@@ -196,7 +196,7 @@ export default function LandingPage() {
                 <div className="absolute -top-4 -right-4 w-24 h-24 bg-amber-500/20 rounded-2xl blur-xl" />
                 <div className="absolute -bottom-4 -left-4 w-32 h-32 bg-teal-500/20 rounded-2xl blur-xl" />
                 <div className="relative w-full h-full rounded-3xl overflow-hidden border border-white/10">
-                  <Image src="https://images.unsplash.com/photo-1631217868264-e5b90bb7e133?w=800&h=800&fit=crop" alt="Doctor consultation" fill className="object-cover" priority unoptimized />
+                  <Image src="/hero-doctor.png" alt="Doctor consultation" fill className="object-cover" priority />
                 </div>
               </div>
             </div>
