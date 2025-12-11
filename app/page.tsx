@@ -6,6 +6,18 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { useI18n } from "./i18n";
 
+// Custom Logo Component
+const Logo = () => (
+  <div className="relative w-10 h-10 flex items-center justify-center">
+    <div className="absolute inset-0 bg-gradient-to-br from-teal-500 to-teal-600 rounded-xl shadow-lg shadow-teal-500/20 transform rotate-3 hover:rotate-6 transition-transform"></div>
+    <svg className="relative w-6 h-6 text-white drop-shadow-md" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" className="text-white/20 fill-white/10 stroke-none" />
+      <path d="M3 13h2l2-5 4 10 3-8h7" className="stroke-white" />
+    </svg>
+    <div className="absolute top-0 right-0 w-2.5 h-2.5 bg-amber-400 rounded-full border-2 border-[#0F172A]"></div>
+  </div>
+);
+
 // Professional SVG Icons
 const Icons = {
   menu: <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>,
@@ -112,9 +124,9 @@ export default function LandingPage() {
       <nav className="fixed top-0 left-0 right-0 z-50 bg-[#0F172A]/80 backdrop-blur-xl border-b border-white/5">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16 lg:h-20">
-            <Link href="/" className="flex items-center gap-2">
-              <div className="w-10 h-10 bg-gradient-to-br from-teal-400 to-teal-600 rounded-xl flex items-center justify-center text-white">{Icons.heart}</div>
-              <span className="text-xl font-bold"><span className="text-teal-400">Tawari</span><span className="text-white">App</span></span>
+            <Link href="/" className="flex items-center gap-3 group">
+              <Logo />
+              <span className="text-2xl font-bold tracking-tight group-hover:opacity-90 transition-opacity"><span className="text-teal-400">Tawari</span><span className="text-white">App</span></span>
             </Link>
 
             <div className="hidden lg:flex items-center gap-8">
@@ -428,9 +440,9 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto">
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">
             <div className="lg:col-span-1">
-              <Link href="/" className="flex items-center gap-2 mb-4">
-                <div className="w-10 h-10 bg-gradient-to-br from-teal-400 to-teal-600 rounded-xl flex items-center justify-center text-white">{Icons.heart}</div>
-                <span className="text-xl font-bold"><span className="text-teal-400">Tawari</span><span className="text-white">App</span></span>
+              <Link href="/" className="flex items-center gap-3 mb-6 group">
+                <Logo />
+                <span className="text-2xl font-bold tracking-tight group-hover:opacity-90 transition-opacity"><span className="text-teal-400">Tawari</span><span className="text-white">App</span></span>
               </Link>
               <p className="text-gray-500 text-sm mb-6 max-w-xs">{t.footer.tagline}</p>
             </div>
