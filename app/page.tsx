@@ -7,14 +7,25 @@ import { useState, useEffect } from "react";
 import { useI18n } from "./i18n";
 
 // Custom Logo Component
+// Custom Logo Component
 const Logo = () => (
-  <div className="relative w-10 h-10 flex items-center justify-center">
-    <div className="absolute inset-0 bg-gradient-to-br from-teal-500 to-teal-600 rounded-xl shadow-lg shadow-teal-500/20 transform rotate-3 hover:rotate-6 transition-transform"></div>
-    <svg className="relative w-6 h-6 text-white drop-shadow-md" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" className="text-white/20 fill-white/10 stroke-none" />
-      <path d="M3 13h2l2-5 4 10 3-8h7" className="stroke-white" />
+  <div className="relative w-11 h-11 flex items-center justify-center">
+    <svg className="w-full h-full transform transition-transform hover:scale-105" viewBox="0 0 24 24" fill="none" strokeLinecap="round" strokeLinejoin="round">
+      {/* Heart Shape - Teal */}
+      <path
+        d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"
+        className="stroke-teal-500"
+        strokeWidth="2"
+      />
+      {/* Pulse Line - Warm Amber (Yellow) - indicating activity/online */}
+      <path
+        d="M2 12h3l3-6 4 12 4-9h6"
+        className="stroke-amber-400"
+        strokeWidth="2.5"
+      />
+      {/* Online Signal Dot */}
+      <circle cx="21" cy="4" r="2" className="fill-amber-400 stroke-none" />
     </svg>
-    <div className="absolute top-0 right-0 w-2.5 h-2.5 bg-amber-400 rounded-full border-2 border-[#0F172A]"></div>
   </div>
 );
 
