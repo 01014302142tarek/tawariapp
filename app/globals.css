@@ -7,7 +7,7 @@
   --primary-dark: #0F766E;
   --accent: #F59E0B;
   --accent-light: #FBBF24;
-  
+
   /* Dark Theme */
   --background: #0F172A;
   --background-light: #1E293B;
@@ -15,12 +15,12 @@
   --surface-light: #334155;
   --border: #334155;
   --border-light: #475569;
-  
+
   /* Text */
   --foreground: #F8FAFC;
   --foreground-muted: #94A3B8;
   --foreground-subtle: #64748B;
-  
+
   /* Semantic */
   --success: #10B981;
   --warning: #F59E0B;
@@ -57,10 +57,16 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* RTL Support */
+html[dir="rtl"] body {
+  font-family: var(--font-cairo), var(--font-sans), system-ui, sans-serif;
+}
+
 /* Custom Scrollbar */
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
+
 .no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
@@ -83,8 +89,15 @@ body {
 
 /* Animations */
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .animate-fade-in {
@@ -93,11 +106,9 @@ body {
 
 /* Hero gradient overlay */
 .hero-gradient {
-  background: linear-gradient(
-    to top,
-    var(--background) 0%,
-    rgba(15, 23, 42, 0.8) 40%,
-    rgba(15, 23, 42, 0.4) 70%,
-    transparent 100%
-  );
+  background: linear-gradient(to top,
+      var(--background) 0%,
+      rgba(15, 23, 42, 0.8) 40%,
+      rgba(15, 23, 42, 0.4) 70%,
+      transparent 100%);
 }
