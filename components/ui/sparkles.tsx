@@ -23,7 +23,7 @@ export const SparklesCore = ({
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
     const particles = useRef<Particle[]>([]);
-    const animationRef = useRef<number>();
+    const animationRef = useRef<number | undefined>(undefined);
 
     class Particle {
         x: number;
