@@ -110,13 +110,17 @@ export function GlowingCard({ children, className, glowColor = "teal", isDark }:
     const borderColors = resolvedIsDark ? borderColorsDark : borderColorsLight;
     const glowColors = resolvedIsDark ? glowColorsDark : glowColorsLight;
 
+    // Check if className includes any overflow class to avoid overriding it
+    const hasOverflowClass = className?.includes('overflow-');
+
     return (
         <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
             className={cn(
-                "relative rounded-2xl border backdrop-blur-sm overflow-hidden group transition-all duration-300",
+                "relative rounded-2xl border backdrop-blur-sm group transition-all duration-300",
+                !hasOverflowClass && "overflow-hidden",
                 resolvedIsDark
                     ? "bg-slate-900/50 shadow-lg shadow-black/5"
                     : "bg-white shadow-lg shadow-gray-100",

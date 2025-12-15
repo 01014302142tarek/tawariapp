@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from "react";
 
-type Language = "en" | "ar";
+export type Language = "en" | "ar";
 
 interface TranslationStrings {
     // Navigation
@@ -136,6 +136,191 @@ interface TranslationStrings {
         paymentMethods: string;
         copyright: string;
     };
+    // Common Dashboard Elements
+    common: {
+        today: string;
+        viewAll: string;
+        search: string;
+        filter: string;
+        save: string;
+        cancel: string;
+        edit: string;
+        delete: string;
+        add: string;
+        loading: string;
+        noData: string;
+        online: string;
+        offline: string;
+        settings: string;
+        logout: string;
+        profile: string;
+        notifications: string;
+        messages: string;
+        darkMode: string;
+        lightMode: string;
+    };
+    // Doctor Dashboard
+    doctorDashboard: {
+        // Sidebar
+        sidebar: {
+            dashboard: string;
+            appointments: string;
+            patients: string;
+            schedule: string;
+            messages: string;
+            analytics: string;
+            settings: string;
+        };
+        // Greeting
+        greeting: {
+            morning: string;
+            afternoon: string;
+            evening: string;
+            subtitle: string;
+        };
+        // Stats
+        stats: {
+            todayAppointments: string;
+            completed: string;
+            revenueToday: string;
+            rating: string;
+        };
+        // Sections
+        sections: {
+            todayAppointments: string;
+            scheduled: string;
+            weeklyPerformance: string;
+            pendingTasks: string;
+            items: string;
+            recentMessages: string;
+            patientConversations: string;
+            unread: string;
+            openMessages: string;
+            healthTips: string;
+            dailyRecommendations: string;
+            new: string;
+            quickActions: string;
+            manageYourPractice: string;
+        };
+        // Appointment Status
+        status: {
+            inProgress: string;
+            completed: string;
+            upcoming: string;
+            done: string;
+        };
+        // Quick Actions
+        actions: {
+            startVideoCall: string;
+            connectWithPatient: string;
+            viewSchedule: string;
+            manageAppointments: string;
+            patientRecords: string;
+            accessRecords: string;
+            messagesAction: string;
+            chatWithPatients: string;
+        };
+        // Performance
+        performance: {
+            consultations: string;
+            patientSatisfaction: string;
+            responseRate: string;
+            youreOnline: string;
+            availableForConsultations: string;
+        };
+        // Tasks
+        tasks: {
+            reviewLabResults: string;
+            prescriptionRenewal: string;
+            followUpReport: string;
+            ecgAnalysis: string;
+            today: string;
+            tomorrow: string;
+            inDays: string;
+        };
+        // Health Tips
+        tips: {
+            heartHealth: string;
+            heartHealthTip: string;
+            sleepQuality: string;
+            sleepQualityTip: string;
+            hydration: string;
+            hydrationTip: string;
+            cardiology: string;
+            wellness: string;
+            general: string;
+        };
+    };
+    // Patient Dashboard
+    patientDashboard: {
+        sidebar: {
+            dashboard: string;
+            appointments: string;
+            prescriptions: string;
+            records: string;
+            messages: string;
+            settings: string;
+        };
+        greeting: {
+            welcome: string;
+            subtitle: string;
+        };
+        stats: {
+            upcomingAppointments: string;
+            activePrescriptions: string;
+            medicalRecords: string;
+            unreadMessages: string;
+        };
+        sections: {
+            nextAppointment: string;
+            recentPrescriptions: string;
+            quickActions: string;
+        };
+        actions: {
+            bookAppointment: string;
+            viewPrescriptions: string;
+            medicalRecords: string;
+            messageDoctor: string;
+        };
+    };
+    // Admin Dashboard
+    adminDashboard: {
+        sidebar: {
+            dashboard: string;
+            users: string;
+            doctors: string;
+            patients: string;
+            analytics: string;
+            settings: string;
+        };
+        greeting: {
+            welcome: string;
+            subtitle: string;
+        };
+        stats: {
+            totalUsers: string;
+            totalDoctors: string;
+            totalPatients: string;
+            totalRevenue: string;
+            activeConsultations: string;
+            pendingApprovals: string;
+        };
+        sections: {
+            recentActivity: string;
+            systemOverview: string;
+            quickActions: string;
+            topPerformingDoctors: string;
+            revenueOverview: string;
+            trafficSources: string;
+        };
+        actions: {
+            addUser: string;
+            addDoctor: string;
+            addPatient: string;
+            viewReports: string;
+            systemSettings: string;
+        };
+    };
 }
 
 const translations: Record<Language, TranslationStrings> = {
@@ -260,6 +445,178 @@ const translations: Record<Language, TranslationStrings> = {
             paymentMethods: "Payment Methods:",
             copyright: "© 2025 TawariApp. All rights reserved. Made with care in Egypt.",
         },
+        common: {
+            today: "Today",
+            viewAll: "View All",
+            search: "Search",
+            filter: "Filter",
+            save: "Save",
+            cancel: "Cancel",
+            edit: "Edit",
+            delete: "Delete",
+            add: "Add",
+            loading: "Loading...",
+            noData: "No data available",
+            online: "Online",
+            offline: "Offline",
+            settings: "Settings",
+            logout: "Logout",
+            profile: "Profile",
+            notifications: "Notifications",
+            messages: "Messages",
+            darkMode: "Dark Mode",
+            lightMode: "Light Mode",
+        },
+        doctorDashboard: {
+            sidebar: {
+                dashboard: "Dashboard",
+                appointments: "Appointments",
+                patients: "Patients",
+                schedule: "Schedule",
+                messages: "Messages",
+                analytics: "Analytics",
+                settings: "Settings",
+            },
+            greeting: {
+                morning: "Good Morning",
+                afternoon: "Good Afternoon",
+                evening: "Good Evening",
+                subtitle: "Here's what's happening with your patients today.",
+            },
+            stats: {
+                todayAppointments: "Today's Appointments",
+                completed: "Completed",
+                revenueToday: "Revenue Today",
+                rating: "Rating",
+            },
+            sections: {
+                todayAppointments: "Today's Appointments",
+                scheduled: "scheduled",
+                weeklyPerformance: "Weekly Performance",
+                pendingTasks: "Pending Tasks",
+                items: "items",
+                recentMessages: "Recent Messages",
+                patientConversations: "Patient conversations",
+                unread: "unread",
+                openMessages: "Open Messages",
+                healthTips: "Health Tips to Share",
+                dailyRecommendations: "Daily recommendations",
+                new: "New",
+                quickActions: "Quick Actions",
+                manageYourPractice: "Manage your practice",
+            },
+            status: {
+                inProgress: "In Progress",
+                completed: "Completed",
+                upcoming: "Upcoming",
+                done: "Done",
+            },
+            actions: {
+                startVideoCall: "Start Video Call",
+                connectWithPatient: "Connect with your next patient via HD video",
+                viewSchedule: "View Schedule",
+                manageAppointments: "Manage appointments and availability",
+                patientRecords: "Patient Records",
+                accessRecords: "Access medical records securely",
+                messagesAction: "Messages",
+                chatWithPatients: "Chat with patients in real-time",
+            },
+            performance: {
+                consultations: "Consultations",
+                patientSatisfaction: "Patient Satisfaction",
+                responseRate: "Response Rate",
+                youreOnline: "You're Online",
+                availableForConsultations: "Available for consultations",
+            },
+            tasks: {
+                reviewLabResults: "Review Lab Results",
+                prescriptionRenewal: "Prescription Renewal",
+                followUpReport: "Follow-up Report",
+                ecgAnalysis: "ECG Analysis",
+                today: "Today",
+                tomorrow: "Tomorrow",
+                inDays: "In 2 days",
+            },
+            tips: {
+                heartHealth: "Heart Health",
+                heartHealthTip: "Recommend 30 minutes of daily walking to improve cardiovascular health.",
+                sleepQuality: "Sleep Quality",
+                sleepQualityTip: "Suggest avoiding screens 1 hour before bedtime for better sleep.",
+                hydration: "Hydration",
+                hydrationTip: "Remind patients to drink 8 glasses of water daily.",
+                cardiology: "Cardiology",
+                wellness: "Wellness",
+                general: "General",
+            },
+        },
+        patientDashboard: {
+            sidebar: {
+                dashboard: "Dashboard",
+                appointments: "Appointments",
+                prescriptions: "Prescriptions",
+                records: "Medical Records",
+                messages: "Messages",
+                settings: "Settings",
+            },
+            greeting: {
+                welcome: "Welcome back",
+                subtitle: "Here's your health overview",
+            },
+            stats: {
+                upcomingAppointments: "Upcoming Appointments",
+                activePrescriptions: "Active Prescriptions",
+                medicalRecords: "Medical Records",
+                unreadMessages: "Unread Messages",
+            },
+            sections: {
+                nextAppointment: "Next Appointment",
+                recentPrescriptions: "Recent Prescriptions",
+                quickActions: "Quick Actions",
+            },
+            actions: {
+                bookAppointment: "Book Appointment",
+                viewPrescriptions: "View Prescriptions",
+                medicalRecords: "Medical Records",
+                messageDoctor: "Message Doctor",
+            },
+        },
+        adminDashboard: {
+            sidebar: {
+                dashboard: "Dashboard",
+                users: "Users",
+                doctors: "Doctors",
+                patients: "Patients",
+                analytics: "Analytics",
+                settings: "Settings",
+            },
+            greeting: {
+                welcome: "Welcome, Admin",
+                subtitle: "Platform overview and management",
+            },
+            stats: {
+                totalUsers: "Total Users",
+                totalDoctors: "Total Doctors",
+                totalPatients: "Total Patients",
+                totalRevenue: "Total Revenue",
+                activeConsultations: "Active Consultations",
+                pendingApprovals: "Pending Approvals",
+            },
+            sections: {
+                recentActivity: "Recent Activity",
+                systemOverview: "System Overview",
+                quickActions: "Quick Actions",
+                topPerformingDoctors: "Top Performing Doctors",
+                revenueOverview: "Revenue Overview",
+                trafficSources: "Traffic Sources",
+            },
+            actions: {
+                addUser: "Add User",
+                addDoctor: "Add Doctor",
+                addPatient: "Add Patient",
+                viewReports: "View Reports",
+                systemSettings: "System Settings",
+            },
+        },
     },
     ar: {
         nav: {
@@ -382,6 +739,178 @@ const translations: Record<Language, TranslationStrings> = {
             paymentMethods: "طرق الدفع:",
             copyright: "© ٢٠٢٥ تواري. جميع الحقوق محفوظة. صنع بعناية في مصر.",
         },
+        common: {
+            today: "اليوم",
+            viewAll: "عرض الكل",
+            search: "بحث",
+            filter: "تصفية",
+            save: "حفظ",
+            cancel: "إلغاء",
+            edit: "تعديل",
+            delete: "حذف",
+            add: "إضافة",
+            loading: "جاري التحميل...",
+            noData: "لا توجد بيانات",
+            online: "متصل",
+            offline: "غير متصل",
+            settings: "الإعدادات",
+            logout: "تسجيل الخروج",
+            profile: "الملف الشخصي",
+            notifications: "الإشعارات",
+            messages: "الرسائل",
+            darkMode: "الوضع الداكن",
+            lightMode: "الوضع الفاتح",
+        },
+        doctorDashboard: {
+            sidebar: {
+                dashboard: "لوحة التحكم",
+                appointments: "المواعيد",
+                patients: "المرضى",
+                schedule: "الجدول",
+                messages: "الرسائل",
+                analytics: "التحليلات",
+                settings: "الإعدادات",
+            },
+            greeting: {
+                morning: "صباح الخير",
+                afternoon: "مساء الخير",
+                evening: "مساء الخير",
+                subtitle: "إليك ما يحدث مع مرضاك اليوم.",
+            },
+            stats: {
+                todayAppointments: "مواعيد اليوم",
+                completed: "مكتملة",
+                revenueToday: "إيرادات اليوم",
+                rating: "التقييم",
+            },
+            sections: {
+                todayAppointments: "مواعيد اليوم",
+                scheduled: "مجدولة",
+                weeklyPerformance: "الأداء الأسبوعي",
+                pendingTasks: "المهام المعلقة",
+                items: "عناصر",
+                recentMessages: "الرسائل الأخيرة",
+                patientConversations: "محادثات المرضى",
+                unread: "غير مقروءة",
+                openMessages: "فتح الرسائل",
+                healthTips: "نصائح صحية للمشاركة",
+                dailyRecommendations: "توصيات يومية",
+                new: "جديد",
+                quickActions: "إجراءات سريعة",
+                manageYourPractice: "إدارة ممارستك",
+            },
+            status: {
+                inProgress: "قيد التنفيذ",
+                completed: "مكتمل",
+                upcoming: "قادم",
+                done: "تم",
+            },
+            actions: {
+                startVideoCall: "بدء مكالمة فيديو",
+                connectWithPatient: "تواصل مع مريضك التالي عبر فيديو عالي الدقة",
+                viewSchedule: "عرض الجدول",
+                manageAppointments: "إدارة المواعيد والتوافر",
+                patientRecords: "سجلات المرضى",
+                accessRecords: "الوصول للسجلات الطبية بأمان",
+                messagesAction: "الرسائل",
+                chatWithPatients: "الدردشة مع المرضى في الوقت الفعلي",
+            },
+            performance: {
+                consultations: "الاستشارات",
+                patientSatisfaction: "رضا المرضى",
+                responseRate: "معدل الاستجابة",
+                youreOnline: "أنت متصل",
+                availableForConsultations: "متاح للاستشارات",
+            },
+            tasks: {
+                reviewLabResults: "مراجعة نتائج المختبر",
+                prescriptionRenewal: "تجديد الوصفة",
+                followUpReport: "تقرير المتابعة",
+                ecgAnalysis: "تحليل تخطيط القلب",
+                today: "اليوم",
+                tomorrow: "غداً",
+                inDays: "خلال يومين",
+            },
+            tips: {
+                heartHealth: "صحة القلب",
+                heartHealthTip: "أوصِ بـ 30 دقيقة من المشي اليومي لتحسين صحة القلب والأوعية الدموية.",
+                sleepQuality: "جودة النوم",
+                sleepQualityTip: "اقترح تجنب الشاشات قبل ساعة من النوم للحصول على نوم أفضل.",
+                hydration: "الترطيب",
+                hydrationTip: "ذكّر المرضى بشرب 8 أكواب من الماء يومياً.",
+                cardiology: "قلب",
+                wellness: "صحة",
+                general: "عام",
+            },
+        },
+        patientDashboard: {
+            sidebar: {
+                dashboard: "لوحة التحكم",
+                appointments: "المواعيد",
+                prescriptions: "الوصفات الطبية",
+                records: "السجلات الطبية",
+                messages: "الرسائل",
+                settings: "الإعدادات",
+            },
+            greeting: {
+                welcome: "مرحباً بعودتك",
+                subtitle: "إليك نظرة عامة على صحتك",
+            },
+            stats: {
+                upcomingAppointments: "المواعيد القادمة",
+                activePrescriptions: "الوصفات النشطة",
+                medicalRecords: "السجلات الطبية",
+                unreadMessages: "رسائل غير مقروءة",
+            },
+            sections: {
+                nextAppointment: "الموعد التالي",
+                recentPrescriptions: "الوصفات الأخيرة",
+                quickActions: "إجراءات سريعة",
+            },
+            actions: {
+                bookAppointment: "حجز موعد",
+                viewPrescriptions: "عرض الوصفات",
+                medicalRecords: "السجلات الطبية",
+                messageDoctor: "مراسلة الطبيب",
+            },
+        },
+        adminDashboard: {
+            sidebar: {
+                dashboard: "لوحة التحكم",
+                users: "المستخدمون",
+                doctors: "الأطباء",
+                patients: "المرضى",
+                analytics: "التحليلات",
+                settings: "الإعدادات",
+            },
+            greeting: {
+                welcome: "مرحباً، المسؤول",
+                subtitle: "نظرة عامة على المنصة وإدارتها",
+            },
+            stats: {
+                totalUsers: "إجمالي المستخدمين",
+                totalDoctors: "إجمالي الأطباء",
+                totalPatients: "إجمالي المرضى",
+                totalRevenue: "إجمالي الإيرادات",
+                activeConsultations: "الاستشارات النشطة",
+                pendingApprovals: "الموافقات المعلقة",
+            },
+            sections: {
+                recentActivity: "النشاط الأخير",
+                systemOverview: "نظرة عامة على النظام",
+                quickActions: "إجراءات سريعة",
+                topPerformingDoctors: "أفضل الأطباء أداءً",
+                revenueOverview: "نظرة عامة على الإيرادات",
+                trafficSources: "مصادر الزيارات",
+            },
+            actions: {
+                addUser: "إضافة مستخدم",
+                addDoctor: "إضافة طبيب",
+                addPatient: "إضافة مريض",
+                viewReports: "عرض التقارير",
+                systemSettings: "إعدادات النظام",
+            },
+        },
     },
 };
 
@@ -394,23 +923,30 @@ interface I18nContextType {
 
 const I18nContext = createContext<I18nContextType | undefined>(undefined);
 
-export function I18nProvider({ children }: { children: React.ReactNode }) {
-    const [language, setLanguage] = useState<Language>("en");
+export function I18nProvider({ children, locale }: { children: React.ReactNode; locale: Language }) {
+    const [language, setLanguageState] = useState<Language>(locale);
 
     useEffect(() => {
-        // Check localStorage for saved preference
-        const saved = localStorage.getItem("tawari-lang") as Language;
-        if (saved && (saved === "en" || saved === "ar")) {
-            setLanguage(saved);
+        setLanguageState(locale);
+    }, [locale]);
+
+    const setLanguage = (lang: Language) => {
+        // Set cookie for middleware
+        document.cookie = `NEXT_LOCALE=${lang}; path=/; max-age=31536000`;
+        // Navigate to the new language path
+        // Currently we just reload or let the framework handle it. 
+        // A full reload ensures new SSR content is fetched.
+        const currentPath = window.location.pathname;
+        const segments = currentPath.split('/');
+        // segments[0] is empty, segments[1] is 'en' or 'ar' usually
+        if (segments[1] === 'en' || segments[1] === 'ar') {
+            segments[1] = lang;
+            window.location.href = segments.join('/');
+        } else {
+            // Fallback if path doesn't have lang (e.g. root) but middleware should have caught it
+            window.location.href = `/${lang}${currentPath}`;
         }
-    }, []);
-
-    useEffect(() => {
-        // Save preference and update document direction
-        localStorage.setItem("tawari-lang", language);
-        document.documentElement.lang = language;
-        document.documentElement.dir = language === "ar" ? "rtl" : "ltr";
-    }, [language]);
+    };
 
     const value: I18nContextType = {
         language,
