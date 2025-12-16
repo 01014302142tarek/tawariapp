@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>TawariApp - Telemedicine in Egypt</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&amp;family=Noto+Sans:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              colors: {
+                "primary": "#46ec13",
+                "background-light": "#f6f8f6",
+                "background-dark": "#152211",
+                "surface-dark": "#1f3319",
+                "border-dark": "#3f6732",
+                "text-muted": "#9fc992"
+              },
+              fontFamily: {
+                "display": ["Manrope", "sans-serif"],
+                "body": ["Noto Sans", "sans-serif"]
+              },
+              borderRadius: {"DEFAULT": "1rem", "lg": "1.5rem", "xl": "2rem", "full": "9999px"},
+            },
+          },
+        }
+    </script>
+<style>
+        /* Custom scrollbar hiding for clean UI */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-dark text-white font-display">
+<div class="relative flex h-auto min-h-screen w-full flex-col overflow-x-hidden max-w-[480px] mx-auto border-x border-[#3f6732]/30 shadow-2xl shadow-black">
+<!-- Top App Bar -->
+<div class="flex items-center bg-background-dark p-4 pb-2 justify-between sticky top-0 z-50 border-b border-[#3f6732]/20 backdrop-blur-md bg-opacity-90">
+<div class="text-white flex size-12 shrink-0 items-center cursor-pointer hover:text-primary transition-colors" data-icon="menu">
+<span class="material-symbols-outlined">menu</span>
+</div>
+<h2 class="text-white text-xl font-black leading-tight tracking-[-0.015em] flex-1 text-center">TawariApp</h2>
+<div class="flex w-12 items-center justify-end">
+<p class="text-primary text-base font-bold leading-normal tracking-[0.015em] shrink-0 cursor-pointer">Login</p>
+</div>
+</div>
+<!-- Hero Section -->
+<div class="@container">
+<div class="p-4">
+<div class="flex min-h-[420px] flex-col gap-6 bg-cover bg-center bg-no-repeat rounded-2xl items-start justify-end px-4 pb-6 shadow-lg relative overflow-hidden group" data-alt="Happy Egyptian family smiling during a video consultation on a tablet in a cozy living room" style='background-image: linear-gradient(to top, rgba(21, 34, 17, 1) 0%, rgba(21, 34, 17, 0.6) 50%, rgba(0, 0, 0, 0.1) 100%), url("https://lh3.googleusercontent.com/aida-public/AB6AXuD2ZATpy9ibsiUp8c_TYgBpp2Py65MW-YDXxQjE9fGYiDqP0hO5VXUi20P_FqoLkCreJh63KQFiBsvaffbZIyS6nANJaVoVoacDy_fDmTVcTkcbvdOI5zbgV_Y4DonOAA27LRCpMf0pvykBqDiMr0AAvLA3PqKKIAE8uW1gLI4lDSFLUqNrKw0t4xvZQoo5YpsC_D8daxcBkjiheBD9393yHNRzYfg7L3rzujLovI7ff5vXf83k8KOVCt9kqx_7vG3LhKAOuhOTFgm9");'>
+<div class="flex flex-col gap-2 text-left z-10">
+<div class="inline-flex items-center gap-1 bg-primary/20 backdrop-blur-sm px-3 py-1 rounded-full w-fit mb-2">
+<span class="material-symbols-outlined text-primary text-[16px]">verified</span>
+<span class="text-primary text-xs font-bold uppercase tracking-wide">Certified Doctors</span>
+</div>
+<h1 class="text-white text-4xl font-black leading-[1.1] tracking-[-0.033em]">
+                        Consult Your Doctor From Home
+                    </h1>
+<p class="text-gray-200 text-base font-medium leading-normal mt-1">
+                        Skip the waiting room. Connect with Egypt’s top specialists instantly via secure video call.
+                    </p>
+</div>
+<div class="flex flex-col w-full gap-3 z-10">
+<div class="flex gap-3 w-full">
+<button class="flex flex-1 cursor-pointer items-center justify-center overflow-hidden rounded-full h-12 px-5 bg-primary hover:bg-green-400 transition-colors text-background-dark text-base font-bold leading-normal tracking-[0.015em]">
+<span class="truncate">Get Started</span>
+</button>
+<button class="flex flex-1 cursor-pointer items-center justify-center overflow-hidden rounded-full h-12 px-5 bg-surface-dark border border-border-dark hover:bg-surface-dark/80 transition-colors text-white text-base font-bold leading-normal tracking-[0.015em]">
+<span class="truncate">Learn More</span>
+</button>
+</div>
+<!-- Trust Badges -->
+<div class="flex items-center justify-between pt-2 border-t border-white/10 mt-1">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-primary text-[18px]">medical_services</span>
+<span class="text-xs text-gray-300 font-medium">Licensed</span>
+</div>
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-primary text-[18px]">schedule</span>
+<span class="text-xs text-gray-300 font-medium">24/7 Care</span>
+</div>
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-primary text-[18px]">lock</span>
+<span class="text-xs text-gray-300 font-medium">Secure</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- How It Works Section -->
+<div class="flex flex-col gap-6 px-4 py-8">
+<h4 class="text-text-muted text-sm font-bold uppercase tracking-wider text-center">How It Works</h4>
+<div class="flex flex-col gap-4">
+<h2 class="text-white text-2xl font-bold leading-tight text-center">Medical care in 3 simple steps</h2>
+</div>
+<div class="grid grid-cols-1 gap-4">
+<div class="flex items-center gap-4 rounded-xl border border-border-dark bg-surface-dark p-4 transition-transform hover:scale-[1.02]">
+<div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+<span class="material-symbols-outlined">person_search</span>
+</div>
+<div class="flex flex-col">
+<h3 class="text-white text-lg font-bold">1. Choose Doctor</h3>
+<p class="text-text-muted text-sm">Browse profiles of top-rated specialists.</p>
+</div>
+</div>
+<div class="flex items-center gap-4 rounded-xl border border-border-dark bg-surface-dark p-4 transition-transform hover:scale-[1.02]">
+<div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+<span class="material-symbols-outlined">calendar_month</span>
+</div>
+<div class="flex flex-col">
+<h3 class="text-white text-lg font-bold">2. Book Slot</h3>
+<p class="text-text-muted text-sm">Pick a time that fits your schedule.</p>
+</div>
+</div>
+<div class="flex items-center gap-4 rounded-xl border border-border-dark bg-surface-dark p-4 transition-transform hover:scale-[1.02]">
+<div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+<span class="material-symbols-outlined">video_camera_front</span>
+</div>
+<div class="flex flex-col">
+<h3 class="text-white text-lg font-bold">3. Start Call</h3>
+<p class="text-text-muted text-sm">Connect instantly from your home.</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Specialties Section -->
+<div class="py-8 bg-[#1a2b15]/30">
+<div class="flex items-center justify-between px-4 mb-6">
+<h2 class="text-white text-xl font-bold">Our Specialties</h2>
+<a class="text-primary text-sm font-bold hover:underline" href="#">See All</a>
+</div>
+<div class="grid grid-cols-2 gap-3 px-4">
+<!-- Card 1 -->
+<div class="group flex flex-col items-center justify-center gap-3 rounded-2xl bg-surface-dark p-5 border border-border-dark hover:border-primary transition-all cursor-pointer">
+<span class="material-symbols-outlined text-3xl text-primary group-hover:scale-110 transition-transform">stethoscope</span>
+<span class="text-white text-sm font-semibold text-center">General Practice</span>
+</div>
+<!-- Card 2 -->
+<div class="group flex flex-col items-center justify-center gap-3 rounded-2xl bg-surface-dark p-5 border border-border-dark hover:border-primary transition-all cursor-pointer">
+<span class="material-symbols-outlined text-3xl text-primary group-hover:scale-110 transition-transform">child_care</span>
+<span class="text-white text-sm font-semibold text-center">Pediatrics</span>
+</div>
+<!-- Card 3 -->
+<div class="group flex flex-col items-center justify-center gap-3 rounded-2xl bg-surface-dark p-5 border border-border-dark hover:border-primary transition-all cursor-pointer">
+<span class="material-symbols-outlined text-3xl text-primary group-hover:scale-110 transition-transform">pregnant_woman</span>
+<span class="text-white text-sm font-semibold text-center">OB/GYN</span>
+</div>
+<!-- Card 4 -->
+<div class="group flex flex-col items-center justify-center gap-3 rounded-2xl bg-surface-dark p-5 border border-border-dark hover:border-primary transition-all cursor-pointer">
+<span class="material-symbols-outlined text-3xl text-primary group-hover:scale-110 transition-transform">cardiology</span>
+<span class="text-white text-sm font-semibold text-center">Internal Med</span>
+</div>
+<!-- Card 5 -->
+<div class="group flex flex-col items-center justify-center gap-3 rounded-2xl bg-surface-dark p-5 border border-border-dark hover:border-primary transition-all cursor-pointer">
+<span class="material-symbols-outlined text-3xl text-primary group-hover:scale-110 transition-transform">dermatology</span>
+<span class="text-white text-sm font-semibold text-center">Dermatology</span>
+</div>
+<!-- Card 6 -->
+<div class="group flex flex-col items-center justify-center gap-3 rounded-2xl bg-surface-dark p-5 border border-border-dark hover:border-primary transition-all cursor-pointer">
+<span class="material-symbols-outlined text-3xl text-primary group-hover:scale-110 transition-transform">psychology</span>
+<span class="text-white text-sm font-semibold text-center">Mental Health</span>
+</div>
+</div>
+</div>
+<!-- Top Doctors Carousel -->
+<div class="py-8 w-full overflow-hidden">
+<div class="flex items-center justify-between px-4 mb-6">
+<h2 class="text-white text-xl font-bold">Top Rated Doctors</h2>
+</div>
+<div class="flex overflow-x-auto gap-4 px-4 pb-4 no-scrollbar snap-x snap-mandatory">
+<!-- Doctor Card 1 -->
+<div class="snap-center shrink-0 w-[240px] rounded-2xl bg-surface-dark border border-border-dark p-4 flex flex-col items-center text-center relative">
+<div class="absolute top-3 right-3 flex items-center gap-1 bg-black/40 rounded-full px-2 py-0.5">
+<span class="material-symbols-outlined text-yellow-400 text-[14px] fill-1">star</span>
+<span class="text-white text-xs font-bold">4.9</span>
+</div>
+<div class="h-20 w-20 rounded-full bg-cover bg-center mb-3 border-2 border-primary" data-alt="Portrait of Dr. Ahmed Hassan, smiling male doctor" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBvBoxUihcDAM0aq0d-GdpMH8aDDeMHsMK6LUFEPnn8Cp0Ua5RwqkRa70KTJNoS9ilb2Pj6_IIfqjRChzPyps9ZpIQkmA3RqOiyrTJv1q55ZxoSG1Cvus2teT6n83NgY9AiPrOa5rai8WJkfONUhU6De4t-YvoYWHLVKcAcdqT0BtoWbhQU0NriTD7g4189FKOLh5ZNr4XutCaMhm5qPDs0VMK7s0zYF6Ahgfa2V9EKDovkj_re8ziSeTOxRhRwX3saPXrex0KXV6Lv");'></div>
+<h3 class="text-white font-bold text-lg">Dr. Ahmed Hassan</h3>
+<p class="text-primary text-sm font-medium mb-1">Cardiologist</p>
+<p class="text-text-muted text-xs mb-4">15 years experience</p>
+<div class="mt-auto w-full">
+<p class="text-white font-bold text-sm mb-2">300 EGP <span class="text-xs font-normal text-text-muted">/ visit</span></p>
+<button class="w-full rounded-full bg-primary text-background-dark font-bold text-sm py-2 hover:bg-green-400">Book Now</button>
+</div>
+</div>
+<!-- Doctor Card 2 -->
+<div class="snap-center shrink-0 w-[240px] rounded-2xl bg-surface-dark border border-border-dark p-4 flex flex-col items-center text-center relative">
+<div class="absolute top-3 right-3 flex items-center gap-1 bg-black/40 rounded-full px-2 py-0.5">
+<span class="material-symbols-outlined text-yellow-400 text-[14px] fill-1">star</span>
+<span class="text-white text-xs font-bold">5.0</span>
+</div>
+<div class="h-20 w-20 rounded-full bg-cover bg-center mb-3 border-2 border-primary" data-alt="Portrait of Dr. Sara Mahmoud, smiling female doctor with hijab" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAvf5q-kvbx96OnwYVpBC0j6rNgI7jS9Sw4I3BwzA0JOQvRL3X98xyDELtf3RcaTjBoZK-6tkTa1hjiHtGlgLkh6LmSlLkQ_2DCwuAcSS1Byl1LbQVd6OasYLrHE1CAVhBkrcEVkQTV3doerO55tm5LIZjZCMFbJPno4Og1EfYH64_Erqx4y3h53oGabDK1KZzOMLEAZiskFmGmOBTIEQx0PYq0aLHPOEzyr7hQaoyWTAEg-7Jhj1lqW6kxx-99kYHiCkvL_H4qwYHZ");'></div>
+<h3 class="text-white font-bold text-lg">Dr. Sara Mahmoud</h3>
+<p class="text-primary text-sm font-medium mb-1">Pediatrician</p>
+<p class="text-text-muted text-xs mb-4">8 years experience</p>
+<div class="mt-auto w-full">
+<p class="text-white font-bold text-sm mb-2">250 EGP <span class="text-xs font-normal text-text-muted">/ visit</span></p>
+<button class="w-full rounded-full bg-primary text-background-dark font-bold text-sm py-2 hover:bg-green-400">Book Now</button>
+</div>
+</div>
+<!-- Doctor Card 3 -->
+<div class="snap-center shrink-0 w-[240px] rounded-2xl bg-surface-dark border border-border-dark p-4 flex flex-col items-center text-center relative">
+<div class="absolute top-3 right-3 flex items-center gap-1 bg-black/40 rounded-full px-2 py-0.5">
+<span class="material-symbols-outlined text-yellow-400 text-[14px] fill-1">star</span>
+<span class="text-white text-xs font-bold">4.8</span>
+</div>
+<div class="h-20 w-20 rounded-full bg-cover bg-center mb-3 border-2 border-primary" data-alt="Portrait of Dr. Omar Khaled, smiling male doctor" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCliqBrf69g9k_dWC6_8cAKYDnaz3DOcFiwYhFjNDUNdFY5CHGWziQmK4jak5fFfESuLWpdlueWwY2TxaRj301GomqZQq6P0Rh5vwlEv3k2wo_5eUClBbQLSsOGLXHSmdV5y2v3X24V0OKRI7ALredRg-KgHQTlkn_Sx6o_l0O_soQYhRDmlQggMrXuB0_VF3n-qtjc-Oby-ptiCx7jBLtL4iNFPnRVDix05OLh6ply6KDWIysNvur0zVTgprfBk3Ieok3eA0jv8bls");'></div>
+<h3 class="text-white font-bold text-lg">Dr. Omar Khaled</h3>
+<p class="text-primary text-sm font-medium mb-1">Dermatologist</p>
+<p class="text-text-muted text-xs mb-4">12 years experience</p>
+<div class="mt-auto w-full">
+<p class="text-white font-bold text-sm mb-2">280 EGP <span class="text-xs font-normal text-text-muted">/ visit</span></p>
+<button class="w-full rounded-full bg-primary text-background-dark font-bold text-sm py-2 hover:bg-green-400">Book Now</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Why TawariApp -->
+<div class="bg-surface-dark px-4 py-10 rounded-t-[2.5rem] mt-4 border-t border-border-dark">
+<h2 class="text-white text-2xl font-bold mb-8 text-center">Why Choose TawariApp?</h2>
+<div class="space-y-6">
+<div class="flex gap-4">
+<div class="bg-primary/10 p-3 rounded-full h-fit">
+<span class="material-symbols-outlined text-primary">verified_user</span>
+</div>
+<div>
+<h3 class="text-white font-bold text-lg">100% Verified Doctors</h3>
+<p class="text-text-muted text-sm leading-relaxed">Every doctor is vetted and licensed by the Egyptian Ministry of Health.</p>
+</div>
+</div>
+<div class="flex gap-4">
+<div class="bg-primary/10 p-3 rounded-full h-fit">
+<span class="material-symbols-outlined text-primary">prescriptions</span>
+</div>
+<div>
+<h3 class="text-white font-bold text-lg">Digital Prescriptions</h3>
+<p class="text-text-muted text-sm leading-relaxed">Get valid prescriptions sent directly to your phone instantly.</p>
+</div>
+</div>
+<div class="flex gap-4">
+<div class="bg-primary/10 p-3 rounded-full h-fit">
+<span class="material-symbols-outlined text-primary">credit_card</span>
+</div>
+<div>
+<h3 class="text-white font-bold text-lg">Secure Payments</h3>
+<p class="text-text-muted text-sm leading-relaxed">Pay safely via credit card, mobile wallet, or Fawry.</p>
+</div>
+</div>
+<div class="flex gap-4">
+<div class="bg-primary/10 p-3 rounded-full h-fit">
+<span class="material-symbols-outlined text-primary">public</span>
+</div>
+<div>
+<h3 class="text-white font-bold text-lg">Consult From Anywhere</h3>
+<p class="text-text-muted text-sm leading-relaxed">Access quality healthcare from Cairo, Alex, or anywhere in Egypt.</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Testimonials -->
+<div class="px-4 py-10">
+<h2 class="text-white text-xl font-bold mb-6 text-center">Patient Stories</h2>
+<div class="flex flex-col gap-4">
+<!-- Review 1 -->
+<div class="bg-[#1a2b15] p-5 rounded-2xl border border-border-dark/50">
+<div class="flex items-center gap-3 mb-3">
+<div class="h-10 w-10 rounded-full bg-cover bg-center" data-alt="Portrait of a happy female patient" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCGrjiazo5Yq142ZWHM8kYb883ly9PJ3W9bN6H0tapls7lPYt7DWSNF5JncBGmdgjDWzxLJKeJQSKw1MjmovjEQVIdtz35Z2cbTdHKogoZwlD1_yuxvB4PNBrAOS1a7ZLnEQ7E5OPGK5VBZsOt3nvmgqwcBnnkgXhl8J9YmEYxLu7mCGDsWV1BGGqBqcBasCCk3MQYC2PDgoQ5a0_Hjg1R3CAd4PWMlzTNINLWKQJeP1tvmvIN6vLIBl36y2hKQuULMrvXaX2PvfYQK");'></div>
+<div>
+<p class="text-white font-bold text-sm">Nour El-Din</p>
+<div class="flex">
+<span class="material-symbols-outlined text-yellow-400 text-[14px] fill-1">star</span>
+<span class="material-symbols-outlined text-yellow-400 text-[14px] fill-1">star</span>
+<span class="material-symbols-outlined text-yellow-400 text-[14px] fill-1">star</span>
+<span class="material-symbols-outlined text-yellow-400 text-[14px] fill-1">star</span>
+<span class="material-symbols-outlined text-yellow-400 text-[14px] fill-1">star</span>
+</div>
+</div>
+</div>
+<p class="text-gray-300 text-sm italic">"Saved me a trip to the hospital late at night. The pediatrician was very professional and calming."</p>
+</div>
+<!-- Review 2 -->
+<div class="bg-[#1a2b15] p-5 rounded-2xl border border-border-dark/50">
+<div class="flex items-center gap-3 mb-3">
+<div class="h-10 w-10 rounded-full bg-cover bg-center" data-alt="Portrait of a happy male patient" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuD3_wLmGgHU2K-_2Tmw-ymG1o92ZjPnCU6gWVGzHKEs3-5Y2Dp1qTvydzSuV6UFnsN5q_R3rK_uP9Qcsl4tmPwx8hd3KFI9CDWfRroqI-QB8E_lvplPBfFzwYZzT-W3oM8Vkizs0b-qCKxQvgEQ9s59I3bjCdFy_4FI5Okzy3nr5Tf_EUK6M--RJUmdmf5qP_mY9lN2oHbd2s75NlMz34lIeCYsnRQcv4K4XxRvoDdMDRyUzBhkxjAXm5V6sHqWjL9PqQEGa84qLdRp");'></div>
+<div>
+<p class="text-white font-bold text-sm">Karim M.</p>
+<div class="flex">
+<span class="material-symbols-outlined text-yellow-400 text-[14px] fill-1">star</span>
+<span class="material-symbols-outlined text-yellow-400 text-[14px] fill-1">star</span>
+<span class="material-symbols-outlined text-yellow-400 text-[14px] fill-1">star</span>
+<span class="material-symbols-outlined text-yellow-400 text-[14px] fill-1">star</span>
+<span class="material-symbols-outlined text-yellow-400 text-[14px] fill-1">star_half</span>
+</div>
+</div>
+</div>
+<p class="text-gray-300 text-sm italic">"The app is so easy to use. I got my prescription immediately after the call."</p>
+</div>
+</div>
+</div>
+<!-- CTA Section -->
+<div class="px-4 pb-8">
+<div class="bg-gradient-to-br from-primary/20 to-surface-dark rounded-3xl p-6 text-center border border-primary/30">
+<h2 class="text-white text-2xl font-black mb-2">Start Your Health Journey Today</h2>
+<p class="text-gray-200 text-sm mb-6">Join thousands of Egyptians who trust TawariApp.</p>
+<button class="w-full rounded-full bg-primary text-background-dark font-extrabold text-lg h-14 hover:bg-green-400 shadow-lg shadow-green-900/50 transition-all transform active:scale-95">
+                Download Now
+            </button>
+</div>
+</div>
+<!-- Footer -->
+<div class="bg-[#0f1a0c] px-6 py-10 border-t border-border-dark">
+<div class="flex flex-col gap-8">
+<div class="flex flex-col gap-4">
+<h2 class="text-white text-2xl font-black tracking-tight">TawariApp</h2>
+<p class="text-text-muted text-sm max-w-[250px]">Premium healthcare at your fingertips. Anywhere, anytime.</p>
+</div>
+<div class="grid grid-cols-2 gap-8">
+<div class="flex flex-col gap-3">
+<h4 class="text-white font-bold">Company</h4>
+<a class="text-gray-400 text-sm hover:text-primary" href="#">About Us</a>
+<a class="text-gray-400 text-sm hover:text-primary" href="#">Our Doctors</a>
+<a class="text-gray-400 text-sm hover:text-primary" href="#">Careers</a>
+</div>
+<div class="flex flex-col gap-3">
+<h4 class="text-white font-bold">Support</h4>
+<a class="text-gray-400 text-sm hover:text-primary" href="#">FAQ</a>
+<a class="text-gray-400 text-sm hover:text-primary" href="#">Contact</a>
+<a class="text-gray-400 text-sm hover:text-primary" href="#">Privacy Policy</a>
+</div>
+</div>
+<div class="border-t border-white/10 pt-6 flex flex-col items-center gap-4">
+<!-- Payment Methods Placeholder -->
+<div class="flex gap-3 grayscale opacity-70">
+<span class="material-symbols-outlined text-white text-3xl">credit_card</span>
+<span class="material-symbols-outlined text-white text-3xl">account_balance_wallet</span>
+<span class="material-symbols-outlined text-white text-3xl">payments</span>
+</div>
+<div class="flex gap-4">
+<a class="h-10 w-10 rounded-full bg-surface-dark flex items-center justify-center text-white hover:bg-primary hover:text-background-dark transition-colors" href="#">
+<svg class="h-5 w-5 fill-current" viewbox="0 0 24 24"><path d="M24 4.557c-.883.392-1.832.656-2.828.775 1.017-.609 1.798-1.574 2.165-2.724-.951.564-2.005.974-3.127 1.195-.897-.957-2.178-1.555-3.594-1.555-3.179 0-5.515 2.966-4.797 6.045-4.091-.205-7.719-2.165-10.148-5.144-1.29 2.213-.669 5.108 1.523 6.574-.806-.026-1.566-.247-2.229-.616-.054 2.281 1.581 4.415 3.949 4.89-.693.188-1.452.232-2.224.084.626 1.956 2.444 3.379 4.6 3.419-2.07 1.623-4.678 2.348-7.29 2.04 2.179 1.397 4.768 2.212 7.548 2.212 9.142 0 14.307-7.721 13.995-14.646.962-.695 1.797-1.562 2.457-2.549z"></path></svg>
+</a>
+<a class="h-10 w-10 rounded-full bg-surface-dark flex items-center justify-center text-white hover:bg-primary hover:text-background-dark transition-colors" href="#">
+<svg class="h-5 w-5 fill-current" viewbox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.072 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"></path></svg>
+</a>
+</div>
+<p class="text-xs text-gray-500 text-center">© 2023 TawariApp. All rights reserved.</p>
+</div>
+</div>
+</div>
+</div>
+</body></html>
