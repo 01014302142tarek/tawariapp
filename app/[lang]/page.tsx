@@ -6,27 +6,84 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { useI18n } from "../i18n";
 
-// Custom Logo Component
-// Custom Logo Component
-const Logo = () => (
-  <div className="relative w-11 h-11 flex items-center justify-center">
-    <svg className="w-full h-full transform transition-transform hover:scale-105" viewBox="0 0 24 24" fill="none" strokeLinecap="round" strokeLinejoin="round">
-      {/* Heart Shape - Teal */}
+// Custom Logo Component with Heart, Pulse and Text
+const LogoFull = ({ className = "" }: { className?: string }) => (
+  <div className={`flex items-center gap-2 ${className}`}>
+    {/* Heart with Pulse Icon */}
+    <svg className="h-10 w-10 flex-shrink-0" viewBox="0 0 100 90" fill="none">
+      {/* Heart outline - Teal with 3D effect */}
+      <defs>
+        <linearGradient id="heartGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#2DD4BF" />
+          <stop offset="50%" stopColor="#14B8A6" />
+          <stop offset="100%" stopColor="#0D9488" />
+        </linearGradient>
+        <linearGradient id="heartShadow" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#0F766E" />
+          <stop offset="100%" stopColor="#134E4A" />
+        </linearGradient>
+      </defs>
+      {/* Heart shadow for 3D effect */}
       <path
-        d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"
-        className="stroke-teal-500"
-        strokeWidth="2"
+        d="M50 85 C50 85 10 55 10 30 C10 15 22 5 35 5 C42 5 48 10 50 15 C52 10 58 5 65 5 C78 5 90 15 90 30 C90 55 50 85 50 85Z"
+        fill="url(#heartShadow)"
+        transform="translate(2, 2)"
+        opacity="0.3"
       />
-      {/* Pulse Line - Warm Amber (Yellow) - indicating activity/online */}
+      {/* Main heart */}
       <path
-        d="M2 12h3l3-6 4 12 4-9h6"
-        className="stroke-amber-400"
-        strokeWidth="2.5"
+        d="M50 85 C50 85 10 55 10 30 C10 15 22 5 35 5 C42 5 48 10 50 15 C52 10 58 5 65 5 C78 5 90 15 90 30 C90 55 50 85 50 85Z"
+        fill="none"
+        stroke="url(#heartGradient)"
+        strokeWidth="6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
       />
-      {/* Online Signal Dot */}
-      <circle cx="21" cy="4" r="2" className="fill-amber-400 stroke-none" />
+      {/* Pulse/ECG line - Amber/Gold */}
+      <path
+        d="M5 45 L25 45 L35 25 L50 65 L65 35 L75 45 L95 45"
+        fill="none"
+        stroke="#F59E0B"
+        strokeWidth="5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
     </svg>
+    {/* TawariApp Text */}
+    <span className="text-xl font-bold tracking-tight">
+      <span className="text-white">Tawari</span>
+      <span className="text-gray-400">App</span>
+    </span>
   </div>
+);
+
+// Small Logo Icon only (for favicon-like usage)
+const LogoIcon = () => (
+  <svg className="h-10 w-10" viewBox="0 0 100 90" fill="none">
+    <defs>
+      <linearGradient id="heartGradientSmall" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#2DD4BF" />
+        <stop offset="50%" stopColor="#14B8A6" />
+        <stop offset="100%" stopColor="#0D9488" />
+      </linearGradient>
+    </defs>
+    <path
+      d="M50 85 C50 85 10 55 10 30 C10 15 22 5 35 5 C42 5 48 10 50 15 C52 10 58 5 65 5 C78 5 90 15 90 30 C90 55 50 85 50 85Z"
+      fill="none"
+      stroke="url(#heartGradientSmall)"
+      strokeWidth="6"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M5 45 L25 45 L35 25 L50 65 L65 35 L75 45 L95 45"
+      fill="none"
+      stroke="#F59E0B"
+      strokeWidth="5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
 );
 
 // Professional SVG Icons
@@ -135,8 +192,8 @@ export default function LandingPage() {
       <nav className="fixed top-0 left-0 right-0 z-50 bg-[#0F172A]/80 backdrop-blur-xl border-b border-white/5">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16 lg:h-20">
-            <Link href={`/${language}`} className="relative h-14 w-40 group hover:opacity-90 transition-opacity">
-              <Image src="/logo-custom.png" alt="TawariApp" fill className="object-contain object-left" priority />
+            <Link href={`/${language}`} className="group hover:opacity-90 transition-opacity">
+              <LogoFull />
             </Link>
 
             <div className="hidden lg:flex items-center gap-8">
@@ -450,8 +507,8 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto">
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">
             <div className="lg:col-span-1">
-              <Link href={`/${language}`} className="relative h-16 w-48 mb-6 group hover:opacity-90 transition-opacity">
-                <Image src="/logo-custom.png" alt="TawariApp" fill className="object-contain object-left" />
+              <Link href={`/${language}`} className="block mb-6 group hover:opacity-90 transition-opacity">
+                <LogoFull />
               </Link>
               <p className="text-gray-500 text-sm mb-6 max-w-xs">{t.footer.tagline}</p>
             </div>

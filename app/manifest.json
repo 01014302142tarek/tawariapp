@@ -1,0 +1,23 @@
+{
+  "name": "TawariApp - Healthcare at Your Fingertips",
+  "short_name": "TawariApp",
+  "description": "Connect with licensed Egyptian doctors for video consultations. Get medical advice, prescriptions, and care from anywhere.",
+  "start_url": "/",
+  "icons": [
+    {
+      "src": "/web-app-manifest-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/web-app-manifest-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "theme_color": "#f59e0b",
+  "background_color": "#0d9488",
+  "display": "standalone"
+}
