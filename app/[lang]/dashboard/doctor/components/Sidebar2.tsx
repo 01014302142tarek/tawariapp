@@ -84,7 +84,7 @@ export default function Sidebar2() {
                 <Link href="/" className="flex items-center gap-3 group">
                     <div className="relative w-9 h-9 rounded-xl overflow-hidden shadow-lg shadow-teal-500/20">
                         <Image
-                            src="/logo-custom.png"
+                            src="/logo.png"
                             alt="TawariApp"
                             fill
                             className="object-cover"

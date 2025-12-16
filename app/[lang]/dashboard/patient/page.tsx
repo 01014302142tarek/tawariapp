@@ -94,38 +94,38 @@ const SectionHeader = ({ title, subtitle, action, isDark = true }: { title: stri
 
 export default function PatientDashboard() {
     const { theme } = useTheme();
-    const { t, language } = useI18n();
+    const { t, language, isRTL, formatNumber, formatDate } = useI18n();
     const isDark = theme === "dark";
 
     const greeting = new Date().getHours() < 12 ? t.doctorDashboard.greeting.morning : new Date().getHours() < 17 ? t.doctorDashboard.greeting.afternoon : t.doctorDashboard.greeting.evening;
 
     const nextAppointment = {
-        doctor: "Dr. Ahmed Hassan",
-        specialty: "Cardiologist",
+        doctor: t.common.demoNames.drAhmedHassan,
+        specialty: t.specialties.cardiology,
         date: t.common.today,
-        time: "2:30 PM",
+        time: isRTL ? "٠٢:٣٠ م" : "2:30 PM",
         image: "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=100&h=100&fit=crop&crop=face",
-        location: "Room 205, Building A",
+        location: isRTL ? "غرفة ٢٠٥، مبنى أ" : "Room 205, Building A",
     };
 
     const activePrescriptions = [
-        { name: "Lisinopril 10mg", dosage: "1 tablet daily", refillDate: "Dec 28, 2024", status: "active" },
-        { name: "Metformin 500mg", dosage: "2 tablets with meals", refillDate: "Jan 5, 2025", status: "active" },
-        { name: "Atorvastatin 20mg", dosage: "1 tablet at bedtime", refillDate: "Dec 20, 2024", status: "refill-needed" },
+        { name: "Lisinopril 10mg", dosage: t.patientDashboard.prescriptionsPage.frequency.daily.replace("{n}", formatNumber(1)), refillDate: formatDate("Dec 28, 2024"), status: "active" },
+        { name: "Metformin 500mg", dosage: t.patientDashboard.prescriptionsPage.frequency.daily.replace("{n}", formatNumber(2)), refillDate: formatDate("Jan 5, 2025"), status: "active" },
+        { name: "Atorvastatin 20mg", dosage: t.patientDashboard.prescriptionsPage.frequency.bedtime.replace("{n}", formatNumber(1)), refillDate: formatDate("Dec 20, 2024"), status: "refill-needed" },
     ];
 
     const recentActivity = [
-        { type: "appointment", title: "Appointment with Dr. Hassan", time: "2 days ago", icon: Icons.calendar },
-        { type: "prescription", title: "Prescription refilled - Lisinopril", time: "5 days ago", icon: Icons.prescription },
-        { type: "message", title: "Message from Dr. Hassan", time: "1 week ago", icon: Icons.message },
-        { type: "record", title: "Lab results uploaded", time: "2 weeks ago", icon: Icons.folder },
+        { type: "appointment", title: `${t.patientDashboard.activity.appointment} ${t.common.demoNames.drHassan}`, time: isRTL ? `منذ يومين` : `2 ${t.common.time.daysAgo}`, icon: Icons.calendar },
+        { type: "prescription", title: `${t.patientDashboard.activity.prescription} - Lisinopril`, time: isRTL ? `منذ ${formatNumber(5)} أيام` : `5 ${t.common.time.daysAgo}`, icon: Icons.prescription },
+        { type: "message", title: `${t.patientDashboard.activity.message} ${t.common.demoNames.drHassan}`, time: t.common.time.dayAgo, icon: Icons.message }, // "1 day ago" key works for singular
+        { type: "record", title: t.patientDashboard.activity.record, time: isRTL ? `منذ ${formatNumber(14)} يوماً` : `14 ${t.common.time.daysAgo}`, icon: Icons.folder },
     ];
 
     const quickActions = [
-        { title: t.patientDashboard.actions.bookAppointment, description: "Schedule a visit with your doctor", icon: Icons.calendar },
-        { title: t.patientDashboard.actions.viewPrescriptions, description: "Check your active medications", icon: Icons.prescription },
-        { title: t.patientDashboard.actions.messageDoctor, description: "Send a message to your care team", icon: Icons.message },
-        { title: t.patientDashboard.actions.medicalRecords, description: "Access your medical history", icon: Icons.folder },
+        { title: t.patientDashboard.actions.bookAppointment, description: t.patientDashboard.actionDesc.bookAppointment, icon: Icons.calendar },
+        { title: t.patientDashboard.actions.viewPrescriptions, description: t.patientDashboard.actionDesc.viewPrescriptions, icon: Icons.prescription },
+        { title: t.patientDashboard.actions.messageDoctor, description: t.patientDashboard.actionDesc.messageDoctor, icon: Icons.message },
+        { title: t.patientDashboard.actions.medicalRecords, description: t.patientDashboard.actionDesc.medicalRecords, icon: Icons.folder },
     ];
 
     return (
@@ -154,7 +154,7 @@ export default function PatientDashboard() {
                 {/* Greeting Section */}
                 <section className="mb-6 md:mb-8">
                     <h2 className={cn("text-2xl md:text-3xl font-bold mb-2 flex items-center gap-3", isDark ? "text-white" : "text-slate-900")}>
-                        {greeting}, Sarah {Icons.hand}
+                        {greeting}, {isRTL ? "سارة" : "Sarah"} {Icons.hand}
                     </h2>
                     <p className={cn("text-base md:text-lg", isDark ? "text-gray-400" : "text-gray-600")}>
                         {t.patientDashboard.greeting.subtitle}
@@ -168,7 +168,7 @@ export default function PatientDashboard() {
                             { label: t.patientDashboard.stats.upcomingAppointments, value: 2, icon: Icons.calendar },
                             { label: t.patientDashboard.stats.activePrescriptions, value: 3, icon: Icons.prescription },
                             { label: t.patientDashboard.stats.unreadMessages, value: 2, icon: Icons.message },
-                            { label: "Health Score", value: 92, suffix: "%", icon: Icons.heart },
+                            { label: t.patientDashboard.stats.healthScore, value: 92, suffix: "%", icon: Icons.heart },
                         ].map((stat, idx) => (
                             <GlowingCard key={idx} glowColor="teal" className="p-3 md:p-5" isDark={isDark}>
                                 <div className="flex items-start justify-between mb-2 md:mb-3">
@@ -181,9 +181,9 @@ export default function PatientDashboard() {
                                 </div>
                                 <div className="flex items-baseline gap-0.5 md:gap-1">
                                     <span className={cn("text-2xl md:text-3xl font-bold", isDark ? "text-white" : "text-slate-900")}>
-                                        <AnimatedNumber value={stat.value} />
+                                        <AnimatedNumber value={stat.value} format={(v) => formatNumber(v)} />
                                     </span>
-                                    {stat.suffix && <span className={cn("text-base md:text-lg", isDark ? "text-gray-400" : "text-gray-500")}>{stat.suffix}</span>}
+                                    {stat.suffix && <span className={cn("text-base md:text-lg", isDark ? "text-gray-400" : "text-gray-500")}>{formatNumber(stat.suffix)}</span>}
                                 </div>
                                 <p className={cn("text-[11px] md:text-sm mt-1 leading-tight", isDark ? "text-gray-500" : "text-gray-600")}>{stat.label}</p>
                             </GlowingCard>
@@ -295,7 +295,7 @@ export default function PatientDashboard() {
                                                 <p className={cn("text-xs md:text-sm truncate", isDark ? "text-gray-500" : "text-gray-600")}>{rx.dosage}</p>
                                             </div>
                                             <Badge variant={rx.status === "refill-needed" ? "warning" : "success"} className="flex-shrink-0 text-[10px] md:text-xs">
-                                                {rx.status === "refill-needed" ? "Refill Soon" : "Active"}
+                                                {rx.status === "refill-needed" ? t.patientDashboard.prescriptionsPage.status.refillNeeded : t.patientDashboard.prescriptionsPage.status.active}
                                             </Badge>
                                         </div>
                                     ))}

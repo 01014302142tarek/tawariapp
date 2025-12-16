@@ -7,6 +7,7 @@ import { useTheme } from "../context/ThemeContext";
 import { GlowingCard } from "@/components/ui/glowing-card";
 import { SparklesCore } from "@/components/ui/sparkles";
 import { AnimatedNumber } from "@/components/ui/animated-number";
+import { useI18n } from "@/app/i18n";
 
 // Icons
 const Icons = {
@@ -73,41 +74,49 @@ const ProgressBar = ({ value, max, isDark = true }: { value: number; max: number
 };
 
 // Mock data
-const monthlyData = [
-    { month: "Jan", value: 32 }, { month: "Feb", value: 38 }, { month: "Mar", value: 41 },
-    { month: "Apr", value: 45 }, { month: "May", value: 48 }, { month: "Jun", value: 52 },
-    { month: "Jul", value: 54 }, { month: "Aug", value: 51 }, { month: "Sep", value: 53 },
-    { month: "Oct", value: 56 }, { month: "Nov", value: 58 }, { month: "Dec", value: 45 },
-];
 
-const topDoctors = [
-    { rank: 1, name: "Dr. Ahmed Hassan", specialty: "Cardiologist", revenue: 89200, patients: 312 },
-    { rank: 2, name: "Dr. Omar Khalil", specialty: "Neurologist", revenue: 67800, patients: 203 },
-    { rank: 3, name: "Dr. Fatima Hassan", specialty: "Pediatrician", revenue: 54600, patients: 178 },
-    { rank: 4, name: "Dr. Sarah Ahmed", specialty: "Dermatologist", revenue: 45600, patients: 156 },
-    { rank: 5, name: "Dr. Layla Mahmoud", specialty: "Psychiatrist", revenue: 42300, patients: 134 },
-];
-
-const trafficSources = [
-    { source: "Direct", percentage: 45, icon: Icons.globe, color: "teal" },
-    { source: "Referral", percentage: 30, icon: Icons.link, color: "blue" },
-    { source: "Social Media", percentage: 15, icon: Icons.share, color: "emerald" },
-    { source: "Search", percentage: 10, icon: Icons.search, color: "amber" },
-];
 
 export default function AnalyticsPage() {
+    const { t, formatNumber, isRTL } = useI18n();
     const { theme } = useTheme();
     const isDark = theme === "dark";
     const [period, setPeriod] = useState("year");
 
-    const stats = [
-        { label: "Total Revenue", value: 598, suffix: "K EGP", change: "+23%", icon: Icons.money, color: "teal" },
-        { label: "Total Users", value: 1247, change: "+12%", icon: Icons.users, color: "blue" },
-        { label: "Appointments", value: 4637, change: "+18%", icon: Icons.calendar, color: "emerald" },
-        { label: "Avg. Session", value: 12.5, suffix: " min", change: "+5%", icon: Icons.clock, color: "amber" },
+    // Mock data
+    const monthlyData = [
+        { month: "Jan", value: 32 }, { month: "Feb", value: 38 }, { month: "Mar", value: 41 },
+        { month: "Apr", value: 45 }, { month: "May", value: 48 }, { month: "Jun", value: 52 },
+        { month: "Jul", value: 54 }, { month: "Aug", value: 51 }, { month: "Sep", value: 53 },
+        { month: "Oct", value: 56 }, { month: "Nov", value: 58 }, { month: "Dec", value: 45 },
+    ];
+
+    const topDoctors = [
+        { rank: 1, name: t.common.demoNames.drAhmedHassan, specialty: t.specialties.cardiology, revenue: 89200, patients: 312 },
+        { rank: 2, name: t.common.demoNames.drOmarKhalil, specialty: isRTL ? "أعصاب" : "Neurologist", revenue: 67800, patients: 203 },
+        { rank: 3, name: isRTL ? "د. فاطمة حسن" : "Dr. Fatima Hassan", specialty: t.specialties.pediatrics, revenue: 54600, patients: 178 },
+        { rank: 4, name: isRTL ? "د. سارة أحمد" : "Dr. Sarah Ahmed", specialty: t.specialties.dermatology, revenue: 45600, patients: 156 },
+        { rank: 5, name: isRTL ? "د. ليلى محمود" : "Dr. Layla Mahmoud", specialty: t.specialties.mental, revenue: 42300, patients: 134 },
     ];
 
     const maxValue = Math.max(...monthlyData.map(d => d.value));
+
+    const stats = [
+        { label: t.adminDashboard.analyticsPage.stats.revenue, value: 598, suffix: "K EGP", change: "+23%", icon: Icons.money, color: "teal" },
+        { label: t.adminDashboard.analyticsPage.stats.users, value: 1247, change: "+12%", icon: Icons.users, color: "blue" },
+        { label: t.adminDashboard.analyticsPage.stats.appointments, value: 4637, change: "+18%", icon: Icons.calendar, color: "emerald" },
+        { label: t.adminDashboard.analyticsPage.stats.session, value: 12.5, suffix: " min", change: "+5%", icon: Icons.clock, color: "amber" },
+    ];
+
+    const trafficSources = [
+        { source: t.adminDashboard.analyticsPage.traffic.direct, percentage: 45, icon: Icons.globe, color: "teal" },
+        { source: t.adminDashboard.analyticsPage.traffic.referral, percentage: 30, icon: Icons.link, color: "blue" },
+        { source: t.adminDashboard.analyticsPage.traffic.social, percentage: 15, icon: Icons.share, color: "emerald" },
+        { source: t.adminDashboard.analyticsPage.traffic.search, percentage: 10, icon: Icons.search, color: "amber" },
+    ];
+
+    const getPeriodLabel = (key: string) => {
+        return t.adminDashboard.analyticsPage.periods[key as keyof typeof t.adminDashboard.analyticsPage.periods] || key;
+    };
 
     return (
         <div className="relative overflow-hidden min-h-screen">
@@ -133,9 +142,9 @@ export default function AnalyticsPage() {
                 {/* Header */}
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 md:mb-8">
                     <div>
-                        <h1 className={cn("text-xl md:text-2xl lg:text-3xl font-bold", isDark ? "text-white" : "text-slate-900")}>Analytics & Reports</h1>
+                        <h1 className={cn("text-xl md:text-2xl lg:text-3xl font-bold", isDark ? "text-white" : "text-slate-900")}>{t.adminDashboard.analyticsPage.title}</h1>
                         <p className={cn("text-sm md:text-base lg:text-lg mt-1", isDark ? "text-gray-400" : "text-gray-600")}>
-                            Platform performance and insights
+                            {t.adminDashboard.analyticsPage.subtitle}
                         </p>
                     </div>
                     <div className="flex gap-2 overflow-x-auto">
@@ -152,7 +161,7 @@ export default function AnalyticsPage() {
                                             : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                                 )}
                             >
-                                {p}
+                                {getPeriodLabel(p)}
                             </button>
                         ))}
                     </div>
@@ -170,12 +179,12 @@ export default function AnalyticsPage() {
                                 </div>
                                 <div className="flex items-center gap-0.5 md:gap-1 text-emerald-500 text-xs md:text-sm font-medium">
                                     {Icons.arrowUp}
-                                    {stat.change}
+                                    {formatNumber(stat.change)}
                                 </div>
                             </div>
                             <div className="flex items-baseline gap-0.5 md:gap-1">
                                 <span className={cn("text-lg md:text-2xl font-bold", isDark ? "text-white" : "text-slate-900")}>
-                                    <AnimatedNumber value={stat.value} />
+                                    <AnimatedNumber value={stat.value} format={formatNumber} />
                                 </span>
                                 {stat.suffix && <span className={cn("text-[10px] md:text-sm", isDark ? "text-gray-400" : "text-gray-500")}>{stat.suffix}</span>}
                             </div>
@@ -188,7 +197,7 @@ export default function AnalyticsPage() {
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 mb-6 md:mb-8">
                     {/* Revenue Chart */}
                     <GlowingCard glowColor="teal" className="p-4 md:p-6 overflow-visible" isDark={isDark}>
-                        <h3 className={cn("text-base md:text-lg font-semibold mb-4 md:mb-6", isDark ? "text-white" : "text-slate-900")}>Revenue Overview (K EGP)</h3>
+                        <h3 className={cn("text-base md:text-lg font-semibold mb-4 md:mb-6", isDark ? "text-white" : "text-slate-900")}>{t.adminDashboard.analyticsPage.charts.revenue}</h3>
                         <div className="overflow-x-auto">
                             <div className="min-w-[280px]">
                                 {/* Chart container with fixed height */}
@@ -222,7 +231,7 @@ export default function AnalyticsPage() {
 
                     {/* Traffic Sources */}
                     <GlowingCard glowColor="teal" className="p-4 md:p-6" isDark={isDark}>
-                        <h3 className={cn("text-base md:text-lg font-semibold mb-4 md:mb-6", isDark ? "text-white" : "text-slate-900")}>Traffic Sources</h3>
+                        <h3 className={cn("text-base md:text-lg font-semibold mb-4 md:mb-6", isDark ? "text-white" : "text-slate-900")}>{t.adminDashboard.analyticsPage.charts.traffic}</h3>
                         <div className="space-y-3 md:space-y-5">
                             {trafficSources.map((source, idx) => (
                                 <div key={idx}>
@@ -235,7 +244,7 @@ export default function AnalyticsPage() {
                                             </div>
                                             <span className={cn("text-xs md:text-sm", isDark ? "text-gray-400" : "text-gray-600")}>{source.source}</span>
                                         </div>
-                                        <span className={cn("text-xs md:text-sm font-medium", isDark ? "text-white" : "text-slate-900")}>{source.percentage}%</span>
+                                        <span className={cn("text-xs md:text-sm font-medium", isDark ? "text-white" : "text-slate-900")}>{formatNumber(source.percentage)}%</span>
                                     </div>
                                     <ProgressBar value={source.percentage} max={100} color={source.color} isDark={isDark} />
                                 </div>
@@ -247,7 +256,7 @@ export default function AnalyticsPage() {
                 {/* Top Doctors Table */}
                 <GlowingCard glowColor="teal" className="p-4 md:p-6" isDark={isDark}>
                     <div className="flex items-center justify-between mb-4 md:mb-6">
-                        <h3 className={cn("text-base md:text-lg font-semibold", isDark ? "text-white" : "text-slate-900")}>Top Performing Doctors</h3>
+                        <h3 className={cn("text-base md:text-lg font-semibold", isDark ? "text-white" : "text-slate-900")}>{t.adminDashboard.analyticsPage.table.title}</h3>
                         {/* Mobile scroll indicator */}
                         <div className="flex items-center gap-1 md:hidden text-teal-500">
                             <span className="text-[10px]">Scroll</span>
@@ -260,11 +269,11 @@ export default function AnalyticsPage() {
                         <table className="w-full min-w-[500px]">
                             <thead>
                                 <tr className={cn("border-b", isDark ? "border-white/5" : "border-gray-200")}>
-                                    <th className={cn("px-3 md:px-4 py-2 md:py-3 text-left text-xs md:text-sm font-medium", isDark ? "text-gray-400" : "text-gray-500")}>Rank</th>
-                                    <th className={cn("px-3 md:px-4 py-2 md:py-3 text-left text-xs md:text-sm font-medium", isDark ? "text-gray-400" : "text-gray-500")}>Doctor</th>
-                                    <th className={cn("px-3 md:px-4 py-2 md:py-3 text-left text-xs md:text-sm font-medium", isDark ? "text-gray-400" : "text-gray-500")}>Specialty</th>
-                                    <th className={cn("px-3 md:px-4 py-2 md:py-3 text-left text-xs md:text-sm font-medium", isDark ? "text-gray-400" : "text-gray-500")}>Patients</th>
-                                    <th className={cn("px-3 md:px-4 py-2 md:py-3 text-left text-xs md:text-sm font-medium", isDark ? "text-gray-400" : "text-gray-500")}>Revenue</th>
+                                    <th className={cn("px-3 md:px-4 py-2 md:py-3 text-start text-xs md:text-sm font-medium", isDark ? "text-gray-400" : "text-gray-500")}>{t.adminDashboard.analyticsPage.table.rank}</th>
+                                    <th className={cn("px-3 md:px-4 py-2 md:py-3 text-start text-xs md:text-sm font-medium", isDark ? "text-gray-400" : "text-gray-500")}>{t.adminDashboard.analyticsPage.table.doctor}</th>
+                                    <th className={cn("px-3 md:px-4 py-2 md:py-3 text-start text-xs md:text-sm font-medium", isDark ? "text-gray-400" : "text-gray-500")}>{t.adminDashboard.analyticsPage.table.specialty}</th>
+                                    <th className={cn("px-3 md:px-4 py-2 md:py-3 text-start text-xs md:text-sm font-medium", isDark ? "text-gray-400" : "text-gray-500")}>{t.adminDashboard.analyticsPage.table.patients}</th>
+                                    <th className={cn("px-3 md:px-4 py-2 md:py-3 text-start text-xs md:text-sm font-medium", isDark ? "text-gray-400" : "text-gray-500")}>{t.adminDashboard.analyticsPage.table.revenue}</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -278,13 +287,13 @@ export default function AnalyticsPage() {
                                     >
                                         <td className="px-3 md:px-4 py-3 md:py-4">
                                             <span className="w-6 h-6 md:w-8 md:h-8 rounded-full flex items-center justify-center font-bold text-xs md:text-sm bg-teal-500/20 text-teal-500">
-                                                {doctor.rank}
+                                                {formatNumber(doctor.rank)}
                                             </span>
                                         </td>
                                         <td className={cn("px-3 md:px-4 py-3 md:py-4 font-medium text-xs md:text-base", isDark ? "text-white" : "text-slate-900")}>{doctor.name}</td>
                                         <td className={cn("px-3 md:px-4 py-3 md:py-4 text-xs md:text-sm", isDark ? "text-gray-400" : "text-gray-600")}>{doctor.specialty}</td>
-                                        <td className={cn("px-3 md:px-4 py-3 md:py-4 text-xs md:text-base", isDark ? "text-white" : "text-slate-900")}>{doctor.patients}</td>
-                                        <td className="px-3 md:px-4 py-3 md:py-4 text-teal-500 font-medium text-xs md:text-base">{doctor.revenue.toLocaleString()} EGP</td>
+                                        <td className={cn("px-3 md:px-4 py-3 md:py-4 text-xs md:text-base", isDark ? "text-white" : "text-slate-900")}>{formatNumber(doctor.patients)}</td>
+                                        <td className="px-3 md:px-4 py-3 md:py-4 text-teal-500 font-medium text-xs md:text-base">{formatNumber(doctor.revenue.toLocaleString())} EGP</td>
                                     </motion.tr>
                                 ))}
                             </tbody>

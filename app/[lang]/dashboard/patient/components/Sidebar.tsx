@@ -165,7 +165,7 @@ export default function Sidebar({ isMobileOpen, onClose }: { isMobileOpen?: bool
                             }}
                         >
                             <Image
-                                src="/logo-custom.png"
+                                src="/logo.png"
                                 alt="TawariApp"
                                 fill
                                 className="object-cover"

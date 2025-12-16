@@ -136,6 +136,26 @@ interface TranslationStrings {
         paymentMethods: string;
         copyright: string;
     };
+    // Get Started Page
+    getStartedPage: {
+        title: string;
+        subtitle: string;
+        patientTitle: string;
+        patientDesc: string;
+        patientFeature1: string;
+        patientFeature2: string;
+        patientFeature3: string;
+        patientCta: string;
+        doctorTitle: string;
+        doctorDesc: string;
+        doctorFeature1: string;
+        doctorFeature2: string;
+        doctorFeature3: string;
+        doctorCta: string;
+        orText: string;
+        alreadyHaveAccount: string;
+        loginHere: string;
+    };
     // Common Dashboard Elements
     common: {
         today: string;
@@ -158,6 +178,43 @@ interface TranslationStrings {
         messages: string;
         darkMode: string;
         lightMode: string;
+        themeAppearance: string;
+        systemTheme: string;
+        time: {
+            justNow: string;
+            minAgo: string;
+            minsAgo: string;
+            hourAgo: string;
+            hoursAgo: string;
+            dayAgo: string;
+            daysAgo: string;
+        };
+        priority: {
+            high: string;
+            medium: string;
+            low: string;
+        };
+        roles: {
+            doctor: string;
+            patient: string;
+            administrator: string;
+        };
+        demoNames: {
+            drHassan: string;
+            drAhmedHassan: string;
+            drOmarKhalil: string;
+            drFatimaKhaled: string;
+            drOmarNasser: string;
+            sarahJohnson: string;
+            mohamedAli: string;
+            fatimaKhaled: string;
+            omarNasser: string;
+            laylaAhmed: string;
+            ahmedHassan: string;
+            nourIbrahim: string;
+            youssefMahmoud: string;
+            adminUser: string;
+        };
     };
     // Doctor Dashboard
     doctorDashboard: {
@@ -250,6 +307,168 @@ interface TranslationStrings {
             wellness: string;
             general: string;
         };
+        consultationsPage: {
+            title: string;
+            subtitle: string;
+            newConsultation: {
+                title: string;
+                subtitle: string;
+                button: string;
+            };
+            joinRoom: {
+                title: string;
+                subtitle: string;
+                placeholder: string;
+                button: string;
+            };
+            active: {
+                title: string;
+                startedAt: string;
+                duration: string;
+                rejoin: string;
+                end: string;
+            };
+            history: {
+                title: string;
+            };
+            types: {
+                initialConsultation: string;
+                followUp: string;
+                ecgReview: string;
+                checkup: string;
+                bloodPressure: string;
+                consultation: string;
+            };
+            timeLabels: {
+                min: string;
+                startedAt: string;
+            };
+        };
+        analyticsPage: {
+            title: string;
+            subtitle: string;
+            stats: {
+                totalPatients: string;
+                consultations: string;
+                revenue: string;
+                avgRating: string;
+            };
+            charts: {
+                weekly: {
+                    title: string;
+                    subtitle: string;
+                    total: string;
+                };
+                satisfaction: {
+                    title: string;
+                    excellent: string;
+                    good: string;
+                    average: string;
+                };
+            };
+            diagnoses: {
+                title: string;
+                patients: string;
+            };
+        };
+        patientsPage: {
+            title: string;
+            subtitle: string;
+            addPatient: string;
+            searchPlaceholder: string;
+            labels: {
+                condition: string;
+                lastVisit: string;
+                ageSuffix: string;
+                yrs: string;
+                last: string;
+            };
+            conditions: {
+                hypertension: string;
+                arrhythmia: string;
+                routineCheckup: string;
+                heartDisease: string;
+                bloodPressure: string;
+                cholesterol: string;
+                palpitations: string;
+                postSurgery: string;
+                generalCheckup: string;
+            };
+            actions: {
+                call: string;
+                chat: string;
+            };
+            emptyState: {
+                title: string;
+                subtitle: string;
+            };
+        };
+        appointmentsPage: {
+            title: string;
+            subtitle: string;
+            newAppointment: string;
+            searchPlaceholder: string;
+            filters: {
+                all: string;
+                upcoming: string;
+                completed: string;
+                cancelled: string;
+            };
+            sections: {
+                today: string;
+                upcoming: string;
+            };
+            tableHeaders: {
+                time: string;
+                patient: string;
+                purpose: string;
+                statusActions: string;
+                dateTime: string;
+                status: string;
+            };
+            status: {
+                inProgress: string;
+                done: string;
+                upcoming: string;
+                scheduled: string;
+            };
+            actions: {
+                join: string;
+                details: string;
+                viewDetails: string;
+            };
+            emptyState: {
+                title: string;
+                subtitle: string;
+            };
+            types: {
+                followUp: string;
+                initialConsultation: string;
+                heartCheckup: string;
+                ecgReview: string;
+                bloodPressureCheck: string;
+                annualCheckup: string;
+                consultation: string;
+                generalCheckup: string;
+            };
+        };
+        messagesPage: {
+            sidebarTitle: string;
+            searchPlaceholder: string;
+            inputPlaceholder: string;
+            online: string;
+            offline: string;
+            demoConversations: {
+                p1: { name: string; lastMessage: string; };
+                p2: { name: string; lastMessage: string; };
+                p3: { name: string; lastMessage: string; };
+                p4: { name: string; lastMessage: string; };
+                p5: { name: string; lastMessage: string; };
+            };
+            demoMessages: {
+                m1: string; m2: string; m3: string; m4: string; m5: string; m6: string; m7: string;
+            };
+        };
     };
     // Patient Dashboard
     patientDashboard: {
@@ -270,6 +489,7 @@ interface TranslationStrings {
             activePrescriptions: string;
             medicalRecords: string;
             unreadMessages: string;
+            healthScore: string;
         };
         sections: {
             nextAppointment: string;
@@ -281,6 +501,111 @@ interface TranslationStrings {
             viewPrescriptions: string;
             medicalRecords: string;
             messageDoctor: string;
+        };
+        actionDesc: {
+            bookAppointment: string;
+            viewPrescriptions: string;
+            messageDoctor: string;
+            medicalRecords: string;
+        };
+        activity: {
+            appointment: string;
+            prescription: string;
+            message: string;
+            record: string;
+        };
+        appointmentsPage: {
+            title: string;
+            subtitle: string;
+            bookNew: string;
+            filters: {
+                all: string;
+                upcoming: string;
+                completed: string;
+            };
+            reschedule: string;
+            cancel: string;
+        };
+        prescriptionsPage: {
+            title: string;
+            subtitle: string;
+            filters: {
+                all: string;
+                active: string;
+                refillNeeded: string;
+                expired: string;
+            };
+            status: {
+                active: string;
+                refillNeeded: string;
+                expired: string;
+            };
+            labels: {
+                prescribedBy: string;
+                refillDate: string;
+                pillsRemaining: string;
+                left: string;
+                pills: string;
+                started: string;
+            };
+            actions: {
+                requestRefill: string;
+                viewDetails: string;
+                refill: string;
+                details: string;
+            };
+            frequency: {
+                daily: string;
+                bedtime: string;
+                beforeBreakfast: string;
+            };
+            instructions: {
+                morningWater: string;
+                withMeals: string;
+                beforeSleep: string;
+                beforeEating: string;
+            };
+        };
+        messagesPage: {
+            sidebarTitle: string;
+            searchPlaceholder: string;
+            inputPlaceholder: string;
+            online: string;
+            offline: string;
+            demoConversations: {
+                p1: { name: string; lastMessage: string; };
+                p2: { name: string; lastMessage: string; };
+                p3: { name: string; lastMessage: string; };
+            };
+            demoMessages: {
+                m1: string; m2: string; m3: string; m4: string; m5: string; m6: string; m7: string;
+            };
+        };
+        recordsPage: {
+            title: string;
+            subtitle: string;
+            filters: {
+                all: string;
+                lab: string;
+                imaging: string;
+                visits: string;
+            };
+            vitals: {
+                title: string;
+                bloodPressure: string;
+                heartRate: string;
+                weight: string;
+                bloodGlucose: string;
+            };
+            status: {
+                new: string;
+                viewed: string;
+            };
+            trends: {
+                stable: string;
+                up: string;
+                down: string;
+            };
         };
     };
     // Admin Dashboard
@@ -320,6 +645,169 @@ interface TranslationStrings {
             viewReports: string;
             systemSettings: string;
         };
+        activity: {
+            registration: string;
+            payment: string;
+            appointment: string;
+            approval: string;
+        };
+        actionDesc: {
+            registerDoctor: string;
+            registerPatient: string;
+            analytics: string;
+            config: string;
+        };
+        system: {
+            allOperational: string;
+            lastChecked: string;
+            uptime: string;
+            satisfaction: string;
+            sessions: string;
+        };
+        usersPage: {
+            title: string;
+            subtitle: string;
+            addUser: string;
+            searchPlaceholder: string;
+            stats: {
+                totalUsers: string;
+                doctors: string;
+                patients: string;
+                admins: string;
+            };
+            filters: {
+                all: string;
+                doctor: string;
+                patient: string;
+                admin: string;
+                active: string;
+                pending: string;
+                inactive: string;
+            };
+            table: {
+                role: string;
+                status: string;
+                joined: string;
+            };
+        };
+        doctorsPage: {
+            title: string;
+            subtitle: string;
+            addDoctor: string;
+            searchPlaceholder: string;
+            stats: {
+                totalDoctors: string;
+                active: string;
+                pending: string;
+                revenue: string;
+            };
+            filters: {
+                all: string;
+                active: string;
+                pending: string;
+                inactive: string;
+            };
+            card: {
+                patients: string;
+                consults: string;
+                revenue: string;
+                viewProfile: string;
+                approve: string;
+            };
+        };
+        patientsPage: {
+            title: string;
+            subtitle: string;
+            addPatient: string;
+            searchPlaceholder: string;
+            stats: {
+                totalPatients: string;
+                active: string;
+                newThisMonth: string;
+                avgAppointments: string;
+            };
+            filters: {
+                all: string;
+                active: string;
+                inactive: string;
+            };
+            card: {
+                age: string;
+                visits: string;
+                primaryDoctor: string;
+                lastVisit: string;
+                viewRecords: string;
+            };
+        };
+        analyticsPage: {
+            title: string;
+            subtitle: string;
+            periods: {
+                week: string;
+                month: string;
+                year: string;
+            };
+            stats: {
+                revenue: string;
+                users: string;
+                appointments: string;
+                session: string;
+            };
+            charts: {
+                revenue: string;
+                traffic: string;
+            };
+            traffic: {
+                direct: string;
+                referral: string;
+                social: string;
+                search: string;
+            };
+            table: {
+                title: string;
+                rank: string;
+                doctor: string;
+                specialty: string;
+                patients: string;
+                revenue: string;
+            };
+        };
+        settingsPage: {
+            title: string;
+            subtitle: string;
+            save: string;
+            saved: string;
+            sections: {
+                general: string;
+                security: string;
+                notifications: string;
+                payment: string;
+                info: string;
+            };
+            items: {
+                maintenance: { label: string; desc: string; };
+                registration: { label: string; desc: string; };
+                doctorApproval: { label: string; desc: string; };
+                emailNotifications: { label: string; desc: string; };
+                twoFactor: { label: string; desc: string; };
+                sessionTimeout: { label: string; desc: string; };
+                ipWhitelist: { label: string; desc: string; };
+                auditLog: { label: string; desc: string; };
+                newUser: { label: string; desc: string; };
+                newDoctor: { label: string; desc: string; };
+                paymentAlerts: { label: string; desc: string; };
+                systemAlerts: { label: string; desc: string; };
+                acceptPayments: { label: string; desc: string; };
+                refunds: { label: string; desc: string; };
+                invoices: { label: string; desc: string; };
+            };
+            info: {
+                version: string;
+                environment: string;
+                lastUpdated: string;
+                dbStatus: string;
+            };
+        };
     };
 }
 
@@ -331,7 +819,7 @@ const translations: Record<Language, TranslationStrings> = {
             doctors: "Doctors",
             forDoctors: "For Doctors",
             login: "Login",
-            getStarted: "Get Started Free",
+            getStarted: "Get Started",
         },
         hero: {
             badge: "Doctors Available 24/7",
@@ -445,6 +933,25 @@ const translations: Record<Language, TranslationStrings> = {
             paymentMethods: "Payment Methods:",
             copyright: "© 2025 TawariApp. All rights reserved. Made with care in Egypt.",
         },
+        getStartedPage: {
+            title: "Get Started with TawariApp",
+            subtitle: "Choose how you want to join our healthcare platform",
+            patientTitle: "I'm a Patient",
+            patientDesc: "Book appointments with top doctors, get prescriptions, and manage your health",
+            patientFeature1: "Video consultations 24/7",
+            patientFeature2: "Digital prescriptions",
+            patientFeature3: "Health records management",
+            patientCta: "Register as Patient",
+            doctorTitle: "I'm a Doctor",
+            doctorDesc: "Join our platform and grow your practice with telemedicine",
+            doctorFeature1: "Reach more patients",
+            doctorFeature2: "Flexible schedule",
+            doctorFeature3: "Secure platform",
+            doctorCta: "Register as Doctor",
+            orText: "or",
+            alreadyHaveAccount: "Already have an account?",
+            loginHere: "Login here",
+        },
         common: {
             today: "Today",
             viewAll: "View All",
@@ -464,8 +971,45 @@ const translations: Record<Language, TranslationStrings> = {
             profile: "Profile",
             notifications: "Notifications",
             messages: "Messages",
-            darkMode: "Dark Mode",
-            lightMode: "Light Mode",
+            darkMode: "Dark",
+            lightMode: "Light",
+            themeAppearance: "Theme Appearance",
+            systemTheme: "System",
+            time: {
+                justNow: "Just now",
+                minAgo: "1 min ago",
+                minsAgo: "mins ago",
+                hourAgo: "1 hour ago",
+                hoursAgo: "hours ago",
+                dayAgo: "1 day ago",
+                daysAgo: "days ago",
+            },
+            priority: {
+                high: "High",
+                medium: "Medium",
+                low: "Low",
+            },
+            roles: {
+                doctor: "Doctor",
+                patient: "Patient",
+                administrator: "Administrator",
+            },
+            demoNames: {
+                drHassan: "Dr. Hassan",
+                drAhmedHassan: "Dr. Ahmed Hassan",
+                drOmarKhalil: "Dr. Omar Khalil",
+                drFatimaKhaled: "Dr. Fatima Khaled",
+                drOmarNasser: "Dr. Omar Nasser",
+                sarahJohnson: "Sarah Johnson",
+                mohamedAli: "Mohamed Ali",
+                fatimaKhaled: "Fatima Khaled",
+                omarNasser: "Omar Nasser",
+                laylaAhmed: "Layla Ahmed",
+                ahmedHassan: "Ahmed Hassan",
+                nourIbrahim: "Nour Ibrahim",
+                youssefMahmoud: "Youssef Mahmoud",
+                adminUser: "Admin User",
+            },
         },
         doctorDashboard: {
             sidebar: {
@@ -548,6 +1092,175 @@ const translations: Record<Language, TranslationStrings> = {
                 wellness: "Wellness",
                 general: "General",
             },
+            consultationsPage: {
+                title: "Consultations",
+                subtitle: "Manage video consultations with patients",
+                newConsultation: {
+                    title: "Start New Consultation",
+                    subtitle: "Begin a video call with your next patient",
+                    button: "Start Video Call"
+                },
+                joinRoom: {
+                    title: "Join by Room Code",
+                    subtitle: "Enter a room code to join an existing session",
+                    placeholder: "Enter room code...",
+                    button: "Join"
+                },
+                active: {
+                    title: "Active Now",
+                    startedAt: "Started at",
+                    duration: "Duration",
+                    rejoin: "Rejoin Call",
+                    end: "End Call"
+                },
+                history: {
+                    title: "Recent Consultations"
+                },
+                types: {
+                    initialConsultation: "Initial Consultation",
+                    followUp: "Follow-up",
+                    ecgReview: "ECG Review",
+                    checkup: "Checkup",
+                    bloodPressure: "Blood Pressure",
+                    consultation: "Consultation"
+                },
+                timeLabels: {
+                    min: "min",
+                    startedAt: "Started at"
+                }
+            },
+            analyticsPage: {
+                title: "Analytics",
+                subtitle: "Track your performance and metrics",
+                stats: {
+                    totalPatients: "Total Patients",
+                    consultations: "Consultations",
+                    revenue: "Revenue (EGP)",
+                    avgRating: "Avg. Rating"
+                },
+                charts: {
+                    weekly: {
+                        title: "Weekly Consultations",
+                        subtitle: "This week's performance",
+                        total: "Total this week"
+                    },
+                    satisfaction: {
+                        title: "Patient Satisfaction",
+                        excellent: "Excellent",
+                        good: "Good",
+                        average: "Average"
+                    }
+                },
+                diagnoses: {
+                    title: "Top Diagnoses This Month",
+                    patients: "patients"
+                }
+            },
+
+            appointmentsPage: {
+                title: "Appointments",
+                subtitle: "Manage your patient appointments",
+                newAppointment: "New Appointment",
+                searchPlaceholder: "Search appointments...",
+                filters: {
+                    all: "All",
+                    upcoming: "Upcoming",
+                    completed: "Completed",
+                    cancelled: "Cancelled"
+                },
+                sections: {
+                    today: "Today",
+                    upcoming: "Upcoming"
+                },
+                tableHeaders: {
+                    time: "Time",
+                    patient: "Patient",
+                    purpose: "Purpose",
+                    statusActions: "Status & Actions",
+                    dateTime: "Date & Time",
+                    status: "Status"
+                },
+                status: {
+                    inProgress: "In Progress",
+                    done: "Done",
+                    upcoming: "Upcoming",
+                    scheduled: "Scheduled"
+                },
+                actions: {
+                    join: "Join",
+                    details: "Details",
+                    viewDetails: "View Details"
+                },
+                emptyState: {
+                    title: "No appointments found",
+                    subtitle: "Try adjusting your search or filters"
+                },
+                types: {
+                    followUp: "Follow-up",
+                    initialConsultation: "Initial Consultation",
+                    heartCheckup: "Heart Checkup",
+                    ecgReview: "ECG Review",
+                    bloodPressureCheck: "Blood Pressure Check",
+                    annualCheckup: "Annual Checkup",
+                    consultation: "Consultation",
+                    generalCheckup: "General Checkup"
+                }
+            },
+            patientsPage: {
+                title: "Patients",
+                subtitle: "registered patients",
+                addPatient: "Add Patient",
+                searchPlaceholder: "Search patients by name or condition...",
+                labels: {
+                    condition: "Condition",
+                    lastVisit: "Last Visit",
+                    ageSuffix: "years old",
+                    yrs: "yrs",
+                    last: "Last"
+                },
+                conditions: {
+                    hypertension: "Hypertension",
+                    arrhythmia: "Arrhythmia",
+                    routineCheckup: "Routine Checkup",
+                    heartDisease: "Heart Disease",
+                    bloodPressure: "Blood Pressure",
+                    cholesterol: "Cholesterol",
+                    palpitations: "Palpitations",
+                    postSurgery: "Post-Surgery",
+                    generalCheckup: "General Checkup"
+                },
+                actions: {
+                    call: "Call",
+                    chat: "Chat"
+                },
+                emptyState: {
+                    title: "No patients found",
+                    subtitle: "Try adjusting your search"
+                }
+            },
+            messagesPage: {
+                sidebarTitle: "Messages",
+                searchPlaceholder: "Search conversations...",
+                inputPlaceholder: "Type a message...",
+                online: "Online",
+                offline: "Offline",
+                demoConversations: {
+                    p1: { name: "Sarah Johnson", lastMessage: "Thank you doctor, I'll take the medication as prescribed." },
+                    p2: { name: "Mohamed Ali", lastMessage: "When should I come for the next appointment?" },
+                    p3: { name: "Fatima Khaled", lastMessage: "I've been feeling much better lately." },
+                    p4: { name: "Omar Nasser", lastMessage: "The ECG results look normal." },
+                    p5: { name: "Layla Ahmed", lastMessage: "Should I continue with the current dosage?" }
+                },
+                demoMessages: {
+                    m1: "Good morning Dr. Hassan, I wanted to ask about my medication.",
+                    m2: "Good morning Sarah! Of course, what would you like to know?",
+                    m3: "I've been experiencing some mild dizziness after taking the blood pressure medication.",
+                    m4: "That can be a common side effect initially. Are you taking it with food?",
+                    m5: "No, I usually take it on an empty stomach in the morning.",
+                    m6: "I recommend taking it with breakfast. This should help reduce the dizziness. If it persists for more than a week, please let me know.",
+                    m7: "Thank you doctor, I'll take the medication as prescribed."
+                }
+            },
         },
         patientDashboard: {
             sidebar: {
@@ -567,6 +1280,7 @@ const translations: Record<Language, TranslationStrings> = {
                 activePrescriptions: "Active Prescriptions",
                 medicalRecords: "Medical Records",
                 unreadMessages: "Unread Messages",
+                healthScore: "Health Score",
             },
             sections: {
                 nextAppointment: "Next Appointment",
@@ -578,6 +1292,118 @@ const translations: Record<Language, TranslationStrings> = {
                 viewPrescriptions: "View Prescriptions",
                 medicalRecords: "Medical Records",
                 messageDoctor: "Message Doctor",
+            },
+            actionDesc: {
+                bookAppointment: "Schedule a visit with your doctor",
+                viewPrescriptions: "Check your active medications",
+                messageDoctor: "Send a message to your care team",
+                medicalRecords: "Access your medical history",
+            },
+            activity: {
+                appointment: "Appointment with",
+                prescription: "Prescription refilled",
+                message: "Message from",
+                record: "Lab results uploaded",
+            },
+
+            appointmentsPage: {
+                title: "My Appointments",
+                subtitle: "View and manage your appointments",
+                bookNew: "Book Appointment",
+                filters: {
+                    all: "All",
+                    upcoming: "Upcoming",
+                    completed: "Completed"
+                },
+                reschedule: "Reschedule",
+                cancel: "Cancel"
+            },
+            prescriptionsPage: {
+                title: "My Prescriptions",
+                subtitle: "Manage your medications and refills",
+                filters: {
+                    all: "All",
+                    active: "Active",
+                    refillNeeded: "Refill Needed",
+                    expired: "Expired"
+                },
+                status: {
+                    active: "Active",
+                    refillNeeded: "Refill Needed",
+                    expired: "Expired"
+                },
+                labels: {
+                    prescribedBy: "Prescribed by",
+                    refillDate: "Refill Date",
+                    pillsRemaining: "Pills Remaining",
+                    left: "Left",
+                    pills: "pills",
+                    started: "Started"
+                },
+                actions: {
+                    requestRefill: "Request Refill",
+                    viewDetails: "View Details",
+                    refill: "Refill",
+                    details: "Details"
+                },
+                frequency: {
+                    daily: "{n} tablets daily",
+                    bedtime: "At bedtime",
+                    beforeBreakfast: "Before breakfast",
+                },
+                instructions: {
+                    morningWater: "Take in the morning with water",
+                    withMeals: "Take with meals",
+                    beforeSleep: "Take before sleep",
+                    beforeEating: "Take 30 mins before eating",
+                }
+            },
+            messagesPage: {
+                sidebarTitle: "Messages",
+                searchPlaceholder: "Search...",
+                inputPlaceholder: "Type a message...",
+                online: "Online",
+                offline: "Offline",
+                demoConversations: {
+                    p1: { name: "Sarah Johnson", lastMessage: "Thank you doctor, I'll take the medication as prescribed." },
+                    p2: { name: "Mohamed Ali", lastMessage: "When should I come for the next appointment?" },
+                    p3: { name: "Fatima Khaled", lastMessage: "I've been feeling much better lately." }
+                },
+                demoMessages: {
+                    m1: "Good morning Dr. Hassan, I wanted to ask about my medication.",
+                    m2: "Good morning Sarah! Of course, what would you like to know?",
+                    m3: "I've been experiencing some mild dizziness after taking the blood pressure medication.",
+                    m4: "That can be a common side effect initially. Are you taking it with food?",
+                    m5: "No, I usually take it on an empty stomach in the morning.",
+                    m6: "I recommend taking it with breakfast. This should help reduce the dizziness. If it persists for more than a week, please let me know.",
+                    m7: "Thank you doctor, I'll take the medication as prescribed."
+                }
+            },
+            recordsPage: {
+                title: "Medical Records",
+                subtitle: "Access your medical history and documents",
+                filters: {
+                    all: "All Records",
+                    lab: "Lab Results",
+                    imaging: "Imaging",
+                    visits: "Visit Summaries"
+                },
+                vitals: {
+                    title: "Latest Vitals",
+                    bloodPressure: "Blood Pressure",
+                    heartRate: "Heart Rate",
+                    weight: "Weight",
+                    bloodGlucose: "Blood Glucose"
+                },
+                status: {
+                    new: "New",
+                    viewed: "Viewed"
+                },
+                trends: {
+                    stable: "Stable",
+                    up: "Up",
+                    down: "Down"
+                }
             },
         },
         adminDashboard: {
@@ -616,6 +1442,169 @@ const translations: Record<Language, TranslationStrings> = {
                 viewReports: "View Reports",
                 systemSettings: "System Settings",
             },
+            activity: {
+                registration: "New doctor registered",
+                payment: "Payment received",
+                appointment: "Patient completed appointment",
+                approval: "Doctor account approved",
+            },
+            actionDesc: {
+                registerDoctor: "Register new doctor",
+                registerPatient: "Register new patient",
+                analytics: "Platform analytics",
+                config: "System config",
+            },
+            system: {
+                allOperational: "All Systems Operational",
+                lastChecked: "Last checked 2 min ago",
+                uptime: "System Uptime",
+                satisfaction: "User Satisfaction",
+                sessions: "Active Sessions",
+            },
+            usersPage: {
+                title: "User Management",
+                subtitle: "Manage all users on the platform",
+                addUser: "Add User",
+                searchPlaceholder: "Search users...",
+                stats: {
+                    totalUsers: "Total Users",
+                    doctors: "Doctors",
+                    patients: "Patients",
+                    admins: "Admins"
+                },
+                filters: {
+                    all: "All",
+                    doctor: "Doctor",
+                    patient: "Patient",
+                    admin: "Admin",
+                    active: "Active",
+                    pending: "Pending",
+                    inactive: "Inactive"
+                },
+                table: {
+                    role: "Role",
+                    status: "Status",
+                    joined: "Joined"
+                }
+            },
+            doctorsPage: {
+                title: "Doctor Management",
+                subtitle: "Manage doctor accounts and approvals",
+                addDoctor: "Add Doctor",
+                searchPlaceholder: "Search doctors by name or specialty...",
+                stats: {
+                    totalDoctors: "Total Doctors",
+                    active: "Active",
+                    pending: "Pending",
+                    revenue: "Revenue"
+                },
+                filters: {
+                    all: "All",
+                    active: "Active",
+                    pending: "Pending",
+                    inactive: "Inactive"
+                },
+                card: {
+                    patients: "Patients",
+                    consults: "Consults",
+                    revenue: "Revenue",
+                    viewProfile: "View Profile",
+                    approve: "Approve"
+                }
+            },
+            patientsPage: {
+                title: "Patient Management",
+                subtitle: "View and manage patient accounts",
+                addPatient: "Add Patient",
+                searchPlaceholder: "Search patients by name, email, or doctor...",
+                stats: {
+                    totalPatients: "Total Patients",
+                    active: "Active",
+                    newThisMonth: "New This Month",
+                    avgAppointments: "Avg. Appointments"
+                },
+                filters: {
+                    all: "All",
+                    active: "Active",
+                    inactive: "Inactive"
+                },
+                card: {
+                    age: "Age",
+                    visits: "Visits",
+                    primaryDoctor: "Primary Doctor",
+                    lastVisit: "Last Visit",
+                    viewRecords: "View Records"
+                }
+            },
+            analyticsPage: {
+                title: "Analytics & Reports",
+                subtitle: "Platform performance and insights",
+                periods: {
+                    week: "Week",
+                    month: "Month",
+                    year: "Year"
+                },
+                stats: {
+                    revenue: "Total Revenue",
+                    users: "Total Users",
+                    appointments: "Appointments",
+                    session: "Avg. Session"
+                },
+                charts: {
+                    revenue: "Revenue Overview (K EGP)",
+                    traffic: "Traffic Sources"
+                },
+                traffic: {
+                    direct: "Direct",
+                    referral: "Referral",
+                    social: "Social Media",
+                    search: "Search"
+                },
+                table: {
+                    title: "Top Performing Doctors",
+                    rank: "Rank",
+                    doctor: "Doctor",
+                    specialty: "Specialty",
+                    patients: "Patients",
+                    revenue: "Revenue"
+                }
+            },
+            settingsPage: {
+                title: "System Settings",
+                subtitle: "Configure platform preferences and features",
+                save: "Save Changes",
+                saved: "Saved!",
+                sections: {
+                    general: "General Settings",
+                    security: "Security Settings",
+                    notifications: "Notifications",
+                    payment: "Payment Settings",
+                    info: "Platform Information"
+                },
+                items: {
+                    maintenance: { label: "Maintenance Mode", desc: "Enable to show maintenance page to users" },
+                    registration: { label: "User Registration", desc: "Allow new users to register on the platform" },
+                    doctorApproval: { label: "Doctor Auto-Approval", desc: "Automatically approve new doctor registrations" },
+                    emailNotifications: { label: "Email Notifications", desc: "Send email notifications for platform events" },
+                    twoFactor: { label: "Two-Factor Authentication", desc: "Require 2FA for all admin accounts" },
+                    sessionTimeout: { label: "Session Timeout", desc: "Automatically log out inactive users after 30 minutes" },
+                    ipWhitelist: { label: "IP Whitelist", desc: "Restrict admin access to whitelisted IPs only" },
+                    auditLog: { label: "Audit Logging", desc: "Log all admin actions for security review" },
+                    newUser: { label: "New User Alerts", desc: "Notify when new users register" },
+                    newDoctor: { label: "Doctor Registration", desc: "Notify when doctors await approval" },
+                    paymentAlerts: { label: "Payment Alerts", desc: "Notify for payment transactions" },
+                    systemAlerts: { label: "System Alerts", desc: "Critical system notifications" },
+                    acceptPayments: { label: "Accept Payments", desc: "Enable payment processing on the platform" },
+                    refunds: { label: "Automatic Refunds", desc: "Process refunds for cancelled appointments" },
+                    invoices: { label: "Generate Invoices", desc: "Automatically generate PDF invoices" }
+                },
+                info: {
+                    version: "Version",
+                    environment: "Environment",
+                    lastUpdated: "Last Updated",
+                    dbStatus: "Database Status"
+                }
+            },
         },
     },
     ar: {
@@ -625,7 +1614,7 @@ const translations: Record<Language, TranslationStrings> = {
             doctors: "الأطباء",
             forDoctors: "للأطباء",
             login: "تسجيل الدخول",
-            getStarted: "ابدأ مجاناً",
+            getStarted: "ابدأ الآن",
         },
         hero: {
             badge: "أطباء متاحون على مدار الساعة",
@@ -739,6 +1728,25 @@ const translations: Record<Language, TranslationStrings> = {
             paymentMethods: "طرق الدفع:",
             copyright: "© ٢٠٢٥ تواري. جميع الحقوق محفوظة. صنع بعناية في مصر.",
         },
+        getStartedPage: {
+            title: "ابدأ مع طوارئ",
+            subtitle: "اختر كيف تريد الانضمام إلى منصتنا الصحية",
+            patientTitle: "أنا مريض",
+            patientDesc: "احجز مواعيد مع أفضل الأطباء، واحصل على الوصفات الطبية، وأدر صحتك",
+            patientFeature1: "استشارات فيديو على مدار الساعة",
+            patientFeature2: "وصفات طبية رقمية",
+            patientFeature3: "إدارة السجلات الصحية",
+            patientCta: "التسجيل كمريض",
+            doctorTitle: "أنا طبيب",
+            doctorDesc: "انضم إلى منصتنا ووسّع ممارستك الطبية عبر الطب عن بُعد",
+            doctorFeature1: "الوصول لمزيد من المرضى",
+            doctorFeature2: "جدول مرن",
+            doctorFeature3: "منصة آمنة",
+            doctorCta: "التسجيل كطبيب",
+            orText: "أو",
+            alreadyHaveAccount: "لديك حساب بالفعل؟",
+            loginHere: "سجل دخولك هنا",
+        },
         common: {
             today: "اليوم",
             viewAll: "عرض الكل",
@@ -758,8 +1766,45 @@ const translations: Record<Language, TranslationStrings> = {
             profile: "الملف الشخصي",
             notifications: "الإشعارات",
             messages: "الرسائل",
-            darkMode: "الوضع الداكن",
-            lightMode: "الوضع الفاتح",
+            darkMode: "داكن",
+            lightMode: "فاتح",
+            themeAppearance: "مظهر السمة",
+            systemTheme: "النظام",
+            time: {
+                justNow: "الآن",
+                minAgo: "منذ دقيقة",
+                minsAgo: "منذ دقائق",
+                hourAgo: "منذ ساعة",
+                hoursAgo: "منذ ساعات",
+                dayAgo: "منذ يوم",
+                daysAgo: "منذ أيام",
+            },
+            priority: {
+                high: "عالية",
+                medium: "متوسطة",
+                low: "منخفضة",
+            },
+            roles: {
+                doctor: "طبيب",
+                patient: "مريض",
+                administrator: "مدير النظام",
+            },
+            demoNames: {
+                drHassan: "د. حسن",
+                drAhmedHassan: "د. أحمد حسن",
+                drOmarKhalil: "د. عمر خليل",
+                drFatimaKhaled: "د. فاطمة خالد",
+                drOmarNasser: "د. عمر ناصر",
+                sarahJohnson: "سارة جونسون",
+                mohamedAli: "محمد علي",
+                fatimaKhaled: "فاطمة خالد",
+                omarNasser: "عمر ناصر",
+                laylaAhmed: "ليلى أحمد",
+                ahmedHassan: "أحمد حسن",
+                nourIbrahim: "نور إبراهيم",
+                youssefMahmoud: "يوسف محمود",
+                adminUser: "مدير النظام",
+            },
         },
         doctorDashboard: {
             sidebar: {
@@ -842,6 +1887,175 @@ const translations: Record<Language, TranslationStrings> = {
                 wellness: "صحة",
                 general: "عام",
             },
+            consultationsPage: {
+                title: "الاستشارات",
+                subtitle: "إدارة استشارات الفيديو مع المرضى",
+                newConsultation: {
+                    title: "بدء استشارة جديدة",
+                    subtitle: "ابدأ مكالمة فيديو مع مريضك التالي",
+                    button: "بدء مكالمة فيديو"
+                },
+                joinRoom: {
+                    title: "انضمام برمز الغرفة",
+                    subtitle: "أدخل رمز الغرفة للانضمام إلى جلسة موجودة",
+                    placeholder: "أدخل رمز الغرفة...",
+                    button: "انضمام"
+                },
+                active: {
+                    title: "نشط الآن",
+                    startedAt: "بدأت في",
+                    duration: "المدة",
+                    rejoin: "إعادة الانضمام",
+                    end: "إنهاء المكالمة"
+                },
+                history: {
+                    title: "الاستشارات الأخيرة"
+                },
+                types: {
+                    initialConsultation: "استشارة أولية",
+                    followUp: "متابعة",
+                    ecgReview: "مراجعة تخطيط القلب",
+                    checkup: "فحص",
+                    bloodPressure: "ضغط الدم",
+                    consultation: "استشارة"
+                },
+                timeLabels: {
+                    min: "دقيقة",
+                    startedAt: "بدأت في"
+                }
+            },
+            analyticsPage: {
+                title: "التحليلات",
+                subtitle: "تتبع أدائك ومقاييسك",
+                stats: {
+                    totalPatients: "إجمالي المرضى",
+                    consultations: "الاستشارات",
+                    revenue: "الإيرادات (ج.م)",
+                    avgRating: "متوسط التقييم"
+                },
+                charts: {
+                    weekly: {
+                        title: "الاستشارات الأسبوعية",
+                        subtitle: "أداء هذا الأسبوع",
+                        total: "المجموع هذا الأسبوع"
+                    },
+                    satisfaction: {
+                        title: "رضا المرضى",
+                        excellent: "ممتاز",
+                        good: "جيد",
+                        average: "متوسط"
+                    }
+                },
+                diagnoses: {
+                    title: "أهم التشخيصات هذا الشهر",
+                    patients: "مرضى"
+                }
+            },
+
+            appointmentsPage: {
+                title: "المواعيد",
+                subtitle: "إدارة مواعيد مرضاك",
+                newAppointment: "موعد جديد",
+                searchPlaceholder: "البحث في المواعيد...",
+                filters: {
+                    all: "الكل",
+                    upcoming: "قادمة",
+                    completed: "مكتملة",
+                    cancelled: "ملغاة"
+                },
+                sections: {
+                    today: "اليوم",
+                    upcoming: "القادمة"
+                },
+                tableHeaders: {
+                    time: "الوقت",
+                    patient: "المريض",
+                    purpose: "الغرض",
+                    statusActions: "الحالة والإجراءات",
+                    dateTime: "التاريخ والوقت",
+                    status: "الحالة"
+                },
+                status: {
+                    inProgress: "جاري",
+                    done: "تم",
+                    upcoming: "قادم",
+                    scheduled: "مجدول"
+                },
+                actions: {
+                    join: "انضمام",
+                    details: "تفاصيل",
+                    viewDetails: "عرض التفاصيل"
+                },
+                emptyState: {
+                    title: "لا توجد مواعيد",
+                    subtitle: "حاول تعديل البحث أو التصنيفات"
+                },
+                types: {
+                    followUp: "متابعة",
+                    initialConsultation: "استشارة أولية",
+                    heartCheckup: "فحص القلب",
+                    ecgReview: "مراجعة تخطيط القلب",
+                    bloodPressureCheck: "فحص ضغط الدم",
+                    annualCheckup: "فحص سنوي",
+                    consultation: "استشارة",
+                    generalCheckup: "فحص عام"
+                }
+            },
+            patientsPage: {
+                title: "المرضى",
+                subtitle: "مرضى مسجلين",
+                addPatient: "إضافة مريض",
+                searchPlaceholder: "البحث عن المرضى بالاسم أو الحالة...",
+                labels: {
+                    condition: "الحالة",
+                    lastVisit: "آخر زيارة",
+                    ageSuffix: "سنة",
+                    yrs: "سنة",
+                    last: "آخر زيارة"
+                },
+                conditions: {
+                    hypertension: "ارتفاع ضغط الدم",
+                    arrhythmia: "عدم انتظام ضربات القلب",
+                    routineCheckup: "فحص روتيني",
+                    heartDisease: "أمراض القلب",
+                    bloodPressure: "ضغط الدم",
+                    cholesterol: "الكوليسترول",
+                    palpitations: "خفقان القلب",
+                    postSurgery: "ما بعد الجراحة",
+                    generalCheckup: "فحص عام"
+                },
+                actions: {
+                    call: "اتصال",
+                    chat: "دردشة"
+                },
+                emptyState: {
+                    title: "لا يوجد مرضى",
+                    subtitle: "حاول تغيير كلمات البحث"
+                }
+            },
+            messagesPage: {
+                sidebarTitle: "الرسائل",
+                searchPlaceholder: "بحث في المحادثات...",
+                inputPlaceholder: "اكتب رسالة...",
+                online: "متصل",
+                offline: "غير متصل",
+                demoConversations: {
+                    p1: { name: "سارة جونسون", lastMessage: "شكراً دكتور، سأتناول الدواء كما هو موصوف." },
+                    p2: { name: "محمد علي", lastMessage: "متى يجب أن آتي للموعد القادم؟" },
+                    p3: { name: "فاطمة خالد", lastMessage: "أشعر بتحسن كبير مؤخراً." },
+                    p4: { name: "عمر ناصر", lastMessage: "نتائج تخطيط القلب تبدو طبيعية." },
+                    p5: { name: "ليلى أحمد", lastMessage: "هل يجب أن أستمر بالجرعة الحالية؟" }
+                },
+                demoMessages: {
+                    m1: "صباح الخير د. حسن، أردت أن أسألك عن دوائي.",
+                    m2: "صباح الخير سارة! بالطبع، ماذا تريدين أن تعرفي؟",
+                    m3: "كنت أشعر ببعض الدوار الخفيف بعد تناول دواء ضغط الدم.",
+                    m4: "يمكن أن يكون ذلك أثراً جانبياً شائعاً في البداية. هل تتناولينه مع الطعام؟",
+                    m5: "لا، عادة ما أتناوله على معدة فارغة في الصباح.",
+                    m6: "أنصح بتناوله مع وجبة الإفطار. هذا سيساعد في تقليل الدوار. إذا استمر لأكثر من أسبوع، يرجى إخباري.",
+                    m7: "شكراً دكتور، سأتناول الدواء كما هو موصوف."
+                }
+            },
         },
         patientDashboard: {
             sidebar: {
@@ -861,6 +2075,7 @@ const translations: Record<Language, TranslationStrings> = {
                 activePrescriptions: "الوصفات النشطة",
                 medicalRecords: "السجلات الطبية",
                 unreadMessages: "رسائل غير مقروءة",
+                healthScore: "نقاط الصحة",
             },
             sections: {
                 nextAppointment: "الموعد التالي",
@@ -872,6 +2087,118 @@ const translations: Record<Language, TranslationStrings> = {
                 viewPrescriptions: "عرض الوصفات",
                 medicalRecords: "السجلات الطبية",
                 messageDoctor: "مراسلة الطبيب",
+            },
+            actionDesc: {
+                bookAppointment: "حدد موعدًا لزيارة طبيبك",
+                viewPrescriptions: "تحقق من أدويتك النشطة",
+                messageDoctor: "أرسل رسالة إلى فريق الرعاية الخاص بك",
+                medicalRecords: "الوصول إلى سجلك الطبي",
+            },
+            activity: {
+                appointment: "موعد مع",
+                prescription: "تم تجديد الوصفة",
+                message: "رسالة من",
+                record: "تم رفع نتائج المختبر",
+            },
+
+            appointmentsPage: {
+                title: "مواعيدي",
+                subtitle: "عرض وإدارة المواعيد الخاصة بك",
+                bookNew: "حجز موعد",
+                filters: {
+                    all: "الكل",
+                    upcoming: "قادمة",
+                    completed: "مكتملة"
+                },
+                reschedule: "إعادة جدولة",
+                cancel: "إلغاء"
+            },
+            prescriptionsPage: {
+                title: "وصفاتي الطبية",
+                subtitle: "إدارة أدويتك وطلبات إعادة التعبئة",
+                filters: {
+                    all: "الكل",
+                    active: "نشطة",
+                    refillNeeded: "بحاجة لتجديد",
+                    expired: "منتهية"
+                },
+                status: {
+                    active: "نشطة",
+                    refillNeeded: "بحاجة لتجديد",
+                    expired: "منتهية"
+                },
+                labels: {
+                    prescribedBy: "وصفها",
+                    refillDate: "تاريخ التجديد",
+                    pillsRemaining: "الحبوب المتبقية",
+                    left: "متبقي",
+                    pills: "حبة",
+                    started: "بدأ في"
+                },
+                actions: {
+                    requestRefill: "طلب تجديد",
+                    viewDetails: "عرض التفاصيل",
+                    refill: "تجديد",
+                    details: "تفاصيل"
+                },
+                frequency: {
+                    daily: "{n} أقراص يومياً",
+                    bedtime: "عند النوم",
+                    beforeBreakfast: "قبل الإفطار",
+                },
+                instructions: {
+                    morningWater: "يؤخذ صباحاً مع الماء",
+                    withMeals: "يؤخذ مع الأكل",
+                    beforeSleep: "يؤخذ قبل النوم",
+                    beforeEating: "يؤخذ قبل الأكل بـ 30 دقيقة",
+                }
+            },
+            messagesPage: {
+                sidebarTitle: "الرسائل",
+                searchPlaceholder: "بحث...",
+                inputPlaceholder: "اكتب رسالة...",
+                online: "متصل",
+                offline: "غير متصل",
+                demoConversations: {
+                    p1: { name: "سارة جونسون", lastMessage: "شكراً دكتور، سأتناول الدواء كما هو موصوف." },
+                    p2: { name: "محمد علي", lastMessage: "متى يجب أن آتي للموعد القادم؟" },
+                    p3: { name: "فاطمة خالد", lastMessage: "أشعر بتحسن كبير مؤخراً." }
+                },
+                demoMessages: {
+                    m1: "صباح الخير د. حسن، أردت أن أسألك عن دوائي.",
+                    m2: "صباح الخير سارة! بالطبع، ماذا تريدين أن تعرفي؟",
+                    m3: "كنت أشعر ببعض الدوار الخفيف بعد تناول دواء ضغط الدم.",
+                    m4: "يمكن أن يكون ذلك أثراً جانبياً شائعاً في البداية. هل تتناولينه مع الطعام؟",
+                    m5: "لا، عادة ما أتناوله على معدة فارغة في الصباح.",
+                    m6: "أنصح بتناوله مع وجبة الإفطار. هذا سيساعد في تقليل الدوار. إذا استمر لأكثر من أسبوع، يرجى إخباري.",
+                    m7: "شكراً دكتور، سأتناول الدواء كما هو موصوف."
+                }
+            },
+            recordsPage: {
+                title: "السجلات الطبية",
+                subtitle: "الوصول إلى سجلك الطبي والمستندات",
+                filters: {
+                    all: "كل السجلات",
+                    lab: "نتائج المختبر",
+                    imaging: "الأشعة والصور",
+                    visits: "ملخصات الزيارة"
+                },
+                vitals: {
+                    title: "المؤشرات الحيوية",
+                    bloodPressure: "ضغط الدم",
+                    heartRate: "معدل ضربات القلب",
+                    weight: "الوزن",
+                    bloodGlucose: "سكر الدم"
+                },
+                status: {
+                    new: "جديد",
+                    viewed: "تم عرضه"
+                },
+                trends: {
+                    stable: "مستقر",
+                    up: "مرتفع",
+                    down: "منخفض"
+                }
             },
         },
         adminDashboard: {
@@ -910,7 +2237,171 @@ const translations: Record<Language, TranslationStrings> = {
                 viewReports: "عرض التقارير",
                 systemSettings: "إعدادات النظام",
             },
+            activity: {
+                registration: "تسجيل طبيب جديد",
+                payment: "تم استلام الدفعة",
+                appointment: "أكمل المريض الموعد",
+                approval: "تمت الموافقة على حساب الطبيب",
+            },
+            actionDesc: {
+                registerDoctor: "تسجيل طبيب جديد",
+                registerPatient: "تسجيل مريض جديد",
+                analytics: "تحليلات المنصة",
+                config: "تكوين النظام",
+            },
+            system: {
+                allOperational: "جميع الأنظمة تعمل",
+                lastChecked: "آخر فحص قبل دقيقتين",
+                uptime: "وقت التشغيل",
+                satisfaction: "رضا المستخدمين",
+                sessions: "جلسات نشطة",
+            },
+            usersPage: {
+                title: "إدارة المستخدمين",
+                subtitle: "إدارة جميع المستخدمين في المنصة",
+                addUser: "إضافة مستخدم",
+                searchPlaceholder: "البحث عن المستخدمين...",
+                stats: {
+                    totalUsers: "إجمالي المستخدمين",
+                    doctors: "الأطباء",
+                    patients: "المرضى",
+                    admins: "المسؤولين"
+                },
+                filters: {
+                    all: "الكل",
+                    doctor: "طبيب",
+                    patient: "مريض",
+                    admin: "مشرف",
+                    active: "نشط",
+                    pending: "معلق",
+                    inactive: "غير نشط"
+                },
+                table: {
+                    role: "الدور",
+                    status: "الحالة",
+                    joined: "تاريخ الانضمام"
+                }
+            },
+            doctorsPage: {
+                title: "إدارة الأطباء",
+                subtitle: "إدارة حسابات الأطباء والموافقة عليها",
+                addDoctor: "إضافة طبيب",
+                searchPlaceholder: "البحث عن الأطباء بالاسم أو التخصص...",
+                stats: {
+                    totalDoctors: "إجمالي الأطباء",
+                    active: "نشط",
+                    pending: "معلق",
+                    revenue: "الإيرادات"
+                },
+                filters: {
+                    all: "الكل",
+                    active: "نشط",
+                    pending: "معلق",
+                    inactive: "غير نشط"
+                },
+                card: {
+                    patients: "المرضى",
+                    consults: "الاستشارات",
+                    revenue: "الإيرادات",
+                    viewProfile: "عرض الملف الشخصي",
+                    approve: "موافقة"
+                }
+            },
+            patientsPage: {
+                title: "إدارة المرضى",
+                subtitle: "عرض وإدارة حسابات المرضى",
+                addPatient: "إضافة مريض",
+                searchPlaceholder: "البحث عن المرضى بالاسم أو البريد الإلكتروني أو الطبيب...",
+                stats: {
+                    totalPatients: "إجمالي المرضى",
+                    active: "نشط",
+                    newThisMonth: "جديد هذا الشهر",
+                    avgAppointments: "متوسط المواعيد"
+                },
+                filters: {
+                    all: "الكل",
+                    active: "نشط",
+                    inactive: "غير نشط"
+                },
+                card: {
+                    age: "العمر",
+                    visits: "الزيارات",
+                    primaryDoctor: "الطبيب المعالج",
+                    lastVisit: "آخر زيارة",
+                    viewRecords: "عرض السجلات"
+                }
+            },
+            analyticsPage: {
+                title: "التحليلات والتقارير",
+                subtitle: "أداء المنصة والرؤى",
+                periods: {
+                    week: "أسبوع",
+                    month: "شهر",
+                    year: "سنة"
+                },
+                stats: {
+                    revenue: "إجمالي الإيرادات",
+                    users: "إجمالي المستخدمين",
+                    appointments: "المواعيد",
+                    session: "متوسط الجلسة"
+                },
+                charts: {
+                    revenue: "نظرة عامة على الإيرادات (ألف جنيه)",
+                    traffic: "مصادر الزيارات"
+                },
+                traffic: {
+                    direct: "مباشر",
+                    referral: "إحالة",
+                    social: "وسائل التواصل",
+                    search: "بحث"
+                },
+                table: {
+                    title: "أفضل الأطباء أداءً",
+                    rank: "الترتيب",
+                    doctor: "الطبيب",
+                    specialty: "التخصص",
+                    patients: "المرضى",
+                    revenue: "الإيرادات"
+                }
+            },
+            settingsPage: {
+                title: "إعدادات النظام",
+                subtitle: "تكوين تفضيلات وميزات المنصة",
+                save: "حفظ التغييرات",
+                saved: "تم الحفظ!",
+                sections: {
+                    general: "الإعدادات العامة",
+                    security: "إعدادات الأمان",
+                    notifications: "الإشعارات",
+                    payment: "إعدادات الدفع",
+                    info: "معلومات المنصة"
+                },
+                items: {
+                    maintenance: { label: "وضع الصيانة", desc: "تمكين لعرض صفحة الصيانة للمستخدمين" },
+                    registration: { label: "تسجيل المستخدمين", desc: "السماح للمستخدمين الجدد بالتسجيل في المنصة" },
+                    doctorApproval: { label: "الموافقة التلقائية للطبيب", desc: "الموافقة التلقائية على تسجيلات الأطباء الجديدة" },
+                    emailNotifications: { label: "إشعارات البريد الإلكتروني", desc: "إرسال إشعارات البريد الإلكتروني لأحداث المنصة" },
+                    twoFactor: { label: "المصادقة الثنائية", desc: "تطلب المصادقة الثنائية لجميع حسابات المسؤولين" },
+                    sessionTimeout: { label: "مهلة الجلسة", desc: "تسجيل خروج المستخدمين غير النشطين تلقائيًا بعد 30 دقيقة" },
+                    ipWhitelist: { label: "القائمة البيضاء للـ IP", desc: "قصر الوصول الإداري على عناوين IP المدرجة في القائمة البيضاء فقط" },
+                    auditLog: { label: "سجل التدقيق", desc: "سجل جميع إجراءات المسؤول لمراجعة الأمان" },
+                    newUser: { label: "تنبيهات مستخدم جديد", desc: "إعلام عند تسجيل مستخدمين جدد" },
+                    newDoctor: { label: "تسجيل طبيب", desc: "إعلام عندما ينتظر الأطباء الموافقة" },
+                    paymentAlerts: { label: "تنبيهات الدفع", desc: "إعلام لمعاملات الدفع" },
+                    systemAlerts: { label: "تنبيهات النظام", desc: "إشعارات النظام الحرجة" },
+                    acceptPayments: { label: "قبول المدفوعات", desc: "تمكين معالجة الدفع على المنصة" },
+                    refunds: { label: "المبالغ المستردة التلقائية", desc: "معالجة المبالغ المستردة للمواعيد الملغاة" },
+                    invoices: { label: "إنشاء الفواتير", desc: "إنشاء فواتير PDF تلقائيًا" }
+                },
+                info: {
+                    version: "الإصدار",
+                    environment: "البيئة",
+                    lastUpdated: "آخر تحديث",
+                    dbStatus: "حالة قاعدة البيانات"
+                }
+            },
         },
+
     },
 };
 
@@ -919,6 +2410,8 @@ interface I18nContextType {
     setLanguage: (lang: Language) => void;
     t: TranslationStrings;
     isRTL: boolean;
+    formatNumber: (num: number | string) => string;
+    formatDate: (date: string | Date, options?: Intl.DateTimeFormatOptions) => string;
 }
 
 const I18nContext = createContext<I18nContextType | undefined>(undefined);
@@ -948,11 +2441,40 @@ export function I18nProvider({ children, locale }: { children: React.ReactNode; 
         }
     };
 
+    const formatNumber = (num: number | string): string => {
+        if (!num && num !== 0) return "";
+        const str = num.toString();
+        if (language === "ar") {
+            return str.replace(/\d/g, (d) => "٠١٢٣٤٥٦٧٨٩"[parseInt(d)]);
+        }
+        return str;
+    };
+
+    const formatDate = (date: string | Date, options?: Intl.DateTimeFormatOptions): string => {
+        if (!date) return "";
+        try {
+            const d = new Date(date);
+            if (isNaN(d.getTime())) return date.toString(); // Return original if invalid date
+
+            const defaultOptions: Intl.DateTimeFormatOptions = {
+                day: 'numeric',
+                month: 'short',
+                year: 'numeric'
+            };
+
+            return new Intl.DateTimeFormat(language === 'ar' ? 'ar-EG' : 'en-US', options || defaultOptions).format(d);
+        } catch (e) {
+            return date.toString();
+        }
+    };
+
     const value: I18nContextType = {
         language,
         setLanguage,
         t: translations[language],
         isRTL: language === "ar",
+        formatNumber,
+        formatDate,
     };
 
     return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>;

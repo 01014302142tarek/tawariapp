@@ -128,7 +128,7 @@ const ProgressBar = ({ value, max, isDark = true }: { value: number; max: number
 
 export default function AdminDashboard() {
     const { theme } = useTheme();
-    const { t, language, isRTL } = useI18n();
+    const { t, language, isRTL, formatNumber } = useI18n();
     const isDark = theme === "dark";
 
     const time = new Date().getHours();
@@ -136,16 +136,16 @@ export default function AdminDashboard() {
     const greeting = t.doctorDashboard.greeting[greetingKey as keyof typeof t.doctorDashboard.greeting];
 
     const pendingApprovals = [
-        { id: 1, name: "Dr. Sarah Ahmed", email: "sarah.ahmed@email.com", specialty: "Dermatologist", image: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=100&h=100&fit=crop&crop=face", date: "2 hours ago" },
-        { id: 2, name: "Dr. Omar Khalil", email: "omar.khalil@email.com", specialty: "Neurologist", image: "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=100&h=100&fit=crop&crop=face", date: "5 hours ago" },
-        { id: 3, name: "Dr. Fatima Hassan", email: "fatima.h@email.com", specialty: "Pediatrician", image: "https://images.unsplash.com/photo-1594824476967-48c8b964273f?w=100&h=100&fit=crop&crop=face", date: "1 day ago" },
+        { id: 1, name: "Dr. Sarah Ahmed", email: "sarah.ahmed@email.com", specialty: "Dermatologist", image: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=100&h=100&fit=crop&crop=face", date: isRTL ? `منذ ${formatNumber(2)} ساعات` : `2 ${t.common.time.hoursAgo}` },
+        { id: 2, name: "Dr. Omar Khalil", email: "omar.khalil@email.com", specialty: "Neurologist", image: "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=100&h=100&fit=crop&crop=face", date: isRTL ? `منذ ${formatNumber(5)} ساعات` : `5 ${t.common.time.hoursAgo}` },
+        { id: 3, name: "Dr. Fatima Hassan", email: "fatima.h@email.com", specialty: "Pediatrician", image: "https://images.unsplash.com/photo-1594824476967-48c8b964273f?w=100&h=100&fit=crop&crop=face", date: t.common.time.dayAgo },
     ];
 
     const recentActivity = [
-        { id: 1, action: "New doctor registered", name: "Dr. Ahmed Hassan", time: "10 min ago", type: "registration" },
-        { id: 2, action: "Payment received", name: "EGP 500", time: "25 min ago", type: "payment" },
-        { id: 3, action: "Patient completed appointment", name: "Sarah Johnson", time: "1 hour ago", type: "appointment" },
-        { id: 4, action: "Doctor account approved", name: "Dr. Layla Nasser", time: "3 hours ago", type: "approval" },
+        { id: 1, action: t.adminDashboard.activity.registration, name: t.common.demoNames.drAhmedHassan, time: isRTL ? `منذ ${formatNumber(10)} دقائق` : `10 ${t.common.time.minsAgo}`, type: "registration" },
+        { id: 2, action: t.adminDashboard.activity.payment, name: isRTL ? `٥٠٠ ج.م` : "EGP 500", time: isRTL ? `منذ ${formatNumber(25)} دقيقة` : `25 ${t.common.time.minsAgo}`, type: "payment" },
+        { id: 3, action: t.adminDashboard.activity.appointment, name: t.common.demoNames.sarahJohnson, time: t.common.time.hourAgo, type: "appointment" },
+        { id: 4, action: t.adminDashboard.activity.approval, name: isRTL ? "د. ليلى ناصر" : "Dr. Layla Nasser", time: isRTL ? `منذ ${formatNumber(3)} ساعات` : `3 ${t.common.time.hoursAgo}`, type: "approval" },
     ];
 
     return (
@@ -173,7 +173,7 @@ export default function AdminDashboard() {
                 {/* Greeting */}
                 <section className="mb-6 md:mb-8">
                     <h2 className={cn("text-2xl md:text-3xl font-bold mb-2 flex items-center gap-3", isDark ? "text-white" : "text-slate-900")}>
-                        {greeting}, Admin {Icons.hand}
+                        {greeting}, {isRTL ? "مدير" : "Admin"} {Icons.hand}
                     </h2>
                     <p className={cn("text-base md:text-lg", isDark ? "text-gray-400" : "text-gray-600")}>
                         {t.adminDashboard.greeting.subtitle}
@@ -187,7 +187,7 @@ export default function AdminDashboard() {
                             { label: t.adminDashboard.stats.totalUsers, value: 1247, change: "+12%", icon: Icons.users, color: "teal" },
                             { label: t.adminDashboard.stats.totalDoctors, value: 89, change: "+5%", icon: Icons.doctor, color: "emerald" },
                             { label: t.adminDashboard.stats.totalPatients, value: 1158, change: "+18%", icon: Icons.patient, color: "blue" },
-                            { label: t.adminDashboard.stats.totalRevenue, value: 45600, suffix: " EGP", change: "+23%", icon: Icons.money, color: "amber" },
+                            { label: t.adminDashboard.stats.totalRevenue, value: 45600, suffix: isRTL ? " ج.م" : " EGP", change: "+23%", icon: Icons.money, color: "amber" },
                         ].map((stat, idx) => (
                             <GlowingCard key={idx} glowColor="teal" className="p-3 md:p-5" isDark={isDark}>
                                 <div className="flex items-start justify-between mb-2 md:mb-4">
@@ -198,12 +198,12 @@ export default function AdminDashboard() {
                                     </div>
                                     <div className="flex items-center gap-0.5 md:gap-1 text-emerald-500 text-xs md:text-sm font-medium">
                                         {Icons.arrowUp}
-                                        {stat.change}
+                                        {formatNumber(stat.change)}
                                     </div>
                                 </div>
                                 <div className="flex items-baseline gap-0.5 md:gap-1">
                                     <span className={cn("text-xl md:text-3xl font-bold", isDark ? "text-white" : "text-slate-900")}>
-                                        <AnimatedNumber value={stat.value} />
+                                        <AnimatedNumber value={stat.value} format={(v) => formatNumber(v)} />
                                     </span>
                                     {stat.suffix && <span className={cn("text-xs md:text-lg", isDark ? "text-gray-400" : "text-gray-500")}>{stat.suffix}</span>}
                                 </div>
@@ -225,7 +225,7 @@ export default function AdminDashboard() {
                                     </div>
                                     <div>
                                         <h3 className={cn("font-semibold", isDark ? "text-white" : "text-slate-900")}>{t.adminDashboard.stats.pendingApprovals}</h3>
-                                        <p className={cn("text-sm", isDark ? "text-gray-500" : "text-gray-600")}>{pendingApprovals.length} awaiting review</p>
+                                        <p className={cn("text-sm", isDark ? "text-gray-500" : "text-gray-600")}>{formatNumber(pendingApprovals.length)} awaiting review</p>
                                     </div>
                                 </div>
                                 <Link href="/dashboard/admin/doctors" className="text-teal-500 hover:text-teal-400 text-sm font-medium">
@@ -284,8 +284,8 @@ export default function AdminDashboard() {
                                         <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500" />
                                     </span>
                                     <div>
-                                        <p className={cn("text-sm font-medium", isDark ? "text-white" : "text-slate-900")}>All Systems Operational</p>
-                                        <p className={cn("text-xs", isDark ? "text-gray-500" : "text-gray-600")}>Last checked 2 min ago</p>
+                                        <p className={cn("text-sm font-medium", isDark ? "text-white" : "text-slate-900")}>{t.adminDashboard.system.allOperational}</p>
+                                        <p className={cn("text-xs", isDark ? "text-gray-500" : "text-gray-600")}>{t.adminDashboard.system.lastChecked}</p>
                                     </div>
                                 </div>
                             </div>
@@ -293,16 +293,16 @@ export default function AdminDashboard() {
                             {/* Metrics */}
                             <div className="space-y-4">
                                 {[
-                                    { label: "System Uptime", current: 99.9, max: 100, color: "emerald" },
-                                    { label: "User Satisfaction", current: 94, max: 100, color: "teal" },
-                                    { label: "Active Sessions", current: 156, max: 200, color: "blue" },
+                                    { label: t.adminDashboard.system.uptime, current: 99.9, max: 100, color: "emerald" },
+                                    { label: t.adminDashboard.system.satisfaction, current: 94, max: 100, color: "teal" },
+                                    { label: t.adminDashboard.system.sessions, current: 156, max: 200, color: "blue" },
                                 ].map((metric, idx) => {
                                     const percentage = Math.round((metric.current / metric.max) * 100);
                                     return (
                                         <div key={idx}>
                                             <div className="flex items-center justify-between mb-2">
                                                 <span className={cn("text-sm", isDark ? "text-gray-400" : "text-gray-600")}>{metric.label}</span>
-                                                <span className={cn("text-sm font-medium", isDark ? "text-white" : "text-slate-900")}>{percentage}%</span>
+                                                <span className={cn("text-sm font-medium", isDark ? "text-white" : "text-slate-900")}>{formatNumber(percentage)}%</span>
                                             </div>
                                             <ProgressBar value={metric.current} max={metric.max} color={metric.color} isDark={isDark} />
                                         </div>
@@ -353,10 +353,10 @@ export default function AdminDashboard() {
                     <h3 className={cn("text-lg font-semibold mb-4", isDark ? "text-white" : "text-slate-900")}>{t.adminDashboard.sections.quickActions}</h3>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
                         {[
-                            { title: t.adminDashboard.actions.addDoctor, description: "Register new doctor", icon: Icons.doctor, href: "/dashboard/admin/doctors" },
-                            { title: t.adminDashboard.actions.addPatient, description: "Register new patient", icon: Icons.patient, href: "/dashboard/admin/patients" },
-                            { title: t.adminDashboard.actions.viewReports, description: "Platform analytics", icon: Icons.chart, href: "/dashboard/admin/analytics" },
-                            { title: t.common.settings, description: "System config", icon: Icons.settings, href: "/dashboard/admin/settings" },
+                            { title: t.adminDashboard.actions.addDoctor, description: t.adminDashboard.actionDesc.registerDoctor, icon: Icons.doctor, href: "/dashboard/admin/doctors" },
+                            { title: t.adminDashboard.actions.addPatient, description: t.adminDashboard.actionDesc.registerPatient, icon: Icons.patient, href: "/dashboard/admin/patients" },
+                            { title: t.adminDashboard.actions.viewReports, description: t.adminDashboard.actionDesc.analytics, icon: Icons.chart, href: "/dashboard/admin/analytics" },
+                            { title: t.common.settings, description: t.adminDashboard.actionDesc.config, icon: Icons.settings, href: "/dashboard/admin/settings" },
                         ].map((action, idx) => (
                             <Link key={idx} href={action.href}>
                                 <motion.div

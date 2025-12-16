@@ -6,18 +6,7 @@ import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { GlowingCard } from "@/components/ui/glowing-card";
 import { useThemeStyles } from "../context/useThemeStyles";
-
-// Mock Data
-const patients = [
-    { id: 1, name: "Sarah Johnson", age: 34, condition: "Hypertension", lastVisit: "Dec 14, 2024", status: "active", image: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&crop=face" },
-    { id: 2, name: "Mohamed Ali", age: 45, condition: "Arrhythmia", lastVisit: "Dec 14, 2024", status: "active", image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face" },
-    { id: 3, name: "Fatima Khaled", age: 28, condition: "Routine Checkup", lastVisit: "Dec 10, 2024", status: "active", image: "https://images.unsplash.com/photo-1489424731084-a5d8b219a5bb?w=100&h=100&fit=crop&crop=face" },
-    { id: 4, name: "Omar Nasser", age: 52, condition: "Heart Disease", lastVisit: "Dec 8, 2024", status: "active", image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face" },
-    { id: 5, name: "Layla Ahmed", age: 41, condition: "Blood Pressure", lastVisit: "Dec 5, 2024", status: "inactive", image: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&h=100&fit=crop&crop=face" },
-    { id: 6, name: "Ahmed Hassan", age: 38, condition: "Cholesterol", lastVisit: "Nov 28, 2024", status: "active", image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop&crop=face" },
-    { id: 7, name: "Nour Ibrahim", age: 29, condition: "Palpitations", lastVisit: "Nov 20, 2024", status: "inactive", image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop&crop=face" },
-    { id: 8, name: "Youssef Mahmoud", age: 61, condition: "Post-Surgery", lastVisit: "Nov 15, 2024", status: "active", image: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=100&h=100&fit=crop&crop=face" },
-];
+import { useI18n } from "@/app/i18n";
 
 // Icons
 const Icons = {
@@ -63,10 +52,26 @@ const Icons = {
     ),
 };
 
+// Mock Data
+
+
 export default function PatientsPage() {
+    const { t, formatNumber, formatDate } = useI18n();
     const [searchQuery, setSearchQuery] = useState("");
     const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
     const { isDark, pageBg, textPrimary, textSecondary, textMuted, inputBg, inputFocus, buttonSecondary, buttonSecondaryActive, divider, cardHover, emptyStateBg } = useThemeStyles();
+
+    // Mock Data
+    const patients = [
+        { id: 1, name: t.common.demoNames.sarahJohnson, age: 34, condition: t.doctorDashboard.patientsPage.conditions.hypertension, lastVisit: "Dec 14, 2024", status: "active", image: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&crop=face" },
+        { id: 2, name: t.common.demoNames.mohamedAli, age: 45, condition: t.doctorDashboard.patientsPage.conditions.arrhythmia, lastVisit: "Dec 14, 2024", status: "active", image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face" },
+        { id: 3, name: t.common.demoNames.fatimaKhaled, age: 28, condition: t.doctorDashboard.patientsPage.conditions.routineCheckup, lastVisit: "Dec 10, 2024", status: "active", image: "https://images.unsplash.com/photo-1489424731084-a5d8b219a5bb?w=100&h=100&fit=crop&crop=face" },
+        { id: 4, name: t.common.demoNames.omarNasser, age: 52, condition: t.doctorDashboard.patientsPage.conditions.heartDisease, lastVisit: "Dec 8, 2024", status: "active", image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face" },
+        { id: 5, name: t.common.demoNames.laylaAhmed, age: 41, condition: t.doctorDashboard.patientsPage.conditions.bloodPressure, lastVisit: "Dec 5, 2024", status: "inactive", image: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&h=100&fit=crop&crop=face" },
+        { id: 6, name: t.common.demoNames.ahmedHassan, age: 38, condition: t.doctorDashboard.patientsPage.conditions.cholesterol, lastVisit: "Nov 28, 2024", status: "active", image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop&crop=face" },
+        { id: 7, name: t.common.demoNames.nourIbrahim, age: 29, condition: t.doctorDashboard.patientsPage.conditions.palpitations, lastVisit: "Nov 20, 2024", status: "inactive", image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop&crop=face" },
+        { id: 8, name: t.common.demoNames.youssefMahmoud, age: 61, condition: t.doctorDashboard.patientsPage.conditions.postSurgery, lastVisit: "Nov 15, 2024", status: "active", image: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=100&h=100&fit=crop&crop=face" },
+    ];
 
     const filteredPatients = patients.filter((patient) =>
         patient.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -82,13 +87,13 @@ export default function PatientsPage() {
                         <span className="w-8 h-8 md:w-10 md:h-10 rounded-lg md:rounded-xl bg-teal-500/10 flex items-center justify-center text-teal-500">
                             {Icons.users}
                         </span>
-                        Patients
+                        {t.doctorDashboard.patientsPage.title}
                     </h1>
-                    <p className={cn("text-sm md:text-base mt-1", textMuted)}>{patients.length} registered patients</p>
+                    <p className={cn("text-sm md:text-base mt-1", textMuted)}>{formatNumber(patients.length)} {t.doctorDashboard.patientsPage.subtitle}</p>
                 </div>
                 <button className="flex items-center justify-center gap-2 bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-400 hover:to-teal-500 text-white font-semibold py-2 md:py-2.5 px-4 md:px-5 rounded-xl transition-all shadow-lg shadow-teal-500/20 text-sm md:text-base">
                     {Icons.plus}
-                    <span>Add Patient</span>
+                    <span>{t.doctorDashboard.patientsPage.addPatient}</span>
                 </button>
             </div>
 
@@ -100,7 +105,7 @@ export default function PatientsPage() {
                     </span>
                     <input
                         type="text"
-                        placeholder="Search patients by name or condition..."
+                        placeholder={t.doctorDashboard.patientsPage.searchPlaceholder}
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         className={cn("w-full pl-12 pr-4 py-3 rounded-xl border transition-colors", inputBg, inputFocus)}
@@ -132,34 +137,34 @@ export default function PatientsPage() {
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: idx * 0.05 }}
                         >
-                            <GlowingCard glowColor="teal" className="p-4 md:p-5">
+                            <GlowingCard isDark={isDark} glowColor="teal" className="p-4 md:p-5">
                                 <div className="flex items-start gap-3 md:gap-4 mb-3 md:mb-4">
                                     <div className="relative w-12 h-12 md:w-14 md:h-14 rounded-full overflow-hidden border-2 border-teal-500/30">
                                         <Image src={patient.image} alt={patient.name} fill className="object-cover" unoptimized />
                                     </div>
                                     <div className="flex-1 min-w-0">
                                         <h3 className={cn("font-semibold truncate text-sm md:text-base", textPrimary)}>{patient.name}</h3>
-                                        <p className={cn("text-xs md:text-sm", textMuted)}>{patient.age} years old</p>
+                                        <p className={cn("text-xs md:text-sm", textMuted)}>{formatNumber(patient.age)} {t.doctorDashboard.patientsPage.labels.ageSuffix}</p>
                                     </div>
                                 </div>
                                 <div className="space-y-1.5 md:space-y-2 mb-3 md:mb-4">
                                     <div className="flex items-center justify-between text-xs md:text-sm">
-                                        <span className={textMuted}>Condition</span>
+                                        <span className={textMuted}>{t.doctorDashboard.patientsPage.labels.condition}</span>
                                         <span className={cn("truncate ml-2", textPrimary)}>{patient.condition}</span>
                                     </div>
                                     <div className="flex items-center justify-between text-xs md:text-sm">
-                                        <span className={textMuted}>Last Visit</span>
-                                        <span className={textSecondary}>{patient.lastVisit}</span>
+                                        <span className={textMuted}>{t.doctorDashboard.patientsPage.labels.lastVisit}</span>
+                                        <span className={textSecondary}>{formatDate(patient.lastVisit)}</span>
                                     </div>
                                 </div>
                                 <div className="flex gap-2">
                                     <button className="flex-1 flex items-center justify-center gap-1 md:gap-1.5 p-1.5 md:p-2 rounded-lg bg-teal-500/10 text-teal-500 hover:bg-teal-500 hover:text-white transition-all text-xs md:text-sm">
                                         {Icons.video}
-                                        <span>Call</span>
+                                        <span>{t.doctorDashboard.patientsPage.actions.call}</span>
                                     </button>
                                     <button className={cn("flex-1 flex items-center justify-center gap-1 md:gap-1.5 p-1.5 md:p-2 rounded-lg transition-all text-xs md:text-sm", isDark ? "bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-gray-900")}>
                                         {Icons.chat}
-                                        <span>Chat</span>
+                                        <span>{t.doctorDashboard.patientsPage.actions.chat}</span>
                                     </button>
                                     <button className={cn("p-1.5 md:p-2 rounded-lg transition-all", isDark ? "bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-gray-900")}>
                                         {Icons.profile}
@@ -170,7 +175,7 @@ export default function PatientsPage() {
                     ))}
                 </div>
             ) : (
-                <GlowingCard glowColor="teal" className="p-0 overflow-hidden">
+                <GlowingCard isDark={isDark} glowColor="teal" className="p-0 overflow-hidden">
                     <div className={divider}>
                         {filteredPatients.map((patient, idx) => (
                             <motion.div
@@ -188,8 +193,8 @@ export default function PatientsPage() {
                                     <p className={cn("text-xs md:text-sm", textMuted)}>{patient.condition}</p>
                                 </div>
                                 <div className="text-right hidden sm:block">
-                                    <p className={cn("text-xs md:text-sm", textSecondary)}>{patient.age} yrs</p>
-                                    <p className={cn("text-xs", textMuted)}>Last: {patient.lastVisit}</p>
+                                    <p className={cn("text-xs md:text-sm", textSecondary)}>{formatNumber(patient.age)} {t.doctorDashboard.patientsPage.labels.yrs}</p>
+                                    <p className={cn("text-xs", textMuted)}>{t.doctorDashboard.patientsPage.labels.last}: {formatDate(patient.lastVisit)}</p>
                                 </div>
                                 <div className="flex gap-1.5 md:gap-2">
                                     <button className="p-1.5 md:p-2 rounded-lg bg-teal-500/10 text-teal-500 hover:bg-teal-500 hover:text-white transition-all">
@@ -211,8 +216,8 @@ export default function PatientsPage() {
                     <div className={cn("w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4", emptyStateBg, textMuted)}>
                         {Icons.users}
                     </div>
-                    <h3 className={cn("text-lg font-medium mb-2", textPrimary)}>No patients found</h3>
-                    <p className={textMuted}>Try adjusting your search</p>
+                    <h3 className={cn("text-lg font-medium mb-2", textPrimary)}>{t.doctorDashboard.patientsPage.emptyState.title}</h3>
+                    <p className={textMuted}>{t.doctorDashboard.patientsPage.emptyState.subtitle}</p>
                 </div>
             )}
         </div>

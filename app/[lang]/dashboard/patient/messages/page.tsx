@@ -5,25 +5,9 @@ import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useThemeStyles } from "../context/useThemeStyles";
+import { useI18n } from "@/app/i18n";
 
-// Mock Data
-const conversations = [
-    { id: 1, name: "Dr. Ahmed Hassan", specialty: "Cardiologist", lastMessage: "Your test results look good. Keep up with the medication.", time: "2 min ago", unread: 2, image: "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=100&h=100&fit=crop&crop=face" },
-    { id: 2, name: "Dr. Fatima Khaled", specialty: "General Practitioner", lastMessage: "Please schedule a follow-up in 2 weeks.", time: "1 hour ago", unread: 0, image: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=100&h=100&fit=crop&crop=face" },
-    { id: 3, name: "Dr. Omar Nasser", specialty: "Dermatologist", lastMessage: "The cream should help with the irritation.", time: "Yesterday", unread: 0, image: "https://images.unsplash.com/photo-1537368910025-700350fe46c7?w=100&h=100&fit=crop&crop=face" },
-];
-
-const mockMessages = [
-    { id: 1, sender: "doctor", text: "Good morning Sarah! I've reviewed your latest blood work.", time: "10:30 AM" },
-    { id: 2, sender: "patient", text: "Good morning Dr. Hassan! What do the results show?", time: "10:32 AM" },
-    { id: 3, sender: "doctor", text: "Your cholesterol levels have improved significantly since our last check.", time: "10:33 AM" },
-    { id: 4, sender: "doctor", text: "The Atorvastatin is working well. Your LDL is now within normal range.", time: "10:34 AM" },
-    { id: 5, sender: "patient", text: "That's great news! Should I continue with the same dosage?", time: "10:36 AM" },
-    { id: 6, sender: "doctor", text: "Yes, continue with 20mg daily. We'll check again in 3 months.", time: "10:38 AM" },
-    { id: 7, sender: "doctor", text: "Your test results look good. Keep up with the medication.", time: "10:40 AM" },
-];
-
-// Icons
+// Icons (unchanged)
 const Icons = {
     message: (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -58,11 +42,30 @@ const Icons = {
 };
 
 export default function MessagesPage() {
+    const { t, isRTL } = useI18n();
+    const { isDark, textPrimary, textMuted, inputBg, inputFocus, border } = useThemeStyles();
+
+    // Mock Data - moved inside to use translations/RTL logic
+    const conversations = [
+        { id: 1, name: t.patientDashboard.messagesPage.demoConversations.p1.name, specialty: t.specialties.cardiology, lastMessage: t.patientDashboard.messagesPage.demoConversations.p1.lastMessage, time: isRTL ? "منذ دقيقتين" : `2 ${t.common.time.minsAgo}`, unread: 2, image: "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=100&h=100&fit=crop&crop=face" },
+        { id: 2, name: t.patientDashboard.messagesPage.demoConversations.p2.name, specialty: t.specialties.general, lastMessage: t.patientDashboard.messagesPage.demoConversations.p2.lastMessage, time: isRTL ? "منذ ساعة" : t.common.time.hourAgo, unread: 0, image: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=100&h=100&fit=crop&crop=face" },
+        { id: 3, name: t.patientDashboard.messagesPage.demoConversations.p3.name, specialty: t.specialties.dermatology, lastMessage: t.patientDashboard.messagesPage.demoConversations.p3.lastMessage, time: isRTL ? "أمس" : "Yesterday", unread: 0, image: "https://images.unsplash.com/photo-1537368910025-700350fe46c7?w=100&h=100&fit=crop&crop=face" },
+    ];
+
+    const mockMessages = [
+        { id: 1, sender: "doctor", text: t.patientDashboard.messagesPage.demoMessages.m1, time: "10:30 AM" },
+        { id: 2, sender: "patient", text: t.patientDashboard.messagesPage.demoMessages.m2, time: "10:32 AM" },
+        { id: 3, sender: "doctor", text: t.patientDashboard.messagesPage.demoMessages.m3, time: "10:33 AM" },
+        { id: 4, sender: "doctor", text: t.patientDashboard.messagesPage.demoMessages.m4, time: "10:34 AM" },
+        { id: 5, sender: "patient", text: t.patientDashboard.messagesPage.demoMessages.m5, time: "10:36 AM" },
+        { id: 6, sender: "doctor", text: t.patientDashboard.messagesPage.demoMessages.m6, time: "10:38 AM" },
+        { id: 7, sender: "doctor", text: t.patientDashboard.messagesPage.demoMessages.m7, time: "10:40 AM" },
+    ];
+
     const [selectedConversation, setSelectedConversation] = useState(conversations[0]);
     const [newMessage, setNewMessage] = useState("");
     const [searchQuery, setSearchQuery] = useState("");
     const [showSidebar, setShowSidebar] = useState(false);
-    const { isDark, textPrimary, textMuted, inputBg, inputFocus, border } = useThemeStyles();
 
     const filteredConversations = conversations.filter((conv) =>
         conv.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -96,6 +99,9 @@ export default function MessagesPage() {
                 "fixed md:relative z-40 md:z-0 h-full w-[280px] md:w-80 border-r flex flex-col transition-transform duration-300 md:translate-x-0",
                 border,
                 isDark ? "bg-slate-950" : "bg-white",
+                // Handle RTL logic for translation if needed, but here translate-x logic is mostly visual. 
+                // For RTL, translate-x should probably be reversed or handle direction prop.
+                // Assuming standard LTR CSS for now or global dir="rtl" handles layout.
                 showSidebar ? "translate-x-0" : "-translate-x-full md:translate-x-0"
             )}>
                 {/* Header */}
@@ -106,7 +112,7 @@ export default function MessagesPage() {
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
                             </svg>
                         </span>
-                        Messages
+                        {t.patientDashboard.messagesPage.sidebarTitle}
                     </h1>
                     {/* Search */}
                     <div className="relative">
@@ -117,7 +123,7 @@ export default function MessagesPage() {
                         </span>
                         <input
                             type="text"
-                            placeholder="Search..."
+                            placeholder={t.patientDashboard.messagesPage.searchPlaceholder}
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             className={cn("w-full pl-9 pr-3 py-2 text-sm rounded-lg border transition-colors", inputBg, inputFocus)}
@@ -228,7 +234,7 @@ export default function MessagesPage() {
                     <div className="flex gap-2 md:gap-3">
                         <input
                             type="text"
-                            placeholder="Type a message..."
+                            placeholder={t.patientDashboard.messagesPage.inputPlaceholder}
                             value={newMessage}
                             onChange={(e) => setNewMessage(e.target.value)}
                             className={cn("flex-1 px-3 md:px-4 py-2 md:py-3 rounded-lg md:rounded-xl border transition-colors text-sm", inputBg, inputFocus)}

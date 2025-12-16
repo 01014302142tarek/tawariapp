@@ -5,25 +5,8 @@ import Image from "next/image";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useThemeStyles } from "../context/useThemeStyles";
-
-// Mock Data
-const conversations = [
-    { id: 1, name: "Sarah Johnson", lastMessage: "Thank you doctor, I'll take the medication as prescribed.", time: "2 min ago", unread: 2, image: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&crop=face" },
-    { id: 2, name: "Mohamed Ali", lastMessage: "When should I come for the next appointment?", time: "15 min ago", unread: 1, image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face" },
-    { id: 3, name: "Fatima Khaled", lastMessage: "I've been feeling much better lately.", time: "1 hour ago", unread: 0, image: "https://images.unsplash.com/photo-1489424731084-a5d8b219a5bb?w=100&h=100&fit=crop&crop=face" },
-    { id: 4, name: "Omar Nasser", lastMessage: "The ECG results look normal.", time: "3 hours ago", unread: 0, image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face" },
-    { id: 5, name: "Layla Ahmed", lastMessage: "Should I continue with the current dosage?", time: "Yesterday", unread: 0, image: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&h=100&fit=crop&crop=face" },
-];
-
-const mockMessages = [
-    { id: 1, sender: "patient", text: "Good morning Dr. Hassan, I wanted to ask about my medication.", time: "10:30 AM" },
-    { id: 2, sender: "doctor", text: "Good morning Sarah! Of course, what would you like to know?", time: "10:32 AM" },
-    { id: 3, sender: "patient", text: "I've been experiencing some mild dizziness after taking the blood pressure medication.", time: "10:33 AM" },
-    { id: 4, sender: "doctor", text: "That can be a common side effect initially. Are you taking it with food?", time: "10:35 AM" },
-    { id: 5, sender: "patient", text: "No, I usually take it on an empty stomach in the morning.", time: "10:36 AM" },
-    { id: 6, sender: "doctor", text: "I recommend taking it with breakfast. This should help reduce the dizziness. If it persists for more than a week, please let me know.", time: "10:38 AM" },
-    { id: 7, sender: "patient", text: "Thank you doctor, I'll take the medication as prescribed.", time: "10:40 AM" },
-];
+import { useI18n } from "@/app/i18n";
+import { useEffect } from "react";
 
 // Icons
 const Icons = {
@@ -50,11 +33,36 @@ const Icons = {
 };
 
 export default function MessagesPage() {
-    const [selectedConversation, setSelectedConversation] = useState(conversations[0]);
+    const { t, isRTL, language, formatNumber } = useI18n();
     const [newMessage, setNewMessage] = useState("");
     const [searchQuery, setSearchQuery] = useState("");
     const [showConversations, setShowConversations] = useState(false);
     const { isDark, pageBg, textPrimary, textMuted, inputBg, inputFocus, border } = useThemeStyles();
+
+    // Mock Data with Translations
+    const conversations = [
+        { id: 1, name: t.doctorDashboard.messagesPage.demoConversations.p1.name, lastMessage: t.doctorDashboard.messagesPage.demoConversations.p1.lastMessage, time: isRTL ? `منذ ${formatNumber(2)} دقيقة` : `2 ${t.common.time.minsAgo}`, unread: 2, image: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&crop=face" },
+        { id: 2, name: t.doctorDashboard.messagesPage.demoConversations.p2.name, lastMessage: t.doctorDashboard.messagesPage.demoConversations.p2.lastMessage, time: isRTL ? `منذ ${formatNumber(15)} دقيقة` : `15 ${t.common.time.minsAgo}`, unread: 1, image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face" },
+        { id: 3, name: t.doctorDashboard.messagesPage.demoConversations.p3.name, lastMessage: t.doctorDashboard.messagesPage.demoConversations.p3.lastMessage, time: isRTL ? "منذ ساعة" : t.common.time.hourAgo, unread: 0, image: "https://images.unsplash.com/photo-1489424731084-a5d8b219a5bb?w=100&h=100&fit=crop&crop=face" },
+        { id: 4, name: t.doctorDashboard.messagesPage.demoConversations.p4.name, lastMessage: t.doctorDashboard.messagesPage.demoConversations.p4.lastMessage, time: isRTL ? `منذ ${formatNumber(3)} ساعات` : `3 ${t.common.time.hoursAgo}`, unread: 0, image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face" },
+        { id: 5, name: t.doctorDashboard.messagesPage.demoConversations.p5.name, lastMessage: t.doctorDashboard.messagesPage.demoConversations.p5.lastMessage, time: isRTL ? "أمس" : "Yesterday", unread: 0, image: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&h=100&fit=crop&crop=face" },
+    ];
+
+    const mockMessages = [
+        { id: 1, sender: "patient", text: t.doctorDashboard.messagesPage.demoMessages.m1, time: isRTL ? "١٠:٣٠ ص" : "10:30 AM" },
+        { id: 2, sender: "doctor", text: t.doctorDashboard.messagesPage.demoMessages.m2, time: isRTL ? "١٠:٣٢ ص" : "10:32 AM" },
+        { id: 3, sender: "patient", text: t.doctorDashboard.messagesPage.demoMessages.m3, time: isRTL ? "١٠:٣٣ ص" : "10:33 AM" },
+        { id: 4, sender: "doctor", text: t.doctorDashboard.messagesPage.demoMessages.m4, time: isRTL ? "١٠:٣٥ ص" : "10:35 AM" },
+        { id: 5, sender: "patient", text: t.doctorDashboard.messagesPage.demoMessages.m5, time: isRTL ? "١٠:٣٦ ص" : "10:36 AM" },
+        { id: 6, sender: "doctor", text: t.doctorDashboard.messagesPage.demoMessages.m6, time: isRTL ? "١٠:٣٨ ص" : "10:38 AM" },
+        { id: 7, sender: "patient", text: t.doctorDashboard.messagesPage.demoMessages.m7, time: isRTL ? "١٠:٤٠ ص" : "10:40 AM" },
+    ];
+
+    const [selectedConversation, setSelectedConversation] = useState(conversations[0]);
+
+    useEffect(() => {
+        setSelectedConversation(conversations[0]);
+    }, [language]); // Reset selected conversation on language change to update translation
 
     const filteredConversations = conversations.filter((conv) =>
         conv.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -80,7 +88,8 @@ export default function MessagesPage() {
                 "fixed md:relative inset-y-0 left-0 z-40 w-72 md:w-80 border-r flex flex-col transition-transform duration-300 md:translate-x-0",
                 border,
                 isDark ? "bg-slate-950" : "bg-white",
-                showConversations ? "translate-x-0" : "-translate-x-full"
+                // RTL logic for sliding can be complex, keeping LTR slide logic for now unless explicitly asked.
+                showConversations ? "translate-x-0" : "-translate-x-full md:translate-x-0"
             )}>
                 {/* Header */}
                 <div className={cn("p-3 md:p-4 border-b", border)}>
@@ -89,7 +98,7 @@ export default function MessagesPage() {
                             <span className="w-7 h-7 md:w-8 md:h-8 rounded-lg bg-teal-500/10 flex items-center justify-center text-teal-500">
                                 {Icons.message}
                             </span>
-                            Messages
+                            {t.doctorDashboard.messagesPage.sidebarTitle}
                         </h1>
                         <button
                             onClick={() => setShowConversations(false)}
@@ -107,7 +116,7 @@ export default function MessagesPage() {
                         </span>
                         <input
                             type="text"
-                            placeholder="Search conversations..."
+                            placeholder={t.doctorDashboard.messagesPage.searchPlaceholder}
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             className={cn("w-full pl-10 pr-4 py-2 md:py-2.5 text-sm rounded-xl border transition-colors", inputBg, inputFocus)}
@@ -137,7 +146,7 @@ export default function MessagesPage() {
                                 </div>
                                 {conv.unread > 0 && (
                                     <span className="absolute -top-1 -right-1 w-4 h-4 md:w-5 md:h-5 bg-teal-500 text-white text-[10px] md:text-xs font-bold rounded-full flex items-center justify-center">
-                                        {conv.unread}
+                                        {formatNumber(conv.unread)}
                                     </span>
                                 )}
                             </div>
@@ -179,7 +188,7 @@ export default function MessagesPage() {
                         </div>
                         <div>
                             <h2 className={cn("font-semibold text-sm md:text-base", textPrimary)}>{selectedConversation.name}</h2>
-                            <p className="text-xs text-teal-500">Online</p>
+                            <p className="text-xs text-teal-500">{t.doctorDashboard.messagesPage.online}</p>
                         </div>
                     </div>
                     <button className="p-2 md:p-2.5 rounded-xl bg-teal-500/10 text-teal-500 hover:bg-teal-500 hover:text-white transition-all">
@@ -213,7 +222,7 @@ export default function MessagesPage() {
                                 <p className={cn(
                                     "text-[10px] md:text-xs mt-1",
                                     msg.sender === "doctor" ? "text-teal-100" : textMuted
-                                )}>{msg.time}</p>
+                                )}>{formatNumber(msg.time)}</p>
                             </div>
                         </motion.div>
                     ))}
@@ -224,7 +233,7 @@ export default function MessagesPage() {
                     <div className="flex gap-2 md:gap-3">
                         <input
                             type="text"
-                            placeholder="Type a message..."
+                            placeholder={t.doctorDashboard.messagesPage.inputPlaceholder}
                             value={newMessage}
                             onChange={(e) => setNewMessage(e.target.value)}
                             className={cn("flex-1 px-3 md:px-4 py-2.5 md:py-3 rounded-xl border transition-colors text-sm md:text-base", inputBg, inputFocus)}

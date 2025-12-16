@@ -4,14 +4,6 @@ import React from "react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
-// Try to use theme context if available, otherwise default to dark
-let useThemeHook: (() => { theme: string }) | null = null;
-try {
-    // Dynamic import would be better but for simplicity we use a fallback
-} catch {
-    // Context not available
-}
-
 interface GlowingCardProps {
     children: React.ReactNode;
     className?: string;
@@ -29,12 +21,12 @@ const glowColorsDark = {
 };
 
 const glowColorsLight = {
-    teal: "from-teal-100/80 via-teal-50/40 to-transparent",
-    amber: "from-amber-100/80 via-amber-50/40 to-transparent",
-    purple: "from-purple-100/80 via-purple-50/40 to-transparent",
-    blue: "from-blue-100/80 via-blue-50/40 to-transparent",
-    pink: "from-pink-100/80 via-pink-50/40 to-transparent",
-    green: "from-green-100/80 via-green-50/40 to-transparent",
+    teal: "from-teal-100/60 via-teal-50/30 to-transparent",
+    amber: "from-amber-100/60 via-amber-50/30 to-transparent",
+    purple: "from-purple-100/60 via-purple-50/30 to-transparent",
+    blue: "from-blue-100/60 via-blue-50/30 to-transparent",
+    pink: "from-pink-100/60 via-pink-50/30 to-transparent",
+    green: "from-green-100/60 via-green-50/30 to-transparent",
 };
 
 const borderColorsDark = {
@@ -47,59 +39,84 @@ const borderColorsDark = {
 };
 
 const borderColorsLight = {
-    teal: "border-teal-200 hover:border-teal-300 shadow-teal-100/50",
-    amber: "border-amber-200 hover:border-amber-300 shadow-amber-100/50",
-    purple: "border-purple-200 hover:border-purple-300 shadow-purple-100/50",
-    blue: "border-blue-200 hover:border-blue-300 shadow-blue-100/50",
-    pink: "border-pink-200 hover:border-pink-300 shadow-pink-100/50",
-    green: "border-green-200 hover:border-green-300 shadow-green-100/50",
+    teal: "border-teal-200/80 hover:border-teal-400 shadow-sm hover:shadow-md hover:shadow-teal-100/50",
+    amber: "border-amber-200/80 hover:border-amber-400 shadow-sm hover:shadow-md hover:shadow-amber-100/50",
+    purple: "border-purple-200/80 hover:border-purple-400 shadow-sm hover:shadow-md hover:shadow-purple-100/50",
+    blue: "border-blue-200/80 hover:border-blue-400 shadow-sm hover:shadow-md hover:shadow-blue-100/50",
+    pink: "border-pink-200/80 hover:border-pink-400 shadow-sm hover:shadow-md hover:shadow-pink-100/50",
+    green: "border-green-200/80 hover:border-green-400 shadow-sm hover:shadow-md hover:shadow-green-100/50",
 };
 
-// Create a version that accepts isDark prop for explicit control
+// Helper function to resolve theme from localStorage
+function resolveThemeFromStorage(): boolean {
+    if (typeof window === "undefined") return false; // Default to light
+
+    // Check for new theme mode keys first
+    const themeKeys = [
+        "doctor-dashboard-theme-mode",
+        "patient-dashboard-theme-mode",
+        "admin-theme-mode"
+    ];
+
+    for (const key of themeKeys) {
+        const mode = localStorage.getItem(key);
+        if (mode) {
+            if (mode === "system") {
+                return window.matchMedia("(prefers-color-scheme: dark)").matches;
+            }
+            return mode === "dark";
+        }
+    }
+
+    // Check for old theme keys (backwards compatibility)
+    const legacyKeys = [
+        "doctor-dashboard-theme",
+        "patient-dashboard-theme",
+        "admin-theme"
+    ];
+
+    for (const key of legacyKeys) {
+        const theme = localStorage.getItem(key);
+        if (theme) {
+            return theme === "dark";
+        }
+    }
+
+    // Default to light theme
+    return false;
+}
+
 export function GlowingCard({ children, className, glowColor = "teal", isDark }: GlowingCardProps) {
-    // If isDark is explicitly provided, use it directly
-    // Otherwise fall back to localStorage/system preference detection
-    const [autoDetectedDark, setAutoDetectedDark] = React.useState(true);
+    const [autoDetectedDark, setAutoDetectedDark] = React.useState(false);
 
     React.useEffect(() => {
-        // Only run auto-detection if isDark is not explicitly passed
         if (isDark === undefined) {
-            // Check localStorage for theme (check both doctor and patient dashboards)
-            const doctorTheme = localStorage.getItem("doctor-dashboard-theme");
-            const patientTheme = localStorage.getItem("patient-dashboard-theme");
-            const savedTheme = doctorTheme || patientTheme;
-            if (savedTheme) {
-                setAutoDetectedDark(savedTheme === "dark");
-            } else {
-                // Check system preference
-                setAutoDetectedDark(window.matchMedia("(prefers-color-scheme: dark)").matches);
-            }
+            // Initial detection
+            setAutoDetectedDark(resolveThemeFromStorage());
 
             // Listen for storage changes
             const handleStorage = () => {
-                const dTheme = localStorage.getItem("doctor-dashboard-theme");
-                const pTheme = localStorage.getItem("patient-dashboard-theme");
-                const theme = dTheme || pTheme;
-                if (theme) {
-                    setAutoDetectedDark(theme === "dark");
-                }
+                setAutoDetectedDark(resolveThemeFromStorage());
             };
 
             window.addEventListener("storage", handleStorage);
 
-            // Also check periodically for local changes
+            // Also check periodically for local changes (theme switches within same window)
             const interval = setInterval(() => {
-                const dTheme = localStorage.getItem("doctor-dashboard-theme");
-                const pTheme = localStorage.getItem("patient-dashboard-theme");
-                const theme = dTheme || pTheme;
-                if (theme) {
-                    setAutoDetectedDark(theme === "dark");
-                }
+                setAutoDetectedDark(resolveThemeFromStorage());
             }, 100);
+
+            // Listen for system theme changes when in system mode
+            const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+            const handleMediaChange = () => {
+                setAutoDetectedDark(resolveThemeFromStorage());
+            };
+            mediaQuery.addEventListener("change", handleMediaChange);
 
             return () => {
                 window.removeEventListener("storage", handleStorage);
                 clearInterval(interval);
+                mediaQuery.removeEventListener("change", handleMediaChange);
             };
         }
     }, [isDark]);
@@ -123,7 +140,7 @@ export function GlowingCard({ children, className, glowColor = "teal", isDark }:
                 !hasOverflowClass && "overflow-hidden",
                 resolvedIsDark
                     ? "bg-slate-900/50 shadow-lg shadow-black/5"
-                    : "bg-white shadow-lg shadow-gray-100",
+                    : "bg-white shadow-lg",
                 borderColors[glowColor],
                 className
             )}

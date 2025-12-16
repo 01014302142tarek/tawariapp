@@ -8,16 +8,19 @@ export function AnimatedNumber({
     value,
     className,
     duration = 2,
+    format,
 }: {
     value: number;
     className?: string;
     duration?: number;
+    format?: (value: number) => string;
 }) {
     const count = useMotionValue(0);
     const rounded = useTransform(count, (latest) => Math.round(latest));
-    const displayValue = useTransform(rounded, (latest) =>
-        latest >= 1000 ? `${(latest / 1000).toFixed(1)}k` : latest.toString()
-    );
+    const displayValue = useTransform(rounded, (latest) => {
+        if (format) return format(latest);
+        return latest >= 1000 ? `${(latest / 1000).toFixed(1)}k` : latest.toString();
+    });
     const ref = useRef<HTMLSpanElement>(null);
 
     useEffect(() => {

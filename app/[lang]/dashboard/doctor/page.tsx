@@ -166,23 +166,24 @@ const ProgressBar = ({ value, max, isDark = true }: { value: number; max: number
 
 export default function Doctor2Dashboard() {
     const { theme } = useTheme();
-    const { t, language } = useI18n();
+    const { t, language, isRTL, formatNumber } = useI18n();
     const isDark = theme === "dark";
 
     // MOCK DATA moved inside for translations
+    // MOCK DATA moved inside for translations
     const patients = [
-        { id: 1, name: "Sarah Johnson", designation: "9:00 AM", image: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&crop=face" },
-        { id: 2, name: "Mohamed Ali", designation: "10:30 AM", image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face" },
-        { id: 3, name: "Fatima Khaled", designation: "11:45 AM", image: "https://images.unsplash.com/photo-1489424731084-a5d8b219a5bb?w=100&h=100&fit=crop&crop=face" },
-        { id: 4, name: "Omar Nasser", designation: "2:00 PM", image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face" },
-        { id: 5, name: "Layla Ahmed", designation: "3:30 PM", image: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&h=100&fit=crop&crop=face" },
+        { id: 1, name: t.common.demoNames.sarahJohnson, designation: "9:00 AM", image: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&crop=face" },
+        { id: 2, name: t.common.demoNames.mohamedAli, designation: "10:30 AM", image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face" },
+        { id: 3, name: t.common.demoNames.fatimaKhaled, designation: "11:45 AM", image: "https://images.unsplash.com/photo-1489424731084-a5d8b219a5bb?w=100&h=100&fit=crop&crop=face" },
+        { id: 4, name: t.common.demoNames.omarNasser, designation: "2:00 PM", image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face" },
+        { id: 5, name: t.common.demoNames.laylaAhmed, designation: "3:30 PM", image: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&h=100&fit=crop&crop=face" },
     ];
 
     const appointments = [
-        { id: 1, time: "09:00", patient: "Sarah Johnson", type: "Follow-up", status: "completed", image: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&crop=face" },
-        { id: 2, time: "10:30", patient: "Mohamed Ali", type: "Initial Consultation", status: "in-progress", image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face" },
-        { id: 3, time: "11:45", patient: "Fatima Khaled", type: "Heart Checkup", status: "upcoming", image: "https://images.unsplash.com/photo-1489424731084-a5d8b219a5bb?w=100&h=100&fit=crop&crop=face" },
-        { id: 4, time: "14:00", patient: "Omar Nasser", type: "ECG Review", status: "upcoming", image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face" },
+        { id: 1, time: isRTL ? "09:00 ص" : "09:00 AM", patient: t.common.demoNames.sarahJohnson, type: t.doctorDashboard.appointmentsPage.types.followUp, status: "completed", image: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&crop=face" },
+        { id: 2, time: isRTL ? "10:30 ص" : "10:30 AM", patient: t.common.demoNames.mohamedAli, type: t.doctorDashboard.appointmentsPage.types.initialConsultation, status: "in-progress", image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face" },
+        { id: 3, time: isRTL ? "11:45 ص" : "11:45 AM", patient: t.common.demoNames.fatimaKhaled, type: t.doctorDashboard.appointmentsPage.types.heartCheckup, status: "upcoming", image: "https://images.unsplash.com/photo-1489424731084-a5d8b219a5bb?w=100&h=100&fit=crop&crop=face" },
+        { id: 4, time: isRTL ? "02:00 م" : "02:00 PM", patient: t.common.demoNames.omarNasser, type: t.doctorDashboard.appointmentsPage.types.ecgReview, status: "upcoming", image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face" },
     ];
 
     const quickActions = [
@@ -193,16 +194,16 @@ export default function Doctor2Dashboard() {
     ];
 
     const pendingTasks = [
-        { id: 1, title: t.doctorDashboard.tasks.reviewLabResults, patient: "Sarah Johnson", priority: "high", dueTime: t.doctorDashboard.tasks.today },
-        { id: 2, title: t.doctorDashboard.tasks.prescriptionRenewal, patient: "Mohamed Ali", priority: "medium", dueTime: t.doctorDashboard.tasks.tomorrow },
-        { id: 3, title: t.doctorDashboard.tasks.followUpReport, patient: "Fatima Khaled", priority: "low", dueTime: t.doctorDashboard.tasks.inDays },
-        { id: 4, title: t.doctorDashboard.tasks.ecgAnalysis, patient: "Omar Nasser", priority: "high", dueTime: t.doctorDashboard.tasks.today },
+        { id: 1, title: t.doctorDashboard.tasks.reviewLabResults, patient: t.common.demoNames.sarahJohnson, priority: t.common.priority.high, dueTime: t.doctorDashboard.tasks.today },
+        { id: 2, title: t.doctorDashboard.tasks.prescriptionRenewal, patient: t.common.demoNames.mohamedAli, priority: t.common.priority.medium, dueTime: t.doctorDashboard.tasks.tomorrow },
+        { id: 3, title: t.doctorDashboard.tasks.followUpReport, patient: t.common.demoNames.fatimaKhaled, priority: t.common.priority.low, dueTime: t.doctorDashboard.tasks.inDays },
+        { id: 4, title: t.doctorDashboard.tasks.ecgAnalysis, patient: t.common.demoNames.omarNasser, priority: t.common.priority.high, dueTime: t.doctorDashboard.tasks.today },
     ];
 
     const recentMessages = [
-        { id: 1, patient: "Layla Ahmed", message: "Thank you doctor! I'm feeling much better now.", time: "5 min ago", unread: true, image: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&h=100&fit=crop&crop=face" },
-        { id: 2, patient: "Omar Nasser", message: "When should I take the new medication?", time: "1 hour ago", unread: true, image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face" },
-        { id: 3, patient: "Sarah Johnson", message: "I've attached my latest blood test results.", time: "3 hours ago", unread: false, image: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&crop=face" },
+        { id: 1, patient: t.common.demoNames.laylaAhmed, message: t.doctorDashboard.messagesPage.demoMessages.m3, time: isRTL ? `منذ ${formatNumber(5)} دقائق` : `5 ${t.common.time.minsAgo}`, unread: true, image: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&h=100&fit=crop&crop=face" },
+        { id: 2, patient: t.common.demoNames.omarNasser, message: t.doctorDashboard.messagesPage.demoMessages.m1, time: t.common.time.hourAgo, unread: true, image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face" },
+        { id: 3, patient: t.common.demoNames.sarahJohnson, message: t.doctorDashboard.messagesPage.demoMessages.m7, time: isRTL ? `منذ ${formatNumber(3)} ساعات` : `3 ${t.common.time.hoursAgo}`, unread: false, image: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&crop=face" },
     ];
 
     const healthTips = [
@@ -237,7 +238,7 @@ export default function Doctor2Dashboard() {
                 {/* Greeting Section */}
                 <section className="mb-6 md:mb-8">
                     <h2 className={cn("text-2xl md:text-3xl font-bold mb-2 flex items-center gap-3", isDark ? "text-white" : "text-slate-900")}>
-                        {new Date().getHours() < 12 ? t.doctorDashboard.greeting.morning : new Date().getHours() < 17 ? t.doctorDashboard.greeting.afternoon : t.doctorDashboard.greeting.evening}, Dr. Hassan
+                        {new Date().getHours() < 12 ? t.doctorDashboard.greeting.morning : new Date().getHours() < 17 ? t.doctorDashboard.greeting.afternoon : t.doctorDashboard.greeting.evening}, {t.common.demoNames.drHassan}
                         <svg className="w-6 h-6 md:w-8 md:h-8 text-teal-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 00-3 0m-6-3V11m0-5.5v-1a1.5 1.5 0 013 0v1m0 0V11m0-5.5a1.5 1.5 0 013 0v3m0 0V11" />
                         </svg>
@@ -253,10 +254,10 @@ export default function Doctor2Dashboard() {
                         {[
                             { label: t.doctorDashboard.stats.todayAppointments, value: 5, icon: Icons.calendar },
                             { label: t.doctorDashboard.stats.completed, value: 2, icon: Icons.check },
-                            { label: t.doctorDashboard.stats.revenueToday, value: 2400, suffix: " EGP", icon: Icons.money },
-                            { label: t.doctorDashboard.stats.rating, value: 4.9, suffix: "/5", icon: Icons.star },
+                            { label: t.doctorDashboard.stats.revenueToday, value: 2400, suffix: isRTL ? " ج.م" : " EGP", icon: Icons.money },
+                            { label: t.doctorDashboard.stats.rating, value: 4.9, suffix: isRTL ? "/٥" : "/5", icon: Icons.star },
                         ].map((stat, idx) => (
-                            <GlowingCard key={idx} glowColor="teal" className="p-3 md:p-5">
+                            <GlowingCard key={idx} isDark={isDark} glowColor="teal" className="p-3 md:p-5">
                                 <div className="flex items-start justify-between mb-2 md:mb-3">
                                     <div className="w-8 h-8 md:w-10 md:h-10 rounded-lg md:rounded-xl bg-teal-500/10 flex items-center justify-center text-teal-500">
                                         <span className="[&>svg]:w-4 [&>svg]:h-4 md:[&>svg]:w-5 md:[&>svg]:h-5">
@@ -267,7 +268,7 @@ export default function Doctor2Dashboard() {
                                 </div>
                                 <div className="flex items-baseline gap-0.5 md:gap-1">
                                     <span className={cn("text-xl md:text-3xl font-bold", isDark ? "text-white" : "text-slate-900")}>
-                                        <AnimatedNumber value={stat.value} />
+                                        <AnimatedNumber value={stat.value} format={(v) => formatNumber(v)} />
                                     </span>
                                     {stat.suffix && <span className={cn("text-sm md:text-lg", isDark ? "text-gray-400" : "text-gray-500")}>{stat.suffix}</span>}
                                 </div>
@@ -282,10 +283,10 @@ export default function Doctor2Dashboard() {
                     {/* Left Column - Appointments & Messages */}
                     <div className="lg:col-span-2 space-y-4 md:space-y-6">
                         {/* Appointments */}
-                        <GlowingCard glowColor="teal" className="p-4 md:p-6">
+                        <GlowingCard isDark={isDark} glowColor="teal" className="p-4 md:p-6">
                             <SectionHeader
                                 title={t.doctorDashboard.sections.todayAppointments}
-                                subtitle={`${appointments.length} ${t.doctorDashboard.sections.scheduled}`}
+                                subtitle={`${formatNumber(appointments.length)} ${t.doctorDashboard.sections.scheduled}`}
                                 isDark={isDark}
                                 action={
                                     <button className="text-teal-500 hover:text-teal-400 text-sm font-medium transition-colors">
@@ -314,7 +315,7 @@ export default function Doctor2Dashboard() {
                                     >
                                         <div className="flex items-center gap-3 w-full sm:w-auto">
                                             <div className="text-center min-w-[45px] md:min-w-[50px]">
-                                                <span className={cn("text-base md:text-lg font-bold", isDark ? "text-white" : "text-slate-900")}>{apt.time}</span>
+                                                <span className={cn("text-base md:text-lg font-bold", isDark ? "text-white" : "text-slate-900")}>{formatNumber(apt.time)}</span>
                                             </div>
                                             <div className={cn("w-px h-8 md:h-10 hidden sm:block", isDark ? "bg-white/10" : "bg-gray-200")} />
                                             <Avatar src={apt.image} alt={apt.patient} size="sm" />
@@ -341,7 +342,7 @@ export default function Doctor2Dashboard() {
                         </GlowingCard>
 
                         {/* Recent Messages */}
-                        <GlowingCard glowColor="teal" className="p-4 md:p-6">
+                        <GlowingCard isDark={isDark} glowColor="teal" className="p-4 md:p-6">
                             <SectionHeader
                                 title={t.doctorDashboard.sections.recentMessages}
                                 subtitle={t.doctorDashboard.sections.patientConversations}
@@ -349,7 +350,7 @@ export default function Doctor2Dashboard() {
                                 action={
                                     <div className="flex items-center gap-2">
                                         <span className="w-2 h-2 bg-teal-500 rounded-full animate-pulse" />
-                                        <span className="text-teal-500 text-xs font-medium">2 {t.doctorDashboard.sections.unread}</span>
+                                        <span className="text-teal-500 text-xs font-medium">{formatNumber(2)} {t.doctorDashboard.sections.unread}</span>
                                     </div>
                                 }
                             />
@@ -396,7 +397,7 @@ export default function Doctor2Dashboard() {
                         </GlowingCard>
 
                         {/* Health Tips to Share */}
-                        <GlowingCard glowColor="teal" className="p-4 md:p-6">
+                        <GlowingCard isDark={isDark} glowColor="teal" className="p-4 md:p-6">
                             <SectionHeader
                                 title={t.doctorDashboard.sections.healthTips}
                                 subtitle={t.doctorDashboard.sections.dailyRecommendations}
@@ -441,7 +442,7 @@ export default function Doctor2Dashboard() {
                     {/* Right Column - Performance, Tasks & Tips */}
                     <div className="space-y-4 md:space-y-6">
                         {/* Performance */}
-                        <GlowingCard glowColor="teal" className="p-4 md:p-6">
+                        <GlowingCard isDark={isDark} glowColor="teal" className="p-4 md:p-6">
                             <SectionHeader title={t.doctorDashboard.sections.weeklyPerformance} isDark={isDark} />
                             <div className="space-y-5">
                                 {[
@@ -454,7 +455,7 @@ export default function Doctor2Dashboard() {
                                         <div key={idx}>
                                             <div className="flex items-center justify-between mb-2">
                                                 <span className={cn("text-sm", isDark ? "text-gray-400" : "text-gray-600")}>{metric.label}</span>
-                                                <span className={cn("text-sm font-medium", isDark ? "text-white" : "text-slate-900")}>{percentage}%</span>
+                                                <span className={cn("text-sm font-medium", isDark ? "text-white" : "text-slate-900")}>{formatNumber(percentage)}%</span>
                                             </div>
                                             <ProgressBar value={metric.current} max={metric.max} isDark={isDark} />
                                         </div>
@@ -478,10 +479,10 @@ export default function Doctor2Dashboard() {
                         </GlowingCard>
 
                         {/* Pending Tasks */}
-                        <GlowingCard glowColor="teal" className="p-4 md:p-6">
+                        <GlowingCard isDark={isDark} glowColor="teal" className="p-4 md:p-6">
                             <SectionHeader
                                 title={t.doctorDashboard.sections.pendingTasks}
-                                subtitle={`${pendingTasks.length} ${t.doctorDashboard.sections.items}`}
+                                subtitle={`${formatNumber(pendingTasks.length)} ${t.doctorDashboard.sections.items}`}
                                 isDark={isDark}
                                 action={
                                     <button className="text-teal-500 hover:text-teal-400 text-sm font-medium transition-colors">

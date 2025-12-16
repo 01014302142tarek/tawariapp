@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -19,6 +19,16 @@ const Icons = {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z" />
         </svg>
     ),
+    system: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 17.25v1.007a3 3 0 01-.879 2.122L7.5 21h9l-.621-.621A3 3 0 0115 18.257V17.25m6-12V15a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 15V5.25m18 0A2.25 2.25 0 0018.75 3H5.25A2.25 2.25 0 003 5.25m18 0V12a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 12V5.25" />
+        </svg>
+    ),
+    appearance: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4.098 19.902a3.75 3.75 0 005.304 0l6.401-6.402M6.75 21A3.75 3.75 0 013 17.25V4.125C3 3.504 3.504 3 4.125 3h5.25c.621 0 1.125.504 1.125 1.125v4.072M6.75 21a3.75 3.75 0 003.75-3.75V8.197M6.75 21h13.125c.621 0 1.125-.504 1.125-1.125v-5.25c0-.621-.504-1.125-1.125-1.125h-4.072M10.5 8.197l2.88-2.88c.438-.439 1.15-.439 1.59 0l3.712 3.713c.44.44.44 1.152 0 1.59l-2.879 2.88M6.75 17.25h.008v.008H6.75v-.008z" />
+        </svg>
+    ),
     bell: (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
@@ -27,6 +37,16 @@ const Icons = {
     chevronDown: (
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        </svg>
+    ),
+    chevronRight: (
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+        </svg>
+    ),
+    check: (
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
         </svg>
     ),
     settings: (
@@ -53,29 +73,55 @@ const Icons = {
 };
 
 const adminInfo = {
-    name: "Admin User",
     image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face",
 };
 
-// User Dropdown
+// User Dropdown with Theme Appearance submenu
 const UserDropdown = ({
     name,
     image,
     isDark,
-    onToggleTheme
+    themeMode,
+    onSetThemeMode
 }: {
     name: string;
     image: string;
     isDark: boolean;
-    onToggleTheme?: () => void;
+    themeMode: "system" | "light" | "dark";
+    onSetThemeMode: (mode: "system" | "light" | "dark") => void;
 }) => {
     const [isOpen, setIsOpen] = useState(false);
-    const { t } = useI18n();
+    const [showThemeMenu, setShowThemeMenu] = useState(false);
+    const { t, isRTL } = useI18n();
+    const dropdownRef = useRef<HTMLDivElement>(null);
+
+    // Close dropdown when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+                setIsOpen(false);
+                setShowThemeMenu(false);
+            }
+        };
+
+        if (isOpen) {
+            document.addEventListener('mousedown', handleClickOutside);
+        }
+
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [isOpen]);
+    const themeOptions = [
+        { mode: "system" as const, label: t.common.systemTheme || "System", icon: Icons.system },
+        { mode: "light" as const, label: t.common.lightMode || "Light", icon: Icons.sun },
+        { mode: "dark" as const, label: t.common.darkMode || "Dark", icon: Icons.moon },
+    ];
 
     return (
-        <div className="relative z-[100]">
+        <div ref={dropdownRef} className="relative z-[100]">
             <button
-                onClick={() => setIsOpen(!isOpen)}
+                onClick={() => { setIsOpen(!isOpen); setShowThemeMenu(false); }}
                 className={cn(
                     "flex items-center gap-2 md:gap-3 p-1.5 md:p-2 rounded-xl transition-colors",
                     isDark ? "hover:bg-white/5" : "hover:bg-gray-100"
@@ -88,7 +134,7 @@ const UserDropdown = ({
                 </div>
                 <div className="text-left hidden sm:block">
                     <p className={cn("text-sm font-medium", isDark ? "text-white" : "text-slate-900")}>{name}</p>
-                    <p className={cn("text-xs", isDark ? "text-gray-500" : "text-gray-600")}>Administrator</p>
+                    <p className={cn("text-xs", isDark ? "text-gray-500" : "text-gray-600")}>{t.common.roles.administrator}</p>
                 </div>
                 <motion.span animate={{ rotate: isOpen ? 180 : 0 }} className={cn("hidden sm:block", isDark ? "text-gray-400" : "text-gray-500")}>
                     {Icons.chevronDown}
@@ -97,56 +143,97 @@ const UserDropdown = ({
 
             <AnimatePresence>
                 {isOpen && (
-                    <>
-                        <div className="fixed inset-0 z-[90]" onClick={() => setIsOpen(false)} />
-                        <motion.div
-                            initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                            animate={{ opacity: 1, y: 0, scale: 1 }}
-                            exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                            transition={{ duration: 0.15 }}
-                            className={cn(
-                                "absolute right-0 top-full mt-2 w-56 rounded-xl shadow-2xl overflow-hidden z-[100]",
-                                isDark ? "bg-slate-900 border border-white/10" : "bg-white border border-gray-200"
-                            )}
-                        >
-                            <div className="p-2">
-                                {/* Mobile-only: Theme Toggle */}
-                                <button
-                                    onClick={() => {
-                                        onToggleTheme?.();
-                                        setIsOpen(false);
-                                    }}
-                                    className={cn(
-                                        "w-full flex items-center justify-between px-3 py-2.5 rounded-lg transition-colors md:hidden",
-                                        isDark ? "text-gray-400 hover:text-white hover:bg-white/5" : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
-                                    )}
-                                >
-                                    <div className="flex items-center gap-3">
-                                        {isDark ? Icons.sun : Icons.moon}
-                                        <span className="text-sm">{isDark ? t.common.lightMode : t.common.darkMode}</span>
-                                    </div>
-                                </button>
-
-                                {/* Divider - mobile only */}
-                                <div className={cn("my-2 border-t md:hidden", isDark ? "border-white/10" : "border-gray-200")} />
-
-                                <button className={cn(
-                                    "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors",
+                    <motion.div
+                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                        transition={{ duration: 0.15 }}
+                        className={cn(
+                            "absolute top-full mt-2 w-64 rounded-xl shadow-2xl overflow-hidden z-[100]",
+                            isRTL ? "left-0" : "right-0",
+                            isDark ? "bg-slate-900 border border-white/10" : "bg-white border border-gray-200"
+                        )}
+                    >
+                        <div className="p-2">
+                            {/* Theme Appearance Button */}
+                            <button
+                                onClick={() => setShowThemeMenu(!showThemeMenu)}
+                                className={cn(
+                                    "w-full flex items-center justify-between px-3 py-2.5 rounded-lg transition-colors",
                                     isDark ? "text-gray-400 hover:text-white hover:bg-white/5" : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
-                                )}>
-                                    {Icons.settings}
-                                    <span className="text-sm">{t.common.settings}</span>
-                                </button>
-                                <button className={cn(
-                                    "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors",
-                                    isDark ? "text-gray-400 hover:text-red-400 hover:bg-red-500/10" : "text-gray-600 hover:text-red-600 hover:bg-red-50"
-                                )}>
-                                    {Icons.logout}
-                                    <span className="text-sm">{t.common.logout}</span>
-                                </button>
-                            </div>
-                        </motion.div>
-                    </>
+                                )}
+                            >
+                                <div className="flex items-center gap-3">
+                                    {Icons.appearance}
+                                    <span className="text-sm">{t.common.themeAppearance || "Theme Appearance"}</span>
+                                </div>
+                                <motion.span animate={{ rotate: showThemeMenu ? 90 : 0 }}>
+                                    {Icons.chevronRight}
+                                </motion.span>
+                            </button>
+
+                            {/* Theme Options Submenu */}
+                            <AnimatePresence>
+                                {showThemeMenu && (
+                                    <motion.div
+                                        initial={{ opacity: 0, height: 0 }}
+                                        animate={{ opacity: 1, height: "auto" }}
+                                        exit={{ opacity: 0, height: 0 }}
+                                        transition={{ duration: 0.15 }}
+                                        className={cn(
+                                            "overflow-hidden rounded-lg mt-1 mb-1",
+                                            isDark ? "bg-white/5" : "bg-gray-50"
+                                        )}
+                                    >
+                                        {themeOptions.map((option) => (
+                                            <button
+                                                key={option.mode}
+                                                onClick={() => {
+                                                    onSetThemeMode(option.mode);
+                                                    setShowThemeMenu(false);
+                                                    setIsOpen(false);
+                                                }}
+                                                className={cn(
+                                                    "w-full flex items-center justify-between px-4 py-2.5 transition-colors",
+                                                    isDark
+                                                        ? "text-gray-400 hover:text-white hover:bg-white/5"
+                                                        : "text-gray-600 hover:text-gray-900 hover:bg-gray-100",
+                                                    themeMode === option.mode && (isDark ? "text-teal-400" : "text-teal-600")
+                                                )}
+                                            >
+                                                <div className="flex items-center gap-3">
+                                                    {option.icon}
+                                                    <span className="text-sm">{option.label}</span>
+                                                </div>
+                                                {themeMode === option.mode && (
+                                                    <span className={isDark ? "text-teal-400" : "text-teal-600"}>
+                                                        {Icons.check}
+                                                    </span>
+                                                )}
+                                            </button>
+                                        ))}
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+
+                            <div className={cn("my-2 border-t", isDark ? "border-white/10" : "border-gray-200")} />
+
+                            <button className={cn(
+                                "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors",
+                                isDark ? "text-gray-400 hover:text-white hover:bg-white/5" : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+                            )}>
+                                {Icons.settings}
+                                <span className="text-sm">{t.common.settings}</span>
+                            </button>
+                            <button className={cn(
+                                "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors",
+                                isDark ? "text-gray-400 hover:text-red-400 hover:bg-red-500/10" : "text-gray-600 hover:text-red-600 hover:bg-red-50"
+                            )}>
+                                {Icons.logout}
+                                <span className="text-sm">{t.common.logout}</span>
+                            </button>
+                        </div>
+                    </motion.div>
                 )}
             </AnimatePresence>
         </div>
@@ -154,7 +241,7 @@ const UserDropdown = ({
 };
 
 export default function Header({ onMenuClick }: { onMenuClick?: () => void }) {
-    const { theme, toggleTheme } = useTheme();
+    const { theme, themeMode, setThemeMode } = useTheme();
     const { t, isRTL } = useI18n();
     const isDark = theme === "dark";
 
@@ -193,21 +280,6 @@ export default function Header({ onMenuClick }: { onMenuClick?: () => void }) {
                 </div>
 
                 <div className="flex items-center gap-2 md:gap-3">
-
-
-                    {/* Theme Toggle - hidden on mobile */}
-                    <button
-                        onClick={toggleTheme}
-                        className={cn(
-                            "p-2.5 rounded-xl border transition-all hidden md:flex",
-                            isDark
-                                ? "bg-white/5 hover:bg-white/10 border-white/5 text-gray-400 hover:text-white"
-                                : "bg-gray-100 hover:bg-gray-200 border-gray-200 text-gray-600 hover:text-gray-900"
-                        )}
-                    >
-                        {isDark ? Icons.sun : Icons.moon}
-                    </button>
-
                     {/* Notifications - visible on all screens */}
                     <button className={cn(
                         "relative p-2 md:p-2.5 rounded-xl border transition-colors",
@@ -221,10 +293,11 @@ export default function Header({ onMenuClick }: { onMenuClick?: () => void }) {
 
                     {/* User Dropdown */}
                     <UserDropdown
-                        name={adminInfo.name}
+                        name={t.common.demoNames.adminUser}
                         image={adminInfo.image}
                         isDark={isDark}
-                        onToggleTheme={toggleTheme}
+                        themeMode={themeMode}
+                        onSetThemeMode={setThemeMode}
                     />
                 </div>
             </div>

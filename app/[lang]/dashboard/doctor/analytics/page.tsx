@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { GlowingCard } from "@/components/ui/glowing-card";
 import { AnimatedNumber } from "@/components/ui/animated-number";
 import { useThemeStyles } from "../context/useThemeStyles";
+import { useI18n } from "@/app/i18n";
 
 // Icons
 const Icons = {
@@ -41,29 +42,51 @@ const Icons = {
     ),
 };
 
-// Chart Data
-const weeklyData = [
-    { day: "Mon", consultations: 8, revenue: 1600 },
-    { day: "Tue", consultations: 12, revenue: 2400 },
-    { day: "Wed", consultations: 10, revenue: 2000 },
-    { day: "Thu", consultations: 15, revenue: 3000 },
-    { day: "Fri", consultations: 11, revenue: 2200 },
-    { day: "Sat", consultations: 6, revenue: 1200 },
-    { day: "Sun", consultations: 4, revenue: 800 },
-];
-
-const topDiagnoses = [
-    { name: "Hypertension", count: 45, percentage: 28 },
-    { name: "Arrhythmia", count: 32, percentage: 20 },
-    { name: "Heart Disease", count: 28, percentage: 17 },
-    { name: "Cholesterol", count: 24, percentage: 15 },
-    { name: "General Checkup", count: 32, percentage: 20 },
-];
-
-const maxConsultations = Math.max(...weeklyData.map(d => d.consultations));
-
 export default function AnalyticsPage() {
+    const { t, isRTL, formatNumber } = useI18n();
     const { isDark, pageBg, textPrimary, textSecondary, textMuted } = useThemeStyles();
+
+    // Chart Data
+    const weeklyData = [
+        { day: "Mon", consultations: 8, revenue: 1600 },
+        { day: "Tue", consultations: 12, revenue: 2400 },
+        { day: "Wed", consultations: 10, revenue: 2000 },
+        { day: "Thu", consultations: 15, revenue: 3000 },
+        { day: "Fri", consultations: 11, revenue: 2200 },
+        { day: "Sat", consultations: 6, revenue: 1200 },
+        { day: "Sun", consultations: 4, revenue: 800 },
+    ];
+
+    const diagnosesMap: Record<string, string> = isRTL ? {
+        "Hypertension": "ارتفاع ضغط الدم",
+        "Arrhythmia": "عدم انتظام ضربات القلب",
+        "Heart Disease": "أمراض القلب",
+        "Cholesterol": "الكوليسترول",
+        "General Checkup": "فحص عام"
+    } : {
+        "Hypertension": "Hypertension",
+        "Arrhythmia": "Arrhythmia",
+        "Heart Disease": "Heart Disease",
+        "Cholesterol": "Cholesterol",
+        "General Checkup": "General Checkup"
+    };
+
+    const daysMap: Record<string, string> = isRTL ? {
+        "Mon": "إثنين", "Tue": "ثلاثاء", "Wed": "أربعاء", "Thu": "خميس", "Fri": "جمعة", "Sat": "سبت", "Sun": "أحد"
+    } : {
+        "Mon": "Mon", "Tue": "Tue", "Wed": "Wed", "Thu": "Thu", "Fri": "Fri", "Sat": "Sat", "Sun": "Sun"
+    };
+
+    const topDiagnoses = [
+        { name: "Hypertension", count: 45, percentage: 28 },
+        { name: "Arrhythmia", count: 32, percentage: 20 },
+        { name: "Heart Disease", count: 28, percentage: 17 },
+        { name: "Cholesterol", count: 24, percentage: 15 },
+        { name: "General Checkup", count: 32, percentage: 20 },
+    ];
+
+    const maxConsultations = Math.max(...weeklyData.map(d => d.consultations));
+
 
     return (
         <div className="p-4 md:p-6 lg:p-8">
@@ -73,20 +96,20 @@ export default function AnalyticsPage() {
                     <span className="w-8 h-8 md:w-10 md:h-10 rounded-lg md:rounded-xl bg-teal-500/10 flex items-center justify-center text-teal-500">
                         {Icons.chart}
                     </span>
-                    Analytics
+                    {t.doctorDashboard.analyticsPage.title}
                 </h1>
-                <p className={cn("text-sm md:text-base mt-1", textMuted)}>Track your performance and metrics</p>
+                <p className={cn("text-sm md:text-base mt-1", textMuted)}>{t.doctorDashboard.analyticsPage.subtitle}</p>
             </div>
 
             {/* Stats Overview */}
             <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-6 md:mb-8">
                 {[
-                    { label: "Total Patients", value: 156, change: "+12%", icon: Icons.users },
-                    { label: "Consultations", value: 66, change: "+8%", icon: Icons.video },
-                    { label: "Revenue (EGP)", value: 13200, change: "+15%", icon: Icons.money },
-                    { label: "Avg. Rating", value: 4.9, change: "+0.2", icon: Icons.star },
+                    { label: t.doctorDashboard.analyticsPage.stats.totalPatients, value: 156, change: "+12%", icon: Icons.users },
+                    { label: t.doctorDashboard.analyticsPage.stats.consultations, value: 66, change: "+8%", icon: Icons.video },
+                    { label: t.doctorDashboard.analyticsPage.stats.revenue, value: 13200, change: "+15%", icon: Icons.money },
+                    { label: t.doctorDashboard.analyticsPage.stats.avgRating, value: 4.9, change: "+0.2", icon: Icons.star },
                 ].map((stat, idx) => (
-                    <GlowingCard key={idx} glowColor="teal" className="p-3 md:p-5">
+                    <GlowingCard key={idx} isDark={isDark} glowColor="teal" className="p-3 md:p-5">
                         <div className="flex items-start justify-between mb-2 md:mb-3">
                             <div className="w-8 h-8 md:w-10 md:h-10 rounded-lg md:rounded-xl bg-teal-500/10 flex items-center justify-center text-teal-500">
                                 <span className="[&>svg]:w-4 [&>svg]:h-4 md:[&>svg]:w-5 md:[&>svg]:h-5">
@@ -95,11 +118,11 @@ export default function AnalyticsPage() {
                             </div>
                             <span className="flex items-center gap-0.5 md:gap-1 text-xs md:text-sm text-teal-500">
                                 {Icons.trendUp}
-                                {stat.change}
+                                {formatNumber(stat.change)}
                             </span>
                         </div>
                         <div className={cn("text-xl md:text-3xl font-bold mb-0.5 md:mb-1", textPrimary)}>
-                            <AnimatedNumber value={stat.value} />
+                            <AnimatedNumber value={stat.value} format={formatNumber} />
                         </div>
                         <p className={cn("text-xs md:text-sm truncate", textMuted)}>{stat.label}</p>
                     </GlowingCard>
@@ -109,15 +132,15 @@ export default function AnalyticsPage() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6 mb-6 md:mb-8">
                 {/* Weekly Consultations Chart */}
                 <div className="lg:col-span-2">
-                    <GlowingCard glowColor="teal" className="p-4 md:p-6 h-full">
+                    <GlowingCard isDark={isDark} glowColor="teal" className="p-4 md:p-6 h-full">
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4 md:mb-6">
                             <div>
-                                <h2 className={cn("text-base md:text-lg font-semibold", textPrimary)}>Weekly Consultations</h2>
-                                <p className={cn("text-xs md:text-sm", textMuted)}>This week&apos;s performance</p>
+                                <h2 className={cn("text-base md:text-lg font-semibold", textPrimary)}>{t.doctorDashboard.analyticsPage.charts.weekly.title}</h2>
+                                <p className={cn("text-xs md:text-sm", textMuted)}>{t.doctorDashboard.analyticsPage.charts.weekly.subtitle}</p>
                             </div>
                             <div className="text-left sm:text-right">
-                                <p className={cn("text-xl md:text-2xl font-bold", textPrimary)}>66</p>
-                                <p className="text-xs md:text-sm text-teal-500">Total this week</p>
+                                <p className={cn("text-xl md:text-2xl font-bold", textPrimary)}>{formatNumber(66)}</p>
+                                <p className="text-xs md:text-sm text-teal-500">{t.doctorDashboard.analyticsPage.charts.weekly.total}</p>
                             </div>
                         </div>
 
@@ -139,11 +162,11 @@ export default function AnalyticsPage() {
                                                     "absolute -top-7 left-1/2 -translate-x-1/2 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10",
                                                     isDark ? "bg-slate-800 text-white" : "bg-gray-800 text-white"
                                                 )}>
-                                                    {data.consultations}
+                                                    {formatNumber(data.consultations)}
                                                 </div>
                                             </motion.div>
                                         </div>
-                                        <span className={cn("text-xs mt-2", textMuted)}>{data.day}</span>
+                                        <span className={cn("text-xs mt-2", textMuted)}>{daysMap[data.day]}</span>
                                     </div>
                                 );
                             })}
@@ -153,8 +176,8 @@ export default function AnalyticsPage() {
 
                 {/* Patient Satisfaction */}
                 <div>
-                    <GlowingCard glowColor="teal" className="p-4 md:p-6 h-full">
-                        <h2 className={cn("text-base md:text-lg font-semibold mb-4 md:mb-6", textPrimary)}>Patient Satisfaction</h2>
+                    <GlowingCard isDark={isDark} glowColor="teal" className="p-4 md:p-6 h-full">
+                        <h2 className={cn("text-base md:text-lg font-semibold mb-4 md:mb-6", textPrimary)}>{t.doctorDashboard.analyticsPage.charts.satisfaction.title}</h2>
 
                         <div className="text-center mb-4 md:mb-6">
                             <div className="relative w-28 h-28 md:w-32 md:h-32 mx-auto">
@@ -183,23 +206,23 @@ export default function AnalyticsPage() {
                                     />
                                 </svg>
                                 <div className="absolute inset-0 flex items-center justify-center">
-                                    <span className={cn("text-2xl md:text-3xl font-bold", textPrimary)}>92%</span>
+                                    <span className={cn("text-2xl md:text-3xl font-bold", textPrimary)}>{formatNumber(92)}%</span>
                                 </div>
                             </div>
                         </div>
 
                         <div className="space-y-2 md:space-y-3">
                             <div className="flex items-center justify-between text-xs md:text-sm">
-                                <span className={textSecondary}>Excellent</span>
-                                <span className={textPrimary}>68%</span>
+                                <span className={textSecondary}>{t.doctorDashboard.analyticsPage.charts.satisfaction.excellent}</span>
+                                <span className={textPrimary}>{formatNumber(68)}%</span>
                             </div>
                             <div className="flex items-center justify-between text-xs md:text-sm">
-                                <span className={textSecondary}>Good</span>
-                                <span className={textPrimary}>24%</span>
+                                <span className={textSecondary}>{t.doctorDashboard.analyticsPage.charts.satisfaction.good}</span>
+                                <span className={textPrimary}>{formatNumber(24)}%</span>
                             </div>
                             <div className="flex items-center justify-between text-xs md:text-sm">
-                                <span className={textSecondary}>Average</span>
-                                <span className={textPrimary}>8%</span>
+                                <span className={textSecondary}>{t.doctorDashboard.analyticsPage.charts.satisfaction.average}</span>
+                                <span className={textPrimary}>{formatNumber(8)}%</span>
                             </div>
                         </div>
                     </GlowingCard>
@@ -207,18 +230,18 @@ export default function AnalyticsPage() {
             </div>
 
             {/* Top Diagnoses */}
-            <GlowingCard glowColor="teal" className="p-4 md:p-6">
-                <h2 className={cn("text-base md:text-lg font-semibold mb-4 md:mb-6", textPrimary)}>Top Diagnoses This Month</h2>
+            <GlowingCard isDark={isDark} glowColor="teal" className="p-4 md:p-6">
+                <h2 className={cn("text-base md:text-lg font-semibold mb-4 md:mb-6", textPrimary)}>{t.doctorDashboard.analyticsPage.diagnoses.title}</h2>
                 <div className="space-y-3 md:space-y-4">
                     {topDiagnoses.map((diagnosis, idx) => (
                         <div key={idx} className="flex items-center gap-2 md:gap-4">
                             <div className="w-6 md:w-8 text-center">
-                                <span className={cn("text-xs md:text-sm font-medium", textMuted)}>#{idx + 1}</span>
+                                <span className={cn("text-xs md:text-sm font-medium", textMuted)}>#{formatNumber(idx + 1)}</span>
                             </div>
                             <div className="flex-1">
                                 <div className="flex items-center justify-between mb-1">
-                                    <span className={cn("text-xs md:text-sm font-medium", textPrimary)}>{diagnosis.name}</span>
-                                    <span className={cn("text-xs md:text-sm hidden sm:inline", textSecondary)}>{diagnosis.count} patients</span>
+                                    <span className={cn("text-xs md:text-sm font-medium", textPrimary)}>{diagnosesMap[diagnosis.name]}</span>
+                                    <span className={cn("text-xs md:text-sm hidden sm:inline", textSecondary)}>{formatNumber(diagnosis.count)} {t.doctorDashboard.analyticsPage.diagnoses.patients}</span>
                                 </div>
                                 <div className={cn("w-full h-1.5 md:h-2 rounded-full overflow-hidden", isDark ? "bg-slate-800" : "bg-gray-200")}>
                                     <motion.div
@@ -230,7 +253,7 @@ export default function AnalyticsPage() {
                                 </div>
                             </div>
                             <div className="w-10 md:w-12 text-right">
-                                <span className="text-xs md:text-sm text-teal-500">{diagnosis.percentage}%</span>
+                                <span className="text-xs md:text-sm text-teal-500">{formatNumber(diagnosis.percentage)}%</span>
                             </div>
                         </div>
                     ))}

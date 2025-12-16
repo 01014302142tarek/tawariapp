@@ -206,7 +206,7 @@ export default function LandingPage() {
             <div className="hidden lg:flex items-center gap-3">
               <LanguageToggle />
               <Link href={`/${language}/login`} className="text-gray-300 hover:text-white font-medium text-sm px-4 py-2 transition-colors">{t.nav.login}</Link>
-              <Link href={`/${language}/register`} className="bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-400 hover:to-teal-500 text-white font-semibold px-5 py-2.5 rounded-full transition-all shadow-lg shadow-teal-500/25">{t.nav.getStarted}</Link>
+              <Link href={`/${language}/get-started`} className="bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-400 hover:to-teal-500 text-white font-semibold px-5 py-2.5 rounded-full transition-all shadow-lg shadow-teal-500/25">{t.nav.getStarted}</Link>
             </div>
 
             <button className="lg:hidden p-2 text-gray-300 hover:text-white" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
@@ -223,7 +223,7 @@ export default function LandingPage() {
                 <Link href="#for-doctors" className="text-gray-300 hover:text-teal-400 py-2">{t.nav.forDoctors}</Link>
                 <div className="flex items-center gap-3 pt-4 border-t border-white/10">
                   <LanguageToggle />
-                  <Link href={`/${language}/register`} className="bg-teal-500 hover:bg-teal-400 text-white font-semibold px-5 py-2 rounded-full flex-1 text-center">{t.nav.getStarted}</Link>
+                  <Link href={`/${language}/get-started`} className="bg-teal-500 hover:bg-teal-400 text-white font-semibold px-5 py-2 rounded-full flex-1 text-center">{t.nav.getStarted}</Link>
                 </div>
               </div>
             </div>
@@ -515,8 +515,8 @@ export default function LandingPage() {
             <div>
               <h4 className="font-bold mb-4">{t.footer.forPatients}</h4>
               <div className="flex flex-col gap-3">
-                <Link href={`/${language}/doctors`} className="text-gray-400 text-sm hover:text-teal-400 transition-colors">{t.footer.findDoctors}</Link>
-                <Link href={`/${language}/how-it-works`} className="text-gray-400 text-sm hover:text-teal-400 transition-colors">{t.footer.howItWorks}</Link>
+                <Link href={`/${language}#doctors`} className="text-gray-400 text-sm hover:text-teal-400 transition-colors">{t.footer.findDoctors}</Link>
+                <Link href={`/${language}#how-it-works`} className="text-gray-400 text-sm hover:text-teal-400 transition-colors">{t.footer.howItWorks}</Link>
                 <Link href={`/${language}/faq`} className="text-gray-400 text-sm hover:text-teal-400 transition-colors">{t.footer.faq}</Link>
               </div>
             </div>
@@ -524,8 +524,8 @@ export default function LandingPage() {
               <h4 className="font-bold mb-4">{t.footer.forDoctorsTitle}</h4>
               <div className="flex flex-col gap-3">
                 <Link href={`/${language}/doctor-onboarding`} className="text-gray-400 text-sm hover:text-teal-400 transition-colors">{t.footer.joinAsDoctor}</Link>
-                <Link href={`/${language}/doctor-faq`} className="text-gray-400 text-sm hover:text-teal-400 transition-colors">{t.footer.doctorFaq}</Link>
-                <Link href={`/${language}/pricing`} className="text-gray-400 text-sm hover:text-teal-400 transition-colors">{t.footer.pricing}</Link>
+                <Link href={`/${language}/faq`} className="text-gray-400 text-sm hover:text-teal-400 transition-colors">{t.footer.doctorFaq}</Link>
+                <span className="text-gray-400 text-sm hover:text-teal-400 transition-colors cursor-default">{t.footer.pricing}</span>
               </div>
             </div>
             <div>

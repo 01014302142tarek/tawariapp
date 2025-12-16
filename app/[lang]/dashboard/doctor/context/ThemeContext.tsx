@@ -2,59 +2,76 @@
 
 import React, { createContext, useContext, useEffect, useState } from "react";
 
+type ThemeMode = "system" | "light" | "dark";
 type Theme = "light" | "dark";
 
 interface ThemeContextType {
     theme: Theme;
-    toggleTheme: () => void;
+    themeMode: ThemeMode;
+    setThemeMode: (mode: ThemeMode) => void;
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
+function getSystemTheme(): Theme {
+    if (typeof window !== "undefined") {
+        return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    }
+    return "light";
+}
+
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-    const [theme, setTheme] = useState<Theme>("dark");
+    const [themeMode, setThemeModeState] = useState<ThemeMode>("light");
+    const [theme, setTheme] = useState<Theme>("light");
     const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
-        // Check localStorage first, then system preference
-        const savedTheme = localStorage.getItem("doctor-dashboard-theme") as Theme | null;
-
-        if (savedTheme) {
-            setTheme(savedTheme);
-        } else {
-            // Use system preference
-            const systemPrefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-            setTheme(systemPrefersDark ? "dark" : "light");
-        }
-
         setMounted(true);
-
-        // Listen for system theme changes
-        const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
-        const handleChange = (e: MediaQueryListEvent) => {
-            // Only update if user hasn't set a preference
-            if (!localStorage.getItem("doctor-dashboard-theme")) {
-                setTheme(e.matches ? "dark" : "light");
+        const savedMode = localStorage.getItem("doctor-dashboard-theme-mode") as ThemeMode;
+        if (savedMode && ["system", "light", "dark"].includes(savedMode)) {
+            setThemeModeState(savedMode);
+            if (savedMode === "system") {
+                setTheme(getSystemTheme());
+            } else {
+                setTheme(savedMode);
             }
-        };
-
-        mediaQuery.addEventListener("change", handleChange);
-        return () => mediaQuery.removeEventListener("change", handleChange);
+        } else {
+            // Default to light theme
+            setThemeModeState("light");
+            setTheme("light");
+        }
     }, []);
 
-    const toggleTheme = () => {
-        const newTheme = theme === "dark" ? "light" : "dark";
-        setTheme(newTheme);
-        localStorage.setItem("doctor-dashboard-theme", newTheme);
+    useEffect(() => {
+        if (!mounted) return;
+
+        if (themeMode === "system") {
+            const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+            const handleChange = (e: MediaQueryListEvent) => {
+                setTheme(e.matches ? "dark" : "light");
+            };
+            setTheme(getSystemTheme());
+            mediaQuery.addEventListener("change", handleChange);
+            return () => mediaQuery.removeEventListener("change", handleChange);
+        }
+    }, [themeMode, mounted]);
+
+    const setThemeMode = (mode: ThemeMode) => {
+        setThemeModeState(mode);
+        localStorage.setItem("doctor-dashboard-theme-mode", mode);
+        if (mode === "system") {
+            setTheme(getSystemTheme());
+        } else {
+            setTheme(mode);
+        }
     };
 
-    // Prevent flash of wrong theme
     if (!mounted) {
         return null;
     }
 
     return (
-        <ThemeContext.Provider value={{ theme, toggleTheme }}>
+        <ThemeContext.Provider value={{ theme, themeMode, setThemeMode }}>
             {children}
         </ThemeContext.Provider>
     );

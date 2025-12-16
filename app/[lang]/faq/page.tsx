@@ -1,0 +1,410 @@
+"use client";
+
+import React, { useState } from "react";
+import Link from "next/link";
+import { useI18n } from "../../i18n";
+import { motion, AnimatePresence } from "framer-motion";
+
+// Logo Component
+const LogoFull = ({ className = "" }: { className?: string }) => (
+    <div className={`flex items-center gap-2 ${className}`}>
+        <svg className="h-10 w-10 flex-shrink-0" viewBox="0 0 100 90" fill="none">
+            <defs>
+                <linearGradient id="heartGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#2DD4BF" />
+                    <stop offset="50%" stopColor="#14B8A6" />
+                    <stop offset="100%" stopColor="#0D9488" />
+                </linearGradient>
+            </defs>
+            <path
+                d="M50 85 C50 85 10 55 10 30 C10 15 22 5 35 5 C42 5 48 10 50 15 C52 10 58 5 65 5 C78 5 90 15 90 30 C90 55 50 85 50 85Z"
+                fill="none"
+                stroke="url(#heartGradient)"
+                strokeWidth="6"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+            />
+            <path
+                d="M5 45 L25 45 L35 25 L50 65 L65 35 L75 45 L95 45"
+                fill="none"
+                stroke="#F59E0B"
+                strokeWidth="5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+            />
+        </svg>
+        <span className="text-xl font-bold tracking-tight">
+            <span className="text-white">Tawari</span>
+            <span className="text-gray-400">App</span>
+        </span>
+    </div>
+);
+
+// Icons
+const Icons = {
+    menu: (
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+    ),
+    close: (
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+        </svg>
+    ),
+    chevron: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        </svg>
+    ),
+    patient: (
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+        </svg>
+    ),
+    doctor: (
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}>
+            <path d="M11 2v2" />
+            <path d="M5 2v2" />
+            <path d="M5 3H4a2 2 0 0 0-2 2v4a6 6 0 0 0 12 0V5a2 2 0 0 0-2-2h-1" />
+            <path d="M8 15a6 6 0 0 0 12 0v-3" />
+            <circle cx="20" cy="10" r="2" />
+        </svg>
+    ),
+    language: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
+        </svg>
+    ),
+};
+
+// Language Toggle
+function LanguageToggle() {
+    const { language, setLanguage } = useI18n();
+    return (
+        <button
+            onClick={() => setLanguage(language === 'en' ? 'ar' : 'en')}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-sm font-medium transition-colors"
+        >
+            {Icons.language}
+            <span>{language === 'en' ? 'العربية' : 'English'}</span>
+        </button>
+    );
+}
+
+// FAQ Accordion Item
+function FAQItem({ question, answer, isOpen, onClick }: {
+    question: string;
+    answer: string;
+    isOpen: boolean;
+    onClick: () => void;
+}) {
+    return (
+        <div className="border border-white/10 rounded-xl overflow-hidden bg-slate-800/30 hover:bg-slate-800/50 transition-colors">
+            <button
+                onClick={onClick}
+                className="w-full flex items-center justify-between p-5 text-left"
+            >
+                <span className="font-medium text-white pr-4">{question}</span>
+                <motion.span
+                    animate={{ rotate: isOpen ? 180 : 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="text-teal-400 flex-shrink-0"
+                >
+                    {Icons.chevron}
+                </motion.span>
+            </button>
+            <AnimatePresence>
+                {isOpen && (
+                    <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                    >
+                        <div className="px-5 pb-5 text-gray-400 leading-relaxed">
+                            {answer}
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+        </div>
+    );
+}
+
+export default function FAQPage() {
+    const { t, isRTL, language } = useI18n();
+    const [openPatient, setOpenPatient] = useState<number | null>(0);
+    const [openDoctor, setOpenDoctor] = useState<number | null>(null);
+    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+    const translations = {
+        en: {
+            title: "Frequently Asked Questions",
+            subtitle: "Find answers to common questions about TawariApp",
+            patientSection: "For Patients",
+            doctorSection: "For Doctors",
+            patientFaqs: [
+                {
+                    question: "How do I book an appointment with a doctor?",
+                    answer: "Simply create an account, browse our list of available doctors, select your preferred specialist, choose a time slot that works for you, and confirm your booking. You'll receive a confirmation email with all the details."
+                },
+                {
+                    question: "What payment methods do you accept?",
+                    answer: "We accept all major credit and debit cards (Visa, MasterCard), as well as Vodafone Cash for convenient mobile payments. All transactions are securely processed."
+                },
+                {
+                    question: "Can I get a prescription through video consultation?",
+                    answer: "Yes! Our licensed doctors can issue digital prescriptions after a video consultation if they determine it's medically appropriate. The prescription will be sent to your registered email and can be used at any pharmacy."
+                },
+                {
+                    question: "Is my medical information kept private?",
+                    answer: "Absolutely. We take privacy very seriously. All your medical information is encrypted and stored securely. We comply with all health data protection regulations and never share your information without your consent."
+                },
+                {
+                    question: "What if I need to cancel or reschedule my appointment?",
+                    answer: "You can cancel or reschedule your appointment up to 2 hours before the scheduled time through your dashboard. Cancellations made with less than 2 hours notice may be subject to a small fee."
+                },
+                {
+                    question: "Are the doctors on TawariApp licensed?",
+                    answer: "Yes, all doctors on our platform are fully licensed medical professionals registered with the Egyptian Medical Syndicate. We verify each doctor's credentials before they can offer consultations."
+                }
+            ],
+            doctorFaqs: [
+                {
+                    question: "How do I register as a doctor on TawariApp?",
+                    answer: "Click on 'Register as Doctor' and complete our onboarding process. You'll need to provide your medical license, specialization certificates, and identification documents. Our team will verify your credentials within 2-3 business days."
+                },
+                {
+                    question: "What commission does TawariApp charge?",
+                    answer: "We charge a competitive commission on each consultation. The exact rate depends on your specialization and consultation volume. Contact our support team for detailed pricing information."
+                },
+                {
+                    question: "Can I set my own consultation fees?",
+                    answer: "Yes, you have full control over your consultation fees. We provide suggested ranges based on your specialty and experience, but the final decision is yours."
+                },
+                {
+                    question: "How do I receive payments for consultations?",
+                    answer: "Payments are processed weekly and transferred directly to your registered bank account. You can view your earnings and payment history in your doctor dashboard."
+                },
+                {
+                    question: "What technical requirements do I need for video consultations?",
+                    answer: "You need a stable internet connection (at least 5 Mbps), a device with a camera and microphone (computer, tablet, or smartphone), and a quiet, well-lit private space for consultations."
+                },
+                {
+                    question: "Can I issue prescriptions through the platform?",
+                    answer: "Yes, our platform includes a built-in digital prescription system. You can prescribe medications during or after the consultation, and the prescription is automatically sent to the patient's email."
+                }
+            ],
+            stillHaveQuestions: "Still have questions?",
+            contactUs: "Contact our support team",
+        },
+        ar: {
+            title: "الأسئلة الشائعة",
+            subtitle: "اعثر على إجابات للأسئلة الشائعة حول طوارئ",
+            patientSection: "للمرضى",
+            doctorSection: "للأطباء",
+            patientFaqs: [
+                {
+                    question: "كيف أحجز موعداً مع طبيب؟",
+                    answer: "ببساطة قم بإنشاء حساب، تصفح قائمة الأطباء المتاحين، اختر الأخصائي المفضل لديك، حدد الوقت المناسب لك، وأكد الحجز. ستتلقى بريداً إلكترونياً بجميع التفاصيل."
+                },
+                {
+                    question: "ما طرق الدفع المتاحة؟",
+                    answer: "نقبل جميع بطاقات الائتمان والخصم الرئيسية (فيزا، ماستركارد)، بالإضافة إلى فودافون كاش للدفع عبر الهاتف. جميع المعاملات مؤمنة."
+                },
+                {
+                    question: "هل يمكنني الحصول على وصفة طبية من خلال الاستشارة بالفيديو؟",
+                    answer: "نعم! يمكن لأطبائنا المرخصين إصدار وصفات طبية رقمية بعد الاستشارة إذا رأوا ذلك مناسباً طبياً. سيتم إرسال الوصفة إلى بريدك الإلكتروني ويمكن استخدامها في أي صيدلية."
+                },
+                {
+                    question: "هل معلوماتي الطبية محمية؟",
+                    answer: "بالتأكيد. نحن نأخذ الخصوصية على محمل الجد. جميع معلوماتك الطبية مشفرة ومخزنة بشكل آمن. نحن نلتزم بجميع لوائح حماية البيانات الصحية ولا نشارك معلوماتك دون موافقتك."
+                },
+                {
+                    question: "ماذا لو أردت إلغاء أو إعادة جدولة موعدي؟",
+                    answer: "يمكنك إلغاء أو إعادة جدولة موعدك حتى ساعتين قبل الموعد المحدد من خلال لوحة التحكم. الإلغاءات التي تتم بأقل من ساعتين قد تخضع لرسوم بسيطة."
+                },
+                {
+                    question: "هل الأطباء في طوارئ مرخصون؟",
+                    answer: "نعم، جميع الأطباء على منصتنا هم أطباء مرخصون ومسجلون في نقابة الأطباء المصرية. نتحقق من أوراق اعتماد كل طبيب قبل السماح له بتقديم الاستشارات."
+                }
+            ],
+            doctorFaqs: [
+                {
+                    question: "كيف أسجل كطبيب في طوارئ؟",
+                    answer: "انقر على 'التسجيل كطبيب' وأكمل عملية التسجيل. ستحتاج إلى تقديم رخصتك الطبية وشهادات التخصص ووثائق الهوية. سيتحقق فريقنا من بياناتك خلال 2-3 أيام عمل."
+                },
+                {
+                    question: "ما هي العمولة التي تأخذها طوارئ؟",
+                    answer: "نحن نفرض عمولة تنافسية على كل استشارة. يعتمد المعدل الدقيق على تخصصك وحجم الاستشارات. تواصل مع فريق الدعم للحصول على معلومات تفصيلية."
+                },
+                {
+                    question: "هل يمكنني تحديد رسوم الاستشارة الخاصة بي؟",
+                    answer: "نعم، لديك السيطرة الكاملة على رسوم الاستشارة. نقدم نطاقات مقترحة بناءً على تخصصك وخبرتك، لكن القرار النهائي لك."
+                },
+                {
+                    question: "كيف أستلم مدفوعات الاستشارات؟",
+                    answer: "تتم معالجة المدفوعات أسبوعياً وتحويلها مباشرة إلى حسابك البنكي المسجل. يمكنك عرض أرباحك وسجل الدفعات في لوحة تحكم الطبيب."
+                },
+                {
+                    question: "ما المتطلبات التقنية للاستشارات بالفيديو؟",
+                    answer: "تحتاج إلى اتصال إنترنت مستقر (5 ميجابت على الأقل)، جهاز بكاميرا وميكروفون (كمبيوتر أو تابلت أو هاتف)، ومكان خاص هادئ وجيد الإضاءة للاستشارات."
+                },
+                {
+                    question: "هل يمكنني إصدار وصفات طبية من خلال المنصة؟",
+                    answer: "نعم، تتضمن منصتنا نظام وصفات طبية رقمي مدمج. يمكنك وصف الأدوية أثناء أو بعد الاستشارة، ويتم إرسال الوصفة تلقائياً إلى بريد المريض."
+                }
+            ],
+            stillHaveQuestions: "لا زلت لديك أسئلة؟",
+            contactUs: "تواصل مع فريق الدعم",
+        }
+    };
+
+    const text = translations[language as keyof typeof translations] || translations.en;
+
+    return (
+        <div className={`min-h-screen bg-[#0F172A] text-white overflow-x-hidden ${isRTL ? 'font-cairo' : ''}`} dir={isRTL ? 'rtl' : 'ltr'}>
+            {/* Background Effects */}
+            <div className="fixed inset-0 overflow-hidden pointer-events-none">
+                <div className="absolute inset-0 bg-gradient-to-br from-teal-900/20 via-[#0F172A] to-[#0F172A]" />
+                <div className="absolute top-1/4 -right-1/4 w-[600px] h-[600px] bg-teal-500/10 rounded-full blur-3xl" />
+                <div className="absolute bottom-1/4 -left-1/4 w-[400px] h-[400px] bg-amber-500/5 rounded-full blur-3xl" />
+            </div>
+
+            {/* Navigation */}
+            <nav className="relative z-50 bg-[#0F172A]/80 backdrop-blur-xl border-b border-white/5">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="flex items-center justify-between h-16 lg:h-20">
+                        <Link href={`/${language}`} className="group hover:opacity-90 transition-opacity">
+                            <LogoFull />
+                        </Link>
+
+                        {/* Desktop Navigation */}
+                        <div className="hidden lg:flex items-center gap-3">
+                            <LanguageToggle />
+                            <Link
+                                href={`/${language}/login`}
+                                className="text-gray-300 hover:text-white font-medium text-sm px-4 py-2 transition-colors"
+                            >
+                                {t.nav.login}
+                            </Link>
+                            <Link
+                                href={`/${language}/get-started`}
+                                className="bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-400 hover:to-teal-500 text-white font-semibold px-5 py-2 rounded-full text-sm transition-all"
+                            >
+                                {t.nav.getStarted}
+                            </Link>
+                        </div>
+
+                        {/* Mobile Menu Button */}
+                        <button
+                            className="lg:hidden p-2 text-gray-300 hover:text-white"
+                            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                        >
+                            {mobileMenuOpen ? Icons.close : Icons.menu}
+                        </button>
+                    </div>
+
+                    {/* Mobile Menu */}
+                    {mobileMenuOpen && (
+                        <div className="lg:hidden py-4">
+                            <div className="flex flex-col gap-3 items-start">
+                                <Link
+                                    href={`/${language}/login`}
+                                    className="text-gray-300 hover:text-teal-400 py-2 font-medium"
+                                    onClick={() => setMobileMenuOpen(false)}
+                                >
+                                    {t.nav.login}
+                                </Link>
+                                <LanguageToggle />
+                                <Link
+                                    href={`/${language}/get-started`}
+                                    className="bg-teal-500 hover:bg-teal-400 text-white font-semibold px-5 py-2.5 rounded-full text-center"
+                                    onClick={() => setMobileMenuOpen(false)}
+                                >
+                                    {t.nav.getStarted}
+                                </Link>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            </nav>
+
+            {/* Main Content */}
+            <main className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-20">
+                {/* Header */}
+                <div className="text-center mb-12 md:mb-16">
+                    <h1 className="text-3xl sm:text-4xl md:text-5xl font-black leading-tight tracking-tight mb-4">
+                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-400 to-teal-300">
+                            {text.title}
+                        </span>
+                    </h1>
+                    <p className="text-gray-400 text-base sm:text-lg max-w-2xl mx-auto">
+                        {text.subtitle}
+                    </p>
+                </div>
+
+                {/* Patient FAQs */}
+                <div className="mb-12">
+                    <div className="flex items-center gap-3 mb-6">
+                        <div className="w-10 h-10 rounded-xl bg-teal-500/20 flex items-center justify-center text-teal-400">
+                            {Icons.patient}
+                        </div>
+                        <h2 className="text-2xl font-bold text-white">{text.patientSection}</h2>
+                    </div>
+                    <div className="space-y-3">
+                        {text.patientFaqs.map((faq, index) => (
+                            <FAQItem
+                                key={index}
+                                question={faq.question}
+                                answer={faq.answer}
+                                isOpen={openPatient === index}
+                                onClick={() => setOpenPatient(openPatient === index ? null : index)}
+                            />
+                        ))}
+                    </div>
+                </div>
+
+                {/* Doctor FAQs */}
+                <div className="mb-12">
+                    <div className="flex items-center gap-3 mb-6">
+                        <div className="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center text-amber-400">
+                            {Icons.doctor}
+                        </div>
+                        <h2 className="text-2xl font-bold text-white">{text.doctorSection}</h2>
+                    </div>
+                    <div className="space-y-3">
+                        {text.doctorFaqs.map((faq, index) => (
+                            <FAQItem
+                                key={index}
+                                question={faq.question}
+                                answer={faq.answer}
+                                isOpen={openDoctor === index}
+                                onClick={() => setOpenDoctor(openDoctor === index ? null : index)}
+                            />
+                        ))}
+                    </div>
+                </div>
+
+                {/* Contact CTA */}
+                <div className="text-center bg-slate-800/30 border border-white/10 rounded-2xl p-8">
+                    <p className="text-gray-400 mb-4">{text.stillHaveQuestions}</p>
+                    <Link
+                        href={`/${language}/contact`}
+                        className="inline-flex items-center gap-2 bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-400 hover:to-teal-500 text-white font-semibold px-6 py-3 rounded-full transition-all"
+                    >
+                        {text.contactUs}
+                    </Link>
+                </div>
+            </main>
+
+            {/* Footer */}
+            <footer className="relative z-10 border-t border-white/5 py-8">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+                    <p className="text-gray-500 text-sm">{t.footer.copyright}</p>
+                </div>
+            </footer>
+        </div>
+    );
+}

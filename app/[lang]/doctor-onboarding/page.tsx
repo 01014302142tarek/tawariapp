@@ -75,7 +75,7 @@ const Icons = {
         </svg>
     ),
     spinner: (
-        <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+        <svg className="w-5 h-5 animate-spin rtl:-scale-x-100" fill="none" viewBox="0 0 24 24">
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
         </svg>
@@ -92,25 +92,168 @@ const Icons = {
     ),
 };
 
-// Step configuration
-const steps = [
-    { id: 1, title: "Welcome", icon: Icons.user },
-    { id: 2, title: "Professional", icon: Icons.briefcase },
-    { id: 3, title: "Practice", icon: Icons.building },
-    { id: 4, title: "Verification", icon: Icons.document },
-    { id: 5, title: "Complete", icon: Icons.check },
+// Step configuration - will be translated in component
+const stepKeys = [
+    { id: 1, key: "welcome", icon: Icons.user },
+    { id: 2, key: "professional", icon: Icons.briefcase },
+    { id: 3, key: "practice", icon: Icons.building },
+    { id: 4, key: "verification", icon: Icons.document },
+    { id: 5, key: "complete", icon: Icons.check },
 ];
 
-// Medical specialties
-const specialties = [
-    "Cardiology", "Dermatology", "Endocrinology", "Gastroenterology",
-    "General Practice", "Neurology", "Oncology", "Ophthalmology",
-    "Orthopedics", "Pediatrics", "Psychiatry", "Pulmonology",
-    "Radiology", "Rheumatology", "Urology", "Other"
-];
+// Medical specialties - bilingual
+const specialtiesData = {
+    en: ["Cardiology", "Dermatology", "Endocrinology", "Gastroenterology", "General Practice", "Neurology", "Oncology", "Ophthalmology", "Orthopedics", "Pediatrics", "Psychiatry", "Pulmonology", "Radiology", "Rheumatology", "Urology", "Other"],
+    ar: ["قلب", "جلدية", "غدد صماء", "جهاز هضمي", "طب عام", "أعصاب", "أورام", "عيون", "عظام", "أطفال", "طب نفسي", "رئة", "أشعة", "روماتيزم", "مسالك بولية", "أخرى"]
+};
+
+// Onboarding translations
+const onboardingTranslations = {
+    en: {
+        steps: { welcome: "Welcome", professional: "Professional", practice: "Practice", verification: "Verification", complete: "Complete" },
+        step1: {
+            title: "Welcome, Doctor!",
+            subtitle: "Let's set up your profile to get started",
+            fullName: "Full Name",
+            namePlaceholder: "Dr. Ahmed Hassan",
+            email: "Email Address",
+            emailPlaceholder: "ahmed.hassan@email.com",
+            password: "Password",
+            passwordPlaceholder: "Enter your password",
+            phone: "Phone Number",
+            phonePlaceholder: "+20 123 456 7890",
+            uploadPhoto: "Upload photo",
+            clickToChange: "Click to change"
+        },
+        step2: {
+            title: "Professional Details",
+            subtitle: "Tell us about your medical expertise",
+            specialty: "Medical Specialty",
+            experience: "Years of Experience",
+            license: "License Number",
+            licensePlaceholder: "ML-12345-EG",
+            certifications: "Certifications",
+            certPlaceholder: "Board certifications..."
+        },
+        step3: {
+            title: "Practice Information",
+            subtitle: "Where do you practice medicine?",
+            clinicName: "Clinic/Hospital Name",
+            clinicPlaceholder: "Cairo Medical Center",
+            fee: "Consultation Fee (EGP)",
+            feePlaceholder: "500",
+            address: "Work Address",
+            addressPlaceholder: "123 Medical Street, Cairo, Egypt",
+            days: "Available Days",
+            daysPlaceholder: "Sun - Thu",
+            hours: "Working Hours",
+            hoursPlaceholder: "9 AM - 5 PM"
+        },
+        step4: {
+            title: "Verification",
+            subtitle: "Upload credentials (optional)",
+            licenseDoc: "Medical License Document",
+            additionalDocs: "Additional Documents (Optional)",
+            addDocument: "Add another document",
+            bio: "Professional Bio",
+            bioPlaceholder: "Brief description about yourself...",
+            terms: "I agree to the",
+            termsLink: "Terms",
+            and: "and",
+            privacyLink: "Privacy Policy",
+            dragDrop: "Click to upload or drag and drop"
+        },
+        step5: {
+            welcomeAboard: "Welcome Aboard",
+            submitted: "Your profile has been submitted successfully",
+            redirecting: "Redirecting to Dashboard...",
+            waiting: "Waiting for Admin Approval",
+            summary: "Profile Summary",
+            specialty: "Specialty",
+            experience: "Experience",
+            years: "years",
+            clinic: "Clinic",
+            fee: "Fee",
+            notSpecified: "Not specified"
+        },
+        nav: { back: "Back", continue: "Continue", home: "Home", select: "Select" }
+    },
+    ar: {
+        steps: { welcome: "مرحباً", professional: "المهني", practice: "العمل", verification: "التحقق", complete: "اكتمال" },
+        step1: {
+            title: "مرحباً دكتور!",
+            subtitle: "دعنا نقوم بإعداد ملفك الشخصي للبدء",
+            fullName: "الاسم الكامل",
+            namePlaceholder: "د. أحمد حسن",
+            email: "البريد الإلكتروني",
+            emailPlaceholder: "ahmed.hassan@email.com",
+            password: "كلمة المرور",
+            passwordPlaceholder: "أدخل كلمة المرور",
+            phone: "رقم الهاتف",
+            phonePlaceholder: "+٢٠ ١٢٣ ٤٥٦ ٧٨٩٠",
+            uploadPhoto: "رفع صورة",
+            clickToChange: "انقر للتغيير"
+        },
+        step2: {
+            title: "التفاصيل المهنية",
+            subtitle: "أخبرنا عن خبرتك الطبية",
+            specialty: "التخصص الطبي",
+            experience: "سنوات الخبرة",
+            license: "رقم الترخيص",
+            licensePlaceholder: "ML-12345-EG",
+            certifications: "الشهادات",
+            certPlaceholder: "شهادات البورد..."
+        },
+        step3: {
+            title: "معلومات العيادة",
+            subtitle: "أين تمارس الطب؟",
+            clinicName: "اسم العيادة/المستشفى",
+            clinicPlaceholder: "مركز القاهرة الطبي",
+            fee: "رسوم الاستشارة (ج.م)",
+            feePlaceholder: "٥٠٠",
+            address: "عنوان العمل",
+            addressPlaceholder: "١٢٣ شارع الطبي، القاهرة، مصر",
+            days: "أيام العمل",
+            daysPlaceholder: "الأحد - الخميس",
+            hours: "ساعات العمل",
+            hoursPlaceholder: "٩ ص - ٥ م"
+        },
+        step4: {
+            title: "التحقق",
+            subtitle: "رفع الوثائق (اختياري)",
+            licenseDoc: "وثيقة الترخيص الطبي",
+            additionalDocs: "وثائق إضافية (اختياري)",
+            addDocument: "إضافة وثيقة أخرى",
+            bio: "السيرة الذاتية المهنية",
+            bioPlaceholder: "وصف موجز عن نفسك...",
+            terms: "أوافق على",
+            termsLink: "الشروط",
+            and: "و",
+            privacyLink: "سياسة الخصوصية",
+            dragDrop: "انقر للرفع أو اسحب وأفلت"
+        },
+        step5: {
+            welcomeAboard: "مرحباً بك",
+            submitted: "تم تقديم ملفك الشخصي بنجاح",
+            redirecting: "جاري التوجيه إلى لوحة التحكم...",
+            waiting: "في انتظار موافقة المدير",
+            summary: "ملخص الملف الشخصي",
+            specialty: "التخصص",
+            experience: "الخبرة",
+            years: "سنوات",
+            clinic: "العيادة",
+            fee: "الرسوم",
+            notSpecified: "غير محدد"
+        },
+        nav: { back: "رجوع", continue: "متابعة", home: "الرئيسية", select: "اختر" }
+    }
+};
+
+// Default specialties for file-level usage (will be overridden in component)
+const specialties = specialtiesData.en;
 
 // Input Component
-const Input = ({ label, placeholder, value, onChange, type = "text", isDark, required = false }: {
+const Input = ({ label, placeholder, value, onChange, type = "text", isDark, required = false, dir }: {
     label: string;
     placeholder: string;
     value: string;
@@ -118,6 +261,7 @@ const Input = ({ label, placeholder, value, onChange, type = "text", isDark, req
     type?: string;
     isDark: boolean;
     required?: boolean;
+    dir?: "ltr" | "rtl";
 }) => (
     <div className="space-y-1">
         <label className={cn("block text-xs font-medium", isDark ? "text-gray-300" : "text-gray-700")}>
@@ -128,6 +272,7 @@ const Input = ({ label, placeholder, value, onChange, type = "text", isDark, req
             placeholder={placeholder}
             value={value}
             onChange={(e) => onChange(e.target.value)}
+            dir={dir}
             className={cn(
                 "w-full px-3 py-2 text-sm rounded-lg border outline-none transition-all",
                 isDark
@@ -139,13 +284,14 @@ const Input = ({ label, placeholder, value, onChange, type = "text", isDark, req
 );
 
 // Select Component
-const Select = ({ label, value, onChange, options, isDark, required = false }: {
+const Select = ({ label, value, onChange, options, isDark, required = false, selectLabel = "Select" }: {
     label: string;
     value: string;
     onChange: (value: string) => void;
     options: string[];
     isDark: boolean;
     required?: boolean;
+    selectLabel?: string;
 }) => (
     <div className="space-y-1">
         <label className={cn("block text-xs font-medium", isDark ? "text-gray-300" : "text-gray-700")}>
@@ -161,7 +307,7 @@ const Select = ({ label, value, onChange, options, isDark, required = false }: {
                     : "bg-white border-gray-200 text-slate-900 focus:border-teal-500 focus:ring-1 focus:ring-teal-500/20"
             )}
         >
-            <option value="">Select</option>
+            <option value="">{selectLabel}</option>
             {options.map((opt) => (
                 <option key={opt} value={opt}>{opt}</option>
             ))}
@@ -198,13 +344,14 @@ const Textarea = ({ label, placeholder, value, onChange, isDark, rows = 4 }: {
 );
 
 // File Upload Component
-const FileUpload = ({ label, fileName, onFileChange, isDark, accept = "*", filePreview }: {
+const FileUpload = ({ label, fileName, onFileChange, isDark, accept = "*", filePreview, placeholder = "Click to upload or drag and drop" }: {
     label: string;
     fileName: string;
     onFileChange: (name: string, file?: File) => void;
     isDark: boolean;
     accept?: string;
     filePreview?: string;
+    placeholder?: string;
 }) => {
     const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -272,7 +419,7 @@ const FileUpload = ({ label, fileName, onFileChange, isDark, accept = "*", fileP
                         </div>
                     )}
                     <p className={cn("text-xs text-center px-2", fileName ? "text-teal-500 font-medium" : isDark ? "text-gray-400" : "text-gray-500")}>
-                        {fileName || "Click to upload or drag and drop"}
+                        {fileName || placeholder}
                     </p>
                 </div>
                 <input
@@ -291,7 +438,7 @@ const FileUpload = ({ label, fileName, onFileChange, isDark, accept = "*", fileP
 // ============================================
 
 // Step 1: Welcome & Personal Info
-const Step1Welcome = ({ formData, setFormData, isDark, onPhotoUpload }: { formData: FormData; setFormData: (data: FormData) => void; isDark: boolean; onPhotoUpload?: (file: File) => void }) => {
+const Step1Welcome = ({ formData, setFormData, isDark, text, isRTL, onPhotoUpload }: { formData: FormData; setFormData: (data: FormData) => void; isDark: boolean; text: any; isRTL: boolean; onPhotoUpload?: (file: File) => void }) => {
     const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
@@ -317,12 +464,9 @@ const Step1Welcome = ({ formData, setFormData, isDark, onPhotoUpload }: { formDa
     return (
         <div className="space-y-4">
             <div className="text-center mb-4">
-                <div className="w-12 h-12 rounded-full bg-teal-500/10 flex items-center justify-center mx-auto mb-2 text-teal-500">
-                    {Icons.wave}
-                </div>
-                <h2 className={cn("text-xl font-bold mb-1", isDark ? "text-white" : "text-slate-900")}>Welcome, Doctor!</h2>
+                <h2 className={cn("text-xl font-bold mb-1", isDark ? "text-white" : "text-slate-900")}>{text.step1.title}</h2>
                 <p className={cn("text-xs", isDark ? "text-gray-400" : "text-gray-600")}>
-                    Let&apos;s set up your profile to get started
+                    {text.step1.subtitle}
                 </p>
             </div>
 
@@ -349,60 +493,70 @@ const Step1Welcome = ({ formData, setFormData, isDark, onPhotoUpload }: { formDa
                     />
                 </label>
                 <p className={cn("mt-1 text-xs", isDark ? "text-gray-400" : "text-gray-500")}>
-                    {formData.photoUrl ? "Click to change" : "Upload photo"}
+                    {formData.photoUrl ? text.step1.clickToChange : text.step1.uploadPhoto}
                 </p>
             </div>
 
             <Input
-                label="Full Name"
-                placeholder="Dr. Ahmed Hassan"
+                label={text.step1.fullName}
+                placeholder={text.step1.namePlaceholder}
                 value={formData.fullName}
                 onChange={(val) => setFormData({ ...formData, fullName: val })}
                 isDark={isDark}
             />
             <Input
-                label="Email Address"
-                placeholder="ahmed.hassan@email.com"
+                label={text.step1.email}
+                placeholder={text.step1.emailPlaceholder}
                 value={formData.email}
                 onChange={(val) => setFormData({ ...formData, email: val })}
                 type="email"
                 isDark={isDark}
             />
             <Input
-                label="Phone Number"
-                placeholder="+20 123 456 7890"
+                label={text.step1.password}
+                placeholder={text.step1.passwordPlaceholder}
+                value={formData.password}
+                onChange={(val) => setFormData({ ...formData, password: val })}
+                type="password"
+                isDark={isDark}
+            />
+            <Input
+                label={text.step1.phone}
+                placeholder={text.step1.phonePlaceholder}
                 value={formData.phone}
                 onChange={(val) => setFormData({ ...formData, phone: val })}
                 type="tel"
                 isDark={isDark}
+                dir={isRTL ? "rtl" : "ltr"}
             />
         </div>
     );
 };
 
 // Step 2: Professional Details
-const Step2Professional = ({ formData, setFormData, isDark }: { formData: FormData; setFormData: (data: FormData) => void; isDark: boolean }) => (
+const Step2Professional = ({ formData, setFormData, isDark, text, specialties }: { formData: FormData; setFormData: (data: FormData) => void; isDark: boolean; text: any; specialties: string[] }) => (
     <div className="space-y-4">
         <div className="text-center mb-4">
             <div className="w-12 h-12 rounded-full bg-teal-500/10 flex items-center justify-center mx-auto mb-2 text-teal-500">
                 {Icons.briefcase}
             </div>
-            <h2 className={cn("text-xl font-bold mb-1", isDark ? "text-white" : "text-slate-900")}>Professional Details</h2>
+            <h2 className={cn("text-xl font-bold mb-1", isDark ? "text-white" : "text-slate-900")}>{text.step2.title}</h2>
             <p className={cn("text-xs", isDark ? "text-gray-400" : "text-gray-600")}>
-                Tell us about your medical expertise
+                {text.step2.subtitle}
             </p>
         </div>
 
         <div className="grid grid-cols-2 gap-3">
             <Select
-                label="Medical Specialty"
+                label={text.step2.specialty}
                 value={formData.specialty}
                 onChange={(val) => setFormData({ ...formData, specialty: val })}
                 options={specialties}
                 isDark={isDark}
+                selectLabel={text.nav.select}
             />
             <Input
-                label="Years of Experience"
+                label={text.step2.experience}
                 placeholder="10"
                 value={formData.experience}
                 onChange={(val) => setFormData({ ...formData, experience: val })}
@@ -412,15 +566,15 @@ const Step2Professional = ({ formData, setFormData, isDark }: { formData: FormDa
         </div>
         <div className="grid grid-cols-2 gap-3">
             <Input
-                label="License Number"
-                placeholder="ML-12345-EG"
+                label={text.step2.license}
+                placeholder={text.step2.licensePlaceholder}
                 value={formData.licenseNumber}
                 onChange={(val) => setFormData({ ...formData, licenseNumber: val })}
                 isDark={isDark}
             />
             <Input
-                label="Certifications"
-                placeholder="Board certifications..."
+                label={text.step2.certifications}
+                placeholder={text.step2.certPlaceholder}
                 value={formData.certifications}
                 onChange={(val) => setFormData({ ...formData, certifications: val })}
                 isDark={isDark}
@@ -430,29 +584,29 @@ const Step2Professional = ({ formData, setFormData, isDark }: { formData: FormDa
 );
 
 // Step 3: Practice Information
-const Step3Practice = ({ formData, setFormData, isDark }: { formData: FormData; setFormData: (data: FormData) => void; isDark: boolean }) => (
+const Step3Practice = ({ formData, setFormData, isDark, text }: { formData: FormData; setFormData: (data: FormData) => void; isDark: boolean; text: any }) => (
     <div className="space-y-4">
         <div className="text-center mb-4">
             <div className="w-12 h-12 rounded-full bg-teal-500/10 flex items-center justify-center mx-auto mb-2 text-teal-500">
                 {Icons.building}
             </div>
-            <h2 className={cn("text-xl font-bold mb-1", isDark ? "text-white" : "text-slate-900")}>Practice Information</h2>
+            <h2 className={cn("text-xl font-bold mb-1", isDark ? "text-white" : "text-slate-900")}>{text.step3.title}</h2>
             <p className={cn("text-xs", isDark ? "text-gray-400" : "text-gray-600")}>
-                Where do you practice medicine?
+                {text.step3.subtitle}
             </p>
         </div>
 
         <div className="grid grid-cols-2 gap-3">
             <Input
-                label="Clinic/Hospital Name"
-                placeholder="Cairo Medical Center"
+                label={text.step3.clinicName}
+                placeholder={text.step3.clinicPlaceholder}
                 value={formData.clinicName}
                 onChange={(val) => setFormData({ ...formData, clinicName: val })}
                 isDark={isDark}
             />
             <Input
-                label="Consultation Fee (EGP)"
-                placeholder="500"
+                label={text.step3.fee}
+                placeholder={text.step3.feePlaceholder}
                 value={formData.consultationFee}
                 onChange={(val) => setFormData({ ...formData, consultationFee: val })}
                 type="number"
@@ -460,23 +614,23 @@ const Step3Practice = ({ formData, setFormData, isDark }: { formData: FormData; 
             />
         </div>
         <Input
-            label="Work Address"
-            placeholder="123 Medical Street, Cairo, Egypt"
+            label={text.step3.address}
+            placeholder={text.step3.addressPlaceholder}
             value={formData.address}
             onChange={(val) => setFormData({ ...formData, address: val })}
             isDark={isDark}
         />
         <div className="grid grid-cols-2 gap-3">
             <Input
-                label="Available Days"
-                placeholder="Sun - Thu"
+                label={text.step3.days}
+                placeholder={text.step3.daysPlaceholder}
                 value={formData.availableDays}
                 onChange={(val) => setFormData({ ...formData, availableDays: val })}
                 isDark={isDark}
             />
             <Input
-                label="Working Hours"
-                placeholder="9 AM - 5 PM"
+                label={text.step3.hours}
+                placeholder={text.step3.hoursPlaceholder}
                 value={formData.workingHours}
                 onChange={(val) => setFormData({ ...formData, workingHours: val })}
                 isDark={isDark}
@@ -486,7 +640,7 @@ const Step3Practice = ({ formData, setFormData, isDark }: { formData: FormData; 
 );
 
 // Step 4: Verification & Bio
-const Step4Verification = ({ formData, setFormData, isDark, licensePreview, onLicenseUpload, onExtraUpload }: { formData: FormData; setFormData: (data: FormData) => void; isDark: boolean; licensePreview?: string; onLicenseUpload?: (name: string, file?: File) => void; onExtraUpload?: (file: File) => void }) => {
+const Step4Verification = ({ formData, setFormData, isDark, text, licensePreview, onLicenseUpload, onExtraUpload }: { formData: FormData; setFormData: (data: FormData) => void; isDark: boolean; text: any; licensePreview?: string; onLicenseUpload?: (name: string, file?: File) => void; onExtraUpload?: (file: File) => void }) => {
 
     const handleRemoveExtra = (index: number) => {
         const newDocs = [...formData.extraDocuments];
@@ -500,14 +654,14 @@ const Step4Verification = ({ formData, setFormData, isDark, licensePreview, onLi
                 <div className="w-12 h-12 rounded-full bg-teal-500/10 flex items-center justify-center mx-auto mb-2 text-teal-500">
                     {Icons.document}
                 </div>
-                <h2 className={cn("text-xl font-bold mb-1", isDark ? "text-white" : "text-slate-900")}>Verification</h2>
+                <h2 className={cn("text-xl font-bold mb-1", isDark ? "text-white" : "text-slate-900")}>{text.step4.title}</h2>
                 <p className={cn("text-xs", isDark ? "text-gray-400" : "text-gray-600")}>
-                    Upload credentials (optional)
+                    {text.step4.subtitle}
                 </p>
             </div>
 
             <FileUpload
-                label="Medical License Document"
+                label={text.step4.licenseDoc}
                 fileName={formData.licenseDocument}
                 onFileChange={(name, file) => {
                     setFormData({ ...formData, licenseDocument: name });
@@ -518,11 +672,12 @@ const Step4Verification = ({ formData, setFormData, isDark, licensePreview, onLi
                 isDark={isDark}
                 accept=".pdf,.jpg,.jpeg,.png"
                 filePreview={licensePreview}
+                placeholder={text.step4.dragDrop}
             />
 
             <div className="space-y-2">
                 <label className={cn("block text-xs font-medium", isDark ? "text-gray-300" : "text-gray-700")}>
-                    Additional Documents (Optional)
+                    {text.step4.additionalDocs}
                 </label>
 
                 {/* List of uploaded files */}
@@ -557,7 +712,7 @@ const Step4Verification = ({ formData, setFormData, isDark, licensePreview, onLi
                     )}
                 >
                     <div className="w-5 h-5">{Icons.upload}</div>
-                    <span className="text-xs font-medium">Add another document</span>
+                    <span className="text-xs font-medium">{text.step4.addDocument}</span>
                     <input
                         type="file"
                         className="hidden"
@@ -575,8 +730,8 @@ const Step4Verification = ({ formData, setFormData, isDark, licensePreview, onLi
             </div>
 
             <Textarea
-                label="Professional Bio"
-                placeholder="Brief description about yourself..."
+                label={text.step4.bio}
+                placeholder={text.step4.bioPlaceholder}
                 value={formData.bio}
                 onChange={(val) => setFormData({ ...formData, bio: val })}
                 isDark={isDark}
@@ -592,7 +747,7 @@ const Step4Verification = ({ formData, setFormData, isDark, licensePreview, onLi
                         className="mt-0.5 w-4 h-4 rounded border-gray-300 text-teal-500 focus:ring-teal-500"
                     />
                     <span className={cn("text-xs", isDark ? "text-gray-300" : "text-gray-600")}>
-                        I agree to the <span className="text-teal-500">Terms</span> and <span className="text-teal-500">Privacy Policy</span>
+                        {text.step4.terms} <span className="text-teal-500">{text.step4.termsLink}</span> {text.step4.and} <span className="text-teal-500">{text.step4.privacyLink}</span>
                     </span>
                 </label>
             </div>
@@ -601,7 +756,7 @@ const Step4Verification = ({ formData, setFormData, isDark, licensePreview, onLi
 };
 
 // Step 5: Completion
-const Step5Complete = ({ formData, isDark, isApproved = false }: { formData: FormData; isDark: boolean; isApproved?: boolean }) => (
+const Step5Complete = ({ formData, isDark, text, isApproved = false }: { formData: FormData; isDark: boolean; text: any; isApproved?: boolean }) => (
     <div className="text-center py-4">
         <motion.div
             initial={{ scale: 0 }}
@@ -618,10 +773,10 @@ const Step5Complete = ({ formData, isDark, isApproved = false }: { formData: For
             transition={{ delay: 0.2 }}
         >
             <h2 className={cn("text-xl font-bold mb-1", isDark ? "text-white" : "text-slate-900")}>
-                Welcome Aboard{formData.fullName ? `, Dr. ${formData.fullName.split(" ").pop()}` : ""}!
+                {text.step5.welcomeAboard}{formData.fullName ? `, ${formData.fullName.split(" ")[0]}` : ""}!
             </h2>
             <p className={cn("text-xs mb-4", isDark ? "text-gray-400" : "text-gray-600")}>
-                Your profile has been submitted successfully
+                {text.step5.submitted}
             </p>
         </motion.div>
 
@@ -642,7 +797,7 @@ const Step5Complete = ({ formData, isDark, isApproved = false }: { formData: For
                         {Icons.spinner}
                     </div>
                     <span className={cn("text-sm font-medium", isDark ? "text-teal-400" : "text-teal-600")}>
-                        Redirecting to Dashboard...
+                        {text.step5.redirecting}
                     </span>
                 </>
             ) : (
@@ -651,7 +806,7 @@ const Step5Complete = ({ formData, isDark, isApproved = false }: { formData: For
                         {Icons.clock}
                     </div>
                     <span className={cn("text-sm font-medium", isDark ? "text-amber-400" : "text-amber-600")}>
-                        Waiting for Admin Approval
+                        {text.step5.waiting}
                     </span>
                 </>
             )}
@@ -662,25 +817,25 @@ const Step5Complete = ({ formData, isDark, isApproved = false }: { formData: For
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.4 }}
-            className={cn("p-4 rounded-xl border text-left", isDark ? "bg-slate-800/30 border-white/5" : "bg-gray-50 border-gray-200")}
+            className={cn("p-4 rounded-xl border text-start", isDark ? "bg-slate-800/30 border-white/5" : "bg-gray-50 border-gray-200")}
         >
-            <h3 className={cn("font-semibold text-sm mb-3", isDark ? "text-white" : "text-slate-900")}>Profile Summary</h3>
+            <h3 className={cn("font-semibold text-sm mb-3", isDark ? "text-white" : "text-slate-900")}>{text.step5.summary}</h3>
             <div className="grid grid-cols-2 gap-3 text-xs">
                 <div>
-                    <p className={isDark ? "text-gray-500" : "text-gray-500"}>Specialty</p>
-                    <p className={isDark ? "text-white" : "text-slate-900"}>{formData.specialty || "Not specified"}</p>
+                    <p className={isDark ? "text-gray-500" : "text-gray-500"}>{text.step5.specialty}</p>
+                    <p className={isDark ? "text-white" : "text-slate-900"}>{formData.specialty || text.step5.notSpecified}</p>
                 </div>
                 <div>
-                    <p className={isDark ? "text-gray-500" : "text-gray-500"}>Experience</p>
-                    <p className={isDark ? "text-white" : "text-slate-900"}>{formData.experience ? `${formData.experience} years` : "Not specified"}</p>
+                    <p className={isDark ? "text-gray-500" : "text-gray-500"}>{text.step5.experience}</p>
+                    <p className={isDark ? "text-white" : "text-slate-900"}>{formData.experience ? `${formData.experience} ${text.step5.years}` : text.step5.notSpecified}</p>
                 </div>
                 <div>
-                    <p className={isDark ? "text-gray-500" : "text-gray-500"}>Clinic</p>
-                    <p className={isDark ? "text-white" : "text-slate-900"}>{formData.clinicName || "Not specified"}</p>
+                    <p className={isDark ? "text-gray-500" : "text-gray-500"}>{text.step5.clinic}</p>
+                    <p className={isDark ? "text-white" : "text-slate-900"}>{formData.clinicName || text.step5.notSpecified}</p>
                 </div>
                 <div>
-                    <p className={isDark ? "text-gray-500" : "text-gray-500"}>Fee</p>
-                    <p className={isDark ? "text-white" : "text-slate-900"}>{formData.consultationFee ? `${formData.consultationFee} EGP` : "Not specified"}</p>
+                    <p className={isDark ? "text-gray-500" : "text-gray-500"}>{text.step5.fee}</p>
+                    <p className={isDark ? "text-white" : "text-slate-900"}>{formData.consultationFee ? `${formData.consultationFee} EGP` : text.step5.notSpecified}</p>
                 </div>
             </div>
         </motion.div>
@@ -694,6 +849,7 @@ interface FormData {
     // Step 1
     fullName: string;
     email: string;
+    password: string;
     phone: string;
     photoUrl: string;
     // Step 2
@@ -717,6 +873,7 @@ interface FormData {
 const initialFormData: FormData = {
     fullName: "",
     email: "",
+    password: "",
     phone: "",
     photoUrl: "",
     specialty: "",
@@ -739,12 +896,17 @@ const initialFormData: FormData = {
 // ============================================
 export default function DoctorOnboarding() {
     const { theme } = useTheme();
-    const { language } = useI18n();
+    const { language, isRTL, formatNumber } = useI18n();
     const isDark = theme === "dark";
     const router = useRouter();
 
     const [currentStep, setCurrentStep] = useState(1);
     const [formData, setFormData] = useState<FormData>(initialFormData);
+
+    // Get translations based on language
+    const text = onboardingTranslations[language as keyof typeof onboardingTranslations] || onboardingTranslations.en;
+    const specialties = specialtiesData[language as keyof typeof specialtiesData] || specialtiesData.en;
+    const steps = stepKeys.map(s => ({ ...s, title: text.steps[s.key as keyof typeof text.steps] }));
 
     const progress = (currentStep / steps.length) * 100;
 
@@ -791,15 +953,15 @@ export default function DoctorOnboarding() {
     const renderStep = () => {
         switch (currentStep) {
             case 1:
-                return <Step1Welcome formData={formData} setFormData={setFormData} isDark={isDark} onPhotoUpload={(file) => setPhotoFile(file)} />;
+                return <Step1Welcome formData={formData} setFormData={setFormData} isDark={isDark} text={text} isRTL={isRTL} onPhotoUpload={(file) => setPhotoFile(file)} />;
             case 2:
-                return <Step2Professional formData={formData} setFormData={setFormData} isDark={isDark} />;
+                return <Step2Professional formData={formData} setFormData={setFormData} isDark={isDark} text={text} specialties={specialties} />;
             case 3:
-                return <Step3Practice formData={formData} setFormData={setFormData} isDark={isDark} />;
+                return <Step3Practice formData={formData} setFormData={setFormData} isDark={isDark} text={text} />;
             case 4:
-                return <Step4Verification formData={formData} setFormData={setFormData} isDark={isDark} licensePreview={licensePreview} onLicenseUpload={handleLicenseUpload} />;
+                return <Step4Verification formData={formData} setFormData={setFormData} isDark={isDark} text={text} licensePreview={licensePreview} onLicenseUpload={handleLicenseUpload} />;
             case 5:
-                return <Step5Complete formData={formData} isDark={isDark} />;
+                return <Step5Complete formData={formData} isDark={isDark} text={text} />;
             default:
                 return null;
         }
@@ -820,7 +982,7 @@ export default function DoctorOnboarding() {
                             />
                         </div>
                         <span className={cn("text-xs font-medium min-w-[32px]", isDark ? "text-gray-400" : "text-gray-600")}>
-                            {Math.round(progress)}%
+                            {formatNumber(Math.round(progress))}%
                         </span>
                     </div>
                 </div>
@@ -829,9 +991,9 @@ export default function DoctorOnboarding() {
                 <AnimatePresence mode="wait">
                     <motion.div
                         key={currentStep}
-                        initial={{ opacity: 0, x: 20 }}
+                        initial={{ opacity: 0, x: isRTL ? 20 : -20 }}
                         animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: -20 }}
+                        exit={{ opacity: 0, x: isRTL ? -20 : 20 }}
                         transition={{ duration: 0.2 }}
                     >
                         {renderStep()}
@@ -851,8 +1013,8 @@ export default function DoctorOnboarding() {
                                         : "text-gray-600 hover:text-slate-900 hover:bg-gray-100"
                                 )}
                             >
-                                {Icons.arrowLeft}
-                                Back
+                                {isRTL ? Icons.arrowRight : Icons.arrowLeft}
+                                {text.nav.back}
                             </button>
                         ) : (
                             <div />
@@ -870,8 +1032,8 @@ export default function DoctorOnboarding() {
                                         : "bg-gray-100 text-gray-400 cursor-not-allowed"
                             )}
                         >
-                            Continue
-                            {Icons.arrowRight}
+                            {text.nav.continue}
+                            {isRTL ? Icons.arrowLeft : Icons.arrowRight}
                         </button>
                     </div>
                 )}
@@ -889,8 +1051,8 @@ export default function DoctorOnboarding() {
                                 : "text-gray-600 hover:text-slate-900 hover:bg-gray-100"
                         )}
                     >
-                        {Icons.arrowLeft}
-                        Home
+                        {isRTL ? Icons.arrowRight : Icons.arrowLeft}
+                        {text.nav.home}
                     </button>
                 </div>
             )}

@@ -7,18 +7,10 @@ import { cn } from "@/lib/utils";
 import { GlowingCard } from "@/components/ui/glowing-card";
 import { useThemeStyles } from "../context/useThemeStyles";
 
-// Mock Data
-const appointments = [
-    { id: 1, date: "2024-12-14", time: "09:00", patient: "Sarah Johnson", type: "Follow-up", status: "completed", image: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&crop=face" },
-    { id: 2, date: "2024-12-14", time: "10:30", patient: "Mohamed Ali", type: "Initial Consultation", status: "in-progress", image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face" },
-    { id: 3, date: "2024-12-14", time: "11:45", patient: "Fatima Khaled", type: "Heart Checkup", status: "upcoming", image: "https://images.unsplash.com/photo-1489424731084-a5d8b219a5bb?w=100&h=100&fit=crop&crop=face" },
-    { id: 4, date: "2024-12-14", time: "14:00", patient: "Omar Nasser", type: "ECG Review", status: "upcoming", image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face" },
-    { id: 5, date: "2024-12-14", time: "15:30", patient: "Layla Ahmed", type: "Blood Pressure Check", status: "upcoming", image: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&h=100&fit=crop&crop=face" },
-    { id: 6, date: "2024-12-15", time: "09:00", patient: "Ahmed Hassan", type: "Annual Checkup", status: "scheduled", image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop&crop=face" },
-    { id: 7, date: "2024-12-15", time: "10:00", patient: "Nour Ibrahim", type: "Consultation", status: "scheduled", image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop&crop=face" },
-];
+import { useI18n } from "@/app/i18n";
 
-const filters = ["All", "Upcoming", "Completed", "Cancelled"];
+// Mock Data removed from here
+
 
 // Icons
 const Icons = {
@@ -65,15 +57,45 @@ const Badge = ({ children, variant = "default", isDark = true, className }: { ch
 };
 
 export default function AppointmentsPage() {
-    const [activeFilter, setActiveFilter] = useState("All");
+    const { t, isRTL, formatNumber } = useI18n();
+    const [activeFilter, setActiveFilter] = useState("all");
     const [searchQuery, setSearchQuery] = useState("");
-    const { isDark, pageBg, textPrimary, textSecondary, textMuted, inputBg, inputFocus, buttonSecondary, buttonSecondaryActive, divider, cardHover, emptyStateBg } = useThemeStyles();
+    const { isDark, textPrimary, textSecondary, textMuted, inputBg, inputFocus, buttonSecondary, divider, cardHover, emptyStateBg } = useThemeStyles();
+
+    // Mock Data with Translations
+    const appointments = [
+        { id: 1, date: "2024-12-14", time: isRTL ? "٠٩:٠٠ ص" : "09:00", patient: t.common.demoNames.sarahJohnson, type: t.doctorDashboard.appointmentsPage.types.followUp, status: "completed", image: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&crop=face" },
+        { id: 2, date: "2024-12-14", time: isRTL ? "١٠:٣٠ ص" : "10:30", patient: t.common.demoNames.mohamedAli, type: t.doctorDashboard.appointmentsPage.types.initialConsultation, status: "in-progress", image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face" },
+        { id: 3, date: "2024-12-14", time: isRTL ? "١١:٤٥ ص" : "11:45", patient: t.common.demoNames.fatimaKhaled, type: t.doctorDashboard.appointmentsPage.types.heartCheckup, status: "upcoming", image: "https://images.unsplash.com/photo-1489424731084-a5d8b219a5bb?w=100&h=100&fit=crop&crop=face" },
+        { id: 4, date: "2024-12-14", time: isRTL ? "٠٢:٠٠ م" : "14:00", patient: t.common.demoNames.omarNasser, type: t.doctorDashboard.appointmentsPage.types.ecgReview, status: "upcoming", image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face" },
+        { id: 5, date: "2024-12-14", time: isRTL ? "٠٣:٣٠ م" : "15:30", patient: t.common.demoNames.laylaAhmed, type: t.doctorDashboard.appointmentsPage.types.bloodPressureCheck, status: "upcoming", image: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&h=100&fit=crop&crop=face" },
+        { id: 6, date: "2024-12-15", time: isRTL ? "٠٩:٠٠ ص" : "09:00", patient: t.common.demoNames.ahmedHassan, type: t.doctorDashboard.appointmentsPage.types.annualCheckup, status: "scheduled", image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop&crop=face" },
+        { id: 7, date: "2024-12-15", time: isRTL ? "١٠:٠٠ ص" : "10:00", patient: t.common.demoNames.nourIbrahim, type: t.doctorDashboard.appointmentsPage.types.consultation, status: "scheduled", image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop&crop=face" },
+    ];
+
+    const filters = [
+        { id: "all", label: t.doctorDashboard.appointmentsPage.filters.all },
+        { id: "upcoming", label: t.doctorDashboard.appointmentsPage.filters.upcoming },
+        { id: "completed", label: t.doctorDashboard.appointmentsPage.filters.completed },
+        { id: "cancelled", label: t.doctorDashboard.appointmentsPage.filters.cancelled }
+    ];
+
+    const getStatusLabel = (status: string) => {
+        switch (status) {
+            case "in-progress": return t.doctorDashboard.appointmentsPage.status.inProgress;
+            case "completed": return t.doctorDashboard.appointmentsPage.status.done;
+            case "upcoming": return t.doctorDashboard.appointmentsPage.status.upcoming;
+            case "scheduled": return t.doctorDashboard.appointmentsPage.status.scheduled;
+            default: return status;
+        }
+    };
+
 
     const filteredAppointments = appointments.filter((apt) => {
-        const matchesFilter = activeFilter === "All" ||
-            (activeFilter === "Upcoming" && (apt.status === "upcoming" || apt.status === "scheduled")) ||
-            (activeFilter === "Completed" && apt.status === "completed") ||
-            (activeFilter === "Cancelled" && apt.status === "cancelled");
+        const matchesFilter = activeFilter === "all" ||
+            (activeFilter === "upcoming" && (apt.status === "upcoming" || apt.status === "scheduled")) ||
+            (activeFilter === "completed" && apt.status === "completed") ||
+            (activeFilter === "cancelled" && apt.status === "cancelled");
         const matchesSearch = apt.patient.toLowerCase().includes(searchQuery.toLowerCase()) ||
             apt.type.toLowerCase().includes(searchQuery.toLowerCase());
         return matchesFilter && matchesSearch;
@@ -91,13 +113,13 @@ export default function AppointmentsPage() {
                         <span className="w-8 h-8 md:w-10 md:h-10 rounded-lg md:rounded-xl bg-teal-500/10 flex items-center justify-center text-teal-500">
                             {Icons.calendar}
                         </span>
-                        Appointments
+                        {t.doctorDashboard.appointmentsPage.title}
                     </h1>
-                    <p className={cn("text-sm md:text-base mt-1", textMuted)}>Manage your patient appointments</p>
+                    <p className={cn("text-sm md:text-base mt-1", textMuted)}>{t.doctorDashboard.appointmentsPage.subtitle}</p>
                 </div>
                 <button className="flex items-center justify-center gap-2 bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-400 hover:to-teal-500 text-white font-semibold py-2 md:py-2.5 px-4 md:px-5 rounded-xl transition-all shadow-lg shadow-teal-500/20 text-sm md:text-base">
                     {Icons.plus}
-                    <span>New Appointment</span>
+                    <span>{t.doctorDashboard.appointmentsPage.newAppointment}</span>
                 </button>
             </div>
 
@@ -105,15 +127,19 @@ export default function AppointmentsPage() {
             <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-3 mb-6 md:mb-8">
                 {/* Search */}
                 <div className="relative flex-1 md:max-w-md lg:max-w-lg">
-                    <span className={cn("absolute left-4 top-1/2 -translate-y-1/2", textMuted)}>
+                    <span className={cn("absolute top-1/2 -translate-y-1/2", isRTL ? "right-4" : "left-4", textMuted)}>
                         {Icons.search}
                     </span>
                     <input
                         type="text"
-                        placeholder="Search appointments..."
+                        placeholder={t.doctorDashboard.appointmentsPage.searchPlaceholder}
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className={cn("w-full pl-12 pr-4 py-3 rounded-xl border transition-colors outline-none ring-0 focus:ring-2 focus:ring-teal-500/20", inputBg, inputFocus)}
+                        className={cn(
+                            "w-full py-3 rounded-xl border transition-colors outline-none ring-0 focus:ring-2 focus:ring-teal-500/20",
+                            isRTL ? "pr-12 pl-4" : "pl-12 pr-4",
+                            inputBg, inputFocus
+                        )}
                     />
                 </div>
 
@@ -121,16 +147,16 @@ export default function AppointmentsPage() {
                 <div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 md:mx-0 md:px-0 md:pb-0 no-scrollbar">
                     {filters.map((filter) => (
                         <button
-                            key={filter}
-                            onClick={() => setActiveFilter(filter)}
+                            key={filter.id}
+                            onClick={() => setActiveFilter(filter.id)}
                             className={cn(
                                 "px-4 py-2.5 rounded-xl text-sm font-medium transition-all whitespace-nowrap border",
-                                activeFilter === filter
+                                activeFilter === filter.id
                                     ? "bg-teal-500 text-white border-teal-500 shadow-lg shadow-teal-500/20"
                                     : cn("border-transparent hover:border-teal-500/30", buttonSecondary)
                             )}
                         >
-                            {filter}
+                            {filter.label}
                         </button>
                     ))}
                 </div>
@@ -141,15 +167,15 @@ export default function AppointmentsPage() {
                 <section className="mb-6 md:mb-8">
                     <h2 className={cn("text-base md:text-lg font-semibold mb-3 md:mb-4 flex items-center gap-2", textPrimary)}>
                         <span className="w-2 h-2 rounded-full bg-teal-500"></span>
-                        Today
+                        {t.doctorDashboard.appointmentsPage.sections.today}
                     </h2>
                     <div className="hidden md:grid grid-cols-12 gap-4 px-5 py-3 text-xs font-semibold tracking-wider uppercase opacity-60">
-                        <div className="col-span-2">Time</div>
-                        <div className="col-span-4">Patient</div>
-                        <div className="col-span-3">Purpose</div>
-                        <div className="col-span-3 text-right">Status & Actions</div>
+                        <div className="col-span-2">{t.doctorDashboard.appointmentsPage.tableHeaders.time}</div>
+                        <div className="col-span-4">{t.doctorDashboard.appointmentsPage.tableHeaders.patient}</div>
+                        <div className="col-span-3">{t.doctorDashboard.appointmentsPage.tableHeaders.purpose}</div>
+                        <div className={cn("col-span-3", isRTL ? "text-left" : "text-right")}>{t.doctorDashboard.appointmentsPage.tableHeaders.statusActions}</div>
                     </div>
-                    <GlowingCard glowColor="teal" className="p-0 overflow-hidden">
+                    <GlowingCard isDark={isDark} glowColor="teal" className="p-0 overflow-hidden">
                         <div className={divider}>
                             {todayAppointments.map((apt, idx) => (
                                 <motion.div
@@ -178,7 +204,7 @@ export default function AppointmentsPage() {
                                         {/* Mobile Status Badge (Hidden on Desktop) */}
                                         <div className="md:hidden">
                                             <Badge isDark={isDark} variant={apt.status === "in-progress" ? "warning" : apt.status === "completed" ? "success" : "primary"}>
-                                                {apt.status === "in-progress" ? "In Progress" : apt.status === "completed" ? "Done" : "Upcoming"}
+                                                {getStatusLabel(apt.status)}
                                             </Badge>
                                         </div>
                                     </div>
@@ -203,7 +229,7 @@ export default function AppointmentsPage() {
                                     <div className="md:col-span-3 flex items-center justify-between md:justify-end gap-3 w-full border-t md:border-t-0 pt-3 md:pt-0 mt-1 md:mt-0 border-white/5">
                                         <div className="hidden md:block">
                                             <Badge isDark={isDark} variant={apt.status === "in-progress" ? "warning" : apt.status === "completed" ? "success" : "primary"}>
-                                                {apt.status === "in-progress" ? "In Progress" : apt.status === "completed" ? "Done" : "Upcoming"}
+                                                {getStatusLabel(apt.status)}
                                             </Badge>
                                         </div>
 
@@ -211,11 +237,11 @@ export default function AppointmentsPage() {
                                             {(apt.status === "upcoming" || apt.status === "in-progress") ? (
                                                 <button className="flex-1 md:flex-none flex items-center justify-center gap-2 px-3 py-1.5 md:py-2 rounded-lg bg-teal-500 text-white hover:bg-teal-600 transition-all text-sm font-medium shadow-lg shadow-teal-500/20">
                                                     {Icons.video}
-                                                    <span className="md:hidden lg:inline">Join</span>
+                                                    <span className="md:hidden lg:inline">{t.doctorDashboard.appointmentsPage.actions.join}</span>
                                                 </button>
                                             ) : (
                                                 <button className={cn("flex-1 md:flex-none px-3 py-1.5 text-sm font-medium rounded-lg border transition-colors", isDark ? "border-white/10 hover:bg-white/5 text-gray-400" : "border-gray-200 hover:bg-gray-50 text-gray-600")}>
-                                                    Details
+                                                    {t.doctorDashboard.appointmentsPage.actions.details}
                                                 </button>
                                             )}
                                         </div>
@@ -232,15 +258,15 @@ export default function AppointmentsPage() {
                 <section>
                     <h2 className={cn("text-base md:text-lg font-semibold mb-3 md:mb-4 flex items-center gap-2", textPrimary)}>
                         <span className={textMuted}>{Icons.clock}</span>
-                        Upcoming
+                        {t.doctorDashboard.appointmentsPage.sections.upcoming}
                     </h2>
                     <div className="hidden md:grid grid-cols-12 gap-4 px-5 py-3 text-xs font-semibold tracking-wider uppercase opacity-60">
-                        <div className="col-span-2">Date & Time</div>
-                        <div className="col-span-4">Patient</div>
-                        <div className="col-span-3">Purpose</div>
-                        <div className="col-span-3 text-right">Status</div>
+                        <div className="col-span-2">{t.doctorDashboard.appointmentsPage.tableHeaders.dateTime}</div>
+                        <div className="col-span-4">{t.doctorDashboard.appointmentsPage.tableHeaders.patient}</div>
+                        <div className="col-span-3">{t.doctorDashboard.appointmentsPage.tableHeaders.purpose}</div>
+                        <div className={cn("col-span-3", isRTL ? "text-left" : "text-right")}>{t.doctorDashboard.appointmentsPage.tableHeaders.status}</div>
                     </div>
-                    <GlowingCard glowColor="teal" className="p-0 overflow-hidden">
+                    <GlowingCard isDark={isDark} glowColor="teal" className="p-0 overflow-hidden">
                         <div className={divider}>
                             {upcomingAppointments.map((apt, idx) => (
                                 <motion.div
@@ -253,11 +279,11 @@ export default function AppointmentsPage() {
                                     {/* Date/Time */}
                                     <div className="md:col-span-2 flex items-center gap-3 w-full md:w-auto justify-between md:justify-start">
                                         <div className="min-w-[70px]">
-                                            <p className={cn("text-xs font-medium uppercase tracking-wide", textMuted)}>{apt.date}</p>
+                                            <p className={cn("text-xs font-medium uppercase tracking-wide", textMuted)}>{formatNumber(apt.date)}</p>
                                             <span className={cn("text-base md:text-lg font-bold tracking-tight", textPrimary)}>{apt.time}</span>
                                         </div>
                                         <div className="md:hidden">
-                                            <Badge isDark={isDark} variant="default">Scheduled</Badge>
+                                            <Badge isDark={isDark} variant="default">{getStatusLabel(apt.status)}</Badge>
                                         </div>
                                     </div>
 
@@ -279,7 +305,7 @@ export default function AppointmentsPage() {
 
                                     {/* Actions/Status */}
                                     <div className="md:col-span-3 flex items-center justify-end w-full md:w-auto gap-3 hidden md:flex">
-                                        <Badge isDark={isDark} variant="default">Scheduled</Badge>
+                                        <Badge isDark={isDark} variant="default">{getStatusLabel(apt.status)}</Badge>
                                         <button className={cn("p-2 rounded-lg transition-colors opacity-0 group-hover:opacity-100", isDark ? "hover:bg-white/10 text-gray-400 hover:text-white" : "hover:bg-gray-100 text-gray-500 hover:text-slate-900")}>
                                             <div className="rotate-90">...</div>
                                         </button>
@@ -287,7 +313,7 @@ export default function AppointmentsPage() {
 
                                     {/* Mobile Actions only */}
                                     <div className="flex md:hidden w-full border-t border-white/5 pt-3 mt-1 justify-end">
-                                        <button className={cn("text-xs font-medium", textSecondary)}>View Details</button>
+                                        <button className={cn("text-xs font-medium", textSecondary)}>{t.doctorDashboard.appointmentsPage.actions.viewDetails}</button>
                                     </div>
                                 </motion.div>
                             ))}
@@ -302,8 +328,8 @@ export default function AppointmentsPage() {
                     <div className={cn("w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4", emptyStateBg, textMuted)}>
                         {Icons.calendar}
                     </div>
-                    <h3 className={cn("text-lg font-medium mb-2", textPrimary)}>No appointments found</h3>
-                    <p className={textMuted}>Try adjusting your search or filters</p>
+                    <h3 className={cn("text-lg font-medium mb-2", textPrimary)}>{t.doctorDashboard.appointmentsPage.emptyState.title}</h3>
+                    <p className={textMuted}>{t.doctorDashboard.appointmentsPage.emptyState.subtitle}</p>
                 </div>
             )}
         </div>

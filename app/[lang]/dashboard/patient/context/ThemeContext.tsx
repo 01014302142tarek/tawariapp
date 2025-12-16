@@ -2,41 +2,76 @@
 
 import React, { createContext, useContext, useState, useEffect } from "react";
 
+type ThemeMode = "system" | "light" | "dark";
 type Theme = "light" | "dark";
 
 interface ThemeContextType {
     theme: Theme;
-    toggleTheme: () => void;
+    themeMode: ThemeMode;
+    setThemeMode: (mode: ThemeMode) => void;
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
+function getSystemTheme(): Theme {
+    if (typeof window !== "undefined") {
+        return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    }
+    return "light";
+}
+
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-    const [theme, setTheme] = useState<Theme>("dark");
+    const [themeMode, setThemeModeState] = useState<ThemeMode>("light");
+    const [theme, setTheme] = useState<Theme>("light");
     const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
         setMounted(true);
-        const savedTheme = localStorage.getItem("patient-dashboard-theme") as Theme;
-        if (savedTheme) {
-            setTheme(savedTheme);
-        } else if (window.matchMedia("(prefers-color-scheme: light)").matches) {
+        const savedMode = localStorage.getItem("patient-dashboard-theme-mode") as ThemeMode;
+        if (savedMode && ["system", "light", "dark"].includes(savedMode)) {
+            setThemeModeState(savedMode);
+            if (savedMode === "system") {
+                setTheme(getSystemTheme());
+            } else {
+                setTheme(savedMode);
+            }
+        } else {
+            // Default to light theme
+            setThemeModeState("light");
             setTheme("light");
         }
     }, []);
 
-    const toggleTheme = () => {
-        const newTheme = theme === "dark" ? "light" : "dark";
-        setTheme(newTheme);
-        localStorage.setItem("patient-dashboard-theme", newTheme);
+    useEffect(() => {
+        if (!mounted) return;
+
+        if (themeMode === "system") {
+            const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+            const handleChange = (e: MediaQueryListEvent) => {
+                setTheme(e.matches ? "dark" : "light");
+            };
+            setTheme(getSystemTheme());
+            mediaQuery.addEventListener("change", handleChange);
+            return () => mediaQuery.removeEventListener("change", handleChange);
+        }
+    }, [themeMode, mounted]);
+
+    const setThemeMode = (mode: ThemeMode) => {
+        setThemeModeState(mode);
+        localStorage.setItem("patient-dashboard-theme-mode", mode);
+        if (mode === "system") {
+            setTheme(getSystemTheme());
+        } else {
+            setTheme(mode);
+        }
     };
 
     if (!mounted) {
-        return <div className="min-h-screen bg-slate-950" />;
+        return <div className="min-h-screen bg-white" />;
     }
 
     return (
-        <ThemeContext.Provider value={{ theme, toggleTheme }}>
+        <ThemeContext.Provider value={{ theme, themeMode, setThemeMode }}>
             {children}
         </ThemeContext.Provider>
     );

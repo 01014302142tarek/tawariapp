@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useThemeStyles } from "../context/useThemeStyles";
 import { GlowingCard } from "@/components/ui/glowing-card";
+import { useI18n } from "@/app/i18n";
 
 // Icons
 const Icons = {
@@ -41,31 +42,6 @@ const Icons = {
     ),
 };
 
-// Mock Data
-const categories = [
-    { id: "all", name: "All Records", count: 12 },
-    { id: "lab", name: "Lab Results", count: 5 },
-    { id: "imaging", name: "Imaging", count: 3 },
-    { id: "visits", name: "Visit Summaries", count: 4 },
-];
-
-const records = [
-    { id: 1, type: "lab", title: "Complete Blood Count (CBC)", date: "Dec 10, 2024", doctor: "Dr. Ahmed Hassan", status: "new" },
-    { id: 2, type: "lab", title: "Lipid Panel", date: "Dec 10, 2024", doctor: "Dr. Ahmed Hassan", status: "new" },
-    { id: 3, type: "imaging", title: "Chest X-Ray", date: "Nov 28, 2024", doctor: "Dr. Fatima Khaled", status: "viewed" },
-    { id: 4, type: "visits", title: "Cardiology Follow-up Summary", date: "Nov 15, 2024", doctor: "Dr. Ahmed Hassan", status: "viewed" },
-    { id: 5, type: "lab", title: "HbA1c Test", date: "Oct 20, 2024", doctor: "Dr. Fatima Khaled", status: "viewed" },
-    { id: 6, type: "imaging", title: "ECG Report", date: "Oct 15, 2024", doctor: "Dr. Ahmed Hassan", status: "viewed" },
-    { id: 7, type: "visits", title: "Annual Physical Exam", date: "Sep 5, 2024", doctor: "Dr. Fatima Khaled", status: "viewed" },
-];
-
-const vitalHistory = [
-    { label: "Blood Pressure", value: "120/80", unit: "mmHg", trend: "stable", date: "Dec 10, 2024" },
-    { label: "Heart Rate", value: "72", unit: "bpm", trend: "stable", date: "Dec 10, 2024" },
-    { label: "Weight", value: "68", unit: "kg", trend: "down", date: "Dec 10, 2024" },
-    { label: "Blood Glucose", value: "95", unit: "mg/dL", trend: "stable", date: "Dec 10, 2024" },
-];
-
 const Badge = ({ children, variant = "default" }: { children: React.ReactNode; variant?: "default" | "success" | "new" }) => {
     const variants = {
         default: "bg-slate-700/50 text-slate-300",
@@ -80,8 +56,35 @@ const Badge = ({ children, variant = "default" }: { children: React.ReactNode; v
 };
 
 export default function RecordsPage() {
+    const { t, formatNumber, formatDate } = useI18n();
     const [activeCategory, setActiveCategory] = useState("all");
     const { isDark, textPrimary, textMuted, border } = useThemeStyles();
+
+    const categories = [
+        { id: "all", name: t.patientDashboard.recordsPage.filters.all, count: 12 },
+        { id: "lab", name: t.patientDashboard.recordsPage.filters.lab, count: 5 },
+        { id: "imaging", name: t.patientDashboard.recordsPage.filters.imaging, count: 3 },
+        { id: "visits", name: t.patientDashboard.recordsPage.filters.visits, count: 4 },
+    ];
+
+    const records = [
+        { id: 1, type: "lab", title: "Complete Blood Count (CBC)", date: "Dec 10, 2024", doctor: "Dr. Ahmed Hassan", status: "new" },
+        { id: 2, type: "lab", title: "Lipid Panel", date: "Dec 10, 2024", doctor: "Dr. Ahmed Hassan", status: "new" },
+        { id: 3, type: "imaging", title: "Chest X-Ray", date: "Nov 28, 2024", doctor: "Dr. Fatima Khaled", status: "viewed" },
+        { id: 4, type: "visits", title: "Cardiology Follow-up Summary", date: "Nov 15, 2024", doctor: "Dr. Ahmed Hassan", status: "viewed" },
+        { id: 5, type: "lab", title: "HbA1c Test", date: "Oct 20, 2024", doctor: "Dr. Fatima Khaled", status: "viewed" },
+        { id: 6, type: "imaging", title: "ECG Report", date: "Oct 15, 2024", doctor: "Dr. Ahmed Hassan", status: "viewed" },
+        { id: 7, type: "visits", title: "Annual Physical Exam", date: "Sep 5, 2024", doctor: "Dr. Fatima Khaled", status: "viewed" },
+    ];
+
+    const vitalHistory = [
+        { label: t.patientDashboard.recordsPage.vitals.bloodPressure, value: "120/80", unit: "mmHg", trend: "stable", date: "Dec 10, 2024" },
+        { label: t.patientDashboard.recordsPage.vitals.heartRate, value: "72", unit: "bpm", trend: "stable", date: "Dec 10, 2024" },
+        { label: t.patientDashboard.recordsPage.vitals.weight, value: "68", unit: "kg", trend: "down", date: "Dec 10, 2024" },
+        { label: t.patientDashboard.recordsPage.vitals.bloodGlucose, value: "95", unit: "mg/dL", trend: "stable", date: "Dec 10, 2024" },
+    ];
+
+
 
     const filteredRecords = records.filter(record => {
         if (activeCategory === "all") return true;
@@ -107,9 +110,9 @@ export default function RecordsPage() {
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M2.25 12.75V12A2.25 2.25 0 014.5 9.75h15A2.25 2.25 0 0121.75 12v.75m-8.69-6.44l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.379a1.5 1.5 0 01-1.06-.44z" />
                         </svg>
                     </span>
-                    Medical Records
+                    {t.patientDashboard.recordsPage.title}
                 </h1>
-                <p className={cn("mt-1 text-sm md:text-base", textMuted)}>Access your medical history and documents</p>
+                <p className={cn("mt-1 text-sm md:text-base", textMuted)}>{t.patientDashboard.recordsPage.subtitle}</p>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
@@ -137,7 +140,7 @@ export default function RecordsPage() {
                                         ? "bg-white/20"
                                         : isDark ? "bg-white/10" : "bg-gray-200"
                                 )}>
-                                    {cat.count}
+                                    {formatNumber(cat.count)}
                                 </span>
                             </button>
                         ))}
@@ -162,10 +165,10 @@ export default function RecordsPage() {
                                         <div className="flex-1 min-w-0">
                                             <div className="flex items-center gap-2 mb-0.5 md:mb-1">
                                                 <h3 className={cn("font-medium text-sm md:text-base truncate", textPrimary)}>{record.title}</h3>
-                                                {record.status === "new" && <Badge variant="new">New</Badge>}
+                                                {record.status === "new" && <Badge variant="new">{t.patientDashboard.recordsPage.status.new}</Badge>}
                                             </div>
                                             <p className={cn("text-xs md:text-sm truncate", textMuted)}>
-                                                {record.doctor} • {record.date}
+                                                {record.doctor} • {formatDate(record.date)}
                                             </p>
                                         </div>
                                         <div className="flex gap-1.5 md:gap-2 flex-shrink-0">
@@ -197,7 +200,7 @@ export default function RecordsPage() {
                 {/* Vitals Summary */}
                 <div>
                     <GlowingCard glowColor="teal" className="p-4 md:p-6" isDark={isDark}>
-                        <h2 className={cn("text-base md:text-lg font-semibold mb-3 md:mb-4", textPrimary)}>Latest Vitals</h2>
+                        <h2 className={cn("text-base md:text-lg font-semibold mb-3 md:mb-4", textPrimary)}>{t.patientDashboard.recordsPage.vitals.title}</h2>
                         <div className="grid grid-cols-2 lg:grid-cols-1 gap-2 md:gap-4">
                             {vitalHistory.map((vital, idx) => (
                                 <div key={idx} className={cn("p-2 md:p-3 rounded-lg", isDark ? "bg-white/[0.02]" : "bg-gray-50")}>
@@ -209,14 +212,14 @@ export default function RecordsPage() {
                                                 vital.trend === "down" ? "text-teal-500" :
                                                     "text-gray-500"
                                         )}>
-                                            {vital.trend === "up" ? "↑" : vital.trend === "down" ? "↓" : "→"} {vital.trend}
+                                            {vital.trend === "up" ? "↑" : vital.trend === "down" ? "↓" : "→"} {t.patientDashboard.recordsPage.trends[vital.trend as keyof typeof t.patientDashboard.recordsPage.trends]}
                                         </span>
                                     </div>
                                     <div className="flex items-baseline gap-0.5 md:gap-1">
-                                        <span className={cn("text-lg md:text-2xl font-bold", textPrimary)}>{vital.value}</span>
+                                        <span className={cn("text-lg md:text-2xl font-bold", textPrimary)}>{formatNumber(vital.value)}</span>
                                         <span className={cn("text-xs md:text-sm", textMuted)}>{vital.unit}</span>
                                     </div>
-                                    <p className={cn("text-[10px] md:text-xs mt-0.5 md:mt-1", textMuted)}>{vital.date}</p>
+                                    <p className={cn("text-[10px] md:text-xs mt-0.5 md:mt-1", textMuted)}>{formatNumber(vital.date)}</p>
                                 </div>
                             ))}
                         </div>

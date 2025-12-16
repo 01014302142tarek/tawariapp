@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { useTheme } from "../context/ThemeContext";
 import { GlowingCard } from "@/components/ui/glowing-card";
 import { SparklesCore } from "@/components/ui/sparkles";
+import { useI18n } from "@/app/i18n";
 
 // Icons
 const Icons = {
@@ -52,92 +53,105 @@ const Toggle = ({ enabled, onChange, isDark }: { enabled: boolean; onChange: () 
     <button
         onClick={onChange}
         className={cn(
-            "relative w-12 h-6 rounded-full transition-colors",
-            enabled ? "bg-teal-500" : isDark ? "bg-slate-700" : "bg-gray-300"
+            "relative h-6 w-11 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2",
+            enabled ? "bg-teal-500" : isDark ? "bg-slate-600" : "bg-gray-300",
+            isDark ? "focus:ring-offset-slate-900" : "focus:ring-offset-white"
         )}
     >
-        <motion.div
-            animate={{ x: enabled ? 24 : 2 }}
-            transition={{ type: "spring", stiffness: 500, damping: 30 }}
-            className="absolute top-1 w-4 h-4 rounded-full bg-white shadow-md"
+        <span
+            className={cn(
+                "absolute top-0.5 h-5 w-5 rounded-full shadow-lg transition-all duration-200",
+                enabled ? "left-[22px] bg-white" : "left-0.5 bg-white",
+                isDark && !enabled && "bg-gray-200"
+            )}
         />
     </button>
 );
 
-// Settings sections
-const generalSettings = [
-    { id: "maintenance", label: "Maintenance Mode", description: "Enable to show maintenance page to users", enabled: false },
-    { id: "registration", label: "User Registration", description: "Allow new users to register on the platform", enabled: true },
-    { id: "doctorApproval", label: "Doctor Auto-Approval", description: "Automatically approve new doctor registrations", enabled: false },
-    { id: "emailNotifications", label: "Email Notifications", description: "Send email notifications for platform events", enabled: true },
-];
-
-const securitySettings = [
-    { id: "2fa", label: "Two-Factor Authentication", description: "Require 2FA for all admin accounts", enabled: true },
-    { id: "sessionTimeout", label: "Session Timeout", description: "Automatically log out inactive users after 30 minutes", enabled: true },
-    { id: "ipWhitelist", label: "IP Whitelist", description: "Restrict admin access to whitelisted IPs only", enabled: false },
-    { id: "auditLog", label: "Audit Logging", description: "Log all admin actions for security review", enabled: true },
-];
-
-const notificationSettings = [
-    { id: "newUser", label: "New User Alerts", description: "Notify when new users register", enabled: true },
-    { id: "newDoctor", label: "Doctor Registration", description: "Notify when doctors await approval", enabled: true },
-    { id: "payments", label: "Payment Alerts", description: "Notify for payment transactions", enabled: true },
-    { id: "systemAlerts", label: "System Alerts", description: "Critical system notifications", enabled: true },
-];
-
-const paymentSettings = [
-    { id: "payments", label: "Accept Payments", description: "Enable payment processing on the platform", enabled: true },
-    { id: "refunds", label: "Automatic Refunds", description: "Process refunds for cancelled appointments", enabled: false },
-    { id: "invoices", label: "Generate Invoices", description: "Automatically generate PDF invoices", enabled: true },
-];
-
-// Settings Section Component - moved outside to prevent re-renders
+// Settings Section Component
 const SettingsSection = ({
     title,
     icon,
     settings,
     section,
     onToggle,
-    isDark
+    isDark,
+    t
 }: {
     title: string;
     icon: React.ReactNode;
-    settings: { id: string; label: string; description: string; enabled: boolean }[];
+    settings: { id: string; key: string; enabled: boolean }[];
     section: string;
     onToggle: (section: string, id: string) => void;
     isDark: boolean;
-}) => (
-    <GlowingCard glowColor="teal" className="p-4 md:p-6" isDark={isDark}>
-        <div className="flex items-center gap-2 md:gap-3 mb-4 md:mb-6">
-            <div className="w-8 h-8 md:w-10 md:h-10 rounded-lg md:rounded-xl bg-teal-500/10 flex items-center justify-center text-teal-500">
-                {icon}
-            </div>
-            <h2 className={cn("text-base md:text-lg font-semibold", isDark ? "text-white" : "text-slate-900")}>{title}</h2>
-        </div>
-        <div className="space-y-3 md:space-y-4">
-            {settings.map((setting) => (
-                <div
-                    key={setting.id}
-                    className={cn(
-                        "flex items-center justify-between p-3 md:p-4 rounded-lg md:rounded-xl border",
-                        isDark ? "bg-white/[0.02] border-white/5" : "bg-gray-50 border-gray-200"
-                    )}
-                >
-                    <div className="flex-1 mr-3 md:mr-4">
-                        <p className={cn("font-medium text-sm md:text-base", isDark ? "text-white" : "text-slate-900")}>{setting.label}</p>
-                        <p className={cn("text-xs md:text-sm mt-0.5", isDark ? "text-gray-500" : "text-gray-600")}>{setting.description}</p>
-                    </div>
-                    <Toggle enabled={setting.enabled} onChange={() => onToggle(section, setting.id)} isDark={isDark} />
+    t: any;
+}) => {
+    return (
+        <GlowingCard glowColor="teal" className="p-4 md:p-6" isDark={isDark}>
+            <div className="flex items-center gap-2 md:gap-3 mb-4 md:mb-6">
+                <div className="w-8 h-8 md:w-10 md:h-10 rounded-lg md:rounded-xl bg-teal-500/10 flex items-center justify-center text-teal-500">
+                    {icon}
                 </div>
-            ))}
-        </div>
-    </GlowingCard>
-);
+                <h2 className={cn("text-base md:text-lg font-semibold", isDark ? "text-white" : "text-slate-900")}>{title}</h2>
+            </div>
+            <div className="space-y-3 md:space-y-4">
+                {settings.map((setting) => {
+                    // Type-safe access to item translations based on key
+                    const item = t.adminDashboard.settingsPage.items[setting.key];
+                    return (
+                        <div
+                            key={setting.id}
+                            className={cn(
+                                "flex items-center justify-between p-3 md:p-4 rounded-lg md:rounded-xl border",
+                                isDark ? "bg-white/[0.02] border-white/5" : "bg-gray-50 border-gray-200"
+                            )}
+                        >
+                            <div className="flex-1 mr-3 md:mr-4">
+                                <p className={cn("font-medium text-sm md:text-base", isDark ? "text-white" : "text-slate-900")}>{item?.label || setting.key}</p>
+                                <p className={cn("text-xs md:text-sm mt-0.5", isDark ? "text-gray-500" : "text-gray-600")}>{item?.desc || ''}</p>
+                            </div>
+                            <Toggle enabled={setting.enabled} onChange={() => onToggle(section, setting.id)} isDark={isDark} />
+                        </div>
+                    );
+                })}
+            </div>
+        </GlowingCard>
+    );
+};
 
 export default function SettingsPage() {
+    const { t, formatNumber, formatDate } = useI18n();
     const { theme } = useTheme();
     const isDark = theme === "dark";
+
+    // Define settings with IDs and keys for translation
+    const generalSettings = [
+        { id: "maintenance", key: "maintenance", enabled: false },
+        { id: "registration", key: "registration", enabled: true },
+        { id: "doctorApproval", key: "doctorApproval", enabled: false },
+        { id: "emailNotifications", key: "emailNotifications", enabled: true },
+    ];
+
+    const securitySettings = [
+        { id: "2fa", key: "twoFactor", enabled: true },
+        { id: "sessionTimeout", key: "sessionTimeout", enabled: true },
+        { id: "ipWhitelist", key: "ipWhitelist", enabled: false },
+        { id: "auditLog", key: "auditLog", enabled: true },
+    ];
+
+    const notificationSettings = [
+        { id: "newUser", key: "newUser", enabled: true },
+        { id: "newDoctor", key: "newDoctor", enabled: true },
+        { id: "payments", key: "paymentAlerts", enabled: true },
+        { id: "systemAlerts", key: "systemAlerts", enabled: true },
+    ];
+
+    const paymentSettings = [
+        { id: "payments", key: "acceptPayments", enabled: true },
+        { id: "refunds", key: "refunds", enabled: false },
+        { id: "invoices", key: "invoices", enabled: true },
+    ];
+
 
     const [general, setGeneral] = useState(generalSettings);
     const [security, setSecurity] = useState(securitySettings);
@@ -186,9 +200,9 @@ export default function SettingsPage() {
                 {/* Header */}
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 md:mb-8">
                     <div>
-                        <h1 className={cn("text-xl md:text-2xl lg:text-3xl font-bold", isDark ? "text-white" : "text-slate-900")}>System Settings</h1>
+                        <h1 className={cn("text-xl md:text-2xl lg:text-3xl font-bold", isDark ? "text-white" : "text-slate-900")}>{t.adminDashboard.settingsPage.title}</h1>
                         <p className={cn("text-sm md:text-base lg:text-lg mt-1", isDark ? "text-gray-400" : "text-gray-600")}>
-                            Configure platform preferences and features
+                            {t.adminDashboard.settingsPage.subtitle}
                         </p>
                     </div>
                     <button
@@ -201,16 +215,16 @@ export default function SettingsPage() {
                         )}
                     >
                         {saved ? Icons.check : Icons.save}
-                        {saved ? "Saved!" : "Save Changes"}
+                        {saved ? t.adminDashboard.settingsPage.saved : t.adminDashboard.settingsPage.save}
                     </button>
                 </div>
 
                 {/* Settings Grid - 2x2 Layout */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 mb-6 md:mb-8">
-                    <SettingsSection title="General Settings" icon={Icons.cog} settings={general} section="general" onToggle={toggleSetting} isDark={isDark} />
-                    <SettingsSection title="Security Settings" icon={Icons.shield} settings={security} section="security" onToggle={toggleSetting} isDark={isDark} />
-                    <SettingsSection title="Notifications" icon={Icons.bell} settings={notifications} section="notifications" onToggle={toggleSetting} isDark={isDark} />
-                    <SettingsSection title="Payment Settings" icon={Icons.creditCard} settings={payment} section="payment" onToggle={toggleSetting} isDark={isDark} />
+                    <SettingsSection title={t.adminDashboard.settingsPage.sections.general} icon={Icons.cog} settings={general} section="general" onToggle={toggleSetting} isDark={isDark} t={t} />
+                    <SettingsSection title={t.adminDashboard.settingsPage.sections.security} icon={Icons.shield} settings={security} section="security" onToggle={toggleSetting} isDark={isDark} t={t} />
+                    <SettingsSection title={t.adminDashboard.settingsPage.sections.notifications} icon={Icons.bell} settings={notifications} section="notifications" onToggle={toggleSetting} isDark={isDark} t={t} />
+                    <SettingsSection title={t.adminDashboard.settingsPage.sections.payment} icon={Icons.creditCard} settings={payment} section="payment" onToggle={toggleSetting} isDark={isDark} t={t} />
                 </div>
 
                 {/* Platform Info */}
@@ -219,14 +233,14 @@ export default function SettingsPage() {
                         <div className="w-8 h-8 md:w-10 md:h-10 rounded-lg md:rounded-xl bg-teal-500/10 flex items-center justify-center text-teal-500">
                             {Icons.info}
                         </div>
-                        <h2 className={cn("text-base md:text-lg font-semibold", isDark ? "text-white" : "text-slate-900")}>Platform Information</h2>
+                        <h2 className={cn("text-base md:text-lg font-semibold", isDark ? "text-white" : "text-slate-900")}>{t.adminDashboard.settingsPage.sections.info}</h2>
                     </div>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
                         {[
-                            { label: "Version", value: "2.1.0" },
-                            { label: "Environment", value: "Production" },
-                            { label: "Last Updated", value: "Dec 14, 2024" },
-                            { label: "Database Status", value: "Healthy", highlight: true },
+                            { label: t.adminDashboard.settingsPage.info.version, value: "2.1.0" },
+                            { label: t.adminDashboard.settingsPage.info.environment, value: "Production" },
+                            { label: t.adminDashboard.settingsPage.info.lastUpdated, value: "Dec 14, 2024" },
+                            { label: t.adminDashboard.settingsPage.info.dbStatus, value: "Healthy", highlight: true },
                         ].map((info, idx) => (
                             <div
                                 key={idx}
@@ -239,7 +253,7 @@ export default function SettingsPage() {
                                     "text-sm md:text-lg font-semibold mb-0.5 md:mb-1 truncate",
                                     info.highlight ? "text-emerald-500" : isDark ? "text-white" : "text-slate-900"
                                 )}>
-                                    {info.value}
+                                    {idx === 2 ? formatDate(info.value) : (idx === 0 ? formatNumber(info.value) : info.value)}
                                 </p>
                                 <p className={cn("text-[10px] md:text-sm", isDark ? "text-gray-500" : "text-gray-600")}>{info.label}</p>
                             </div>
@@ -250,4 +264,3 @@ export default function SettingsPage() {
         </div>
     );
 }
-

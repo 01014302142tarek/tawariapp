@@ -8,6 +8,7 @@ import { useTheme } from "../context/ThemeContext";
 import { GlowingCard } from "@/components/ui/glowing-card";
 import { SparklesCore } from "@/components/ui/sparkles";
 import { AnimatedNumber } from "@/components/ui/animated-number";
+import { useI18n } from "@/app/i18n";
 
 // Icons
 const Icons = {
@@ -54,14 +55,7 @@ const Icons = {
 };
 
 // Mock user data
-const users = [
-    { id: 1, name: "Dr. Ahmed Hassan", email: "ahmed.hassan@email.com", role: "Doctor", status: "active", joinDate: "Dec 1, 2024", image: "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=100&h=100&fit=crop&crop=face" },
-    { id: 2, name: "Sarah Johnson", email: "sarah.j@email.com", role: "Patient", status: "active", joinDate: "Nov 28, 2024", image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop&crop=face" },
-    { id: 3, name: "Dr. Fatima Khaled", email: "fatima.k@email.com", role: "Doctor", status: "pending", joinDate: "Dec 10, 2024", image: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=100&h=100&fit=crop&crop=face" },
-    { id: 4, name: "Mohamed Ali", email: "mohamed.ali@email.com", role: "Patient", status: "active", joinDate: "Nov 15, 2024", image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face" },
-    { id: 5, name: "Dr. Omar Nasser", email: "omar.n@email.com", role: "Doctor", status: "inactive", joinDate: "Oct 20, 2024", image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face" },
-    { id: 6, name: "Layla Ahmed", email: "layla.a@email.com", role: "Patient", status: "active", joinDate: "Dec 5, 2024", image: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&h=100&fit=crop&crop=face" },
-];
+
 
 const Badge = ({ variant, children }: { variant: string; children: React.ReactNode }) => {
     const variants: Record<string, string> = {
@@ -80,10 +74,21 @@ const Badge = ({ variant, children }: { variant: string; children: React.ReactNo
 };
 
 export default function UsersPage() {
+    const { t, isRTL, formatNumber, formatDate } = useI18n();
     const { theme } = useTheme();
     const isDark = theme === "dark";
     const [filter, setFilter] = useState("all");
     const [search, setSearch] = useState("");
+
+    // Mock user data
+    const users = [
+        { id: 1, name: t.common.demoNames.drAhmedHassan, email: "ahmed.hassan@email.com", role: t.common.roles.doctor, status: "active", joinDate: "Dec 1, 2024", image: "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=100&h=100&fit=crop&crop=face" },
+        { id: 2, name: t.common.demoNames.sarahJohnson, email: "sarah.j@email.com", role: t.common.roles.patient, status: "active", joinDate: "Nov 28, 2024", image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop&crop=face" },
+        { id: 3, name: t.common.demoNames.drFatimaKhaled, email: "fatima.k@email.com", role: t.common.roles.doctor, status: "pending", joinDate: "Dec 10, 2024", image: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=100&h=100&fit=crop&crop=face" },
+        { id: 4, name: t.common.demoNames.mohamedAli, email: "mohamed.ali@email.com", role: t.common.roles.patient, status: "active", joinDate: "Nov 15, 2024", image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face" },
+        { id: 5, name: t.common.demoNames.drOmarNasser, email: "omar.n@email.com", role: t.common.roles.doctor, status: "inactive", joinDate: "Oct 20, 2024", image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face" },
+        { id: 6, name: t.common.demoNames.laylaAhmed, email: "layla.a@email.com", role: t.common.roles.patient, status: "active", joinDate: "Dec 5, 2024", image: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&h=100&fit=crop&crop=face" },
+    ];
 
     const filteredUsers = users.filter(user => {
         const matchesFilter = filter === "all" || user.role.toLowerCase() === filter || user.status === filter;
@@ -93,11 +98,15 @@ export default function UsersPage() {
     });
 
     const stats = [
-        { label: "Total Users", value: 1247, icon: Icons.users, color: "teal" },
-        { label: "Doctors", value: 89, icon: Icons.doctor, color: "emerald" },
-        { label: "Patients", value: 1153, icon: Icons.patient, color: "blue" },
-        { label: "Admins", value: 5, icon: Icons.admin, color: "amber" },
+        { label: t.adminDashboard.usersPage.stats.totalUsers, value: 1247, icon: Icons.users, color: "teal" },
+        { label: t.adminDashboard.usersPage.stats.doctors, value: 89, icon: Icons.doctor, color: "emerald" },
+        { label: t.adminDashboard.usersPage.stats.patients, value: 1153, icon: Icons.patient, color: "blue" },
+        { label: t.adminDashboard.usersPage.stats.admins, value: 5, icon: Icons.admin, color: "amber" },
     ];
+
+    const getFilterLabel = (key: string) => {
+        return t.adminDashboard.usersPage.filters[key as keyof typeof t.adminDashboard.usersPage.filters] || key;
+    };
 
     return (
         <div className="relative overflow-hidden min-h-screen">
@@ -123,14 +132,14 @@ export default function UsersPage() {
                 {/* Header with Stats */}
                 <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-6 md:mb-8">
                     <div>
-                        <h1 className={cn("text-xl md:text-2xl lg:text-3xl font-bold", isDark ? "text-white" : "text-slate-900")}>User Management</h1>
+                        <h1 className={cn("text-xl md:text-2xl lg:text-3xl font-bold", isDark ? "text-white" : "text-slate-900")}>{t.adminDashboard.usersPage.title}</h1>
                         <p className={cn("text-sm md:text-base lg:text-lg mt-1", isDark ? "text-gray-400" : "text-gray-600")}>
-                            Manage all users on the platform
+                            {t.adminDashboard.usersPage.subtitle}
                         </p>
                     </div>
                     <button className="px-4 md:px-5 py-2 md:py-2.5 bg-teal-500 hover:bg-teal-600 text-white font-medium rounded-xl transition-colors flex items-center gap-2 self-start text-sm md:text-base">
                         {Icons.plus}
-                        Add User
+                        {t.adminDashboard.usersPage.addUser}
                     </button>
                 </div>
 
@@ -146,7 +155,7 @@ export default function UsersPage() {
                                 </div>
                                 <div>
                                     <p className={cn("text-lg md:text-2xl font-bold", isDark ? "text-white" : "text-slate-900")}>
-                                        <AnimatedNumber value={stat.value} />
+                                        <AnimatedNumber value={stat.value} format={formatNumber} />
                                     </p>
                                     <p className={cn("text-[10px] md:text-xs truncate", isDark ? "text-gray-500" : "text-gray-600")}>{stat.label}</p>
                                 </div>
@@ -159,14 +168,15 @@ export default function UsersPage() {
                 <GlowingCard glowColor="teal" className="p-3 md:p-4 mb-4 md:mb-6" isDark={isDark}>
                     <div className="flex flex-col md:flex-row gap-3 md:gap-4">
                         <div className="flex-1 relative">
-                            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">{Icons.search}</div>
+                            <div className={cn("absolute top-1/2 -translate-y-1/2 text-gray-500", isRTL ? "right-3" : "left-3")}>{Icons.search}</div>
                             <input
                                 type="text"
-                                placeholder="Search users..."
+                                placeholder={t.adminDashboard.usersPage.searchPlaceholder}
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
                                 className={cn(
-                                    "w-full pl-10 pr-4 py-2 md:py-2.5 rounded-xl border outline-none transition-colors text-sm md:text-base",
+                                    "w-full py-2 md:py-2.5 rounded-xl border outline-none transition-colors text-sm md:text-base",
+                                    isRTL ? "pr-10 pl-4" : "pl-10 pr-4",
                                     isDark
                                         ? "bg-slate-800/50 border-white/10 text-white placeholder-gray-500 focus:border-teal-500/50"
                                         : "bg-gray-50 border-gray-200 text-slate-900 placeholder-gray-400 focus:border-teal-500"
@@ -187,7 +197,7 @@ export default function UsersPage() {
                                                 : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                                     )}
                                 >
-                                    {f}
+                                    {getFilterLabel(f)}
                                 </button>
                             ))}
                         </div>
@@ -217,8 +227,8 @@ export default function UsersPage() {
                                 </div>
                                 <div className="flex items-center justify-between">
                                     <div className="flex gap-1.5 md:gap-2">
-                                        <Badge variant={user.role}>{user.role}</Badge>
-                                        <Badge variant={user.status}>{user.status}</Badge>
+                                        <Badge variant={user.role}>{getFilterLabel(user.role.toLowerCase())}</Badge>
+                                        <Badge variant={user.status}>{getFilterLabel(user.status)}</Badge>
                                     </div>
                                     <div className="flex gap-1">
                                         <button className={cn(
@@ -232,7 +242,7 @@ export default function UsersPage() {
                                     </div>
                                 </div>
                                 <p className={cn("text-[10px] md:text-xs mt-2 md:mt-3 pt-2 md:pt-3 border-t", isDark ? "text-gray-500 border-white/5" : "text-gray-500 border-gray-200")}>
-                                    Joined {user.joinDate}
+                                    {t.adminDashboard.usersPage.table.joined} {formatDate(user.joinDate)}
                                 </p>
                             </GlowingCard>
                         </motion.div>

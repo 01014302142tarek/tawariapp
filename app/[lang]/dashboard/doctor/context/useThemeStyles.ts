@@ -4,13 +4,14 @@ import { useTheme } from "./ThemeContext";
 
 // Shared theme-aware style classes for the doctor2 dashboard
 export function useThemeStyles() {
-    const { theme, toggleTheme } = useTheme();
+    const { theme, themeMode, setThemeMode } = useTheme();
     const isDark = theme === "dark";
 
     return {
         theme,
         isDark,
-        toggleTheme,
+        themeMode,
+        setThemeMode,
 
         // Page backgrounds
         pageBg: isDark ? "bg-slate-950" : "bg-gray-50",

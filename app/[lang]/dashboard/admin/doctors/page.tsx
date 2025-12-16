@@ -8,6 +8,7 @@ import { useTheme } from "../context/ThemeContext";
 import { GlowingCard } from "@/components/ui/glowing-card";
 import { SparklesCore } from "@/components/ui/sparkles";
 import { AnimatedNumber } from "@/components/ui/animated-number";
+import { useI18n } from "@/app/i18n";
 
 // Icons
 const Icons = {
@@ -49,14 +50,7 @@ const Icons = {
 };
 
 // Mock doctor data
-const doctors = [
-    { id: 1, name: "Dr. Ahmed Hassan", specialty: "Cardiologist", patients: 156, rating: 4.9, status: "active", revenue: 45600, consultations: 234, image: "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=100&h=100&fit=crop&crop=face" },
-    { id: 2, name: "Dr. Sarah Ahmed", specialty: "Dermatologist", patients: 89, rating: 4.8, status: "pending", revenue: 0, consultations: 0, image: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=100&h=100&fit=crop&crop=face" },
-    { id: 3, name: "Dr. Omar Khalil", specialty: "Neurologist", patients: 203, rating: 4.7, status: "active", revenue: 67800, consultations: 312, image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face" },
-    { id: 4, name: "Dr. Fatima Hassan", specialty: "Pediatrician", patients: 312, rating: 4.9, status: "active", revenue: 89200, consultations: 456, image: "https://images.unsplash.com/photo-1594824476967-48c8b964273f?w=100&h=100&fit=crop&crop=face" },
-    { id: 5, name: "Dr. Mohamed Nasser", specialty: "Orthopedic", patients: 178, rating: 4.6, status: "inactive", revenue: 34500, consultations: 189, image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face" },
-    { id: 6, name: "Dr. Layla Mahmoud", specialty: "Psychiatrist", patients: 134, rating: 4.8, status: "active", revenue: 52300, consultations: 276, image: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&h=100&fit=crop&crop=face" },
-];
+
 
 const Badge = ({ variant, children }: { variant: string; children: React.ReactNode }) => {
     const variants: Record<string, string> = {
@@ -72,10 +66,21 @@ const Badge = ({ variant, children }: { variant: string; children: React.ReactNo
 };
 
 export default function DoctorsPage() {
+    const { t, isRTL, formatNumber } = useI18n();
     const { theme } = useTheme();
     const isDark = theme === "dark";
     const [filter, setFilter] = useState("all");
     const [search, setSearch] = useState("");
+
+    // Mock doctor data
+    const doctors = [
+        { id: 1, name: t.common.demoNames.drAhmedHassan, specialty: t.specialties.cardiology, patients: 156, rating: 4.9, status: "active", revenue: 45600, consultations: 234, image: "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=100&h=100&fit=crop&crop=face" },
+        { id: 2, name: isRTL ? "د. سارة أحمد" : "Dr. Sarah Ahmed", specialty: t.specialties.dermatology, patients: 89, rating: 4.8, status: "pending", revenue: 0, consultations: 0, image: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=100&h=100&fit=crop&crop=face" },
+        { id: 3, name: t.common.demoNames.drOmarKhalil, specialty: isRTL ? "أعصاب" : "Neurologist", patients: 203, rating: 4.7, status: "active", revenue: 67800, consultations: 312, image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face" },
+        { id: 4, name: isRTL ? "د. فاطمة حسن" : "Dr. Fatima Hassan", specialty: t.specialties.pediatrics, patients: 312, rating: 4.9, status: "active", revenue: 89200, consultations: 456, image: "https://images.unsplash.com/photo-1594824476967-48c8b964273f?w=100&h=100&fit=crop&crop=face" },
+        { id: 5, name: isRTL ? "د. محمد ناصر" : "Dr. Mohamed Nasser", specialty: t.specialties.orthopedics, patients: 178, rating: 4.6, status: "inactive", revenue: 34500, consultations: 189, image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face" },
+        { id: 6, name: isRTL ? "د. ليلى محمود" : "Dr. Layla Mahmoud", specialty: t.specialties.mental, patients: 134, rating: 4.8, status: "active", revenue: 52300, consultations: 276, image: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&h=100&fit=crop&crop=face" },
+    ];
 
     const filteredDoctors = doctors.filter(doc => {
         const matchesFilter = filter === "all" || doc.status === filter;
@@ -85,11 +90,15 @@ export default function DoctorsPage() {
     });
 
     const stats = [
-        { label: "Total Doctors", value: 89, icon: Icons.doctor, color: "teal" },
-        { label: "Active", value: 76, icon: Icons.check, color: "emerald" },
-        { label: "Pending", value: 8, icon: Icons.clock, color: "orange" },
-        { label: "Revenue", value: 237, suffix: "K", icon: Icons.money, color: "amber" },
+        { label: t.adminDashboard.doctorsPage.stats.totalDoctors, value: 89, icon: Icons.doctor, color: "teal" },
+        { label: t.adminDashboard.doctorsPage.stats.active, value: 76, icon: Icons.check, color: "emerald" },
+        { label: t.adminDashboard.doctorsPage.stats.pending, value: 8, icon: Icons.clock, color: "orange" },
+        { label: t.adminDashboard.doctorsPage.stats.revenue, value: 237, suffix: "K", icon: Icons.money, color: "amber" },
     ];
+
+    const getFilterLabel = (key: string) => {
+        return t.adminDashboard.doctorsPage.filters[key as keyof typeof t.adminDashboard.doctorsPage.filters] || key;
+    };
 
     return (
         <div className="relative overflow-hidden min-h-screen">
@@ -115,14 +124,14 @@ export default function DoctorsPage() {
                 {/* Header */}
                 <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-6 md:mb-8">
                     <div>
-                        <h1 className={cn("text-xl md:text-2xl lg:text-3xl font-bold", isDark ? "text-white" : "text-slate-900")}>Doctor Management</h1>
+                        <h1 className={cn("text-xl md:text-2xl lg:text-3xl font-bold", isDark ? "text-white" : "text-slate-900")}>{t.adminDashboard.doctorsPage.title}</h1>
                         <p className={cn("text-sm md:text-base lg:text-lg mt-1", isDark ? "text-gray-400" : "text-gray-600")}>
-                            Manage doctor accounts and approvals
+                            {t.adminDashboard.doctorsPage.subtitle}
                         </p>
                     </div>
                     <button className="px-4 md:px-5 py-2 md:py-2.5 bg-teal-500 hover:bg-teal-600 text-white font-medium rounded-xl transition-colors flex items-center gap-2 self-start text-sm md:text-base">
                         {Icons.plus}
-                        Add Doctor
+                        {t.adminDashboard.doctorsPage.addDoctor}
                     </button>
                 </div>
 
@@ -139,7 +148,7 @@ export default function DoctorsPage() {
                                 <div>
                                     <div className="flex items-baseline gap-0.5">
                                         <p className={cn("text-lg md:text-2xl font-bold", isDark ? "text-white" : "text-slate-900")}>
-                                            <AnimatedNumber value={stat.value} />
+                                            <AnimatedNumber value={stat.value} format={formatNumber} />
                                         </p>
                                         {stat.suffix && <span className={cn("text-sm md:text-lg", isDark ? "text-gray-400" : "text-gray-500")}>{stat.suffix}</span>}
                                     </div>
@@ -154,14 +163,15 @@ export default function DoctorsPage() {
                 <GlowingCard glowColor="teal" className="p-3 md:p-4 mb-4 md:mb-6" isDark={isDark}>
                     <div className="flex flex-col md:flex-row gap-4">
                         <div className="flex-1 relative">
-                            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">{Icons.search}</div>
+                            <div className={cn("absolute top-1/2 -translate-y-1/2 text-gray-500", isRTL ? "right-3" : "left-3")}>{Icons.search}</div>
                             <input
                                 type="text"
-                                placeholder="Search doctors by name or specialty..."
+                                placeholder={t.adminDashboard.doctorsPage.searchPlaceholder}
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
                                 className={cn(
-                                    "w-full pl-10 pr-4 py-2.5 rounded-xl border outline-none transition-colors",
+                                    "w-full py-2.5 rounded-xl border outline-none transition-colors",
+                                    isRTL ? "pr-10 pl-4" : "pl-10 pr-4",
                                     isDark
                                         ? "bg-slate-800/50 border-white/10 text-white placeholder-gray-500 focus:border-teal-500/50"
                                         : "bg-gray-50 border-gray-200 text-slate-900 placeholder-gray-400 focus:border-teal-500"
@@ -182,7 +192,7 @@ export default function DoctorsPage() {
                                                 : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                                     )}
                                 >
-                                    {f}
+                                    {getFilterLabel(f)}
                                 </button>
                             ))}
                         </div>
@@ -210,26 +220,26 @@ export default function DoctorsPage() {
                                             <p className={cn("text-xs md:text-sm", isDark ? "text-gray-500" : "text-gray-600")}>{doctor.specialty}</p>
                                             <div className="flex items-center gap-1 mt-1">
                                                 <span className="text-teal-500">{Icons.star}</span>
-                                                <span className={cn("text-xs md:text-sm font-medium", isDark ? "text-white" : "text-slate-900")}>{doctor.rating}</span>
+                                                <span className={cn("text-xs md:text-sm font-medium", isDark ? "text-white" : "text-slate-900")}>{formatNumber(doctor.rating)}</span>
                                             </div>
                                         </div>
                                     </div>
-                                    <Badge variant={doctor.status}>{doctor.status}</Badge>
+                                    <Badge variant={doctor.status}>{getFilterLabel(doctor.status)}</Badge>
                                 </div>
 
                                 {/* Stats Grid */}
                                 <div className="grid grid-cols-3 gap-2 md:gap-3 mb-3 md:mb-5">
                                     <div className={cn("p-2 md:p-3 rounded-lg md:rounded-xl text-center", isDark ? "bg-white/[0.03]" : "bg-gray-50")}>
-                                        <p className={cn("text-sm md:text-lg font-bold", isDark ? "text-white" : "text-slate-900")}>{doctor.patients}</p>
-                                        <p className={cn("text-[10px] md:text-xs", isDark ? "text-gray-500" : "text-gray-600")}>Patients</p>
+                                        <p className={cn("text-sm md:text-lg font-bold", isDark ? "text-white" : "text-slate-900")}>{formatNumber(doctor.patients)}</p>
+                                        <p className={cn("text-[10px] md:text-xs", isDark ? "text-gray-500" : "text-gray-600")}>{t.adminDashboard.doctorsPage.card.patients}</p>
                                     </div>
                                     <div className={cn("p-2 md:p-3 rounded-lg md:rounded-xl text-center", isDark ? "bg-white/[0.03]" : "bg-gray-50")}>
-                                        <p className={cn("text-sm md:text-lg font-bold", isDark ? "text-white" : "text-slate-900")}>{doctor.consultations}</p>
-                                        <p className={cn("text-[10px] md:text-xs", isDark ? "text-gray-500" : "text-gray-600")}>Consults</p>
+                                        <p className={cn("text-sm md:text-lg font-bold", isDark ? "text-white" : "text-slate-900")}>{formatNumber(doctor.consultations)}</p>
+                                        <p className={cn("text-[10px] md:text-xs", isDark ? "text-gray-500" : "text-gray-600")}>{t.adminDashboard.doctorsPage.card.consults}</p>
                                     </div>
                                     <div className={cn("p-2 md:p-3 rounded-lg md:rounded-xl text-center", isDark ? "bg-white/[0.03]" : "bg-gray-50")}>
-                                        <p className={cn("text-sm md:text-lg font-bold text-emerald-500")}>{(doctor.revenue / 1000).toFixed(0)}K</p>
-                                        <p className={cn("text-[10px] md:text-xs", isDark ? "text-gray-500" : "text-gray-600")}>Revenue</p>
+                                        <p className={cn("text-sm md:text-lg font-bold text-emerald-500")}>{formatNumber((doctor.revenue / 1000).toFixed(0))}K</p>
+                                        <p className={cn("text-[10px] md:text-xs", isDark ? "text-gray-500" : "text-gray-600")}>{t.adminDashboard.doctorsPage.card.revenue}</p>
                                     </div>
                                 </div>
 
@@ -239,11 +249,11 @@ export default function DoctorsPage() {
                                         "flex-1 py-2 md:py-2.5 rounded-lg md:rounded-xl text-xs md:text-sm font-medium transition-colors",
                                         isDark ? "bg-white/5 hover:bg-white/10 text-white" : "bg-gray-100 hover:bg-gray-200 text-gray-700"
                                     )}>
-                                        View Profile
+                                        {t.adminDashboard.doctorsPage.card.viewProfile}
                                     </button>
                                     {doctor.status === "pending" && (
                                         <button className="px-3 md:px-5 py-2 md:py-2.5 rounded-lg md:rounded-xl text-xs md:text-sm font-medium bg-teal-500 hover:bg-teal-600 text-white transition-colors">
-                                            Approve
+                                            {t.adminDashboard.doctorsPage.card.approve}
                                         </button>
                                     )}
                                 </div>
@@ -251,7 +261,7 @@ export default function DoctorsPage() {
                         </motion.div>
                     ))}
                 </div>
-            </main>
-        </div>
+            </main >
+        </div >
     );
 }

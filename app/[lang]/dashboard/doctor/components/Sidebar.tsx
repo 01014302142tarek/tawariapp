@@ -9,66 +9,8 @@ import { cn } from "@/lib/utils";
 import { useTheme } from "../context/ThemeContext";
 import { useI18n } from "@/app/i18n";
 
-const navItems = [
-    {
-        name: "Dashboard",
-        href: "/dashboard/doctor",
-        icon: (
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" />
-            </svg>
-        ),
-    },
-    {
-        name: "Appointments",
-        href: "/dashboard/doctor/appointments",
-        icon: (
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
-            </svg>
-        ),
-    },
-    {
-        name: "Patients",
-        href: "/dashboard/doctor/patients",
-        icon: (
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
-            </svg>
-        ),
-    },
-    {
-        name: "Consultations",
-        href: "/dashboard/doctor/consultations",
-        icon: (
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15.75 10.5l4.72-4.72a.75.75 0 011.28.53v11.38a.75.75 0 01-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 002.25-2.25v-9a2.25 2.25 0 00-2.25-2.25h-9A2.25 2.25 0 002.25 7.5v9a2.25 2.25 0 002.25 2.25z" />
-            </svg>
-        ),
-    },
-    {
-        name: "Messages",
-        href: "/dashboard/doctor/messages",
-        icon: (
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
-            </svg>
-        ),
-        count: 3,
-    },
-    {
-        name: "Analytics",
-        href: "/dashboard/doctor/analytics",
-        icon: (
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
-            </svg>
-        ),
-    },
-];
-
 // Tooltip component for collapsed state
-function Tooltip({ children, label, isExpanded }: { children: React.ReactNode; label: string; isExpanded: boolean }) {
+function Tooltip({ children, label, isExpanded, isRTL }: { children: React.ReactNode; label: string; isExpanded: boolean; isRTL: boolean }) {
     const [showTooltip, setShowTooltip] = useState(false);
 
     return (
@@ -81,15 +23,21 @@ function Tooltip({ children, label, isExpanded }: { children: React.ReactNode; l
             <AnimatePresence>
                 {showTooltip && !isExpanded && (
                     <motion.div
-                        initial={{ opacity: 0, x: -10 }}
+                        initial={{ opacity: 0, x: isRTL ? 10 : -10 }}
                         animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: -10 }}
+                        exit={{ opacity: 0, x: isRTL ? 10 : -10 }}
                         transition={{ duration: 0.15 }}
-                        className="absolute left-full ml-3 top-1/2 -translate-y-1/2 z-[60]"
+                        className={cn(
+                            "absolute top-1/2 -translate-y-1/2 z-[60]",
+                            isRTL ? "right-full mr-3" : "left-full ml-3"
+                        )}
                     >
                         <div className="bg-slate-900 text-white text-sm font-medium px-3 py-1.5 rounded-lg shadow-xl whitespace-nowrap">
                             {label}
-                            <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1 w-2 h-2 bg-slate-900 rotate-45" />
+                            <div className={cn(
+                                "absolute top-1/2 -translate-y-1/2 w-2 h-2 bg-slate-900 rotate-45",
+                                isRTL ? "right-0 translate-x-1" : "left-0 -translate-x-1"
+                            )} />
                         </div>
                     </motion.div>
                 )}
@@ -105,18 +53,63 @@ export default function Sidebar({ isMobileOpen, onClose }: { isMobileOpen?: bool
     const isDark = theme === "dark";
     const [isExpanded, setIsExpanded] = useState(false);
 
-    // Translation helper for nav items
-    const getNavLabel = (name: string) => {
-        const labels: Record<string, string> = {
-            "Dashboard": t.doctorDashboard.sidebar.dashboard,
-            "Appointments": t.doctorDashboard.sidebar.appointments,
-            "Patients": t.doctorDashboard.sidebar.patients,
-            "Consultations": t.doctorDashboard.sidebar.schedule,
-            "Messages": t.doctorDashboard.sidebar.messages,
-            "Analytics": t.doctorDashboard.sidebar.analytics,
-        };
-        return labels[name] || name;
-    };
+    const navItems = [
+        {
+            name: t.doctorDashboard.sidebar.dashboard,
+            href: `/dashboard/doctor`,
+            icon: (
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" />
+                </svg>
+            ),
+        },
+        {
+            name: t.doctorDashboard.sidebar.appointments,
+            href: `/dashboard/doctor/appointments`,
+            icon: (
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
+                </svg>
+            ),
+        },
+        {
+            name: t.doctorDashboard.sidebar.patients,
+            href: `/dashboard/doctor/patients`,
+            icon: (
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
+                </svg>
+            ),
+        },
+        {
+            name: t.doctorDashboard.sidebar.schedule,
+            href: `/dashboard/doctor/consultations`,
+            icon: (
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15.75 10.5l4.72-4.72a.75.75 0 011.28.53v11.38a.75.75 0 01-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 002.25-2.25v-9a2.25 2.25 0 00-2.25-2.25h-9A2.25 2.25 0 002.25 7.5v9a2.25 2.25 0 002.25 2.25z" />
+                </svg>
+            ),
+        },
+        {
+            name: t.doctorDashboard.sidebar.messages,
+            href: `/dashboard/doctor/messages`,
+            icon: (
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
+                </svg>
+            ),
+            count: 3,
+        },
+        {
+            name: t.doctorDashboard.sidebar.analytics,
+            href: `/dashboard/doctor/analytics`,
+            icon: (
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
+                </svg>
+            ),
+        },
+    ];
 
     // Fixed widths for consistent centering
     const collapsedWidth = 72;
@@ -148,11 +141,11 @@ export default function Sidebar({ isMobileOpen, onClose }: { isMobileOpen?: bool
                 onMouseLeave={() => setIsExpanded(false)}
                 className={cn(
                     "fixed top-0 h-screen flex flex-col z-50 overflow-hidden",
-                    "border-r backdrop-blur-xl",
-                    isRTL ? "right-0 border-l border-r-0" : "left-0",
+                    "backdrop-blur-xl",
+                    isRTL ? "right-0 border-l border-r-0" : "left-0 border-r",
                     // Hidden on mobile by default, shown when isMobileOpen is true
                     isMobileOpen
-                        ? (isRTL ? "translate-x-0" : "translate-x-0")
+                        ? "translate-x-0"
                         : (isRTL ? "translate-x-full md:translate-x-0" : "-translate-x-full md:translate-x-0"),
                     "transition-transform duration-300 md:transition-none",
                     isDark
@@ -167,7 +160,7 @@ export default function Sidebar({ isMobileOpen, onClose }: { isMobileOpen?: bool
                     <Link
                         href="/"
                         className="flex items-center gap-3 group w-full"
-                        style={{ paddingLeft: (collapsedWidth - 40) / 2 }}
+                        style={{ paddingLeft: isRTL ? 0 : (collapsedWidth - 40) / 2, paddingRight: isRTL ? (collapsedWidth - 40) / 2 : 0 }}
                     >
                         <motion.div
                             whileHover={{ scale: 1.05 }}
@@ -180,7 +173,7 @@ export default function Sidebar({ isMobileOpen, onClose }: { isMobileOpen?: bool
                             }}
                         >
                             <Image
-                                src="/logo-custom.png"
+                                src="/logo.png"
                                 alt="TawariApp"
                                 fill
                                 className="object-cover"
@@ -217,7 +210,7 @@ export default function Sidebar({ isMobileOpen, onClose }: { isMobileOpen?: bool
                             };
 
                             return (
-                                <Tooltip key={item.name} label={getNavLabel(item.name)} isExpanded={isExpanded}>
+                                <Tooltip key={item.name} label={item.name} isExpanded={isExpanded} isRTL={isRTL}>
                                     <Link href={href} onClick={handleNavClick}>
                                         <motion.div
                                             whileHover={{ scale: 1.02 }}
@@ -236,9 +229,10 @@ export default function Sidebar({ isMobileOpen, onClose }: { isMobileOpen?: bool
                                             {/* Active indicator */}
                                             {isActive && (
                                                 <motion.div
-                                                    layoutId="activeIndicator"
+                                                    layoutId="doctorActiveIndicator"
                                                     className={cn(
-                                                        "absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 rounded-r-full",
+                                                        "absolute top-1/2 -translate-y-1/2 w-1 h-6",
+                                                        isRTL ? "right-0 rounded-l-full" : "left-0 rounded-r-full",
                                                         isDark ? "bg-teal-400" : "bg-teal-500"
                                                     )}
                                                     transition={{ duration: 0.3, ease: "easeInOut" }}
@@ -266,7 +260,7 @@ export default function Sidebar({ isMobileOpen, onClose }: { isMobileOpen?: bool
                                                         transition={{ duration: 0.15 }}
                                                         className="font-medium text-sm whitespace-nowrap overflow-hidden flex-1"
                                                     >
-                                                        {getNavLabel(item.name)}
+                                                        {item.name}
                                                     </motion.span>
                                                 )}
                                             </AnimatePresence>
@@ -277,12 +271,12 @@ export default function Sidebar({ isMobileOpen, onClose }: { isMobileOpen?: bool
                                                     animate={{
                                                         position: isExpanded ? "relative" : "absolute",
                                                         top: isExpanded ? "auto" : -4,
-                                                        right: isExpanded ? 12 : 8,
+                                                        [isRTL ? "left" : "right"]: isExpanded ? 12 : 8,
                                                     }}
                                                     transition={{ duration: 0.2 }}
                                                     className={cn(
                                                         "flex items-center justify-center text-xs font-bold text-white bg-gradient-to-r from-teal-500 to-teal-400 rounded-full shadow-lg shadow-teal-500/30",
-                                                        isExpanded ? "w-5 h-5 mr-3" : "w-4 h-4 text-[10px]"
+                                                        isExpanded ? "w-5 h-5 ml-3" : "w-4 h-4 text-[10px]"
                                                     )}
                                                 >
                                                     {item.count}
@@ -299,4 +293,3 @@ export default function Sidebar({ isMobileOpen, onClose }: { isMobileOpen?: bool
         </>
     );
 }
-
