@@ -4,9 +4,10 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { useI18n } from "../../i18n";
 import { motion, AnimatePresence } from "framer-motion";
+import { useGlobalTheme } from "@/app/context/GlobalThemeContext";
 
 // Logo Component
-const LogoFull = ({ className = "" }: { className?: string }) => (
+const LogoFull = ({ className = "", isDark = true }: { className?: string; isDark?: boolean }) => (
     <div className={`flex items-center gap-2 ${className}`}>
         <svg className="h-10 w-10 flex-shrink-0" viewBox="0 0 100 90" fill="none">
             <defs>
@@ -34,8 +35,8 @@ const LogoFull = ({ className = "" }: { className?: string }) => (
             />
         </svg>
         <span className="text-xl font-bold tracking-tight">
-            <span className="text-white">Tawari</span>
-            <span className="text-gray-400">App</span>
+            <span className={isDark ? "text-white" : "text-slate-900"}>Tawari</span>
+            <span className={isDark ? "text-gray-400" : "text-gray-500"}>App</span>
         </span>
     </div>
 );
@@ -79,12 +80,12 @@ const Icons = {
 };
 
 // Language Toggle
-function LanguageToggle() {
+function LanguageToggle({ isDark = true }: { isDark?: boolean }) {
     const { language, setLanguage } = useI18n();
     return (
         <button
             onClick={() => setLanguage(language === 'en' ? 'ar' : 'en')}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-sm font-medium transition-colors"
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-full border text-sm font-medium transition-colors ${isDark ? "bg-white/5 hover:bg-white/10 border-white/10" : "bg-gray-100 hover:bg-gray-200 border-gray-200 text-gray-700"}`}
         >
             {Icons.language}
             <span>{language === 'en' ? 'العربية' : 'English'}</span>
@@ -93,19 +94,23 @@ function LanguageToggle() {
 }
 
 // FAQ Accordion Item
-function FAQItem({ question, answer, isOpen, onClick }: {
+function FAQItem({ question, answer, isOpen, onClick, isDark = true }: {
     question: string;
     answer: string;
     isOpen: boolean;
     onClick: () => void;
+    isDark?: boolean;
 }) {
     return (
-        <div className="border border-white/10 rounded-xl overflow-hidden bg-slate-800/30 hover:bg-slate-800/50 transition-colors">
+        <div className={`border rounded-xl overflow-hidden transition-colors ${isDark
+                ? "bg-slate-800/30 border-white/10 hover:bg-slate-800/50"
+                : "bg-white border-gray-200 hover:shadow-lg shadow-sm"
+            }`}>
             <button
                 onClick={onClick}
                 className="w-full flex items-center justify-between p-5 text-left"
             >
-                <span className="font-medium text-white pr-4">{question}</span>
+                <span className={`font-medium pr-4 ${isDark ? "text-white" : "text-slate-900"}`}>{question}</span>
                 <motion.span
                     animate={{ rotate: isOpen ? 180 : 0 }}
                     transition={{ duration: 0.2 }}
@@ -122,7 +127,7 @@ function FAQItem({ question, answer, isOpen, onClick }: {
                         exit={{ height: 0, opacity: 0 }}
                         transition={{ duration: 0.2 }}
                     >
-                        <div className="px-5 pb-5 text-gray-400 leading-relaxed">
+                        <div className={`px-5 pb-5 leading-relaxed ${isDark ? "text-gray-400" : "text-gray-600"}`}>
                             {answer}
                         </div>
                     </motion.div>
@@ -134,6 +139,8 @@ function FAQItem({ question, answer, isOpen, onClick }: {
 
 export default function FAQPage() {
     const { t, isRTL, language } = useI18n();
+    const { theme } = useGlobalTheme();
+    const isDark = theme === "dark";
     const [openPatient, setOpenPatient] = useState<number | null>(0);
     const [openDoctor, setOpenDoctor] = useState<number | null>(null);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -264,28 +271,28 @@ export default function FAQPage() {
     const text = translations[language as keyof typeof translations] || translations.en;
 
     return (
-        <div className={`min-h-screen bg-[#0F172A] text-white overflow-x-hidden ${isRTL ? 'font-cairo' : ''}`} dir={isRTL ? 'rtl' : 'ltr'}>
+        <div className={`min-h-screen overflow-x-hidden ${isRTL ? 'font-cairo' : ''} ${isDark ? 'bg-[#0F172A] text-white' : 'bg-gray-50 text-slate-900'}`} dir={isRTL ? 'rtl' : 'ltr'}>
             {/* Background Effects */}
             <div className="fixed inset-0 overflow-hidden pointer-events-none">
-                <div className="absolute inset-0 bg-gradient-to-br from-teal-900/20 via-[#0F172A] to-[#0F172A]" />
-                <div className="absolute top-1/4 -right-1/4 w-[600px] h-[600px] bg-teal-500/10 rounded-full blur-3xl" />
-                <div className="absolute bottom-1/4 -left-1/4 w-[400px] h-[400px] bg-amber-500/5 rounded-full blur-3xl" />
+                <div className={`absolute inset-0 ${isDark ? 'bg-gradient-to-br from-teal-900/20 via-[#0F172A] to-[#0F172A]' : 'bg-gradient-to-br from-teal-50 via-white to-white'}`} />
+                <div className={`absolute top-1/4 -right-1/4 w-[600px] h-[600px] rounded-full blur-3xl ${isDark ? 'bg-teal-500/10' : 'bg-teal-500/5'}`} />
+                <div className={`absolute bottom-1/4 -left-1/4 w-[400px] h-[400px] rounded-full blur-3xl ${isDark ? 'bg-amber-500/5' : 'bg-amber-500/5'}`} />
             </div>
 
             {/* Navigation */}
-            <nav className="relative z-50 bg-[#0F172A]/80 backdrop-blur-xl border-b border-white/5">
+            <nav className={`relative z-50 backdrop-blur-xl border-b ${isDark ? 'bg-[#0F172A]/80 border-white/5' : 'bg-white/80 border-gray-200'}`}>
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex items-center justify-between h-16 lg:h-20">
                         <Link href={`/${language}`} className="group hover:opacity-90 transition-opacity">
-                            <LogoFull />
+                            <LogoFull isDark={isDark} />
                         </Link>
 
                         {/* Desktop Navigation */}
                         <div className="hidden lg:flex items-center gap-3">
-                            <LanguageToggle />
+                            <LanguageToggle isDark={isDark} />
                             <Link
                                 href={`/${language}/login`}
-                                className="text-gray-300 hover:text-white font-medium text-sm px-4 py-2 transition-colors"
+                                className={`font-medium text-sm px-4 py-2 transition-colors ${isDark ? 'text-gray-300 hover:text-white' : 'text-gray-600 hover:text-gray-900'}`}
                             >
                                 {t.nav.login}
                             </Link>
@@ -299,7 +306,7 @@ export default function FAQPage() {
 
                         {/* Mobile Menu Button */}
                         <button
-                            className="lg:hidden p-2 text-gray-300 hover:text-white"
+                            className={`lg:hidden p-2 ${isDark ? 'text-gray-300 hover:text-white' : 'text-gray-600 hover:text-gray-900'}`}
                             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                         >
                             {mobileMenuOpen ? Icons.close : Icons.menu}
@@ -312,12 +319,12 @@ export default function FAQPage() {
                             <div className="flex flex-col gap-3 items-start">
                                 <Link
                                     href={`/${language}/login`}
-                                    className="text-gray-300 hover:text-teal-400 py-2 font-medium"
+                                    className={`py-2 font-medium ${isDark ? 'text-gray-300 hover:text-teal-400' : 'text-gray-600 hover:text-teal-600'}`}
                                     onClick={() => setMobileMenuOpen(false)}
                                 >
                                     {t.nav.login}
                                 </Link>
-                                <LanguageToggle />
+                                <LanguageToggle isDark={isDark} />
                                 <Link
                                     href={`/${language}/get-started`}
                                     className="bg-teal-500 hover:bg-teal-400 text-white font-semibold px-5 py-2.5 rounded-full text-center"
@@ -340,7 +347,7 @@ export default function FAQPage() {
                             {text.title}
                         </span>
                     </h1>
-                    <p className="text-gray-400 text-base sm:text-lg max-w-2xl mx-auto">
+                    <p className={`text-base sm:text-lg max-w-2xl mx-auto ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
                         {text.subtitle}
                     </p>
                 </div>
@@ -351,7 +358,7 @@ export default function FAQPage() {
                         <div className="w-10 h-10 rounded-xl bg-teal-500/20 flex items-center justify-center text-teal-400">
                             {Icons.patient}
                         </div>
-                        <h2 className="text-2xl font-bold text-white">{text.patientSection}</h2>
+                        <h2 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>{text.patientSection}</h2>
                     </div>
                     <div className="space-y-3">
                         {text.patientFaqs.map((faq, index) => (
@@ -361,6 +368,7 @@ export default function FAQPage() {
                                 answer={faq.answer}
                                 isOpen={openPatient === index}
                                 onClick={() => setOpenPatient(openPatient === index ? null : index)}
+                                isDark={isDark}
                             />
                         ))}
                     </div>
@@ -372,7 +380,7 @@ export default function FAQPage() {
                         <div className="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center text-amber-400">
                             {Icons.doctor}
                         </div>
-                        <h2 className="text-2xl font-bold text-white">{text.doctorSection}</h2>
+                        <h2 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>{text.doctorSection}</h2>
                     </div>
                     <div className="space-y-3">
                         {text.doctorFaqs.map((faq, index) => (
@@ -382,14 +390,15 @@ export default function FAQPage() {
                                 answer={faq.answer}
                                 isOpen={openDoctor === index}
                                 onClick={() => setOpenDoctor(openDoctor === index ? null : index)}
+                                isDark={isDark}
                             />
                         ))}
                     </div>
                 </div>
 
                 {/* Contact CTA */}
-                <div className="text-center bg-slate-800/30 border border-white/10 rounded-2xl p-8">
-                    <p className="text-gray-400 mb-4">{text.stillHaveQuestions}</p>
+                <div className={`text-center rounded-2xl p-8 transition-colors ${isDark ? 'bg-slate-800/30 border border-white/10' : 'bg-white border border-gray-200 shadow-lg'}`}>
+                    <p className={`mb-4 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>{text.stillHaveQuestions}</p>
                     <Link
                         href={`/${language}/contact`}
                         className="inline-flex items-center gap-2 bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-400 hover:to-teal-500 text-white font-semibold px-6 py-3 rounded-full transition-all"
@@ -400,7 +409,7 @@ export default function FAQPage() {
             </main>
 
             {/* Footer */}
-            <footer className="relative z-10 border-t border-white/5 py-8">
+            <footer className={`relative z-10 border-t py-8 ${isDark ? 'border-white/5' : 'border-gray-200'}`}>
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
                     <p className="text-gray-500 text-sm">{t.footer.copyright}</p>
                 </div>

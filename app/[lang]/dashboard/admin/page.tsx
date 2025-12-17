@@ -136,9 +136,9 @@ export default function AdminDashboard() {
     const greeting = t.doctorDashboard.greeting[greetingKey as keyof typeof t.doctorDashboard.greeting];
 
     const pendingApprovals = [
-        { id: 1, name: "Dr. Sarah Ahmed", email: "sarah.ahmed@email.com", specialty: "Dermatologist", image: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=100&h=100&fit=crop&crop=face", date: isRTL ? `منذ ${formatNumber(2)} ساعات` : `2 ${t.common.time.hoursAgo}` },
-        { id: 2, name: "Dr. Omar Khalil", email: "omar.khalil@email.com", specialty: "Neurologist", image: "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=100&h=100&fit=crop&crop=face", date: isRTL ? `منذ ${formatNumber(5)} ساعات` : `5 ${t.common.time.hoursAgo}` },
-        { id: 3, name: "Dr. Fatima Hassan", email: "fatima.h@email.com", specialty: "Pediatrician", image: "https://images.unsplash.com/photo-1594824476967-48c8b964273f?w=100&h=100&fit=crop&crop=face", date: t.common.time.dayAgo },
+        { id: 1, name: t.common.demoNames.drSarahAhmed, email: "sarah.ahmed@email.com", specialty: t.specialties.dermatology, image: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=100&h=100&fit=crop&crop=face", date: isRTL ? `منذ ${formatNumber(2)} ساعات` : `2 ${t.common.time.hoursAgo}` },
+        { id: 2, name: t.common.demoNames.drOmarKhalil, email: "omar.khalil@email.com", specialty: t.specialties.neurology, image: "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=100&h=100&fit=crop&crop=face", date: isRTL ? `منذ ${formatNumber(5)} ساعات` : `5 ${t.common.time.hoursAgo}` },
+        { id: 3, name: t.common.demoNames.drFatimaHassan, email: "fatima.h@email.com", specialty: t.specialties.pediatrics, image: "https://images.unsplash.com/photo-1594824476967-48c8b964273f?w=100&h=100&fit=crop&crop=face", date: t.common.time.dayAgo },
     ];
 
     const recentActivity = [
@@ -225,7 +225,7 @@ export default function AdminDashboard() {
                                     </div>
                                     <div>
                                         <h3 className={cn("font-semibold", isDark ? "text-white" : "text-slate-900")}>{t.adminDashboard.stats.pendingApprovals}</h3>
-                                        <p className={cn("text-sm", isDark ? "text-gray-500" : "text-gray-600")}>{formatNumber(pendingApprovals.length)} awaiting review</p>
+                                        <p className={cn("text-sm", isDark ? "text-gray-500" : "text-gray-600")}>{formatNumber(pendingApprovals.length)} {t.adminDashboard.stats.awaitingReview}</p>
                                     </div>
                                 </div>
                                 <Link href="/dashboard/admin/doctors" className="text-teal-500 hover:text-teal-400 text-sm font-medium">

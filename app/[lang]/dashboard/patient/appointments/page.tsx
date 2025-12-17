@@ -50,10 +50,10 @@ export default function AppointmentsPage() {
 
     // Mock Data
     const appointments = [
-        { id: 1, date: "2024-12-14", time: isRTL ? "٠٢:٣٠ م" : "2:30 PM", doctor: "Dr. Ahmed Hassan", specialty: t.specialties.cardiology, type: t.doctorDashboard.appointmentsPage.types.followUp, status: "upcoming", image: "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=100&h=100&fit=crop&crop=face" },
-        { id: 2, date: "2024-12-18", time: isRTL ? "١٠:٠٠ ص" : "10:00 AM", doctor: "Dr. Fatima Khaled", specialty: t.specialties.general, type: t.doctorDashboard.appointmentsPage.types.generalCheckup, status: "upcoming", image: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=100&h=100&fit=crop&crop=face" },
-        { id: 3, date: "2024-12-10", time: isRTL ? "٠٣:٠٠ م" : "3:00 PM", doctor: "Dr. Ahmed Hassan", specialty: t.specialties.cardiology, type: t.doctorDashboard.appointmentsPage.types.ecgReview, status: "completed", image: "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=100&h=100&fit=crop&crop=face" },
-        { id: 4, date: "2024-12-05", time: isRTL ? "١١:٠٠ ص" : "11:00 AM", doctor: "Dr. Omar Nasser", specialty: t.specialties.dermatology, type: t.doctorDashboard.appointmentsPage.types.consultation, status: "completed", image: "https://images.unsplash.com/photo-1537368910025-700350fe46c7?w=100&h=100&fit=crop&crop=face" },
+        { id: 1, date: "2024-12-14", time: isRTL ? "٠٢:٣٠ م" : "2:30 PM", doctor: t.common.demoNames.drAhmedHassan, specialty: t.specialties.cardiology, type: t.doctorDashboard.appointmentsPage.types.followUp, status: "upcoming", image: "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=100&h=100&fit=crop&crop=face" },
+        { id: 2, date: "2024-12-18", time: isRTL ? "١٠:٠٠ ص" : "10:00 AM", doctor: t.common.demoNames.drFatimaKhaled, specialty: t.specialties.general, type: t.doctorDashboard.appointmentsPage.types.generalCheckup, status: "upcoming", image: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=100&h=100&fit=crop&crop=face" },
+        { id: 3, date: "2024-12-10", time: isRTL ? "٠٣:٠٠ م" : "3:00 PM", doctor: t.common.demoNames.drAhmedHassan, specialty: t.specialties.cardiology, type: t.doctorDashboard.appointmentsPage.types.ecgReview, status: "completed", image: "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=100&h=100&fit=crop&crop=face" },
+        { id: 4, date: "2024-12-05", time: isRTL ? "١١:٠٠ ص" : "11:00 AM", doctor: t.common.demoNames.drOmarNasser, specialty: t.specialties.dermatology, type: t.doctorDashboard.appointmentsPage.types.consultation, status: "completed", image: "https://images.unsplash.com/photo-1537368910025-700350fe46c7?w=100&h=100&fit=crop&crop=face" },
     ];
 
     const filters = [

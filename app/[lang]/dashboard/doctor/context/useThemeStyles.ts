@@ -1,11 +1,10 @@
 "use client";
 
-import { useTheme } from "./ThemeContext";
+import { useGlobalTheme } from "@/app/context/GlobalThemeContext";
 
-// Shared theme-aware style classes for the doctor2 dashboard
+// Shared theme-aware style classes for the doctor dashboard
 export function useThemeStyles() {
-    const { theme, themeMode, setThemeMode } = useTheme();
-    const isDark = theme === "dark";
+    const { isDark, themeMode, setThemeMode, theme } = useGlobalTheme();
 
     return {
         theme,

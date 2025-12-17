@@ -75,11 +75,11 @@ export default function DoctorsPage() {
     // Mock doctor data
     const doctors = [
         { id: 1, name: t.common.demoNames.drAhmedHassan, specialty: t.specialties.cardiology, patients: 156, rating: 4.9, status: "active", revenue: 45600, consultations: 234, image: "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=100&h=100&fit=crop&crop=face" },
-        { id: 2, name: isRTL ? "د. سارة أحمد" : "Dr. Sarah Ahmed", specialty: t.specialties.dermatology, patients: 89, rating: 4.8, status: "pending", revenue: 0, consultations: 0, image: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=100&h=100&fit=crop&crop=face" },
-        { id: 3, name: t.common.demoNames.drOmarKhalil, specialty: isRTL ? "أعصاب" : "Neurologist", patients: 203, rating: 4.7, status: "active", revenue: 67800, consultations: 312, image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face" },
-        { id: 4, name: isRTL ? "د. فاطمة حسن" : "Dr. Fatima Hassan", specialty: t.specialties.pediatrics, patients: 312, rating: 4.9, status: "active", revenue: 89200, consultations: 456, image: "https://images.unsplash.com/photo-1594824476967-48c8b964273f?w=100&h=100&fit=crop&crop=face" },
-        { id: 5, name: isRTL ? "د. محمد ناصر" : "Dr. Mohamed Nasser", specialty: t.specialties.orthopedics, patients: 178, rating: 4.6, status: "inactive", revenue: 34500, consultations: 189, image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face" },
-        { id: 6, name: isRTL ? "د. ليلى محمود" : "Dr. Layla Mahmoud", specialty: t.specialties.mental, patients: 134, rating: 4.8, status: "active", revenue: 52300, consultations: 276, image: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&h=100&fit=crop&crop=face" },
+        { id: 2, name: t.common.demoNames.drSarahAhmed, specialty: t.specialties.dermatology, patients: 89, rating: 4.8, status: "pending", revenue: 0, consultations: 0, image: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=100&h=100&fit=crop&crop=face" },
+        { id: 3, name: t.common.demoNames.drOmarKhalil, specialty: t.specialties.neurology, patients: 203, rating: 4.7, status: "active", revenue: 67800, consultations: 312, image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face" },
+        { id: 4, name: t.common.demoNames.drFatimaHassan, specialty: t.specialties.pediatrics, patients: 312, rating: 4.9, status: "active", revenue: 89200, consultations: 456, image: "https://images.unsplash.com/photo-1594824476967-48c8b964273f?w=100&h=100&fit=crop&crop=face" },
+        { id: 5, name: t.common.demoNames.drMohamedNasser, specialty: t.specialties.orthopedics, patients: 178, rating: 4.6, status: "inactive", revenue: 34500, consultations: 189, image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face" },
+        { id: 6, name: t.common.demoNames.drLaylaMahmoud, specialty: t.specialties.mental, patients: 134, rating: 4.8, status: "active", revenue: 52300, consultations: 276, image: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&h=100&fit=crop&crop=face" },
     ];
 
     const filteredDoctors = doctors.filter(doc => {
@@ -93,7 +93,7 @@ export default function DoctorsPage() {
         { label: t.adminDashboard.doctorsPage.stats.totalDoctors, value: 89, icon: Icons.doctor, color: "teal" },
         { label: t.adminDashboard.doctorsPage.stats.active, value: 76, icon: Icons.check, color: "emerald" },
         { label: t.adminDashboard.doctorsPage.stats.pending, value: 8, icon: Icons.clock, color: "orange" },
-        { label: t.adminDashboard.doctorsPage.stats.revenue, value: 237, suffix: "K", icon: Icons.money, color: "amber" },
+        { label: t.adminDashboard.doctorsPage.stats.revenue, value: 237, suffix: t.common.units.thousand, icon: Icons.money, color: "amber" },
     ];
 
     const getFilterLabel = (key: string) => {
@@ -238,7 +238,7 @@ export default function DoctorsPage() {
                                         <p className={cn("text-[10px] md:text-xs", isDark ? "text-gray-500" : "text-gray-600")}>{t.adminDashboard.doctorsPage.card.consults}</p>
                                     </div>
                                     <div className={cn("p-2 md:p-3 rounded-lg md:rounded-xl text-center", isDark ? "bg-white/[0.03]" : "bg-gray-50")}>
-                                        <p className={cn("text-sm md:text-lg font-bold text-emerald-500")}>{formatNumber((doctor.revenue / 1000).toFixed(0))}K</p>
+                                        <p className={cn("text-sm md:text-lg font-bold text-emerald-500")}>{formatNumber((doctor.revenue / 1000).toFixed(0))}{t.common.units.thousand}</p>
                                         <p className={cn("text-[10px] md:text-xs", isDark ? "text-gray-500" : "text-gray-600")}>{t.adminDashboard.doctorsPage.card.revenue}</p>
                                     </div>
                                 </div>

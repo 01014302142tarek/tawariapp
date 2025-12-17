@@ -8,23 +8,42 @@
   --accent: #F59E0B;
   --accent-light: #FBBF24;
 
-  /* Dark Theme */
+  /* Semantic */
+  --success: #10B981;
+  --warning: #F59E0B;
+  --error: #EF4444;
+}
+
+/* Dark Theme (default) */
+[data-theme="dark"], :root {
   --background: #0F172A;
   --background-light: #1E293B;
   --surface: #1E293B;
   --surface-light: #334155;
   --border: #334155;
   --border-light: #475569;
-
-  /* Text */
   --foreground: #F8FAFC;
   --foreground-muted: #94A3B8;
   --foreground-subtle: #64748B;
+  --card-bg: rgba(30, 41, 59, 0.5);
+  --nav-bg: rgba(15, 23, 42, 0.8);
+  --glow-opacity: 0.2;
+}
 
-  /* Semantic */
-  --success: #10B981;
-  --warning: #F59E0B;
-  --error: #EF4444;
+/* Light Theme */
+[data-theme="light"] {
+  --background: #F8FAFC;
+  --background-light: #F1F5F9;
+  --surface: #FFFFFF;
+  --surface-light: #F1F5F9;
+  --border: #E2E8F0;
+  --border-light: #CBD5E1;
+  --foreground: #0F172A;
+  --foreground-muted: #475569;
+  --foreground-subtle: #64748B;
+  --card-bg: rgba(255, 255, 255, 0.9);
+  --nav-bg: rgba(248, 250, 252, 0.9);
+  --glow-opacity: 0.4;
 }
 
 @theme inline {
@@ -55,6 +74,7 @@ body {
   font-family: var(--font-sans), system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 /* RTL Support */

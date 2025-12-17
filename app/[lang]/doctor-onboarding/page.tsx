@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { useTheme } from "./ThemeContext";
+import { useGlobalTheme } from "@/app/context/GlobalThemeContext";
 import { GlowingCard } from "@/components/ui/glowing-card";
 import { useRouter } from "next/navigation";
 import { useI18n } from "@/app/i18n";
@@ -895,9 +895,8 @@ const initialFormData: FormData = {
 // MAIN COMPONENT
 // ============================================
 export default function DoctorOnboarding() {
-    const { theme } = useTheme();
+    const { isDark } = useGlobalTheme();
     const { language, isRTL, formatNumber } = useI18n();
-    const isDark = theme === "dark";
     const router = useRouter();
 
     const [currentStep, setCurrentStep] = useState(1);
@@ -1002,7 +1001,7 @@ export default function DoctorOnboarding() {
 
                 {/* Navigation Buttons - only show for steps 1-4 */}
                 {currentStep < 5 && (
-                    <div className="flex items-center justify-between mt-4 pt-4 border-t border-white/5">
+                    <div className={cn("flex items-center justify-between mt-4 pt-4 border-t", isDark ? "border-white/5" : "border-teal-100")}>
                         {currentStep > 1 ? (
                             <button
                                 onClick={handleBack}

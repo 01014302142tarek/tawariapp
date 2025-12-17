@@ -1,10 +1,9 @@
 "use client";
 
-import { useTheme } from "./ThemeContext";
+import { useGlobalTheme } from "@/app/context/GlobalThemeContext";
 
 export function useThemeStyles() {
-    const { theme } = useTheme();
-    const isDark = theme === "dark";
+    const { isDark, theme } = useGlobalTheme();
 
     return {
         isDark,

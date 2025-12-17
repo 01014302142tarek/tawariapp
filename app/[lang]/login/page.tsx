@@ -3,9 +3,10 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { useI18n } from "../../i18n";
+import { useGlobalTheme } from "@/app/context/GlobalThemeContext";
 
 // Logo Component
-const LogoFull = ({ className = "" }: { className?: string }) => (
+const LogoFull = ({ className = "", isDark = true }: { className?: string; isDark?: boolean }) => (
     <div className={`flex items-center gap-2 ${className}`}>
         <svg className="h-10 w-10 flex-shrink-0" viewBox="0 0 100 90" fill="none">
             <defs>
@@ -33,8 +34,8 @@ const LogoFull = ({ className = "" }: { className?: string }) => (
             />
         </svg>
         <span className="text-xl font-bold tracking-tight">
-            <span className="text-white">Tawari</span>
-            <span className="text-gray-400">App</span>
+            <span className={isDark ? "text-white" : "text-slate-900"}>Tawari</span>
+            <span className={isDark ? "text-gray-400" : "text-gray-500"}>App</span>
         </span>
     </div>
 );
@@ -85,12 +86,15 @@ const LanguageIcon = (
 );
 
 // Language Toggle
-function LanguageToggle() {
+function LanguageToggle({ isDark = true }: { isDark?: boolean }) {
     const { language, setLanguage } = useI18n();
     return (
         <button
             onClick={() => setLanguage(language === 'en' ? 'ar' : 'en')}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-sm font-medium transition-colors"
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-full border text-sm font-medium transition-colors ${isDark
+                    ? "bg-white/5 hover:bg-white/10 border-white/10 text-white"
+                    : "bg-gray-100 hover:bg-gray-200 border-gray-200 text-gray-700"
+                }`}
         >
             {LanguageIcon}
             <span>{language === 'en' ? 'العربية' : 'English'}</span>
@@ -109,6 +113,7 @@ function InputField({
     showPassword,
     onTogglePassword,
     isRTL,
+    isDark = true,
 }: {
     icon: React.ReactNode;
     type: string;
@@ -119,6 +124,7 @@ function InputField({
     showPassword?: boolean;
     onTogglePassword?: () => void;
     isRTL?: boolean;
+    isDark?: boolean;
 }) {
     // Browsers enforce LTR for type="email", so we use type="text" in RTL mode
     const inputType = showPasswordToggle
@@ -127,7 +133,7 @@ function InputField({
 
     return (
         <div className="relative">
-            <span className={`absolute top-1/2 -translate-y-1/2 text-gray-400 ${isRTL ? 'right-4' : 'left-4'}`}>
+            <span className={`absolute top-1/2 -translate-y-1/2 ${isDark ? "text-gray-400" : "text-gray-500"} ${isRTL ? 'right-4' : 'left-4'}`}>
                 {icon}
             </span>
             <input
@@ -137,13 +143,16 @@ function InputField({
                 onChange={onChange}
                 dir={isRTL ? "rtl" : "ltr"}
                 style={isRTL ? { textAlign: 'right' } : undefined}
-                className={`w-full py-3.5 bg-slate-800/50 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:border-teal-500/50 focus:ring-2 focus:ring-teal-500/20 transition-all outline-none ${isRTL ? 'pr-12 pl-12' : 'pl-12 pr-12'}`}
+                className={`w-full py-3.5 border rounded-xl transition-all outline-none ${isDark
+                        ? "bg-slate-800/50 border-white/10 text-white placeholder-gray-500 focus:border-teal-500/50 focus:ring-2 focus:ring-teal-500/20"
+                        : "bg-white border-gray-200 text-slate-900 placeholder-gray-400 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20"
+                    } ${isRTL ? 'pr-12 pl-12' : 'pl-12 pr-12'}`}
             />
             {showPasswordToggle && (
                 <button
                     type="button"
                     onClick={onTogglePassword}
-                    className={`absolute top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-300 transition-colors ${isRTL ? 'left-4' : 'right-4'}`}
+                    className={`absolute top-1/2 -translate-y-1/2 transition-colors ${isDark ? "text-gray-400 hover:text-gray-300" : "text-gray-500 hover:text-gray-600"} ${isRTL ? 'left-4' : 'right-4'}`}
                 >
                     {showPassword ? Icons.eyeOff : Icons.eye}
                 </button>
@@ -154,6 +163,8 @@ function InputField({
 
 export default function LoginPage() {
     const { t, isRTL, language } = useI18n();
+    const { theme } = useGlobalTheme();
+    const isDark = theme === "dark";
     const [showPassword, setShowPassword] = useState(false);
     const [formData, setFormData] = useState({
         email: "",
@@ -197,23 +208,23 @@ export default function LoginPage() {
     const text = translations[language as keyof typeof translations] || translations.en;
 
     return (
-        <div className={`min-h-screen bg-[#0F172A] text-white overflow-x-hidden ${isRTL ? 'font-cairo' : ''}`} dir={isRTL ? 'rtl' : 'ltr'}>
+        <div className={`min-h-screen overflow-x-hidden ${isRTL ? 'font-cairo' : ''} ${isDark ? 'bg-[#0F172A] text-white' : 'bg-gray-50 text-slate-900'}`} dir={isRTL ? 'rtl' : 'ltr'}>
             {/* Background Effects */}
             <div className="fixed inset-0 overflow-hidden pointer-events-none">
-                <div className="absolute inset-0 bg-gradient-to-br from-teal-900/20 via-[#0F172A] to-[#0F172A]" />
-                <div className="absolute top-1/4 -right-1/4 w-[600px] h-[600px] bg-teal-500/10 rounded-full blur-3xl" />
-                <div className="absolute bottom-1/4 -left-1/4 w-[400px] h-[400px] bg-teal-500/5 rounded-full blur-3xl" />
+                <div className={`absolute inset-0 ${isDark ? 'bg-gradient-to-br from-teal-900/20 via-[#0F172A] to-[#0F172A]' : 'bg-gradient-to-br from-teal-50 via-white to-white'}`} />
+                <div className={`absolute top-1/4 -right-1/4 w-[600px] h-[600px] rounded-full blur-3xl ${isDark ? 'bg-teal-500/10' : 'bg-teal-500/5'}`} />
+                <div className={`absolute bottom-1/4 -left-1/4 w-[400px] h-[400px] rounded-full blur-3xl ${isDark ? 'bg-teal-500/5' : 'bg-teal-500/5'}`} />
             </div>
 
             {/* Navigation */}
-            <nav className="relative z-50 bg-[#0F172A]/80 backdrop-blur-xl border-b border-white/5">
+            <nav className={`relative z-50 backdrop-blur-xl border-b ${isDark ? 'bg-[#0F172A]/80 border-white/5' : 'bg-white/80 border-gray-200'}`}>
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex items-center justify-between h-16 lg:h-20">
                         <Link href={`/${language}`} className="group hover:opacity-90 transition-opacity">
-                            <LogoFull />
+                            <LogoFull isDark={isDark} />
                         </Link>
                         <div className="flex items-center gap-3">
-                            <LanguageToggle />
+                            <LanguageToggle isDark={isDark} />
                         </div>
                     </div>
                 </div>
@@ -224,10 +235,10 @@ export default function LoginPage() {
                 <div className="w-full max-w-md">
                     {/* Header */}
                     <div className="text-center mb-8">
-                        <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">
+                        <h1 className={`text-2xl sm:text-3xl font-bold mb-2 ${isDark ? 'text-white' : 'text-slate-900'}`}>
                             {text.title}
                         </h1>
-                        <p className="text-gray-400 text-sm sm:text-base">
+                        <p className={`text-sm sm:text-base ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
                             {text.subtitle}
                         </p>
                     </div>
@@ -241,6 +252,7 @@ export default function LoginPage() {
                             value={formData.email}
                             onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                             isRTL={isRTL}
+                            isDark={isDark}
                         />
 
                         <InputField
@@ -253,6 +265,7 @@ export default function LoginPage() {
                             showPassword={showPassword}
                             onTogglePassword={() => setShowPassword(!showPassword)}
                             isRTL={isRTL}
+                            isDark={isDark}
                         />
 
                         {/* Remember Me & Forgot Password */}
@@ -262,9 +275,9 @@ export default function LoginPage() {
                                     type="checkbox"
                                     checked={rememberMe}
                                     onChange={(e) => setRememberMe(e.target.checked)}
-                                    className="w-4 h-4 rounded border-gray-600 bg-slate-800 text-teal-500 focus:ring-teal-500/20 focus:ring-offset-0"
+                                    className={`w-4 h-4 rounded text-teal-500 focus:ring-teal-500/20 focus:ring-offset-0 ${isDark ? 'border-gray-600 bg-slate-800' : 'border-gray-300 bg-white'}`}
                                 />
-                                <span className="text-sm text-gray-400">{text.rememberMe}</span>
+                                <span className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>{text.rememberMe}</span>
                             </label>
                             <Link href={`/${language}/forgot-password`} className="text-sm text-teal-400 hover:text-teal-300 transition-colors">
                                 {text.forgotPassword}
@@ -282,25 +295,31 @@ export default function LoginPage() {
 
                     {/* Divider */}
                     <div className="flex items-center gap-4 my-6">
-                        <div className="flex-1 h-px bg-white/10" />
-                        <span className="text-gray-500 text-sm">{text.orContinue}</span>
-                        <div className="flex-1 h-px bg-white/10" />
+                        <div className={`flex-1 h-px ${isDark ? 'bg-white/10' : 'bg-gray-200'}`} />
+                        <span className={`text-sm ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>{text.orContinue}</span>
+                        <div className={`flex-1 h-px ${isDark ? 'bg-white/10' : 'bg-gray-200'}`} />
                     </div>
 
                     {/* Social Login Buttons */}
                     <div className="grid grid-cols-2 gap-3">
-                        <button className="flex items-center justify-center gap-2 py-3 px-4 bg-slate-800/50 border border-white/10 rounded-xl hover:bg-slate-800 hover:border-white/20 transition-all">
+                        <button className={`flex items-center justify-center gap-2 py-3 px-4 border rounded-xl transition-all ${isDark
+                                ? 'bg-slate-800/50 border-white/10 hover:bg-slate-800 hover:border-white/20'
+                                : 'bg-white border-gray-200 hover:bg-gray-50 hover:border-gray-300'
+                            }`}>
                             {Icons.google}
-                            <span className="text-sm text-gray-300">Google</span>
+                            <span className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Google</span>
                         </button>
-                        <button className="flex items-center justify-center gap-2 py-3 px-4 bg-slate-800/50 border border-white/10 rounded-xl hover:bg-slate-800 hover:border-white/20 transition-all">
+                        <button className={`flex items-center justify-center gap-2 py-3 px-4 border rounded-xl transition-all ${isDark
+                                ? 'bg-slate-800/50 border-white/10 hover:bg-slate-800 hover:border-white/20'
+                                : 'bg-white border-gray-200 hover:bg-gray-50 hover:border-gray-300'
+                            }`}>
                             {Icons.apple}
-                            <span className="text-sm text-gray-300">Apple</span>
+                            <span className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Apple</span>
                         </button>
                     </div>
 
                     {/* Register Link */}
-                    <p className="text-center text-gray-400 text-sm mt-6">
+                    <p className={`text-center text-sm mt-6 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
                         {text.noAccount}{" "}
                         <Link href={`/${language}/get-started`} className="text-teal-400 hover:text-teal-300 font-medium">
                             {text.registerLink}

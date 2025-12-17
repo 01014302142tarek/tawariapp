@@ -59,6 +59,7 @@ interface TranslationStrings {
         mental: string;
         cardiology: string;
         orthopedics: string;
+        neurology: string;
     };
     // Doctors
     doctorsSection: {
@@ -199,12 +200,23 @@ interface TranslationStrings {
             patient: string;
             administrator: string;
         };
+        units: {
+            thousand: string;
+            egp: string;
+            kEgp: string;
+            min: string;
+            mins: string;
+        };
         demoNames: {
             drHassan: string;
             drAhmedHassan: string;
             drOmarKhalil: string;
             drFatimaKhaled: string;
             drOmarNasser: string;
+            drSarahAhmed: string;
+            drFatimaHassan: string;
+            drMohamedNasser: string;
+            drLaylaMahmoud: string;
             sarahJohnson: string;
             mohamedAli: string;
             fatimaKhaled: string;
@@ -493,6 +505,7 @@ interface TranslationStrings {
         };
         sections: {
             nextAppointment: string;
+            upcomingVisit: string;
             recentPrescriptions: string;
             quickActions: string;
         };
@@ -553,6 +566,15 @@ interface TranslationStrings {
                 viewDetails: string;
                 refill: string;
                 details: string;
+            };
+            upload: {
+                button: string;
+                modalTitle: string;
+                documentLabel: string;
+                placeholder: string;
+                cancel: string;
+                submit: string;
+                success: string;
             };
             frequency: {
                 daily: string;
@@ -629,6 +651,7 @@ interface TranslationStrings {
             totalRevenue: string;
             activeConsultations: string;
             pendingApprovals: string;
+            awaitingReview: string;
         };
         sections: {
             recentActivity: string;
@@ -862,6 +885,7 @@ const translations: Record<Language, TranslationStrings> = {
             mental: "Mental Health",
             cardiology: "Cardiology",
             orthopedics: "Orthopedics",
+            neurology: "Neurology",
         },
         doctorsSection: {
             badge: "Top Rated",
@@ -994,12 +1018,23 @@ const translations: Record<Language, TranslationStrings> = {
                 patient: "Patient",
                 administrator: "Administrator",
             },
+            units: {
+                thousand: "K",
+                egp: "EGP",
+                kEgp: "K EGP",
+                min: "min",
+                mins: "mins",
+            },
             demoNames: {
                 drHassan: "Dr. Hassan",
                 drAhmedHassan: "Dr. Ahmed Hassan",
                 drOmarKhalil: "Dr. Omar Khalil",
                 drFatimaKhaled: "Dr. Fatima Khaled",
                 drOmarNasser: "Dr. Omar Nasser",
+                drSarahAhmed: "Dr. Sarah Ahmed",
+                drFatimaHassan: "Dr. Fatima Hassan",
+                drMohamedNasser: "Dr. Mohamed Nasser",
+                drLaylaMahmoud: "Dr. Layla Mahmoud",
                 sarahJohnson: "Sarah Johnson",
                 mohamedAli: "Mohamed Ali",
                 fatimaKhaled: "Fatima Khaled",
@@ -1284,6 +1319,7 @@ const translations: Record<Language, TranslationStrings> = {
             },
             sections: {
                 nextAppointment: "Next Appointment",
+                upcomingVisit: "Your upcoming visit",
                 recentPrescriptions: "Recent Prescriptions",
                 quickActions: "Quick Actions",
             },
@@ -1345,6 +1381,15 @@ const translations: Record<Language, TranslationStrings> = {
                     viewDetails: "View Details",
                     refill: "Refill",
                     details: "Details"
+                },
+                upload: {
+                    button: "Upload Prescription",
+                    modalTitle: "Upload Prescription",
+                    documentLabel: "Prescription Document",
+                    placeholder: "Click to upload prescription",
+                    cancel: "Cancel",
+                    submit: "Upload",
+                    success: "Prescription uploaded successfully!"
                 },
                 frequency: {
                     daily: "{n} tablets daily",
@@ -1426,6 +1471,7 @@ const translations: Record<Language, TranslationStrings> = {
                 totalRevenue: "Total Revenue",
                 activeConsultations: "Active Consultations",
                 pendingApprovals: "Pending Approvals",
+                awaitingReview: "awaiting review",
             },
             sections: {
                 recentActivity: "Recent Activity",
@@ -1657,6 +1703,7 @@ const translations: Record<Language, TranslationStrings> = {
             mental: "صحة نفسية",
             cardiology: "قلب",
             orthopedics: "عظام",
+            neurology: "أعصاب",
         },
         doctorsSection: {
             badge: "الأعلى تقييماً",
@@ -1789,12 +1836,23 @@ const translations: Record<Language, TranslationStrings> = {
                 patient: "مريض",
                 administrator: "مدير النظام",
             },
+            units: {
+                thousand: "ألف",
+                egp: "ج.م",
+                kEgp: "ألف ج.م",
+                min: "د",
+                mins: "دقائق",
+            },
             demoNames: {
                 drHassan: "د. حسن",
                 drAhmedHassan: "د. أحمد حسن",
                 drOmarKhalil: "د. عمر خليل",
                 drFatimaKhaled: "د. فاطمة خالد",
                 drOmarNasser: "د. عمر ناصر",
+                drSarahAhmed: "د. سارة أحمد",
+                drFatimaHassan: "د. فاطمة حسن",
+                drMohamedNasser: "د. محمد ناصر",
+                drLaylaMahmoud: "د. ليلى محمود",
                 sarahJohnson: "سارة جونسون",
                 mohamedAli: "محمد علي",
                 fatimaKhaled: "فاطمة خالد",
@@ -2079,6 +2137,7 @@ const translations: Record<Language, TranslationStrings> = {
             },
             sections: {
                 nextAppointment: "الموعد التالي",
+                upcomingVisit: "زيارتك القادمة",
                 recentPrescriptions: "الوصفات الأخيرة",
                 quickActions: "إجراءات سريعة",
             },
@@ -2140,6 +2199,15 @@ const translations: Record<Language, TranslationStrings> = {
                     viewDetails: "عرض التفاصيل",
                     refill: "تجديد",
                     details: "تفاصيل"
+                },
+                upload: {
+                    button: "رفع وصفة طبية",
+                    modalTitle: "رفع وصفة طبية",
+                    documentLabel: "مستند الوصفة الطبية",
+                    placeholder: "انقر لرفع الوصفة الطبية",
+                    cancel: "إلغاء",
+                    submit: "رفع",
+                    success: "تم رفع الوصفة الطبية بنجاح!"
                 },
                 frequency: {
                     daily: "{n} أقراص يومياً",
@@ -2221,6 +2289,7 @@ const translations: Record<Language, TranslationStrings> = {
                 totalRevenue: "إجمالي الإيرادات",
                 activeConsultations: "الاستشارات النشطة",
                 pendingApprovals: "الموافقات المعلقة",
+                awaitingReview: "بانتظار المراجعة",
             },
             sections: {
                 recentActivity: "النشاط الأخير",
@@ -2416,27 +2485,40 @@ interface I18nContextType {
 
 const I18nContext = createContext<I18nContextType | undefined>(undefined);
 
+// Single localStorage key for language preference
+const LANGUAGE_STORAGE_KEY = "tawari-app-language";
+
 export function I18nProvider({ children, locale }: { children: React.ReactNode; locale: Language }) {
     const [language, setLanguageState] = useState<Language>(locale);
 
+    // Initialize language from localStorage if available, sync with URL locale
     useEffect(() => {
+        // Store current language in localStorage for persistence
+        localStorage.setItem(LANGUAGE_STORAGE_KEY, locale);
         setLanguageState(locale);
+
+        // Ensure document direction is set correctly
+        document.documentElement.setAttribute("dir", locale === "ar" ? "rtl" : "ltr");
+        document.documentElement.setAttribute("lang", locale);
     }, [locale]);
 
     const setLanguage = (lang: Language) => {
-        // Set cookie for middleware
-        document.cookie = `NEXT_LOCALE=${lang}; path=/; max-age=31536000`;
+        // Store in localStorage for immediate access
+        localStorage.setItem(LANGUAGE_STORAGE_KEY, lang);
+
+        // Set cookie for middleware (server-side)
+        document.cookie = `NEXT_LOCALE=${lang}; path=/; max-age=31536000; SameSite=Lax`;
+
         // Navigate to the new language path
-        // Currently we just reload or let the framework handle it. 
-        // A full reload ensures new SSR content is fetched.
         const currentPath = window.location.pathname;
         const segments = currentPath.split('/');
+
         // segments[0] is empty, segments[1] is 'en' or 'ar' usually
         if (segments[1] === 'en' || segments[1] === 'ar') {
             segments[1] = lang;
             window.location.href = segments.join('/');
         } else {
-            // Fallback if path doesn't have lang (e.g. root) but middleware should have caught it
+            // Fallback if path doesn't have lang prefix
             window.location.href = `/${lang}${currentPath}`;
         }
     };

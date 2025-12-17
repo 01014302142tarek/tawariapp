@@ -3,9 +3,10 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { useI18n } from "../../i18n";
+import { useGlobalTheme } from "@/app/context/GlobalThemeContext";
 
 // Logo Component
-const LogoFull = ({ className = "" }: { className?: string }) => (
+const LogoFull = ({ className = "", isDark = true }: { className?: string; isDark?: boolean }) => (
     <div className={`flex items-center gap-2 ${className}`}>
         <svg className="h-10 w-10 flex-shrink-0" viewBox="0 0 100 90" fill="none">
             <defs>
@@ -19,8 +20,8 @@ const LogoFull = ({ className = "" }: { className?: string }) => (
             <path d="M5 45 L25 45 L35 25 L50 65 L65 35 L75 45 L95 45" fill="none" stroke="#F59E0B" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
         <span className="text-xl font-bold tracking-tight">
-            <span className="text-white">Tawari</span>
-            <span className="text-gray-400">App</span>
+            <span className={isDark ? "text-white" : "text-slate-900"}>Tawari</span>
+            <span className={isDark ? "text-gray-400" : "text-gray-500"}>App</span>
         </span>
     </div>
 );
@@ -33,10 +34,10 @@ const Icons = {
 };
 
 // Language Toggle
-function LanguageToggle() {
+function LanguageToggle({ isDark = true }: { isDark?: boolean }) {
     const { language, setLanguage } = useI18n();
     return (
-        <button onClick={() => setLanguage(language === 'en' ? 'ar' : 'en')} className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-sm font-medium transition-colors">
+        <button onClick={() => setLanguage(language === 'en' ? 'ar' : 'en')} className={`flex items-center gap-2 px-3 py-1.5 rounded-full border text-sm font-medium transition-colors ${isDark ? "bg-white/5 hover:bg-white/10 border-white/10" : "bg-gray-100 hover:bg-gray-200 border-gray-200 text-gray-700"}`}>
             {Icons.language}
             <span>{language === 'en' ? 'العربية' : 'English'}</span>
         </button>
@@ -45,6 +46,8 @@ function LanguageToggle() {
 
 export default function TermsPage() {
     const { t, isRTL, language } = useI18n();
+    const { theme } = useGlobalTheme();
+    const isDark = theme === "dark";
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
     const translations = {
@@ -129,29 +132,29 @@ export default function TermsPage() {
     const text = translations[language as keyof typeof translations] || translations.en;
 
     return (
-        <div className={`min-h-screen bg-[#0F172A] text-white overflow-x-hidden ${isRTL ? 'font-cairo' : ''}`} dir={isRTL ? 'rtl' : 'ltr'}>
+        <div className={`min-h-screen overflow-x-hidden ${isRTL ? 'font-cairo' : ''} ${isDark ? 'bg-[#0F172A] text-white' : 'bg-gray-50 text-slate-900'}`} dir={isRTL ? 'rtl' : 'ltr'}>
             <div className="fixed inset-0 overflow-hidden pointer-events-none">
-                <div className="absolute inset-0 bg-gradient-to-br from-teal-900/20 via-[#0F172A] to-[#0F172A]" />
+                <div className={`absolute inset-0 ${isDark ? 'bg-gradient-to-br from-teal-900/20 via-[#0F172A] to-[#0F172A]' : 'bg-gradient-to-br from-teal-50 via-white to-white'}`} />
             </div>
 
-            <nav className="relative z-50 bg-[#0F172A]/80 backdrop-blur-xl border-b border-white/5">
+            <nav className={`relative z-50 backdrop-blur-xl border-b ${isDark ? 'bg-[#0F172A]/80 border-white/5' : 'bg-white/80 border-gray-200'}`}>
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex items-center justify-between h-16 lg:h-20">
-                        <Link href={`/${language}`} className="group hover:opacity-90 transition-opacity"><LogoFull /></Link>
+                        <Link href={`/${language}`} className="group hover:opacity-90 transition-opacity"><LogoFull isDark={isDark} /></Link>
                         <div className="hidden lg:flex items-center gap-3">
-                            <LanguageToggle />
-                            <Link href={`/${language}/login`} className="text-gray-300 hover:text-white font-medium text-sm px-4 py-2 transition-colors">{t.nav.login}</Link>
+                            <LanguageToggle isDark={isDark} />
+                            <Link href={`/${language}/login`} className={`font-medium text-sm px-4 py-2 transition-colors ${isDark ? 'text-gray-300 hover:text-white' : 'text-gray-600 hover:text-gray-900'}`}>{t.nav.login}</Link>
                             <Link href={`/${language}/get-started`} className="bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-400 hover:to-teal-500 text-white font-semibold px-5 py-2 rounded-full text-sm transition-all">{t.nav.getStarted}</Link>
                         </div>
-                        <button className="lg:hidden p-2 text-gray-300 hover:text-white" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
+                        <button className={`lg:hidden p-2 ${isDark ? 'text-gray-300 hover:text-white' : 'text-gray-600 hover:text-gray-900'}`} onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
                             {mobileMenuOpen ? Icons.close : Icons.menu}
                         </button>
                     </div>
                     {mobileMenuOpen && (
                         <div className="lg:hidden py-4">
                             <div className="flex flex-col gap-3 items-start">
-                                <Link href={`/${language}/login`} className="text-gray-300 hover:text-teal-400 py-2 font-medium" onClick={() => setMobileMenuOpen(false)}>{t.nav.login}</Link>
-                                <LanguageToggle />
+                                <Link href={`/${language}/login`} className={`py-2 font-medium ${isDark ? 'text-gray-300 hover:text-teal-400' : 'text-gray-600 hover:text-teal-600'}`} onClick={() => setMobileMenuOpen(false)}>{t.nav.login}</Link>
+                                <LanguageToggle isDark={isDark} />
                                 <Link href={`/${language}/get-started`} className="bg-teal-500 hover:bg-teal-400 text-white font-semibold px-5 py-2.5 rounded-full text-center" onClick={() => setMobileMenuOpen(false)}>{t.nav.getStarted}</Link>
                             </div>
                         </div>
@@ -169,15 +172,15 @@ export default function TermsPage() {
 
                 <div className="space-y-8">
                     {text.sections.map((section, idx) => (
-                        <div key={idx} className="bg-slate-800/30 border border-white/10 rounded-2xl p-6 md:p-8">
-                            <h2 className="text-xl font-bold text-white mb-4">{section.title}</h2>
-                            <p className="text-gray-400 leading-relaxed">{section.content}</p>
+                        <div key={idx} className={`rounded-2xl p-6 md:p-8 ${isDark ? 'bg-slate-800/30 border border-white/10' : 'bg-white border border-gray-200 shadow-lg'}`}>
+                            <h2 className={`text-xl font-bold mb-4 ${isDark ? 'text-white' : 'text-slate-900'}`}>{section.title}</h2>
+                            <p className={`leading-relaxed ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>{section.content}</p>
                         </div>
                     ))}
                 </div>
             </main>
 
-            <footer className="relative z-10 border-t border-white/5 py-8">
+            <footer className={`relative z-10 border-t py-8 ${isDark ? 'border-white/5' : 'border-gray-200'}`}>
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
                     <p className="text-gray-500 text-sm">{t.footer.copyright}</p>
                 </div>

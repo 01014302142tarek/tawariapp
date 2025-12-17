@@ -196,7 +196,7 @@ export default function PatientDashboard() {
                     {/* Next Appointment */}
                     <div className="xl:col-span-2">
                         <GlowingCard glowColor="teal" className="p-4 md:p-6" isDark={isDark}>
-                            <SectionHeader title={t.patientDashboard.sections.nextAppointment} subtitle="Your upcoming visit" isDark={isDark} />
+                            <SectionHeader title={t.patientDashboard.sections.nextAppointment} subtitle={t.patientDashboard.sections.upcomingVisit} isDark={isDark} />
 
                             <div className={cn(
                                 "p-3 md:p-5 rounded-xl border",
@@ -270,7 +270,7 @@ export default function PatientDashboard() {
                                             "flex-1 sm:flex-initial px-3 md:px-4 py-2 text-xs md:text-sm font-medium rounded-lg transition-colors text-center",
                                             isDark ? "bg-white/10 hover:bg-white/20 text-white" : "bg-gray-100 hover:bg-gray-200 text-gray-700"
                                         )}>
-                                            Reschedule
+                                            {t.patientDashboard.appointmentsPage.reschedule}
                                         </button>
                                     </div>
                                 </div>
@@ -344,7 +344,7 @@ export default function PatientDashboard() {
 
                 {/* Quick Actions */}
                 <section>
-                    <SectionHeader title={t.patientDashboard.sections.quickActions} subtitle="What would you like to do?" isDark={isDark} />
+                    <SectionHeader title={t.patientDashboard.sections.quickActions} subtitle={t.patientDashboard.actionDesc.bookAppointment} isDark={isDark} />
                     <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
                         {quickActions.map((action, idx) => (
                             <motion.div

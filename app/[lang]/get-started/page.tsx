@@ -3,9 +3,10 @@
 import React from "react";
 import Link from "next/link";
 import { useI18n } from "../../i18n";
+import { useGlobalTheme } from "@/app/context/GlobalThemeContext";
 
 // Logo Component
-const LogoFull = ({ className = "" }: { className?: string }) => (
+const LogoFull = ({ className = "", isDark = true }: { className?: string; isDark?: boolean }) => (
     <div className={`flex items-center gap-2 ${className}`}>
         <svg className="h-10 w-10 flex-shrink-0" viewBox="0 0 100 90" fill="none">
             <defs>
@@ -33,8 +34,8 @@ const LogoFull = ({ className = "" }: { className?: string }) => (
             />
         </svg>
         <span className="text-xl font-bold tracking-tight">
-            <span className="text-white">Tawari</span>
-            <span className="text-gray-400">App</span>
+            <span className={isDark ? "text-white" : "text-slate-900"}>Tawari</span>
+            <span className={isDark ? "text-gray-400" : "text-gray-500"}>App</span>
         </span>
     </div>
 );
@@ -80,13 +81,16 @@ const LanguageIcon = (
 );
 
 // Language Toggle Component
-function LanguageToggle() {
+function LanguageToggle({ isDark = true }: { isDark?: boolean }) {
     const { language, setLanguage } = useI18n();
 
     return (
         <button
             onClick={() => setLanguage(language === 'en' ? 'ar' : 'en')}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-sm font-medium transition-colors"
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-full border text-sm font-medium transition-colors ${isDark
+                    ? "bg-white/5 hover:bg-white/10 border-white/10 text-white"
+                    : "bg-gray-100 hover:bg-gray-200 border-gray-200 text-gray-700"
+                }`}
         >
             {LanguageIcon}
             <span>{language === 'en' ? 'العربية' : 'English'}</span>
@@ -95,9 +99,9 @@ function LanguageToggle() {
 }
 
 // Feature Item Component
-function FeatureItem({ text }: { text: string }) {
+function FeatureItem({ text, isDark = true }: { text: string; isDark?: boolean }) {
     return (
-        <div className="flex items-center gap-2 text-gray-300 text-sm">
+        <div className={`flex items-center gap-2 text-sm ${isDark ? "text-gray-300" : "text-gray-600"}`}>
             {Icons.check}
             <span>{text}</span>
         </div>
@@ -114,6 +118,7 @@ function UserTypeCard({
     ctaText,
     ctaLink,
     isRTL,
+    isDark = true,
 }: {
     type: "patient" | "doctor";
     icon: React.ReactNode;
@@ -123,9 +128,13 @@ function UserTypeCard({
     ctaText: string;
     ctaLink: string;
     isRTL: boolean;
+    isDark?: boolean;
 }) {
     return (
-        <div className="group relative bg-slate-800/50 border border-white/10 rounded-2xl p-6 md:p-8 hover:border-teal-500/50 hover:bg-slate-800/80 transition-all duration-300">
+        <div className={`group relative rounded-2xl p-6 md:p-8 transition-all duration-300 ${isDark
+                ? "bg-slate-800/50 border border-white/10 hover:border-teal-500/50 hover:bg-slate-800/80"
+                : "bg-white border border-gray-200 hover:border-teal-500/50 hover:shadow-xl shadow-lg"
+            }`}>
             {/* Glow effect on hover */}
             <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-teal-500/0 to-teal-600/0 group-hover:from-teal-500/5 group-hover:to-teal-600/10 transition-all duration-300" />
 
@@ -138,15 +147,15 @@ function UserTypeCard({
                 </div>
 
                 {/* Title */}
-                <h2 className="text-2xl md:text-3xl font-bold text-white mb-3">{title}</h2>
+                <h2 className={`text-2xl md:text-3xl font-bold mb-3 ${isDark ? "text-white" : "text-slate-900"}`}>{title}</h2>
 
                 {/* Description */}
-                <p className="text-gray-400 mb-6 leading-relaxed">{description}</p>
+                <p className={`mb-6 leading-relaxed ${isDark ? "text-gray-400" : "text-gray-600"}`}>{description}</p>
 
                 {/* Features */}
                 <div className="space-y-3 mb-8">
                     {features.map((feature, idx) => (
-                        <FeatureItem key={idx} text={feature} />
+                        <FeatureItem key={idx} text={feature} isDark={isDark} />
                     ))}
                 </div>
 
@@ -167,29 +176,31 @@ function UserTypeCard({
 
 export default function GetStartedPage() {
     const { t, isRTL, language } = useI18n();
+    const { theme } = useGlobalTheme();
+    const isDark = theme === "dark";
 
     return (
-        <div className={`min-h-screen bg-[#0F172A] text-white overflow-x-hidden ${isRTL ? 'font-cairo' : ''}`} dir={isRTL ? 'rtl' : 'ltr'}>
+        <div className={`min-h-screen overflow-x-hidden ${isRTL ? 'font-cairo' : ''} ${isDark ? 'bg-[#0F172A] text-white' : 'bg-gray-50 text-slate-900'}`} dir={isRTL ? 'rtl' : 'ltr'}>
             {/* Background Effects */}
             <div className="fixed inset-0 overflow-hidden pointer-events-none">
-                <div className="absolute inset-0 bg-gradient-to-br from-teal-900/20 via-[#0F172A] to-[#0F172A]" />
-                <div className="absolute top-1/4 -right-1/4 w-[600px] h-[600px] bg-teal-500/10 rounded-full blur-3xl" />
-                <div className="absolute bottom-1/4 -left-1/4 w-[400px] h-[400px] bg-amber-500/5 rounded-full blur-3xl" />
+                <div className={`absolute inset-0 ${isDark ? 'bg-gradient-to-br from-teal-900/20 via-[#0F172A] to-[#0F172A]' : 'bg-gradient-to-br from-teal-50 via-white to-white'}`} />
+                <div className={`absolute top-1/4 -right-1/4 w-[600px] h-[600px] rounded-full blur-3xl ${isDark ? 'bg-teal-500/10' : 'bg-teal-500/5'}`} />
+                <div className={`absolute bottom-1/4 -left-1/4 w-[400px] h-[400px] rounded-full blur-3xl ${isDark ? 'bg-amber-500/5' : 'bg-amber-500/5'}`} />
             </div>
 
             {/* Navigation */}
-            <nav className="relative z-50 bg-[#0F172A]/80 backdrop-blur-xl border-b border-white/5">
+            <nav className={`relative z-50 backdrop-blur-xl border-b ${isDark ? 'bg-[#0F172A]/80 border-white/5' : 'bg-white/80 border-gray-200'}`}>
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex items-center justify-between h-16 lg:h-20">
                         <Link href={`/${language}`} className="group hover:opacity-90 transition-opacity">
-                            <LogoFull />
+                            <LogoFull isDark={isDark} />
                         </Link>
 
                         <div className="flex items-center gap-3">
-                            <LanguageToggle />
+                            <LanguageToggle isDark={isDark} />
                             <Link
                                 href={`/${language}/login`}
-                                className="hidden sm:block text-gray-300 hover:text-white font-medium text-sm px-4 py-2 transition-colors"
+                                className={`hidden sm:block font-medium text-sm px-4 py-2 transition-colors ${isDark ? 'text-gray-300 hover:text-white' : 'text-gray-600 hover:text-gray-900'}`}
                             >
                                 {t.nav.login}
                             </Link>
@@ -207,7 +218,7 @@ export default function GetStartedPage() {
                             {t.getStartedPage.title}
                         </span>
                     </h1>
-                    <p className="text-gray-400 text-base sm:text-lg md:text-xl max-w-2xl mx-auto">
+                    <p className={`text-base sm:text-lg md:text-xl max-w-2xl mx-auto ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
                         {t.getStartedPage.subtitle}
                     </p>
                 </div>
@@ -227,6 +238,7 @@ export default function GetStartedPage() {
                         ctaText={t.getStartedPage.patientCta}
                         ctaLink={`/${language}/register`}
                         isRTL={isRTL}
+                        isDark={isDark}
                     />
 
                     <UserTypeCard
@@ -242,12 +254,13 @@ export default function GetStartedPage() {
                         ctaText={t.getStartedPage.doctorCta}
                         ctaLink={`/${language}/doctor-onboarding`}
                         isRTL={isRTL}
+                        isDark={isDark}
                     />
                 </div>
 
                 {/* Login Link */}
                 <div className="text-center">
-                    <p className="text-gray-400 text-sm md:text-base">
+                    <p className={`text-sm md:text-base ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
                         {t.getStartedPage.alreadyHaveAccount}{" "}
                         <Link
                             href={`/${language}/login`}
@@ -260,9 +273,9 @@ export default function GetStartedPage() {
             </main>
 
             {/* Footer */}
-            <footer className="relative z-10 border-t border-white/5 py-8">
+            <footer className={`relative z-10 border-t py-8 ${isDark ? 'border-white/5' : 'border-gray-200'}`}>
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-                    <p className="text-gray-500 text-sm">{t.footer.copyright}</p>
+                    <p className={`text-sm ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>{t.footer.copyright}</p>
                 </div>
             </footer>
         </div>

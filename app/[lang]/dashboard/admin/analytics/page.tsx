@@ -92,19 +92,19 @@ export default function AnalyticsPage() {
 
     const topDoctors = [
         { rank: 1, name: t.common.demoNames.drAhmedHassan, specialty: t.specialties.cardiology, revenue: 89200, patients: 312 },
-        { rank: 2, name: t.common.demoNames.drOmarKhalil, specialty: isRTL ? "أعصاب" : "Neurologist", revenue: 67800, patients: 203 },
-        { rank: 3, name: isRTL ? "د. فاطمة حسن" : "Dr. Fatima Hassan", specialty: t.specialties.pediatrics, revenue: 54600, patients: 178 },
-        { rank: 4, name: isRTL ? "د. سارة أحمد" : "Dr. Sarah Ahmed", specialty: t.specialties.dermatology, revenue: 45600, patients: 156 },
-        { rank: 5, name: isRTL ? "د. ليلى محمود" : "Dr. Layla Mahmoud", specialty: t.specialties.mental, revenue: 42300, patients: 134 },
+        { rank: 2, name: t.common.demoNames.drOmarKhalil, specialty: t.specialties.neurology, revenue: 67800, patients: 203 },
+        { rank: 3, name: t.common.demoNames.drFatimaHassan, specialty: t.specialties.pediatrics, revenue: 54600, patients: 178 },
+        { rank: 4, name: t.common.demoNames.drSarahAhmed, specialty: t.specialties.dermatology, revenue: 45600, patients: 156 },
+        { rank: 5, name: t.common.demoNames.drLaylaMahmoud, specialty: t.specialties.mental, revenue: 42300, patients: 134 },
     ];
 
     const maxValue = Math.max(...monthlyData.map(d => d.value));
 
     const stats = [
-        { label: t.adminDashboard.analyticsPage.stats.revenue, value: 598, suffix: "K EGP", change: "+23%", icon: Icons.money, color: "teal" },
+        { label: t.adminDashboard.analyticsPage.stats.revenue, value: 598, suffix: ` ${t.common.units.kEgp}`, change: "+23%", icon: Icons.money, color: "teal" },
         { label: t.adminDashboard.analyticsPage.stats.users, value: 1247, change: "+12%", icon: Icons.users, color: "blue" },
         { label: t.adminDashboard.analyticsPage.stats.appointments, value: 4637, change: "+18%", icon: Icons.calendar, color: "emerald" },
-        { label: t.adminDashboard.analyticsPage.stats.session, value: 12.5, suffix: " min", change: "+5%", icon: Icons.clock, color: "amber" },
+        { label: t.adminDashboard.analyticsPage.stats.session, value: 12.5, suffix: ` ${t.common.units.min}`, change: "+5%", icon: Icons.clock, color: "amber" },
     ];
 
     const trafficSources = [
@@ -293,7 +293,7 @@ export default function AnalyticsPage() {
                                         <td className={cn("px-3 md:px-4 py-3 md:py-4 font-medium text-xs md:text-base", isDark ? "text-white" : "text-slate-900")}>{doctor.name}</td>
                                         <td className={cn("px-3 md:px-4 py-3 md:py-4 text-xs md:text-sm", isDark ? "text-gray-400" : "text-gray-600")}>{doctor.specialty}</td>
                                         <td className={cn("px-3 md:px-4 py-3 md:py-4 text-xs md:text-base", isDark ? "text-white" : "text-slate-900")}>{formatNumber(doctor.patients)}</td>
-                                        <td className="px-3 md:px-4 py-3 md:py-4 text-teal-500 font-medium text-xs md:text-base">{formatNumber(doctor.revenue.toLocaleString())} EGP</td>
+                                        <td className="px-3 md:px-4 py-3 md:py-4 text-teal-500 font-medium text-xs md:text-base">{formatNumber(doctor.revenue.toLocaleString())} {t.common.units.egp}</td>
                                     </motion.tr>
                                 ))}
                             </tbody>

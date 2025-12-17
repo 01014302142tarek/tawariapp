@@ -123,7 +123,20 @@ const FileUpload = ({ label, fileName, onFileChange, isDark, accept = "*", fileP
 };
 
 // Upload Modal Component
-const UploadModal = ({ isOpen, onClose, onUpload, isDark }: { isOpen: boolean; onClose: () => void; onUpload: (file: File) => void; isDark: boolean }) => {
+const UploadModal = ({ isOpen, onClose, onUpload, isDark, translations }: {
+    isOpen: boolean;
+    onClose: () => void;
+    onUpload: (file: File) => void;
+    isDark: boolean;
+    translations: {
+        modalTitle: string;
+        documentLabel: string;
+        placeholder: string;
+        cancel: string;
+        submit: string;
+        success: string;
+    };
+}) => {
     const [file, setFile] = useState<File | null>(null);
     const [preview, setPreview] = useState<string>("");
 
@@ -169,7 +182,7 @@ const UploadModal = ({ isOpen, onClose, onUpload, isDark }: { isOpen: boolean; o
                     >
                         <div className="flex items-center justify-between mb-4">
                             <h3 className={cn("text-lg font-bold", isDark ? "text-white" : "text-slate-900")}>
-                                Upload Prescription
+                                {translations.modalTitle}
                             </h3>
                             <button
                                 onClick={onClose}
@@ -181,13 +194,13 @@ const UploadModal = ({ isOpen, onClose, onUpload, isDark }: { isOpen: boolean; o
 
                         <div className="space-y-4">
                             <FileUpload
-                                label="Prescription Document"
+                                label={translations.documentLabel}
                                 fileName={file?.name || ""}
                                 onFileChange={handleFileChange}
                                 isDark={isDark}
                                 accept=".jpg,.jpeg,.png,.pdf"
                                 filePreview={preview}
-                                placeholder="Click to upload prescription"
+                                placeholder={translations.placeholder}
                             />
 
                             <div className="flex gap-3 pt-2">
@@ -200,7 +213,7 @@ const UploadModal = ({ isOpen, onClose, onUpload, isDark }: { isOpen: boolean; o
                                             : "border-gray-200 text-gray-600 hover:bg-gray-50"
                                     )}
                                 >
-                                    Cancel
+                                    {translations.cancel}
                                 </button>
                                 <button
                                     onClick={handleSubmit}
@@ -214,7 +227,7 @@ const UploadModal = ({ isOpen, onClose, onUpload, isDark }: { isOpen: boolean; o
                                                 : "bg-gray-100 text-gray-400 cursor-not-allowed"
                                     )}
                                 >
-                                    Upload
+                                    {translations.submit}
                                 </button>
                             </div>
                         </div>
@@ -235,7 +248,7 @@ export default function PrescriptionsPage() {
         // Here you would typically send the file to your backend
         console.log("Uploading file:", file);
         // Simulating success
-        alert("Prescription uploaded successfully!");
+        alert(t.patientDashboard.prescriptionsPage.upload.success);
     };
 
     // Mock Data
@@ -245,7 +258,7 @@ export default function PrescriptionsPage() {
             name: "Lisinopril",
             dosage: formatNumber("10mg"),
             frequency: t.patientDashboard.prescriptionsPage.frequency.daily.replace("{n}", formatNumber(1)),
-            prescribedBy: "Dr. Ahmed Hassan",
+            prescribedBy: t.common.demoNames.drAhmedHassan,
             startDate: formatDate("Nov 15, 2024"),
             refillDate: formatDate("Dec 28, 2024"),
             pillsRemaining: 18,
@@ -257,7 +270,7 @@ export default function PrescriptionsPage() {
             name: "Metformin",
             dosage: formatNumber("500mg"),
             frequency: t.patientDashboard.prescriptionsPage.frequency.daily.replace("{n}", formatNumber(2)), // Assuming I have a flexible key or just formatting "2 tablets daily"
-            prescribedBy: "Dr. Fatima Khaled",
+            prescribedBy: t.common.demoNames.drFatimaKhaled,
             startDate: formatDate("Oct 20, 2024"),
             refillDate: formatDate("Jan 5, 2025"),
             pillsRemaining: 45,
@@ -269,7 +282,7 @@ export default function PrescriptionsPage() {
             name: "Atorvastatin",
             dosage: formatNumber("20mg"),
             frequency: t.patientDashboard.prescriptionsPage.frequency.bedtime,
-            prescribedBy: "Dr. Ahmed Hassan",
+            prescribedBy: t.common.demoNames.drAhmedHassan,
             startDate: formatDate("Sep 10, 2024"),
             refillDate: formatDate("Dec 20, 2024"),
             pillsRemaining: 5,
@@ -281,7 +294,7 @@ export default function PrescriptionsPage() {
             name: "Omeprazole",
             dosage: formatNumber("20mg"),
             frequency: t.patientDashboard.prescriptionsPage.frequency.beforeBreakfast,
-            prescribedBy: "Dr. Fatima Khaled",
+            prescribedBy: t.common.demoNames.drFatimaKhaled,
             startDate: formatDate("Aug 5, 2024"),
             refillDate: formatDate("Dec 15, 2024"),
             pillsRemaining: 0,
@@ -344,7 +357,7 @@ export default function PrescriptionsPage() {
                     className="flex items-center gap-2 px-4 py-2 bg-teal-500 hover:bg-teal-600 text-white text-sm font-medium rounded-lg transition-colors shadow-lg shadow-teal-500/20 w-full md:w-auto justify-center"
                 >
                     {Icons.upload}
-                    Upload Prescription
+                    {t.patientDashboard.prescriptionsPage.upload.button}
                 </button>
             </div>
 
@@ -543,6 +556,7 @@ export default function PrescriptionsPage() {
                 onClose={() => setIsUploadModalOpen(false)}
                 onUpload={handleUpload}
                 isDark={isDark}
+                translations={t.patientDashboard.prescriptionsPage.upload}
             />
         </div>
     );

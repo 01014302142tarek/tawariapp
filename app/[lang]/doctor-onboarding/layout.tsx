@@ -1,17 +1,16 @@
 "use client";
 
-import { ThemeProvider, useTheme } from "./ThemeContext";
+import { useGlobalTheme } from "@/app/context/GlobalThemeContext";
 import { cn } from "@/lib/utils";
 import { SparklesCore } from "@/components/ui/sparkles";
 
 function OnboardingLayoutContent({ children }: { children: React.ReactNode }) {
-    const { theme } = useTheme();
-    const isDark = theme === "dark";
+    const { isDark } = useGlobalTheme();
 
     return (
         <div className={cn(
             "min-h-screen transition-colors duration-300 flex items-center justify-center p-4 md:p-8",
-            isDark ? "bg-slate-950" : "bg-gray-50"
+            isDark ? "bg-slate-950" : "bg-gradient-to-br from-white via-teal-50/30 to-white"
         )}>
             {/* Background Effects */}
             <div className="fixed inset-0 pointer-events-none">
@@ -20,13 +19,19 @@ function OnboardingLayoutContent({ children }: { children: React.ReactNode }) {
                     background="transparent"
                     minSize={0.4}
                     maxSize={1}
-                    particleDensity={isDark ? 20 : 10}
+                    particleDensity={isDark ? 20 : 15}
                     particleColor={isDark ? "20, 184, 166" : "13, 148, 136"}
                 />
-                {isDark && (
+                {isDark ? (
                     <>
                         <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-teal-500/5 rounded-full blur-3xl" />
                         <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-teal-500/5 rounded-full blur-3xl" />
+                    </>
+                ) : (
+                    <>
+                        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-teal-200/30 rounded-full blur-3xl" />
+                        <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-teal-100/40 rounded-full blur-3xl" />
+                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-teal-50/50 rounded-full blur-3xl" />
                     </>
                 )}
             </div>
@@ -44,9 +49,6 @@ export default function DoctorOnboardingLayout({
 }: {
     children: React.ReactNode;
 }) {
-    return (
-        <ThemeProvider>
-            <OnboardingLayoutContent>{children}</OnboardingLayoutContent>
-        </ThemeProvider>
-    );
+    return <OnboardingLayoutContent>{children}</OnboardingLayoutContent>;
 }
+

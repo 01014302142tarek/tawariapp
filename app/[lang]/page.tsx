@@ -5,9 +5,10 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { useI18n } from "../i18n";
+import { useGlobalTheme } from "@/app/context/GlobalThemeContext";
 
 // Custom Logo Component with Heart, Pulse and Text
-const LogoFull = ({ className = "" }: { className?: string }) => (
+const LogoFull = ({ className = "", isDark = true }: { className?: string; isDark?: boolean }) => (
   <div className={`flex items-center gap-2 ${className}`}>
     {/* Heart with Pulse Icon */}
     <svg className="h-10 w-10 flex-shrink-0" viewBox="0 0 100 90" fill="none">
@@ -51,8 +52,8 @@ const LogoFull = ({ className = "" }: { className?: string }) => (
     </svg>
     {/* TawariApp Text */}
     <span className="text-xl font-bold tracking-tight">
-      <span className="text-white">Tawari</span>
-      <span className="text-gray-400">App</span>
+      <span className={isDark ? "text-white" : "text-slate-800"}>Tawari</span>
+      <span className={isDark ? "text-gray-400" : "text-slate-500"}>App</span>
     </span>
   </div>
 );
@@ -167,13 +168,42 @@ function AnimatedCounter({ target }: { target: string }) {
   return <span>{target.includes('+') ? `${formatNumber(count)}+` : target.includes('/') ? target : formatNumber(count)}</span>;
 }
 
+// Theme Toggle Button
+function ThemeToggle() {
+  const { toggleTheme, isDark } = useGlobalTheme();
+  return (
+    <button
+      onClick={toggleTheme}
+      className={`flex items-center justify-center w-10 h-10 rounded-full transition-all duration-300 ${isDark
+        ? 'bg-white/5 hover:bg-white/10 border border-white/10 text-white hover:text-amber-300'
+        : 'bg-teal-500 hover:bg-teal-600 border border-teal-500 text-slate-600 hover:text-slate-800'
+        }`}
+      aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+    >
+      {isDark ? (
+        <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+        </svg>
+      ) : (
+        <svg className="w-5 h-5 text-white" fill="white" viewBox="0 0 24 24">
+          <path d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+        </svg>
+      )}
+    </button>
+  );
+}
+
 // Language Toggle Button
 function LanguageToggle() {
-  const { language, setLanguage, isRTL } = useI18n();
+  const { language, setLanguage } = useI18n();
+  const { isDark } = useGlobalTheme();
   return (
     <button
       onClick={() => setLanguage(language === 'en' ? 'ar' : 'en')}
-      className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-sm font-medium transition-colors"
+      className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${isDark
+        ? 'bg-white/5 hover:bg-white/10 border border-white/10'
+        : 'bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-700'
+        }`}
     >
       {Icons.language}
       <span>{language === 'en' ? 'العربية' : 'English'}</span>
@@ -182,46 +212,73 @@ function LanguageToggle() {
 }
 
 export default function LandingPage() {
+  return <LandingPageContent />;
+}
+
+function LandingPageContent() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { t, isRTL, language } = useI18n();
+  const { isDark } = useGlobalTheme();
   const specialtyKeys = ['general', 'pediatrics', 'obgyn', 'internal', 'dermatology', 'mental', 'cardiology', 'orthopedics'] as const;
 
+  // Theme-aware class helpers
+  const bgMain = isDark ? 'bg-[#0F172A]' : 'bg-[#F8FAFC]';
+  const bgSection = isDark ? 'bg-[#0F172A]' : 'bg-white';
+  const bgSectionAlt = isDark ? 'bg-gradient-to-b from-[#0F172A] to-[#1E293B]/30' : 'bg-gradient-to-b from-[#F8FAFC] to-[#F1F5F9]';
+  const textPrimary = isDark ? 'text-white' : 'text-slate-900';
+  const textSecondary = isDark ? 'text-gray-400' : 'text-slate-600';
+  const textMuted = isDark ? 'text-gray-500' : 'text-slate-500';
+  const borderColor = isDark ? 'border-white/5' : 'border-slate-200';
+  const cardBg = isDark ? 'bg-[#1E293B]/50' : 'bg-white';
+  const cardBorder = isDark ? 'border-white/5' : 'border-slate-200';
+  const cardHoverBorder = isDark ? 'hover:border-white/20' : 'hover:border-teal-300';
+  const navBg = isDark ? 'bg-[#0F172A]/80' : 'bg-white/90';
+
+  // Glowing card styles for light mode - using teal borders
+  const glowCardClass = isDark
+    ? 'bg-[#1E293B]/50 border border-white/5 hover:border-teal-500/30 hover:bg-[#1E293B]'
+    : 'bg-white border-2 border-teal-200 shadow-lg shadow-teal-100/50 hover:shadow-xl hover:shadow-teal-200/60 hover:border-teal-400';
+
   return (
-    <div className={`min-h-screen bg-[#0F172A] text-white overflow-x-hidden ${isRTL ? 'font-cairo' : ''}`} dir={isRTL ? 'rtl' : 'ltr'}>
+    <div className={`min-h-screen ${bgMain} ${textPrimary} overflow-x-hidden transition-colors duration-300 ${isRTL ? 'font-cairo' : ''}`} dir={isRTL ? 'rtl' : 'ltr'}>
       {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-[#0F172A]/80 backdrop-blur-xl border-b border-white/5">
+      <nav className={`fixed top-0 left-0 right-0 z-50 ${navBg} backdrop-blur-xl border-b ${borderColor} transition-colors duration-300`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16 lg:h-20">
             <Link href={`/${language}`} className="group hover:opacity-90 transition-opacity">
-              <LogoFull />
+              <LogoFull isDark={isDark} />
             </Link>
 
             <div className="hidden lg:flex items-center gap-8">
-              <Link href="#how-it-works" className="text-gray-400 hover:text-white transition-colors text-sm font-medium">{t.nav.howItWorks}</Link>
-              <Link href="#specialties" className="text-gray-400 hover:text-white transition-colors text-sm font-medium">{t.nav.specialties}</Link>
-              <Link href="#doctors" className="text-gray-400 hover:text-white transition-colors text-sm font-medium">{t.nav.doctors}</Link>
-              <Link href="#for-doctors" className="text-gray-400 hover:text-white transition-colors text-sm font-medium">{t.nav.forDoctors}</Link>
+              <Link href="#how-it-works" className={`${textSecondary} hover:${textPrimary} transition-colors text-sm font-medium`}>{t.nav.howItWorks}</Link>
+              <Link href="#specialties" className={`${textSecondary} hover:${textPrimary} transition-colors text-sm font-medium`}>{t.nav.specialties}</Link>
+              <Link href="#doctors" className={`${textSecondary} hover:${textPrimary} transition-colors text-sm font-medium`}>{t.nav.doctors}</Link>
+              <Link href="#for-doctors" className={`${textSecondary} hover:${textPrimary} transition-colors text-sm font-medium`}>{t.nav.forDoctors}</Link>
             </div>
 
             <div className="hidden lg:flex items-center gap-3">
+              <ThemeToggle />
               <LanguageToggle />
-              <Link href={`/${language}/login`} className="text-gray-300 hover:text-white font-medium text-sm px-4 py-2 transition-colors">{t.nav.login}</Link>
+              <Link href={`/${language}/login`} className={`${textSecondary} hover:${textPrimary} font-medium text-sm px-4 py-2 transition-colors`}>{t.nav.login}</Link>
               <Link href={`/${language}/get-started`} className="bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-400 hover:to-teal-500 text-white font-semibold px-5 py-2.5 rounded-full transition-all shadow-lg shadow-teal-500/25">{t.nav.getStarted}</Link>
             </div>
 
-            <button className="lg:hidden p-2 text-gray-300 hover:text-white" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
-              {mobileMenuOpen ? Icons.close : Icons.menu}
-            </button>
+            <div className="flex lg:hidden items-center gap-2">
+              <ThemeToggle />
+              <button className={`p-2 ${textSecondary} hover:${textPrimary}`} onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
+                {mobileMenuOpen ? Icons.close : Icons.menu}
+              </button>
+            </div>
           </div>
 
           {mobileMenuOpen && (
-            <div className="lg:hidden py-4 border-t border-white/10">
+            <div className={`lg:hidden py-4 border-t ${borderColor}`}>
               <div className="flex flex-col gap-4">
-                <Link href="#how-it-works" className="text-gray-300 hover:text-teal-400 py-2">{t.nav.howItWorks}</Link>
-                <Link href="#specialties" className="text-gray-300 hover:text-teal-400 py-2">{t.nav.specialties}</Link>
-                <Link href="#doctors" className="text-gray-300 hover:text-teal-400 py-2">{t.nav.doctors}</Link>
-                <Link href="#for-doctors" className="text-gray-300 hover:text-teal-400 py-2">{t.nav.forDoctors}</Link>
-                <div className="flex items-center gap-3 pt-4 border-t border-white/10">
+                <Link href="#how-it-works" className={`${textSecondary} hover:text-teal-500 py-2`}>{t.nav.howItWorks}</Link>
+                <Link href="#specialties" className={`${textSecondary} hover:text-teal-500 py-2`}>{t.nav.specialties}</Link>
+                <Link href="#doctors" className={`${textSecondary} hover:text-teal-500 py-2`}>{t.nav.doctors}</Link>
+                <Link href="#for-doctors" className={`${textSecondary} hover:text-teal-500 py-2`}>{t.nav.forDoctors}</Link>
+                <div className={`flex items-center gap-3 pt-4 border-t ${borderColor}`}>
                   <LanguageToggle />
                   <Link href={`/${language}/get-started`} className="bg-teal-500 hover:bg-teal-400 text-white font-semibold px-5 py-2 rounded-full flex-1 text-center">{t.nav.getStarted}</Link>
                 </div>
@@ -234,30 +291,31 @@ export default function LandingPage() {
       {/* Hero Section */}
       <section className="relative min-h-screen flex items-center pt-20">
         <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-teal-900/20 via-[#0F172A] to-[#0F172A]" />
-          <div className="absolute top-1/4 -right-1/4 w-[800px] h-[800px] bg-teal-500/10 rounded-full blur-3xl" />
+          <div className={`absolute inset-0 ${isDark ? 'bg-gradient-to-br from-teal-900/20 via-[#0F172A] to-[#0F172A]' : 'bg-gradient-to-br from-teal-50 via-white to-white'}`} />
+          <div className={`absolute top-1/4 -right-1/4 w-[800px] h-[800px] ${isDark ? 'bg-teal-500/10' : 'bg-teal-200/30'} rounded-full blur-3xl`} />
+          {!isDark && <div className="absolute bottom-1/4 -left-1/4 w-[600px] h-[600px] bg-teal-100/40 rounded-full blur-3xl" />}
         </div>
 
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-24">
           <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
             <div className={`text-center ${isRTL ? 'lg:text-right' : 'lg:text-left'}`}>
-              <div className="inline-flex items-center gap-2 bg-teal-500/10 border border-teal-500/20 px-4 py-2 rounded-full mb-6">
+              <div className={`inline-flex items-center gap-2 ${isDark ? 'bg-teal-500/10 border-teal-500/20' : 'bg-teal-50 border-teal-200'} border px-4 py-2 rounded-full mb-6`}>
                 <span className="relative flex h-2 w-2"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-teal-400 opacity-75"></span><span className="relative inline-flex rounded-full h-2 w-2 bg-teal-500"></span></span>
-                <span className="text-teal-400 text-sm font-medium">{t.hero.badge}</span>
+                <span className={`${isDark ? 'text-teal-400' : 'text-teal-600'} text-sm font-medium`}>{t.hero.badge}</span>
               </div>
 
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black leading-[1.1] tracking-tight mb-6">
-                {t.hero.headline} <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-400 to-teal-300">{t.hero.headlineHighlight}</span>
+                {t.hero.headline} <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-500 to-teal-400">{t.hero.headlineHighlight}</span>
               </h1>
 
-              <p className="text-lg sm:text-xl text-gray-400 mb-8 max-w-xl mx-auto lg:mx-0">{t.hero.subheadline}</p>
+              <p className={`text-lg sm:text-xl ${textSecondary} mb-8 max-w-xl mx-auto lg:mx-0`}>{t.hero.subheadline}</p>
 
               <div className={`flex flex-col sm:flex-row gap-4 justify-center ${isRTL ? 'lg:justify-end' : 'lg:justify-start'} mb-10`}>
                 <Link href={`/${language}/register`} className="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-400 hover:to-teal-500 text-white font-bold text-lg px-8 py-4 rounded-full transition-all transform hover:scale-105 shadow-xl shadow-teal-500/30">
                   {t.hero.cta}
                   {isRTL ? Icons.arrowLeft : Icons.arrow}
                 </Link>
-                <Link href="#how-it-works" className="inline-flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 text-white font-semibold text-lg px-8 py-4 rounded-full transition-colors">
+                <Link href="#how-it-works" className={`inline-flex items-center justify-center gap-2 ${isDark ? 'bg-white/5 hover:bg-white/10 border-white/10 text-white' : 'bg-teal-50 hover:bg-teal-100 border-2 border-teal-200 text-teal-700'} border font-semibold text-lg px-8 py-4 rounded-full transition-colors`}>
                   {Icons.play}
                   {t.hero.ctaSecondary}
                 </Link>
@@ -265,16 +323,16 @@ export default function LandingPage() {
 
               <div className={`flex flex-wrap items-center justify-center ${isRTL ? 'lg:justify-end' : 'lg:justify-start'} gap-6`}>
                 {[t.hero.trust1, t.hero.trust2, t.hero.trust3].map((text, idx) => (
-                  <div key={idx} className="flex items-center gap-2 text-gray-400">{Icons.check}<span className="text-sm">{text}</span></div>
+                  <div key={idx} className={`flex items-center gap-2 ${textSecondary}`}>{Icons.check}<span className="text-sm">{text}</span></div>
                 ))}
               </div>
             </div>
 
             <div className="relative hidden lg:block">
               <div className="relative w-full aspect-square max-w-lg mx-auto">
-                <div className="absolute -top-4 -right-4 w-24 h-24 bg-amber-500/20 rounded-2xl blur-xl" />
-                <div className="absolute -bottom-4 -left-4 w-32 h-32 bg-teal-500/20 rounded-2xl blur-xl" />
-                <div className="relative w-full h-full rounded-3xl overflow-hidden border border-white/10">
+                <div className={`absolute -top-4 -right-4 w-24 h-24 ${isDark ? 'bg-amber-500/20' : 'bg-teal-300/50'} rounded-2xl blur-xl`} />
+                <div className={`absolute -bottom-4 -left-4 w-32 h-32 ${isDark ? 'bg-teal-500/20' : 'bg-teal-200/60'} rounded-2xl blur-xl`} />
+                <div className={`relative w-full h-full rounded-3xl overflow-hidden border-2 ${isDark ? 'border-white/10' : 'border-teal-200 shadow-2xl shadow-teal-100/50'}`}>
                   <Image src="/hero-doctor.png" alt="Doctor consultation" fill className="object-cover" priority />
                 </div>
               </div>
@@ -284,14 +342,14 @@ export default function LandingPage() {
       </section>
 
       {/* Stats Section */}
-      <section className="py-16 border-y border-white/5 bg-[#0F172A]">
+      <section className={`py-16 border-y ${borderColor} ${bgSection} transition-colors duration-300`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
             {[{ n: "500+", l: t.stats.doctors }, { n: "10,000+", l: t.stats.patients }, { n: "25,000+", l: t.stats.consultations }, { n: "4.9/5", l: t.stats.rating }].map((stat, idx) => (
               <div key={idx} className="text-center">
-                <div className="text-teal-400 flex justify-center mb-3">{statsIcons[idx]}</div>
-                <div className="text-3xl sm:text-4xl font-black text-white mb-1"><AnimatedCounter target={stat.n} /></div>
-                <div className="text-gray-400 text-sm">{stat.l}</div>
+                <div className="text-teal-500 flex justify-center mb-3">{statsIcons[idx]}</div>
+                <div className={`text-3xl sm:text-4xl font-black ${textPrimary} mb-1`}><AnimatedCounter target={stat.n} /></div>
+                <div className={textSecondary + " text-sm"}>{stat.l}</div>
               </div>
             ))}
           </div>
@@ -299,12 +357,12 @@ export default function LandingPage() {
       </section>
 
       {/* How It Works */}
-      <section id="how-it-works" className="py-20 lg:py-28 bg-[#0F172A]">
+      <section id="how-it-works" className={`py-20 lg:py-28 ${bgSection} transition-colors duration-300`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <span className="text-teal-400 text-sm font-bold uppercase tracking-wider">{t.howItWorks.badge}</span>
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mt-3">{t.howItWorks.title} <span className="text-teal-400">{t.howItWorks.titleHighlight}</span></h2>
-            <p className="text-gray-400 text-lg mt-4 max-w-2xl mx-auto">{t.howItWorks.subtitle}</p>
+            <span className="text-teal-500 text-sm font-bold uppercase tracking-wider">{t.howItWorks.badge}</span>
+            <h2 className={`text-3xl sm:text-4xl lg:text-5xl font-bold mt-3 ${textPrimary}`}>{t.howItWorks.title} <span className="text-teal-500">{t.howItWorks.titleHighlight}</span></h2>
+            <p className={`${textSecondary} text-lg mt-4 max-w-2xl mx-auto`}>{t.howItWorks.subtitle}</p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-8">
@@ -313,11 +371,11 @@ export default function LandingPage() {
               { step: "02", title: t.howItWorks.step2Title, desc: t.howItWorks.step2Desc, icon: Icons.calendar, color: "from-amber-500 to-amber-600" },
               { step: "03", title: t.howItWorks.step3Title, desc: t.howItWorks.step3Desc, icon: Icons.video, color: "from-purple-500 to-purple-600" },
             ].map((item, idx) => (
-              <div key={idx} className="group relative bg-[#1E293B]/50 border border-white/5 rounded-3xl p-8 transition-all hover:border-white/20 hover:bg-[#1E293B]">
-                <div className="absolute -top-4 left-8 bg-[#0F172A] px-3 py-1 rounded-full border border-white/10"><span className="text-gray-500 text-sm font-mono">{item.step}</span></div>
+              <div key={idx} className={`group relative rounded-3xl p-8 transition-all ${glowCardClass}`}>
+                <div className={`absolute -top-4 left-8 px-3 py-1 rounded-full border ${isDark ? 'bg-[#0F172A] border-white/10' : 'bg-white border-slate-200 shadow-sm'}`}><span className={`${textMuted} text-sm font-mono`}>{item.step}</span></div>
                 <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${item.color} flex items-center justify-center text-white mb-6 group-hover:scale-110 transition-transform`}>{item.icon}</div>
-                <h3 className="text-xl font-bold mb-3">{item.title}</h3>
-                <p className="text-gray-400 leading-relaxed">{item.desc}</p>
+                <h3 className={`text-xl font-bold mb-3 ${textPrimary}`}>{item.title}</h3>
+                <p className={`${textSecondary} leading-relaxed`}>{item.desc}</p>
               </div>
             ))}
           </div>
@@ -325,21 +383,21 @@ export default function LandingPage() {
       </section>
 
       {/* Specialties */}
-      <section id="specialties" className="py-20 lg:py-28 bg-gradient-to-b from-[#0F172A] to-[#1E293B]/30">
+      <section id="specialties" className={`py-20 lg:py-28 ${bgSectionAlt} transition-colors duration-300`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-12">
             <div>
-              <span className="text-teal-400 text-sm font-bold uppercase tracking-wider">{t.specialties.badge}</span>
-              <h2 className="text-3xl sm:text-4xl font-bold mt-2">{t.specialties.title}</h2>
+              <span className="text-teal-500 text-sm font-bold uppercase tracking-wider">{t.specialties.badge}</span>
+              <h2 className={`text-3xl sm:text-4xl font-bold mt-2 ${textPrimary}`}>{t.specialties.title}</h2>
             </div>
-            <Link href={`/${language}/doctors`} className="text-teal-400 font-semibold hover:text-teal-300 transition-colors flex items-center gap-1">{t.specialties.viewAll}{Icons.chevron}</Link>
+            <Link href={`/${language}/doctors`} className="text-teal-500 font-semibold hover:text-teal-400 transition-colors flex items-center gap-1">{t.specialties.viewAll}{Icons.chevron}</Link>
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {specialtyKeys.map((key) => (
-              <Link key={key} href={`/${language}/doctors?specialty=${key}`} className="group flex flex-col items-center justify-center gap-3 bg-[#1E293B]/50 border border-white/5 rounded-2xl p-6 cursor-pointer transition-all hover:border-teal-500/50 hover:bg-[#1E293B] hover:shadow-lg hover:shadow-teal-500/10">
-                <div className="w-14 h-14 rounded-xl bg-teal-500/10 flex items-center justify-center text-teal-400 group-hover:bg-teal-500 group-hover:text-white transition-all group-hover:scale-110">{SpecialtyIcons[key]}</div>
-                <p className="font-semibold text-white text-center">{t.specialties[key as keyof typeof t.specialties]}</p>
+              <Link key={key} href={`/${language}/doctors?specialty=${key}`} className={`group flex flex-col items-center justify-center gap-3 rounded-2xl p-6 cursor-pointer transition-all ${glowCardClass}`}>
+                <div className={`w-14 h-14 rounded-xl ${isDark ? 'bg-teal-500/10' : 'bg-teal-50'} flex items-center justify-center text-teal-500 group-hover:bg-teal-500 group-hover:text-white transition-all group-hover:scale-110`}>{SpecialtyIcons[key]}</div>
+                <p className={`font-semibold ${textPrimary} text-center`}>{t.specialties[key as keyof typeof t.specialties]}</p>
               </Link>
             ))}
           </div>
@@ -347,19 +405,19 @@ export default function LandingPage() {
       </section>
 
       {/* Top Doctors */}
-      <section id="doctors" className="py-20 lg:py-28 bg-[#0F172A]">
+      <section id="doctors" className={`py-20 lg:py-28 ${bgSection} transition-colors duration-300`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-12">
             <div>
-              <span className="text-teal-400 text-sm font-bold uppercase tracking-wider">{t.doctorsSection.badge}</span>
-              <h2 className="text-3xl sm:text-4xl font-bold mt-2">{t.doctorsSection.title}</h2>
+              <span className="text-teal-500 text-sm font-bold uppercase tracking-wider">{t.doctorsSection.badge}</span>
+              <h2 className={`text-3xl sm:text-4xl font-bold mt-2 ${textPrimary}`}>{t.doctorsSection.title}</h2>
             </div>
-            <Link href={`/${language}/doctors`} className="text-teal-400 font-semibold hover:text-teal-300 transition-colors flex items-center gap-1">{t.doctorsSection.viewAll}{Icons.chevron}</Link>
+            <Link href={`/${language}/doctors`} className="text-teal-500 font-semibold hover:text-teal-400 transition-colors flex items-center gap-1">{t.doctorsSection.viewAll}{Icons.chevron}</Link>
           </div>
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {doctors.map((doctor) => (
-              <div key={doctor.name} className="group bg-[#1E293B]/50 border border-white/5 rounded-2xl p-5 transition-all hover:border-teal-500/30 hover:bg-[#1E293B]">
+              <div key={doctor.name} className={`group rounded-2xl p-5 transition-all ${glowCardClass}`}>
                 <div className="relative mb-4">
                   <div className="relative w-20 h-20 mx-auto rounded-full overflow-hidden border-2 border-teal-500/50 group-hover:border-teal-500 transition-colors">
                     <Image src={doctor.image} alt={isRTL ? doctor.nameAr : doctor.name} fill className="object-cover" unoptimized />
@@ -371,16 +429,16 @@ export default function LandingPage() {
                   )}
                 </div>
                 <div className="text-center">
-                  <h3 className="font-bold text-white mb-1">{isRTL ? doctor.nameAr : doctor.name}</h3>
-                  <p className="text-teal-400 text-sm font-medium mb-1">{isRTL ? doctor.specialtyAr : doctor.specialty}</p>
-                  <p className="text-gray-500 text-xs mb-3">{doctor.experience} {t.doctorsSection.experience}</p>
+                  <h3 className={`font-bold ${textPrimary} mb-1`}>{isRTL ? doctor.nameAr : doctor.name}</h3>
+                  <p className="text-teal-500 text-sm font-medium mb-1">{isRTL ? doctor.specialtyAr : doctor.specialty}</p>
+                  <p className={`${textMuted} text-xs mb-3`}>{doctor.experience} {t.doctorsSection.experience}</p>
                   <div className="flex items-center justify-center gap-1 mb-4">
                     <div className="flex">{[1, 2, 3, 4, 5].map((star) => <span key={star}>{star <= Math.floor(doctor.rating) ? Icons.star : Icons.starEmpty}</span>)}</div>
-                    <span className="text-sm text-gray-400">({doctor.reviews})</span>
+                    <span className={`text-sm ${textSecondary}`}>({doctor.reviews})</span>
                   </div>
-                  <div className="pt-4 border-t border-white/5">
-                    <p className="text-white font-bold mb-3">{doctor.fee} {isRTL ? 'جنيه' : 'EGP'} <span className="text-xs font-normal text-gray-500">{t.doctorsSection.session}</span></p>
-                    <button className="w-full bg-teal-500/10 hover:bg-teal-500 text-teal-400 hover:text-white font-semibold text-sm py-2.5 rounded-xl transition-all">{t.doctorsSection.bookNow}</button>
+                  <div className={`pt-4 border-t ${borderColor}`}>
+                    <p className={`${textPrimary} font-bold mb-3`}>{doctor.fee} {isRTL ? 'جنيه' : 'EGP'} <span className={`text-xs font-normal ${textMuted}`}>{t.doctorsSection.session}</span></p>
+                    <button className="w-full bg-teal-500/10 hover:bg-teal-500 text-teal-500 hover:text-white font-semibold text-sm py-2.5 rounded-xl transition-all">{t.doctorsSection.bookNow}</button>
                   </div>
                 </div>
               </div>
@@ -390,11 +448,11 @@ export default function LandingPage() {
       </section>
 
       {/* Why TawariApp */}
-      <section className="py-20 lg:py-28 bg-gradient-to-b from-[#0F172A] to-[#1E293B]/50">
+      <section className={`py-20 lg:py-28 ${bgSectionAlt} transition-colors duration-300`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <span className="text-teal-400 text-sm font-bold uppercase tracking-wider">{t.whyUs.badge}</span>
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mt-3">{t.whyUs.title} <span className="text-teal-400">{t.whyUs.titleHighlight}</span></h2>
+            <span className="text-teal-500 text-sm font-bold uppercase tracking-wider">{t.whyUs.badge}</span>
+            <h2 className={`text-3xl sm:text-4xl lg:text-5xl font-bold mt-3 ${textPrimary}`}>{t.whyUs.title} <span className="text-teal-500">{t.whyUs.titleHighlight}</span></h2>
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -404,10 +462,10 @@ export default function LandingPage() {
               { title: t.whyUs.item3Title, desc: t.whyUs.item3Desc },
               { title: t.whyUs.item4Title, desc: t.whyUs.item4Desc },
             ].map((item, idx) => (
-              <div key={idx} className="bg-[#1E293B]/30 border border-white/5 rounded-2xl p-6 text-center hover:border-white/10 transition-colors">
-                <div className="text-teal-400 flex justify-center mb-4">{whyUsIcons[idx]}</div>
-                <h3 className="text-lg font-bold mb-2">{item.title}</h3>
-                <p className="text-gray-400 text-sm leading-relaxed">{item.desc}</p>
+              <div key={idx} className={`rounded-2xl p-6 text-center transition-all ${glowCardClass}`}>
+                <div className="text-teal-500 flex justify-center mb-4">{whyUsIcons[idx]}</div>
+                <h3 className={`text-lg font-bold mb-2 ${textPrimary}`}>{item.title}</h3>
+                <p className={`${textSecondary} text-sm leading-relaxed`}>{item.desc}</p>
               </div>
             ))}
           </div>
@@ -415,23 +473,23 @@ export default function LandingPage() {
       </section>
 
       {/* Testimonials */}
-      <section className="py-20 lg:py-28 bg-[#0F172A]">
+      <section className={`py-20 lg:py-28 ${bgSection} transition-colors duration-300`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <span className="text-teal-400 text-sm font-bold uppercase tracking-wider">{t.testimonials.badge}</span>
-            <h2 className="text-3xl sm:text-4xl font-bold mt-3">{t.testimonials.title}</h2>
+            <span className="text-teal-500 text-sm font-bold uppercase tracking-wider">{t.testimonials.badge}</span>
+            <h2 className={`text-3xl sm:text-4xl font-bold mt-3 ${textPrimary}`}>{t.testimonials.title}</h2>
           </div>
 
           <div className="grid md:grid-cols-3 gap-6">
             {testimonials.map((testimonial, idx) => (
-              <div key={idx} className="bg-gradient-to-br from-[#1E293B]/80 to-[#1E293B]/40 border border-white/5 rounded-2xl p-6">
+              <div key={idx} className={`rounded-2xl p-6 transition-all ${isDark ? 'bg-gradient-to-br from-[#1E293B]/80 to-[#1E293B]/40 border border-white/5' : 'bg-white border-2 border-teal-200 shadow-lg shadow-teal-100/50 hover:shadow-xl hover:shadow-teal-200/60 hover:border-teal-400'}`}>
                 <div className="flex gap-1 mb-4">{[1, 2, 3, 4, 5].map((star) => <span key={star}>{star <= testimonial.rating ? Icons.star : Icons.starEmpty}</span>)}</div>
-                <p className="text-gray-300 leading-relaxed mb-6">&ldquo;{isRTL ? testimonial.textAr : testimonial.text}&rdquo;</p>
-                <div className="flex items-center gap-3 pt-4 border-t border-white/5">
+                <p className={`${isDark ? 'text-gray-300' : 'text-slate-600'} leading-relaxed mb-6`}>&ldquo;{isRTL ? testimonial.textAr : testimonial.text}&rdquo;</p>
+                <div className={`flex items-center gap-3 pt-4 border-t ${isDark ? 'border-white/5' : 'border-teal-100'}`}>
                   <div className="relative w-12 h-12 rounded-full overflow-hidden"><Image src={testimonial.image} alt={isRTL ? testimonial.nameAr : testimonial.name} fill className="object-cover" unoptimized /></div>
                   <div>
-                    <p className="font-semibold text-white">{isRTL ? testimonial.nameAr : testimonial.name}</p>
-                    <p className="text-sm text-gray-500">{isRTL ? testimonial.locationAr : testimonial.location}</p>
+                    <p className={`font-semibold ${textPrimary}`}>{isRTL ? testimonial.nameAr : testimonial.name}</p>
+                    <p className={`text-sm ${textMuted}`}>{isRTL ? testimonial.locationAr : testimonial.location}</p>
                   </div>
                 </div>
               </div>
@@ -441,21 +499,21 @@ export default function LandingPage() {
       </section>
 
       {/* For Doctors CTA */}
-      <section id="for-doctors" className="py-20 lg:py-28 bg-gradient-to-br from-[#1E293B] to-[#0F172A]">
+      <section id="for-doctors" className={`py-20 lg:py-28 ${isDark ? 'bg-gradient-to-br from-[#1E293B] to-[#0F172A]' : 'bg-gradient-to-br from-slate-50 to-white'} transition-colors duration-300`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div>
-              <span className="text-amber-400 text-sm font-bold uppercase tracking-wider">{t.forDoctors.badge}</span>
-              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mt-3 mb-6">{t.forDoctors.title} <span className="text-amber-400">{t.forDoctors.titleHighlight}</span></h2>
-              <p className="text-gray-400 text-lg mb-8">{t.forDoctors.subtitle}</p>
+              <span className="text-amber-500 text-sm font-bold uppercase tracking-wider">{t.forDoctors.badge}</span>
+              <h2 className={`text-3xl sm:text-4xl lg:text-5xl font-bold mt-3 mb-6 ${textPrimary}`}>{t.forDoctors.title} <span className="text-amber-500">{t.forDoctors.titleHighlight}</span></h2>
+              <p className={`${textSecondary} text-lg mb-8`}>{t.forDoctors.subtitle}</p>
 
               <div className="space-y-4 mb-8">
                 {[t.forDoctors.benefit1, t.forDoctors.benefit2, t.forDoctors.benefit3, t.forDoctors.benefit4, t.forDoctors.benefit5].map((benefit, idx) => (
                   <div key={idx} className="flex items-center gap-3">
                     <div className="w-6 h-6 rounded-full bg-amber-500/20 flex items-center justify-center flex-shrink-0">
-                      <svg className="w-4 h-4 text-amber-400" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
+                      <svg className="w-4 h-4 text-amber-500" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
                     </div>
-                    <span className="text-gray-300">{benefit}</span>
+                    <span className={isDark ? 'text-gray-300' : 'text-slate-600'}>{benefit}</span>
                   </div>
                 ))}
               </div>
@@ -473,10 +531,10 @@ export default function LandingPage() {
                 { number: "4.9", label: t.forDoctors.stat3, sublabel: t.forDoctors.stat3Sub },
                 { number: isRTL ? "٥٠ ألف+" : "EGP 50K+", label: t.forDoctors.stat4, sublabel: t.forDoctors.stat4Sub },
               ].map((stat, idx) => (
-                <div key={idx} className="bg-[#0F172A]/50 border border-white/5 rounded-2xl p-6 text-center">
-                  <div className="text-3xl font-black text-amber-400 mb-1">{stat.number}</div>
-                  <div className="text-white font-medium text-sm">{stat.label}</div>
-                  <div className="text-gray-500 text-xs">{stat.sublabel}</div>
+                <div key={idx} className={`rounded-2xl p-6 text-center transition-all ${isDark ? 'bg-[#0F172A]/50 border border-white/5' : 'bg-white border-2 border-amber-200 shadow-lg shadow-amber-100/50 hover:shadow-xl hover:shadow-amber-200/60 hover:border-amber-400'}`}>
+                  <div className="text-3xl font-black text-amber-500 mb-1">{stat.number}</div>
+                  <div className={`${textPrimary} font-medium text-sm`}>{stat.label}</div>
+                  <div className={`${textMuted} text-xs`}>{stat.sublabel}</div>
                 </div>
               ))}
             </div>
@@ -485,12 +543,12 @@ export default function LandingPage() {
       </section>
 
       {/* Final CTA */}
-      <section className="py-20 px-4">
+      <section className={`py-20 px-4 ${bgSection}`}>
         <div className="max-w-4xl mx-auto">
-          <div className="relative overflow-hidden bg-gradient-to-br from-teal-600 to-teal-800 rounded-3xl p-8 md:p-12 text-center">
+          <div className="relative overflow-hidden bg-gradient-to-br from-teal-600 to-teal-800 rounded-3xl p-8 md:p-12 text-center shadow-2xl shadow-teal-500/20">
             <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
             <div className="relative z-10">
-              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black mb-4">{t.cta.title}</h2>
+              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black mb-4 text-white">{t.cta.title}</h2>
               <p className="text-teal-100 text-lg mb-8 max-w-xl mx-auto">{t.cta.subtitle}</p>
               <Link href={`/${language}/register`} className="inline-flex items-center gap-2 bg-white text-teal-700 font-bold text-lg px-10 py-4 rounded-full transition-all transform hover:scale-105 shadow-xl">
                 {t.cta.button}
@@ -503,53 +561,53 @@ export default function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="bg-[#0a0f1a] border-t border-white/5 py-16 px-4">
+      <footer className={`${isDark ? 'bg-[#0a0f1a]' : 'bg-slate-50'} border-t ${borderColor} py-16 px-4 transition-colors duration-300`}>
         <div className="max-w-7xl mx-auto">
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">
             <div className="lg:col-span-1">
               <Link href={`/${language}`} className="block mb-6 group hover:opacity-90 transition-opacity">
-                <LogoFull />
+                <LogoFull isDark={isDark} />
               </Link>
-              <p className="text-gray-500 text-sm mb-6 max-w-xs">{t.footer.tagline}</p>
+              <p className={`${textMuted} text-sm mb-6 max-w-xs`}>{t.footer.tagline}</p>
             </div>
             <div>
-              <h4 className="font-bold mb-4">{t.footer.forPatients}</h4>
+              <h4 className={`font-bold mb-4 ${textPrimary}`}>{t.footer.forPatients}</h4>
               <div className="flex flex-col gap-3">
-                <Link href={`/${language}#doctors`} className="text-gray-400 text-sm hover:text-teal-400 transition-colors">{t.footer.findDoctors}</Link>
-                <Link href={`/${language}#how-it-works`} className="text-gray-400 text-sm hover:text-teal-400 transition-colors">{t.footer.howItWorks}</Link>
-                <Link href={`/${language}/faq`} className="text-gray-400 text-sm hover:text-teal-400 transition-colors">{t.footer.faq}</Link>
+                <Link href={`/${language}#doctors`} className={`${textSecondary} text-sm hover:text-teal-500 transition-colors`}>{t.footer.findDoctors}</Link>
+                <Link href={`/${language}#how-it-works`} className={`${textSecondary} text-sm hover:text-teal-500 transition-colors`}>{t.footer.howItWorks}</Link>
+                <Link href={`/${language}/faq`} className={`${textSecondary} text-sm hover:text-teal-500 transition-colors`}>{t.footer.faq}</Link>
               </div>
             </div>
             <div>
-              <h4 className="font-bold mb-4">{t.footer.forDoctorsTitle}</h4>
+              <h4 className={`font-bold mb-4 ${textPrimary}`}>{t.footer.forDoctorsTitle}</h4>
               <div className="flex flex-col gap-3">
-                <Link href={`/${language}/doctor-onboarding`} className="text-gray-400 text-sm hover:text-teal-400 transition-colors">{t.footer.joinAsDoctor}</Link>
-                <Link href={`/${language}/faq`} className="text-gray-400 text-sm hover:text-teal-400 transition-colors">{t.footer.doctorFaq}</Link>
-                <span className="text-gray-400 text-sm hover:text-teal-400 transition-colors cursor-default">{t.footer.pricing}</span>
+                <Link href={`/${language}/doctor-onboarding`} className={`${textSecondary} text-sm hover:text-teal-500 transition-colors`}>{t.footer.joinAsDoctor}</Link>
+                <Link href={`/${language}/faq`} className={`${textSecondary} text-sm hover:text-teal-500 transition-colors`}>{t.footer.doctorFaq}</Link>
+                <span className={`${textSecondary} text-sm hover:text-teal-500 transition-colors cursor-default`}>{t.footer.pricing}</span>
               </div>
             </div>
             <div>
-              <h4 className="font-bold mb-4">{t.footer.company}</h4>
+              <h4 className={`font-bold mb-4 ${textPrimary}`}>{t.footer.company}</h4>
               <div className="flex flex-col gap-3">
-                <Link href={`/${language}/about`} className="text-gray-400 text-sm hover:text-teal-400 transition-colors">{t.footer.aboutUs}</Link>
-                <Link href={`/${language}/contact`} className="text-gray-400 text-sm hover:text-teal-400 transition-colors">{t.footer.contact}</Link>
-                <Link href={`/${language}/privacy`} className="text-gray-400 text-sm hover:text-teal-400 transition-colors">{t.footer.privacy}</Link>
-                <Link href={`/${language}/terms`} className="text-gray-400 text-sm hover:text-teal-400 transition-colors">{t.footer.terms}</Link>
+                <Link href={`/${language}/about`} className={`${textSecondary} text-sm hover:text-teal-500 transition-colors`}>{t.footer.aboutUs}</Link>
+                <Link href={`/${language}/contact`} className={`${textSecondary} text-sm hover:text-teal-500 transition-colors`}>{t.footer.contact}</Link>
+                <Link href={`/${language}/privacy`} className={`${textSecondary} text-sm hover:text-teal-500 transition-colors`}>{t.footer.privacy}</Link>
+                <Link href={`/${language}/terms`} className={`${textSecondary} text-sm hover:text-teal-500 transition-colors`}>{t.footer.terms}</Link>
               </div>
             </div>
           </div>
 
-          <div className="border-t border-white/5 pt-8">
+          <div className={`border-t ${borderColor} pt-8`}>
             <div className="flex flex-col md:flex-row items-center justify-between gap-4">
               <div className="flex items-center gap-4">
-                <span className="text-xs text-gray-500">{t.footer.paymentMethods}</span>
+                <span className={`text-xs ${textMuted}`}>{t.footer.paymentMethods}</span>
                 <div className="flex gap-2">
-                  <div className="w-10 h-6 bg-white/10 rounded flex items-center justify-center text-xs font-bold text-gray-400">VISA</div>
-                  <div className="w-10 h-6 bg-white/10 rounded flex items-center justify-center text-xs font-bold text-gray-400">MC</div>
-                  <div className="w-10 h-6 bg-red-500/20 rounded flex items-center justify-center text-xs font-bold text-red-400">VC</div>
+                  <div className={`w-10 h-6 ${isDark ? 'bg-white/10' : 'bg-slate-200'} rounded flex items-center justify-center text-xs font-bold ${textSecondary}`}>VISA</div>
+                  <div className={`w-10 h-6 ${isDark ? 'bg-white/10' : 'bg-slate-200'} rounded flex items-center justify-center text-xs font-bold ${textSecondary}`}>MC</div>
+                  <div className={`w-10 h-6 ${isDark ? 'bg-red-500/20' : 'bg-red-100'} rounded flex items-center justify-center text-xs font-bold text-red-500`}>VC</div>
                 </div>
               </div>
-              <p className="text-xs text-gray-500">{t.footer.copyright}</p>
+              <p className={`text-xs ${textMuted}`}>{t.footer.copyright}</p>
             </div>
           </div>
         </div>

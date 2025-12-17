@@ -3,14 +3,13 @@
 import { useState } from "react";
 import Sidebar from "./components/Sidebar";
 import Header from "./components/Header";
-import { ThemeProvider, useTheme } from "./context/ThemeContext";
+import { useGlobalTheme } from "@/app/context/GlobalThemeContext";
 import { useI18n } from "@/app/i18n";
 import { cn } from "@/lib/utils";
 
 function LayoutContent({ children }: { children: React.ReactNode }) {
-    const { theme } = useTheme();
+    const { isDark } = useGlobalTheme();
     const { isRTL } = useI18n();
-    const isDark = theme === "dark";
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
     return (
@@ -45,9 +44,5 @@ export default function Doctor2DashboardLayout({
 }: {
     children: React.ReactNode;
 }) {
-    return (
-        <ThemeProvider>
-            <LayoutContent>{children}</LayoutContent>
-        </ThemeProvider>
-    );
+    return <LayoutContent>{children}</LayoutContent>;
 }

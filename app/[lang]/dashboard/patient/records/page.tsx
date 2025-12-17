@@ -68,13 +68,13 @@ export default function RecordsPage() {
     ];
 
     const records = [
-        { id: 1, type: "lab", title: "Complete Blood Count (CBC)", date: "Dec 10, 2024", doctor: "Dr. Ahmed Hassan", status: "new" },
-        { id: 2, type: "lab", title: "Lipid Panel", date: "Dec 10, 2024", doctor: "Dr. Ahmed Hassan", status: "new" },
-        { id: 3, type: "imaging", title: "Chest X-Ray", date: "Nov 28, 2024", doctor: "Dr. Fatima Khaled", status: "viewed" },
-        { id: 4, type: "visits", title: "Cardiology Follow-up Summary", date: "Nov 15, 2024", doctor: "Dr. Ahmed Hassan", status: "viewed" },
-        { id: 5, type: "lab", title: "HbA1c Test", date: "Oct 20, 2024", doctor: "Dr. Fatima Khaled", status: "viewed" },
-        { id: 6, type: "imaging", title: "ECG Report", date: "Oct 15, 2024", doctor: "Dr. Ahmed Hassan", status: "viewed" },
-        { id: 7, type: "visits", title: "Annual Physical Exam", date: "Sep 5, 2024", doctor: "Dr. Fatima Khaled", status: "viewed" },
+        { id: 1, type: "lab", title: "Complete Blood Count (CBC)", date: "Dec 10, 2024", doctor: t.common.demoNames.drAhmedHassan, status: "new" },
+        { id: 2, type: "lab", title: "Lipid Panel", date: "Dec 10, 2024", doctor: t.common.demoNames.drAhmedHassan, status: "new" },
+        { id: 3, type: "imaging", title: "Chest X-Ray", date: "Nov 28, 2024", doctor: t.common.demoNames.drFatimaKhaled, status: "viewed" },
+        { id: 4, type: "visits", title: "Cardiology Follow-up Summary", date: "Nov 15, 2024", doctor: t.common.demoNames.drAhmedHassan, status: "viewed" },
+        { id: 5, type: "lab", title: "HbA1c Test", date: "Oct 20, 2024", doctor: t.common.demoNames.drFatimaKhaled, status: "viewed" },
+        { id: 6, type: "imaging", title: "ECG Report", date: "Oct 15, 2024", doctor: t.common.demoNames.drAhmedHassan, status: "viewed" },
+        { id: 7, type: "visits", title: "Annual Physical Exam", date: "Sep 5, 2024", doctor: t.common.demoNames.drFatimaKhaled, status: "viewed" },
     ];
 
     const vitalHistory = [
@@ -168,7 +168,7 @@ export default function RecordsPage() {
                                                 {record.status === "new" && <Badge variant="new">{t.patientDashboard.recordsPage.status.new}</Badge>}
                                             </div>
                                             <p className={cn("text-xs md:text-sm truncate", textMuted)}>
-                                                {record.doctor} • {formatDate(record.date)}
+                                                {record.doctor} - {formatDate(record.date)}
                                             </p>
                                         </div>
                                         <div className="flex gap-1.5 md:gap-2 flex-shrink-0">
