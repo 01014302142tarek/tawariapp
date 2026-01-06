@@ -1,9 +1,11 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, Suspense } from "react";
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useI18n } from "../../i18n";
 import { useGlobalTheme } from "@/app/context/GlobalThemeContext";
+import { useAuth } from "@/app/context/AuthContext";
 
 // Logo Component
 const LogoFull = ({ className = "", isDark = true }: { className?: string; isDark?: boolean }) => (
@@ -161,9 +163,14 @@ function InputField({
     );
 }
 
-export default function LoginPage() {
-    const { t, isRTL, language } = useI18n();
+function LoginPageContent() {
+    const { isRTL, language } = useI18n();
     const { theme } = useGlobalTheme();
+    const { signIn, signInWithGoogle, isLoading: authLoading } = useAuth();
+    const router = useRouter();
+    const searchParams = useSearchParams();
+    const redirectUrl = searchParams.get('redirect') || `/${language}/dashboard/patient`;
+
     const isDark = theme === "dark";
     const [showPassword, setShowPassword] = useState(false);
     const [formData, setFormData] = useState({
@@ -171,11 +178,30 @@ export default function LoginPage() {
         password: "",
     });
     const [rememberMe, setRememberMe] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        // Handle login logic here
-        console.log("Login submitted:", formData);
+        setError(null);
+        setIsSubmitting(true);
+
+        const { error } = await signIn(formData.email, formData.password);
+
+        if (error) {
+            setError(language === 'ar' ? 'البريد الإلكتروني أو كلمة المرور غير صحيحة' : 'Invalid email or password');
+            setIsSubmitting(false);
+        } else {
+            router.push(redirectUrl);
+        }
+    };
+
+    const handleGoogleSignIn = async () => {
+        setError(null);
+        const { error } = await signInWithGoogle();
+        if (error) {
+            setError(language === 'ar' ? 'فشل تسجيل الدخول بواسطة Google' : 'Failed to sign in with Google');
+        }
     };
 
     const translations = {
@@ -187,6 +213,7 @@ export default function LoginPage() {
             rememberMe: "Remember me",
             forgotPassword: "Forgot password?",
             login: "Login",
+            loggingIn: "Logging in...",
             orContinue: "Or continue with",
             noAccount: "Don't have an account?",
             registerLink: "Create one here",
@@ -199,6 +226,7 @@ export default function LoginPage() {
             rememberMe: "تذكرني",
             forgotPassword: "نسيت كلمة المرور؟",
             login: "تسجيل الدخول",
+            loggingIn: "جاري تسجيل الدخول...",
             orContinue: "أو المتابعة باستخدام",
             noAccount: "ليس لديك حساب؟",
             registerLink: "أنشئ واحداً هنا",
@@ -206,6 +234,14 @@ export default function LoginPage() {
     };
 
     const text = translations[language as keyof typeof translations] || translations.en;
+
+    if (authLoading) {
+        return (
+            <div className={`min-h-screen flex items-center justify-center ${isDark ? 'bg-[#0F172A]' : 'bg-gray-50'}`}>
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500"></div>
+            </div>
+        );
+    }
 
     return (
         <div className={`min-h-screen overflow-x-hidden ${isRTL ? 'font-cairo' : ''} ${isDark ? 'bg-[#0F172A] text-white' : 'bg-gray-50 text-slate-900'}`} dir={isRTL ? 'rtl' : 'ltr'}>
@@ -245,6 +281,13 @@ export default function LoginPage() {
 
                     {/* Login Form */}
                     <form onSubmit={handleSubmit} className="space-y-4">
+                        {/* Error Message */}
+                        {error && (
+                            <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm text-center">
+                                {error}
+                            </div>
+                        )}
+
                         <InputField
                             icon={Icons.email}
                             type="email"
@@ -287,9 +330,17 @@ export default function LoginPage() {
                         {/* Submit Button */}
                         <button
                             type="submit"
-                            className="w-full py-3.5 rounded-xl font-semibold text-white bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-400 hover:to-teal-500 shadow-lg shadow-teal-500/25 transition-all"
+                            disabled={isSubmitting}
+                            className="w-full py-3.5 rounded-xl font-semibold text-white bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-400 hover:to-teal-500 shadow-lg shadow-teal-500/25 transition-all disabled:opacity-70 disabled:cursor-not-allowed"
                         >
-                            {text.login}
+                            {isSubmitting ? (
+                                <span className="flex items-center justify-center gap-2">
+                                    <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></span>
+                                    {text.loggingIn}
+                                </span>
+                            ) : (
+                                text.login
+                            )}
                         </button>
                     </form>
 
@@ -301,20 +352,17 @@ export default function LoginPage() {
                     </div>
 
                     {/* Social Login Buttons */}
-                    <div className="grid grid-cols-2 gap-3">
-                        <button className={`flex items-center justify-center gap-2 py-3 px-4 border rounded-xl transition-all ${isDark
+                    <div className="grid grid-cols-1 gap-3">
+                        <button
+                            type="button"
+                            onClick={handleGoogleSignIn}
+                            className={`flex items-center justify-center gap-2 py-3 px-4 border rounded-xl transition-all ${isDark
                                 ? 'bg-slate-800/50 border-white/10 hover:bg-slate-800 hover:border-white/20'
                                 : 'bg-white border-gray-200 hover:bg-gray-50 hover:border-gray-300'
-                            }`}>
+                            }`}
+                        >
                             {Icons.google}
                             <span className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Google</span>
-                        </button>
-                        <button className={`flex items-center justify-center gap-2 py-3 px-4 border rounded-xl transition-all ${isDark
-                                ? 'bg-slate-800/50 border-white/10 hover:bg-slate-800 hover:border-white/20'
-                                : 'bg-white border-gray-200 hover:bg-gray-50 hover:border-gray-300'
-                            }`}>
-                            {Icons.apple}
-                            <span className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Apple</span>
                         </button>
                     </div>
 
@@ -328,5 +376,23 @@ export default function LoginPage() {
                 </div>
             </main>
         </div>
+    );
+}
+
+// Loading fallback component
+function LoginPageLoading() {
+    return (
+        <div className="min-h-screen flex items-center justify-center bg-[#0F172A]">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500"></div>
+        </div>
+    );
+}
+
+// Default export with Suspense wrapper for useSearchParams
+export default function LoginPage() {
+    return (
+        <Suspense fallback={<LoginPageLoading />}>
+            <LoginPageContent />
+        </Suspense>
     );
 }

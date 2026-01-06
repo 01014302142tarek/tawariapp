@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { useI18n } from "../../i18n";
 import { useGlobalTheme } from "@/app/context/GlobalThemeContext";
+import { useAuth } from "@/app/context/AuthContext";
 
 // Logo Component
 const LogoFull = ({ className = "", isDark = true }: { className?: string; isDark?: boolean }) => (
@@ -180,6 +181,8 @@ function InputField({
 export default function RegisterPage() {
     const { isRTL, language } = useI18n();
     const { theme } = useGlobalTheme();
+    const { signUp, signInWithGoogle, isLoading: authLoading } = useAuth();
+
     const isDark = theme === "dark";
     const [showPassword, setShowPassword] = useState(false);
     const [formData, setFormData] = useState({
@@ -189,11 +192,41 @@ export default function RegisterPage() {
         password: "",
     });
     const [agreedToTerms, setAgreedToTerms] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        // Handle registration logic here
-        console.log("Form submitted:", formData);
+        setError(null);
+        setSuccessMessage(null);
+        setIsSubmitting(true);
+
+        const { error } = await signUp(formData.email, formData.password, {
+            fullName: formData.fullName,
+            phone: formData.phone,
+            role: "patient",
+        });
+
+        if (error) {
+            setError(language === 'ar' ? 'فشل إنشاء الحساب. يرجى المحاولة مرة أخرى.' : 'Failed to create account. Please try again.');
+            setIsSubmitting(false);
+        } else {
+            setSuccessMessage(
+                language === 'ar'
+                    ? 'تم إنشاء الحساب بنجاح! يرجى التحقق من بريدك الإلكتروني لتأكيد حسابك.'
+                    : 'Account created successfully! Please check your email to confirm your account.'
+            );
+            setIsSubmitting(false);
+        }
+    };
+
+    const handleGoogleSignUp = async () => {
+        setError(null);
+        const { error } = await signInWithGoogle();
+        if (error) {
+            setError(language === 'ar' ? 'فشل التسجيل بواسطة Google' : 'Failed to sign up with Google');
+        }
     };
 
     const translations = {
@@ -209,6 +242,7 @@ export default function RegisterPage() {
             and: "and",
             privacyLink: "Privacy Policy",
             register: "Create Account",
+            registering: "Creating Account...",
             orContinue: "Or continue with",
             alreadyHave: "Already have an account?",
             loginLink: "Login here",
@@ -225,6 +259,7 @@ export default function RegisterPage() {
             and: "و",
             privacyLink: "سياسة الخصوصية",
             register: "إنشاء الحساب",
+            registering: "جاري إنشاء الحساب...",
             orContinue: "أو المتابعة باستخدام",
             alreadyHave: "لديك حساب بالفعل؟",
             loginLink: "سجل دخولك هنا",
@@ -232,6 +267,14 @@ export default function RegisterPage() {
     };
 
     const text = translations[language as keyof typeof translations] || translations.en;
+
+    if (authLoading) {
+        return (
+            <div className={`min-h-screen flex items-center justify-center ${isDark ? 'bg-[#0F172A]' : 'bg-gray-50'}`}>
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500"></div>
+            </div>
+        );
+    }
 
     return (
         <div className={`min-h-screen overflow-x-hidden ${isRTL ? 'font-cairo' : ''} ${isDark ? 'bg-[#0F172A] text-white' : 'bg-gray-50 text-slate-900'}`} dir={isRTL ? 'rtl' : 'ltr'}>
@@ -271,6 +314,20 @@ export default function RegisterPage() {
 
                     {/* Registration Form */}
                     <form onSubmit={handleSubmit} className="space-y-4">
+                        {/* Error Message */}
+                        {error && (
+                            <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm text-center">
+                                {error}
+                            </div>
+                        )}
+
+                        {/* Success Message */}
+                        {successMessage && (
+                            <div className="p-3 rounded-xl bg-green-500/10 border border-green-500/20 text-green-400 text-sm text-center">
+                                {successMessage}
+                            </div>
+                        )}
+
                         <InputField
                             icon={Icons.user}
                             type="text"
@@ -343,13 +400,20 @@ export default function RegisterPage() {
                         {/* Submit Button */}
                         <button
                             type="submit"
-                            disabled={!agreedToTerms}
-                            className={`w-full py-3.5 rounded-xl font-semibold text-white transition-all ${agreedToTerms
+                            disabled={!agreedToTerms || isSubmitting}
+                            className={`w-full py-3.5 rounded-xl font-semibold text-white transition-all ${agreedToTerms && !isSubmitting
                                 ? "bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-400 hover:to-teal-500 shadow-lg shadow-teal-500/25"
                                 : "bg-gray-400 cursor-not-allowed"
                                 }`}
                         >
-                            {text.register}
+                            {isSubmitting ? (
+                                <span className="flex items-center justify-center gap-2">
+                                    <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></span>
+                                    {text.registering}
+                                </span>
+                            ) : (
+                                text.register
+                            )}
                         </button>
                     </form>
 
@@ -361,20 +425,17 @@ export default function RegisterPage() {
                     </div>
 
                     {/* Social Login Buttons */}
-                    <div className="grid grid-cols-2 gap-3">
-                        <button className={`flex items-center justify-center gap-2 py-3 px-4 border rounded-xl transition-all ${isDark
-                            ? "bg-slate-800/50 border-white/10 hover:bg-slate-800 hover:border-white/20"
-                            : "bg-white border-gray-200 hover:bg-gray-50 hover:border-gray-300"
-                            }`}>
+                    <div className="grid grid-cols-1 gap-3">
+                        <button
+                            type="button"
+                            onClick={handleGoogleSignUp}
+                            className={`flex items-center justify-center gap-2 py-3 px-4 border rounded-xl transition-all ${isDark
+                                ? "bg-slate-800/50 border-white/10 hover:bg-slate-800 hover:border-white/20"
+                                : "bg-white border-gray-200 hover:bg-gray-50 hover:border-gray-300"
+                            }`}
+                        >
                             {Icons.google}
                             <span className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Google</span>
-                        </button>
-                        <button className={`flex items-center justify-center gap-2 py-3 px-4 border rounded-xl transition-all ${isDark
-                            ? "bg-slate-800/50 border-white/10 hover:bg-slate-800 hover:border-white/20"
-                            : "bg-white border-gray-200 hover:bg-gray-50 hover:border-gray-300"
-                            }`}>
-                            {Icons.apple}
-                            <span className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Apple</span>
                         </button>
                     </div>
 

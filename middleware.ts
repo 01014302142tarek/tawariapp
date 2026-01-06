@@ -1,9 +1,16 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
+import { updateSession } from '@/lib/supabase/middleware'
 
 const locales = ['en', 'ar'] as const
 type Locale = typeof locales[number]
 const defaultLocale: Locale = 'en'
+
+// Protected routes that require authentication
+const protectedRoutes = ['/dashboard']
+
+// Public routes that don't require auth (auth pages themselves)
+const authRoutes = ['/login', '/register', '/get-started']
 
 function getLocale(request: NextRequest): Locale {
     // 1. Check URL query parameter (for sharing/explicit language links)
@@ -34,8 +41,25 @@ function getLocale(request: NextRequest): Locale {
     return defaultLocale
 }
 
-export function middleware(request: NextRequest) {
+function isProtectedRoute(pathname: string): boolean {
+    // Remove locale prefix for checking
+    const pathWithoutLocale = pathname.replace(/^\/(en|ar)/, '')
+    return protectedRoutes.some(route => pathWithoutLocale.startsWith(route))
+}
+
+function isAuthRoute(pathname: string): boolean {
+    // Remove locale prefix for checking
+    const pathWithoutLocale = pathname.replace(/^\/(en|ar)/, '')
+    return authRoutes.some(route => pathWithoutLocale.startsWith(route))
+}
+
+export async function middleware(request: NextRequest) {
     const pathname = request.nextUrl.pathname
+
+    // Skip auth callback route
+    if (pathname.startsWith('/auth/callback')) {
+        return NextResponse.next()
+    }
 
     // Check if pathname already has a locale
     const pathnameHasLocale = locales.some(
@@ -75,20 +99,37 @@ export function middleware(request: NextRequest) {
         return response
     }
 
-    // Locale is in path, ensure cookie is synced
-    const response = NextResponse.next()
-    const existingCookie = request.cookies.get('NEXT_LOCALE')?.value
+    // Update Supabase session and get user
+    const { supabaseResponse, user } = await updateSession(request)
 
-    // Update cookie if it doesn't match the URL locale
+    // Check authentication for protected routes
+    if (isProtectedRoute(pathname)) {
+        if (!user) {
+            // Redirect to login if not authenticated
+            const loginUrl = new URL(`/${currentLocale}/login`, request.url)
+            loginUrl.searchParams.set('redirect', pathname)
+            return NextResponse.redirect(loginUrl)
+        }
+    }
+
+    // Redirect authenticated users away from auth pages to dashboard
+    if (isAuthRoute(pathname) && user) {
+        const role = user.user_metadata?.role || 'patient'
+        const dashboardUrl = new URL(`/${currentLocale}/dashboard/${role}`, request.url)
+        return NextResponse.redirect(dashboardUrl)
+    }
+
+    // Sync locale cookie
+    const existingCookie = request.cookies.get('NEXT_LOCALE')?.value
     if (existingCookie !== currentLocale) {
-        response.cookies.set('NEXT_LOCALE', currentLocale, {
+        supabaseResponse.cookies.set('NEXT_LOCALE', currentLocale, {
             path: '/',
             maxAge: 60 * 60 * 24 * 365, // 1 year
             sameSite: 'lax',
         })
     }
 
-    return response
+    return supabaseResponse
 }
 
 export const config = {

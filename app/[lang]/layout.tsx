@@ -5,6 +5,7 @@ import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { I18nProvider, Language } from "../i18n";
 import { ThemeProviderWrapper } from "../context/ThemeProviderWrapper";
+import { AuthProvider } from "../context/AuthContext";
 import "../globals.css";
 
 const geistSans = Geist({
@@ -45,11 +46,13 @@ export default async function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} ${cairo.variable} antialiased`}
         suppressHydrationWarning
       >
-        <ThemeProviderWrapper>
-          <I18nProvider locale={lang as Language}>
-            {children}
-          </I18nProvider>
-        </ThemeProviderWrapper>
+        <AuthProvider>
+          <ThemeProviderWrapper>
+            <I18nProvider locale={lang as Language}>
+              {children}
+            </I18nProvider>
+          </ThemeProviderWrapper>
+        </AuthProvider>
         <Analytics />
         <SpeedInsights />
       </body>
