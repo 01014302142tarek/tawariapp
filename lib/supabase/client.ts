@@ -1,9 +1,10 @@
 "use client";
 
 import { createBrowserClient } from "@supabase/ssr";
+import type { Database } from "@/lib/supabase/types";
 
 export function createClient() {
-    return createBrowserClient(
+    return createBrowserClient<Database>(
         process.env.NEXT_PUBLIC_TawariAppSUPABASE_URL!,
         process.env.NEXT_PUBLIC_TawariAppSUPABASE_ANON_KEY!
     );

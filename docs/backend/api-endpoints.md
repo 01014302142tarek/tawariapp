@@ -1,6 +1,6 @@
 # API Endpoints Specification
 
-**Last Updated:** December 11, 2025  
+**Last Updated:** January 2, 2026
 **Base URL:** `https://tawariapp.vercel.app/api`
 
 ---
@@ -25,9 +25,11 @@
 
 ```http
 Content-Type: application/json
-Authorization: Bearer <firebase_id_token>
+Authorization: Bearer <supabase_access_token>
 Accept-Language: ar  # or 'en'
 ```
+
+> **Note:** Authentication uses Supabase Auth with email/password (Phase 1). Phone auth will be added in Phase 2.
 
 ### Response Format
 
@@ -65,69 +67,98 @@ Accept-Language: ar  # or 'en'
 
 ## Authentication
 
-### Register User
+Authentication is handled by Supabase Auth. These endpoints are called client-side using the Supabase SDK.
 
-Create a new user account after Firebase phone verification.
+### Sign Up
 
-```http
-POST /api/auth/register
-```
+Create a new user account with email and password.
 
-**Request:**
-```json
-{
-  "firebaseToken": "eyJhbGci...",
-  "name_ar": "أحمد محمد",
-  "name_en": "Ahmed Mohamed",
-  "role": "patient"
-}
+```typescript
+// Client-side using Supabase SDK
+const { data, error } = await supabase.auth.signUp({
+  email: 'user@example.com',
+  password: 'securepassword',
+  options: {
+    data: {
+      name_ar: 'أحمد محمد',
+      name_en: 'Ahmed Mohamed',
+      role: 'patient'
+    }
+  }
+})
 ```
 
 **Response:**
 ```json
 {
-  "success": true,
-  "data": {
-    "user": {
-      "id": "uuid",
-      "phone": "+201012345678",
+  "user": {
+    "id": "uuid",
+    "email": "user@example.com",
+    "user_metadata": {
       "name_ar": "أحمد محمد",
       "role": "patient"
-    },
-    "patient": {
-      "id": "uuid",
-      "user_id": "uuid"
     }
+  },
+  "session": {
+    "access_token": "eyJ...",
+    "refresh_token": "..."
   }
 }
 ```
 
 ---
 
+### Sign In
+
+Sign in with email and password.
+
+```typescript
+const { data, error } = await supabase.auth.signInWithPassword({
+  email: 'user@example.com',
+  password: 'securepassword'
+})
+```
+
+---
+
+### Sign Out
+
+```typescript
+await supabase.auth.signOut()
+```
+
+---
+
+### Password Reset
+
+Request password reset email.
+
+```typescript
+const { error } = await supabase.auth.resetPasswordForEmail(email, {
+  redirectTo: 'https://tawariapp.vercel.app/auth/reset-password'
+})
+```
+
+---
+
 ### Get Current User
 
-Get the authenticated user's profile.
+Get the authenticated user's session.
 
-```http
-GET /api/auth/me
+```typescript
+const { data: { user } } = await supabase.auth.getUser()
 ```
 
 **Response:**
 ```json
 {
-  "success": true,
-  "data": {
-    "user": {
-      "id": "uuid",
-      "phone": "+201012345678",
+  "user": {
+    "id": "uuid",
+    "email": "user@example.com",
+    "user_metadata": {
       "name_ar": "أحمد محمد",
       "role": "patient",
       "avatar_url": "https://..."
-    },
-    "profile": {
-      "id": "uuid",
-      "date_of_birth": "1990-01-15",
-      "gender": "male"
     }
   }
 }
@@ -137,31 +168,35 @@ GET /api/auth/me
 
 ### Update Profile
 
-Update the authenticated user's profile.
+Update the authenticated user's metadata.
 
-```http
-PUT /api/auth/profile
-```
-
-**Request:**
-```json
-{
-  "name_ar": "أحمد محمد علي",
-  "avatar_url": "https://...",
-  "date_of_birth": "1990-01-15",
-  "gender": "male"
-}
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "data": {
-    "user": { ... },
-    "profile": { ... }
+```typescript
+const { data, error } = await supabase.auth.updateUser({
+  data: {
+    name_ar: 'أحمد محمد علي',
+    avatar_url: 'https://...'
   }
-}
+})
+```
+
+---
+
+### Future: Phone Authentication (Phase 2)
+
+When phone auth is added:
+
+```typescript
+// Request OTP
+const { error } = await supabase.auth.signInWithOtp({
+  phone: '+201012345678'
+})
+
+// Verify OTP
+const { data, error } = await supabase.auth.verifyOtp({
+  phone: '+201012345678',
+  token: '123456',
+  type: 'sms'
+})
 ```
 
 ---

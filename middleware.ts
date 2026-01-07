@@ -10,7 +10,7 @@ const defaultLocale: Locale = 'en'
 const protectedRoutes = ['/dashboard']
 
 // Public routes that don't require auth (auth pages themselves)
-const authRoutes = ['/login', '/register', '/get-started']
+const authRoutes = ['/login', '/register', '/get-started', '/forgot-password', '/reset-password', '/verify-email', '/doctor-onboarding']
 
 function getLocale(request: NextRequest): Locale {
     // 1. Check URL query parameter (for sharing/explicit language links)

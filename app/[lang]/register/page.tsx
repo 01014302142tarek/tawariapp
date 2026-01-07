@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useI18n } from "../../i18n";
 import { useGlobalTheme } from "@/app/context/GlobalThemeContext";
 import { useAuth } from "@/app/context/AuthContext";
@@ -182,6 +183,7 @@ export default function RegisterPage() {
     const { isRTL, language } = useI18n();
     const { theme } = useGlobalTheme();
     const { signUp, signInWithGoogle, isLoading: authLoading } = useAuth();
+    const router = useRouter();
 
     const isDark = theme === "dark";
     const [showPassword, setShowPassword] = useState(false);
@@ -194,12 +196,10 @@ export default function RegisterPage() {
     const [agreedToTerms, setAgreedToTerms] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError(null);
-        setSuccessMessage(null);
         setIsSubmitting(true);
 
         const { error } = await signUp(formData.email, formData.password, {
@@ -212,12 +212,8 @@ export default function RegisterPage() {
             setError(language === 'ar' ? 'فشل إنشاء الحساب. يرجى المحاولة مرة أخرى.' : 'Failed to create account. Please try again.');
             setIsSubmitting(false);
         } else {
-            setSuccessMessage(
-                language === 'ar'
-                    ? 'تم إنشاء الحساب بنجاح! يرجى التحقق من بريدك الإلكتروني لتأكيد حسابك.'
-                    : 'Account created successfully! Please check your email to confirm your account.'
-            );
-            setIsSubmitting(false);
+            // Redirect to verify email page
+            router.push(`/${language}/verify-email`);
         }
     };
 
@@ -318,13 +314,6 @@ export default function RegisterPage() {
                         {error && (
                             <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm text-center">
                                 {error}
-                            </div>
-                        )}
-
-                        {/* Success Message */}
-                        {successMessage && (
-                            <div className="p-3 rounded-xl bg-green-500/10 border border-green-500/20 text-green-400 text-sm text-center">
-                                {successMessage}
                             </div>
                         )}
 
