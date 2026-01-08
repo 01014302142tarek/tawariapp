@@ -170,8 +170,9 @@ export async function getOrCreateConversation(
         .or(`and(sender_profile_id.eq.${profile.id},recipient_profile_id.eq.${otherProfileId}),and(sender_profile_id.eq.${otherProfileId},recipient_profile_id.eq.${profile.id})`)
         .limit(1);
 
-    if (existingMessages && existingMessages.length > 0) {
-        return { conversationId: existingMessages[0].conversation_id };
+    const messages = existingMessages as { conversation_id: string }[] | null;
+    if (messages && messages.length > 0) {
+        return { conversationId: messages[0].conversation_id };
     }
 
     // Create new conversation ID (UUID)
