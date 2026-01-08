@@ -181,6 +181,8 @@ interface TranslationStrings {
         lightMode: string;
         themeAppearance: string;
         systemTheme: string;
+        error: string;
+        goBack: string;
         time: {
             justNow: string;
             minAgo: string;
@@ -235,6 +237,7 @@ interface TranslationStrings {
             dashboard: string;
             appointments: string;
             patients: string;
+            prescriptions: string;
             schedule: string;
             messages: string;
             analytics: string;
@@ -481,12 +484,46 @@ interface TranslationStrings {
                 m1: string; m2: string; m3: string; m4: string; m5: string; m6: string; m7: string;
             };
         };
+        schedulePage: {
+            title: string;
+            subtitle: string;
+            weeklySchedule: string;
+            setYourHours: string;
+            days: {
+                sunday: string;
+                monday: string;
+                tuesday: string;
+                wednesday: string;
+                thursday: string;
+                friday: string;
+                saturday: string;
+            };
+            addSlot: string;
+            removeSlot: string;
+            noSlots: string;
+            dayOff: string;
+            startTime: string;
+            endTime: string;
+            saveChanges: string;
+            saving: string;
+            saved: string;
+            blockedTimes: string;
+            blockedTimesDesc: string;
+            addBlockedTime: string;
+            reason: string;
+            reasonPlaceholder: string;
+            from: string;
+            to: string;
+            noBlockedTimes: string;
+            deleteBlockedTime: string;
+        };
     };
     // Patient Dashboard
     patientDashboard: {
         sidebar: {
             dashboard: string;
             appointments: string;
+            findDoctors: string;
             prescriptions: string;
             records: string;
             messages: string;
@@ -629,6 +666,46 @@ interface TranslationStrings {
                 down: string;
             };
         };
+        doctorsPage: {
+            title: string;
+            subtitle: string;
+            searchPlaceholder: string;
+            filters: {
+                all: string;
+                available: string;
+            };
+            experience: string;
+            years: string;
+            perSession: string;
+            bookNow: string;
+            viewProfile: string;
+            noResults: string;
+            noResultsDesc: string;
+            selectDate: string;
+            selectTime: string;
+            availableSlots: string;
+            noSlots: string;
+            confirmBooking: string;
+            bookingConfirmed: string;
+            bookingFailed: string;
+            patientNotes: string;
+            patientNotesPlaceholder: string;
+            back: string;
+            booking: string;
+        };
+    };
+    // Video Consultation
+    consultation: {
+        inProgress: string;
+        endCall: string;
+        endTitle: string;
+        endMessage: string;
+        justLeave: string;
+        endAndComplete: string;
+        joining: string;
+        waitingForDoctor: string;
+        sessionEnded: string;
+        returnToAppointments: string;
     };
     // Admin Dashboard
     adminDashboard: {
@@ -999,6 +1076,8 @@ const translations: Record<Language, TranslationStrings> = {
             lightMode: "Light",
             themeAppearance: "Theme Appearance",
             systemTheme: "System",
+            error: "Error",
+            goBack: "Go Back",
             time: {
                 justNow: "Just now",
                 minAgo: "1 min ago",
@@ -1051,6 +1130,7 @@ const translations: Record<Language, TranslationStrings> = {
                 dashboard: "Dashboard",
                 appointments: "Appointments",
                 patients: "Patients",
+                prescriptions: "Prescriptions",
                 schedule: "Schedule",
                 messages: "Messages",
                 analytics: "Analytics",
@@ -1296,11 +1376,45 @@ const translations: Record<Language, TranslationStrings> = {
                     m7: "Thank you doctor, I'll take the medication as prescribed."
                 }
             },
+            schedulePage: {
+                title: "Schedule Management",
+                subtitle: "Set your availability and working hours",
+                weeklySchedule: "Weekly Schedule",
+                setYourHours: "Set your working hours for each day",
+                days: {
+                    sunday: "Sunday",
+                    monday: "Monday",
+                    tuesday: "Tuesday",
+                    wednesday: "Wednesday",
+                    thursday: "Thursday",
+                    friday: "Friday",
+                    saturday: "Saturday",
+                },
+                addSlot: "Add Time Slot",
+                removeSlot: "Remove",
+                noSlots: "No time slots",
+                dayOff: "Day Off",
+                startTime: "Start Time",
+                endTime: "End Time",
+                saveChanges: "Save Changes",
+                saving: "Saving...",
+                saved: "Saved!",
+                blockedTimes: "Blocked Times",
+                blockedTimesDesc: "Block specific dates when you're unavailable",
+                addBlockedTime: "Add Blocked Time",
+                reason: "Reason",
+                reasonPlaceholder: "e.g., Vacation, Conference",
+                from: "From",
+                to: "To",
+                noBlockedTimes: "No blocked times set",
+                deleteBlockedTime: "Delete",
+            },
         },
         patientDashboard: {
             sidebar: {
                 dashboard: "Dashboard",
                 appointments: "Appointments",
+                findDoctors: "Find Doctors",
                 prescriptions: "Prescriptions",
                 records: "Medical Records",
                 messages: "Messages",
@@ -1450,6 +1564,45 @@ const translations: Record<Language, TranslationStrings> = {
                     down: "Down"
                 }
             },
+            doctorsPage: {
+                title: "Find a Doctor",
+                subtitle: "Browse and book appointments with our verified doctors",
+                searchPlaceholder: "Search by name or specialty...",
+                filters: {
+                    all: "All Specialties",
+                    available: "Available Now",
+                },
+                experience: "Experience",
+                years: "years",
+                perSession: "per session",
+                bookNow: "Book Now",
+                viewProfile: "View Profile",
+                noResults: "No doctors found",
+                noResultsDesc: "Try adjusting your search or filters",
+                selectDate: "Select Date",
+                selectTime: "Select Time",
+                availableSlots: "Available Slots",
+                noSlots: "No available slots for this date",
+                confirmBooking: "Confirm Booking",
+                bookingConfirmed: "Appointment booked successfully!",
+                bookingFailed: "Failed to book appointment. Please try again.",
+                patientNotes: "Notes for Doctor (Optional)",
+                patientNotesPlaceholder: "Describe your symptoms or reason for visit...",
+                back: "Back",
+                booking: "Booking...",
+            },
+        },
+        consultation: {
+            inProgress: "Consultation in Progress",
+            endCall: "End Call",
+            endTitle: "End Consultation?",
+            endMessage: "Are you sure you want to end this consultation? This action cannot be undone.",
+            justLeave: "Just Leave",
+            endAndComplete: "End & Complete",
+            joining: "Joining consultation...",
+            waitingForDoctor: "Waiting for doctor to start the consultation",
+            sessionEnded: "This consultation has ended",
+            returnToAppointments: "Return to Appointments",
         },
         adminDashboard: {
             sidebar: {
@@ -1817,6 +1970,8 @@ const translations: Record<Language, TranslationStrings> = {
             lightMode: "فاتح",
             themeAppearance: "مظهر السمة",
             systemTheme: "النظام",
+            error: "خطأ",
+            goBack: "رجوع",
             time: {
                 justNow: "الآن",
                 minAgo: "منذ دقيقة",
@@ -1869,6 +2024,7 @@ const translations: Record<Language, TranslationStrings> = {
                 dashboard: "لوحة التحكم",
                 appointments: "المواعيد",
                 patients: "المرضى",
+                prescriptions: "الوصفات الطبية",
                 schedule: "الجدول",
                 messages: "الرسائل",
                 analytics: "التحليلات",
@@ -2114,11 +2270,45 @@ const translations: Record<Language, TranslationStrings> = {
                     m7: "شكراً دكتور، سأتناول الدواء كما هو موصوف."
                 }
             },
+            schedulePage: {
+                title: "إدارة الجدول",
+                subtitle: "حدد أوقات عملك وساعات التوفر",
+                weeklySchedule: "الجدول الأسبوعي",
+                setYourHours: "حدد ساعات عملك لكل يوم",
+                days: {
+                    sunday: "الأحد",
+                    monday: "الإثنين",
+                    tuesday: "الثلاثاء",
+                    wednesday: "الأربعاء",
+                    thursday: "الخميس",
+                    friday: "الجمعة",
+                    saturday: "السبت",
+                },
+                addSlot: "إضافة فترة زمنية",
+                removeSlot: "إزالة",
+                noSlots: "لا توجد فترات زمنية",
+                dayOff: "يوم عطلة",
+                startTime: "وقت البدء",
+                endTime: "وقت الانتهاء",
+                saveChanges: "حفظ التغييرات",
+                saving: "جاري الحفظ...",
+                saved: "تم الحفظ!",
+                blockedTimes: "الأوقات المحجوبة",
+                blockedTimesDesc: "احجب تواريخ محددة عندما تكون غير متاح",
+                addBlockedTime: "إضافة وقت محجوب",
+                reason: "السبب",
+                reasonPlaceholder: "مثال: إجازة، مؤتمر",
+                from: "من",
+                to: "إلى",
+                noBlockedTimes: "لا توجد أوقات محجوبة",
+                deleteBlockedTime: "حذف",
+            },
         },
         patientDashboard: {
             sidebar: {
                 dashboard: "لوحة التحكم",
                 appointments: "المواعيد",
+                findDoctors: "البحث عن طبيب",
                 prescriptions: "الوصفات الطبية",
                 records: "السجلات الطبية",
                 messages: "الرسائل",
@@ -2268,6 +2458,45 @@ const translations: Record<Language, TranslationStrings> = {
                     down: "منخفض"
                 }
             },
+            doctorsPage: {
+                title: "البحث عن طبيب",
+                subtitle: "تصفح واحجز مواعيد مع أطبائنا المعتمدين",
+                searchPlaceholder: "ابحث بالاسم أو التخصص...",
+                filters: {
+                    all: "جميع التخصصات",
+                    available: "متاح الآن",
+                },
+                experience: "الخبرة",
+                years: "سنوات",
+                perSession: "للجلسة",
+                bookNow: "احجز الآن",
+                viewProfile: "عرض الملف",
+                noResults: "لم يتم العثور على أطباء",
+                noResultsDesc: "حاول تعديل البحث أو الفلاتر",
+                selectDate: "اختر التاريخ",
+                selectTime: "اختر الوقت",
+                availableSlots: "المواعيد المتاحة",
+                noSlots: "لا توجد مواعيد متاحة لهذا التاريخ",
+                confirmBooking: "تأكيد الحجز",
+                bookingConfirmed: "تم حجز الموعد بنجاح!",
+                bookingFailed: "فشل حجز الموعد. يرجى المحاولة مرة أخرى.",
+                patientNotes: "ملاحظات للطبيب (اختياري)",
+                patientNotesPlaceholder: "صف أعراضك أو سبب الزيارة...",
+                back: "رجوع",
+                booking: "جاري الحجز...",
+            },
+        },
+        consultation: {
+            inProgress: "الاستشارة جارية",
+            endCall: "إنهاء المكالمة",
+            endTitle: "إنهاء الاستشارة؟",
+            endMessage: "هل أنت متأكد من إنهاء هذه الاستشارة؟ لا يمكن التراجع عن هذا الإجراء.",
+            justLeave: "مغادرة فقط",
+            endAndComplete: "إنهاء وإكمال",
+            joining: "جاري الانضمام للاستشارة...",
+            waitingForDoctor: "في انتظار الطبيب لبدء الاستشارة",
+            sessionEnded: "انتهت هذه الاستشارة",
+            returnToAppointments: "العودة للمواعيد",
         },
         adminDashboard: {
             sidebar: {

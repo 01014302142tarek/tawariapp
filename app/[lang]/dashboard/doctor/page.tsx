@@ -2,6 +2,7 @@
 
 import React from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useTheme } from "./context/ThemeContext";
@@ -194,10 +195,10 @@ export default function Doctor2Dashboard() {
     ];
 
     const quickActions = [
-        { title: t.doctorDashboard.actions.startVideoCall, description: t.doctorDashboard.actions.connectWithPatient, icon: Icons.video },
-        { title: t.doctorDashboard.actions.viewSchedule, description: t.doctorDashboard.actions.manageAppointments, icon: Icons.calendarDays },
-        { title: t.doctorDashboard.actions.patientRecords, description: t.doctorDashboard.actions.accessRecords, icon: Icons.document },
-        { title: t.doctorDashboard.actions.messagesAction, description: t.doctorDashboard.actions.chatWithPatients, icon: Icons.chat },
+        { title: t.doctorDashboard.actions.startVideoCall, description: t.doctorDashboard.actions.connectWithPatient, icon: Icons.video, href: `/${language}/dashboard/doctor/appointments` },
+        { title: t.doctorDashboard.actions.viewSchedule, description: t.doctorDashboard.actions.manageAppointments, icon: Icons.calendarDays, href: `/${language}/dashboard/doctor/schedule` },
+        { title: t.doctorDashboard.actions.patientRecords, description: t.doctorDashboard.actions.accessRecords, icon: Icons.document, href: `/${language}/dashboard/doctor/patients` },
+        { title: t.doctorDashboard.actions.messagesAction, description: t.doctorDashboard.actions.chatWithPatients, icon: Icons.chat, href: `/${language}/dashboard/doctor/messages` },
     ];
 
     const pendingTasks = [
@@ -296,9 +297,9 @@ export default function Doctor2Dashboard() {
                                 subtitle={`${formatNumber(appointments.length)} ${t.doctorDashboard.sections.scheduled}`}
                                 isDark={isDark}
                                 action={
-                                    <button className="text-teal-500 hover:text-teal-400 text-sm font-medium transition-colors">
+                                    <Link href={`/${language}/dashboard/doctor/appointments`} className="text-teal-500 hover:text-teal-400 text-sm font-medium transition-colors">
                                         {t.common.viewAll} →
-                                    </button>
+                                    </Link>
                                 }
                             />
 
@@ -393,14 +394,17 @@ export default function Doctor2Dashboard() {
                                     </motion.div>
                                 ))}
                             </div>
-                            <button className={cn(
-                                "w-full mt-4 py-2.5 rounded-xl text-sm font-medium transition-all",
-                                isDark
-                                    ? "bg-white/5 hover:bg-white/10 text-white"
-                                    : "bg-gray-100 hover:bg-gray-200 text-gray-700"
-                            )}>
+                            <Link
+                                href={`/${language}/dashboard/doctor/messages`}
+                                className={cn(
+                                    "block w-full mt-4 py-2.5 rounded-xl text-sm font-medium transition-all text-center",
+                                    isDark
+                                        ? "bg-white/5 hover:bg-white/10 text-white"
+                                        : "bg-gray-100 hover:bg-gray-200 text-gray-700"
+                                )}
+                            >
                                 {t.doctorDashboard.sections.openMessages}
-                            </button>
+                            </Link>
                         </GlowingCard>
 
                         {/* Health Tips to Share */}
@@ -537,27 +541,28 @@ export default function Doctor2Dashboard() {
                     <SectionHeader title={t.doctorDashboard.sections.quickActions} subtitle={t.doctorDashboard.sections.manageYourPractice} isDark={isDark} />
                     <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
                         {quickActions.map((action, idx) => (
-                            <GlowingCard
-                                key={idx}
-                                isDark={isDark}
-                                glowColor="teal"
-                                className="cursor-pointer group h-full"
-                            >
-                                <div className="flex flex-col items-start h-full">
-                                    <div className={cn(
-                                        "w-10 h-10 md:w-12 md:h-12 rounded-lg md:rounded-xl flex items-center justify-center mb-2 md:mb-4 transition-all duration-300",
-                                        isDark
-                                            ? "bg-white/5 text-teal-400 group-hover:bg-teal-500/20 group-hover:text-teal-300"
-                                            : "bg-teal-50 text-teal-600 group-hover:bg-teal-100 group-hover:text-teal-700"
-                                    )}>
-                                        <span className="[&>svg]:w-5 [&>svg]:h-5 md:[&>svg]:w-6 md:[&>svg]:h-6">
-                                            {action.icon}
-                                        </span>
+                            <Link key={idx} href={action.href}>
+                                <GlowingCard
+                                    isDark={isDark}
+                                    glowColor="teal"
+                                    className="cursor-pointer group h-full"
+                                >
+                                    <div className="flex flex-col items-start h-full">
+                                        <div className={cn(
+                                            "w-10 h-10 md:w-12 md:h-12 rounded-lg md:rounded-xl flex items-center justify-center mb-2 md:mb-4 transition-all duration-300",
+                                            isDark
+                                                ? "bg-white/5 text-teal-400 group-hover:bg-teal-500/20 group-hover:text-teal-300"
+                                                : "bg-teal-50 text-teal-600 group-hover:bg-teal-100 group-hover:text-teal-700"
+                                        )}>
+                                            <span className="[&>svg]:w-5 [&>svg]:h-5 md:[&>svg]:w-6 md:[&>svg]:h-6">
+                                                {action.icon}
+                                            </span>
+                                        </div>
+                                        <h3 className={cn("font-semibold text-sm md:text-base mb-0.5 md:mb-1 transition-colors", isDark ? "text-white group-hover:text-teal-400" : "text-slate-900 group-hover:text-teal-700")}>{action.title}</h3>
+                                        <p className={cn("text-xs md:text-sm line-clamp-2", isDark ? "text-gray-400" : "text-gray-600")}>{action.description}</p>
                                     </div>
-                                    <h3 className={cn("font-semibold text-sm md:text-base mb-0.5 md:mb-1 transition-colors", isDark ? "text-white group-hover:text-teal-400" : "text-slate-900 group-hover:text-teal-700")}>{action.title}</h3>
-                                    <p className={cn("text-xs md:text-sm line-clamp-2", isDark ? "text-gray-400" : "text-gray-600")}>{action.description}</p>
-                                </div>
-                            </GlowingCard>
+                                </GlowingCard>
+                            </Link>
                         ))}
                     </div>
                 </section>

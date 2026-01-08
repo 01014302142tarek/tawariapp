@@ -77,6 +77,28 @@ When adding UI elements, ensure they work for both LTR (English) and RTL (Arabic
 - Use logical properties (start/end) instead of left/right where appropriate
 - Test layouts in both `/en/` and `/ar/` routes
 
+## Test Users
+
+Pre-seeded test accounts for development and testing:
+
+| Email | Password | Role | Name |
+|-------|----------|------|------|
+| patient1@tawari.test | TawariPatient1!2024 | Patient | Ahmed Hassan |
+| patient2@tawari.test | TawariPatient2!2024 | Patient | Fatima Ali |
+| doctor1@tawari.test | TawariDoctor1!2024 | Doctor | Dr. Mohamed Ibrahim (Cardiologist) |
+| doctor2@tawari.test | TawariDoctor2!2024 | Doctor | Dr. Nour El-Din (Dermatologist) |
+| admin1@tawari.test | TawariAdmin1!2024 | Admin | Sarah Admin (full_admin) |
+| admin2@tawari.test | TawariAdmin2!2024 | Admin | Omar Admin (support_agent) |
+
+**Re-seeding test data:**
+```bash
+# Create/reset test users and basic profiles
+npx tsx scripts/seed-test-users.ts
+
+# Add additional data (appointments, prescriptions, messages, etc.)
+# Run scripts/seed-additional-data.sql in Supabase SQL Editor
+```
+
 ## Documentation
 
 Detailed specifications are available in:

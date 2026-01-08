@@ -2,6 +2,7 @@
 
 import React from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useTheme } from "./context/ThemeContext";
@@ -127,10 +128,10 @@ export default function PatientDashboard() {
     ];
 
     const quickActions = [
-        { title: t.patientDashboard.actions.bookAppointment, description: t.patientDashboard.actionDesc.bookAppointment, icon: Icons.calendar },
-        { title: t.patientDashboard.actions.viewPrescriptions, description: t.patientDashboard.actionDesc.viewPrescriptions, icon: Icons.prescription },
-        { title: t.patientDashboard.actions.messageDoctor, description: t.patientDashboard.actionDesc.messageDoctor, icon: Icons.message },
-        { title: t.patientDashboard.actions.medicalRecords, description: t.patientDashboard.actionDesc.medicalRecords, icon: Icons.folder },
+        { title: t.patientDashboard.actions.bookAppointment, description: t.patientDashboard.actionDesc.bookAppointment, icon: Icons.calendar, href: `/${language}/dashboard/patient/doctors` },
+        { title: t.patientDashboard.actions.viewPrescriptions, description: t.patientDashboard.actionDesc.viewPrescriptions, icon: Icons.prescription, href: `/${language}/dashboard/patient/prescriptions` },
+        { title: t.patientDashboard.actions.messageDoctor, description: t.patientDashboard.actionDesc.messageDoctor, icon: Icons.message, href: `/${language}/dashboard/patient/messages` },
+        { title: t.patientDashboard.actions.medicalRecords, description: t.patientDashboard.actionDesc.medicalRecords, icon: Icons.folder, href: `/${language}/dashboard/patient/records` },
     ];
 
     return (
@@ -359,23 +360,25 @@ export default function PatientDashboard() {
                                 transition={{ delay: idx * 0.1 }}
                                 whileHover={{ y: -4 }}
                             >
-                                <GlowingCard
-                                    glowColor="teal"
-                                    className="p-3 md:p-5 cursor-pointer group h-full"
-                                    isDark={isDark}
-                                >
-                                    <div className="w-9 h-9 md:w-12 md:h-12 rounded-lg md:rounded-xl bg-teal-500/10 flex items-center justify-center text-teal-500 mb-2 md:mb-4 group-hover:bg-teal-500 group-hover:text-white transition-all">
-                                        <span className="[&>svg]:w-4 [&>svg]:h-4 md:[&>svg]:w-5 md:[&>svg]:h-5">
-                                            {action.icon}
-                                        </span>
-                                    </div>
-                                    <h3 className={cn("font-semibold text-xs md:text-base mb-0.5 md:mb-1 group-hover:text-teal-500 transition-colors leading-tight", isDark ? "text-white" : "text-slate-900")}>
-                                        {action.title}
-                                    </h3>
-                                    <p className={cn("text-[10px] md:text-sm leading-tight line-clamp-2 hidden sm:block", isDark ? "text-gray-500" : "text-gray-600")}>
-                                        {action.description}
-                                    </p>
-                                </GlowingCard>
+                                <Link href={action.href}>
+                                    <GlowingCard
+                                        glowColor="teal"
+                                        className="p-3 md:p-5 cursor-pointer group h-full"
+                                        isDark={isDark}
+                                    >
+                                        <div className="w-9 h-9 md:w-12 md:h-12 rounded-lg md:rounded-xl bg-teal-500/10 flex items-center justify-center text-teal-500 mb-2 md:mb-4 group-hover:bg-teal-500 group-hover:text-white transition-all">
+                                            <span className="[&>svg]:w-4 [&>svg]:h-4 md:[&>svg]:w-5 md:[&>svg]:h-5">
+                                                {action.icon}
+                                            </span>
+                                        </div>
+                                        <h3 className={cn("font-semibold text-xs md:text-base mb-0.5 md:mb-1 group-hover:text-teal-500 transition-colors leading-tight", isDark ? "text-white" : "text-slate-900")}>
+                                            {action.title}
+                                        </h3>
+                                        <p className={cn("text-[10px] md:text-sm leading-tight line-clamp-2 hidden sm:block", isDark ? "text-gray-500" : "text-gray-600")}>
+                                            {action.description}
+                                        </p>
+                                    </GlowingCard>
+                                </Link>
                             </motion.div>
                         ))}
                     </div>

@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -90,7 +91,8 @@ const UserDropdown = ({
     isDark,
     themeMode,
     onSetThemeMode,
-    onLogout
+    onLogout,
+    settingsHref
 }: {
     name: string;
     image: string;
@@ -98,6 +100,7 @@ const UserDropdown = ({
     themeMode: "system" | "light" | "dark";
     onSetThemeMode: (mode: "system" | "light" | "dark") => void;
     onLogout: () => void;
+    settingsHref: string;
 }) => {
     const [isOpen, setIsOpen] = useState(false);
     const [showThemeMenu, setShowThemeMenu] = useState(false);
@@ -227,13 +230,17 @@ const UserDropdown = ({
 
                             <div className={cn("my-2 border-t", isDark ? "border-white/10" : "border-gray-200")} />
 
-                            <button className={cn(
-                                "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors",
-                                isDark ? "text-gray-400 hover:text-white hover:bg-white/5" : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
-                            )}>
+                            <Link
+                                href={settingsHref}
+                                onClick={() => setIsOpen(false)}
+                                className={cn(
+                                    "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors",
+                                    isDark ? "text-gray-400 hover:text-white hover:bg-white/5" : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+                                )}
+                            >
                                 {Icons.settings}
                                 <span className="text-sm">{t.common.settings}</span>
-                            </button>
+                            </Link>
                             <button
                                 onClick={onLogout}
                                 className={cn(
@@ -334,6 +341,7 @@ export default function Header({ onMenuClick }: { onMenuClick?: () => void }) {
                         themeMode={themeMode}
                         onSetThemeMode={setThemeMode}
                         onLogout={handleLogout}
+                        settingsHref={`/${language}/dashboard/patient/settings`}
                     />
                 </div>
             </div>

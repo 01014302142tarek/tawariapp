@@ -1,27 +1,28 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { GlowingCard } from "@/components/ui/glowing-card";
 import { useThemeStyles } from "../context/useThemeStyles";
-
 import { useI18n } from "@/app/i18n";
-
-// Mock Data removed from here
-
+import {
+    getDoctorAppointments,
+    startConsultation,
+    endConsultation,
+    cancelAppointmentAsDoctor,
+    markNoShow,
+    type AppointmentWithDetails,
+    type AppointmentStatus,
+} from "@/app/actions/appointments";
 
 // Icons
 const Icons = {
     calendar: (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
-        </svg>
-    ),
-    plus: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.5v15m7.5-7.5h-15" />
         </svg>
     ),
     search: (
@@ -39,15 +40,26 @@ const Icons = {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
     ),
+    x: (
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+        </svg>
+    ),
+    check: (
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.5 12.75l6 6 9-13.5" />
+        </svg>
+    ),
 };
 
 // Badge Component
-const Badge = ({ children, variant = "default", isDark = true, className }: { children: React.ReactNode; variant?: "default" | "success" | "warning" | "primary"; isDark?: boolean; className?: string }) => {
+const Badge = ({ children, variant = "default", isDark = true, className }: { children: React.ReactNode; variant?: "default" | "success" | "warning" | "primary" | "error"; isDark?: boolean; className?: string }) => {
     const variants = {
         default: isDark ? "bg-slate-700/50 text-slate-300" : "bg-gray-200 text-gray-700",
-        success: "bg-teal-500/10 text-teal-500 border border-teal-500/20",
+        success: "bg-green-500/10 text-green-500 border border-green-500/20",
         warning: "bg-amber-500/10 text-amber-500 border border-amber-500/20",
         primary: "bg-teal-500/10 text-teal-500 border border-teal-500/20",
+        error: "bg-red-500/10 text-red-500 border border-red-500/20",
     };
     return (
         <span className={cn("px-2.5 py-1 rounded-full text-xs font-medium", variants[variant], className)}>
@@ -57,21 +69,28 @@ const Badge = ({ children, variant = "default", isDark = true, className }: { ch
 };
 
 export default function AppointmentsPage() {
-    const { t, isRTL, formatNumber } = useI18n();
+    const router = useRouter();
+    const { t, isRTL, language } = useI18n();
     const [activeFilter, setActiveFilter] = useState("all");
     const [searchQuery, setSearchQuery] = useState("");
     const { isDark, textPrimary, textSecondary, textMuted, inputBg, inputFocus, buttonSecondary, divider, cardHover, emptyStateBg } = useThemeStyles();
 
-    // Mock Data with Translations
-    const appointments = [
-        { id: 1, date: "2024-12-14", time: isRTL ? "٠٩:٠٠ ص" : "09:00", patient: t.common.demoNames.sarahJohnson, type: t.doctorDashboard.appointmentsPage.types.followUp, status: "completed", image: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&crop=face" },
-        { id: 2, date: "2024-12-14", time: isRTL ? "١٠:٣٠ ص" : "10:30", patient: t.common.demoNames.mohamedAli, type: t.doctorDashboard.appointmentsPage.types.initialConsultation, status: "in-progress", image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face" },
-        { id: 3, date: "2024-12-14", time: isRTL ? "١١:٤٥ ص" : "11:45", patient: t.common.demoNames.fatimaKhaled, type: t.doctorDashboard.appointmentsPage.types.heartCheckup, status: "upcoming", image: "https://images.unsplash.com/photo-1489424731084-a5d8b219a5bb?w=100&h=100&fit=crop&crop=face" },
-        { id: 4, date: "2024-12-14", time: isRTL ? "٠٢:٠٠ م" : "14:00", patient: t.common.demoNames.omarNasser, type: t.doctorDashboard.appointmentsPage.types.ecgReview, status: "upcoming", image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face" },
-        { id: 5, date: "2024-12-14", time: isRTL ? "٠٣:٣٠ م" : "15:30", patient: t.common.demoNames.laylaAhmed, type: t.doctorDashboard.appointmentsPage.types.bloodPressureCheck, status: "upcoming", image: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&h=100&fit=crop&crop=face" },
-        { id: 6, date: "2024-12-15", time: isRTL ? "٠٩:٠٠ ص" : "09:00", patient: t.common.demoNames.ahmedHassan, type: t.doctorDashboard.appointmentsPage.types.annualCheckup, status: "scheduled", image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop&crop=face" },
-        { id: 7, date: "2024-12-15", time: isRTL ? "١٠:٠٠ ص" : "10:00", patient: t.common.demoNames.nourIbrahim, type: t.doctorDashboard.appointmentsPage.types.consultation, status: "scheduled", image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop&crop=face" },
-    ];
+    const [appointments, setAppointments] = useState<AppointmentWithDetails[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [actionLoading, setActionLoading] = useState<string | null>(null);
+
+    useEffect(() => {
+        loadAppointments();
+    }, []);
+
+    const loadAppointments = async () => {
+        setLoading(true);
+        const result = await getDoctorAppointments();
+        if (result.appointments) {
+            setAppointments(result.appointments);
+        }
+        setLoading(false);
+    };
 
     const filters = [
         { id: "all", label: t.doctorDashboard.appointmentsPage.filters.all },
@@ -80,29 +99,106 @@ export default function AppointmentsPage() {
         { id: "cancelled", label: t.doctorDashboard.appointmentsPage.filters.cancelled }
     ];
 
-    const getStatusLabel = (status: string) => {
+    const getStatusVariant = (status: AppointmentStatus): "default" | "success" | "warning" | "primary" | "error" => {
         switch (status) {
-            case "in-progress": return t.doctorDashboard.appointmentsPage.status.inProgress;
+            case "in_progress": return "warning";
+            case "completed": return "success";
+            case "scheduled": return "primary";
+            case "in_waiting_room": return "warning";
+            case "cancelled": return "error";
+            case "no_show": return "error";
+            default: return "default";
+        }
+    };
+
+    const getStatusLabel = (status: AppointmentStatus): string => {
+        switch (status) {
+            case "in_progress": return t.doctorDashboard.appointmentsPage.status.inProgress;
             case "completed": return t.doctorDashboard.appointmentsPage.status.done;
-            case "upcoming": return t.doctorDashboard.appointmentsPage.status.upcoming;
             case "scheduled": return t.doctorDashboard.appointmentsPage.status.scheduled;
+            case "in_waiting_room": return isRTL ? "في غرفة الانتظار" : "In Waiting Room";
+            case "cancelled": return isRTL ? "ملغي" : "Cancelled";
+            case "no_show": return isRTL ? "لم يحضر" : "No Show";
             default: return status;
         }
     };
 
+    const formatTime = (isoString: string): string => {
+        const date = new Date(isoString);
+        return date.toLocaleTimeString(isRTL ? "ar-EG" : "en-US", {
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: true,
+        });
+    };
+
+    const formatDate = (isoString: string): string => {
+        const date = new Date(isoString);
+        return date.toLocaleDateString(isRTL ? "ar-EG" : "en-US", {
+            month: "short",
+            day: "numeric",
+        });
+    };
+
+    const isToday = (isoString: string): boolean => {
+        const date = new Date(isoString);
+        const today = new Date();
+        return date.toDateString() === today.toDateString();
+    };
+
+    const handleStartConsultation = async (appointmentId: string) => {
+        setActionLoading(appointmentId);
+        const result = await startConsultation(appointmentId);
+        if (result.success) {
+            // Navigate to the embedded consultation page
+            router.push(`/${language}/dashboard/consultation/${appointmentId}`);
+        }
+        setActionLoading(null);
+    };
+
+    const handleEndConsultation = async (appointmentId: string) => {
+        setActionLoading(appointmentId);
+        await endConsultation(appointmentId);
+        await loadAppointments();
+        setActionLoading(null);
+    };
+
+    const handleCancel = async (appointmentId: string) => {
+        if (!confirm(isRTL ? "هل أنت متأكد من إلغاء هذا الموعد؟" : "Are you sure you want to cancel this appointment?")) {
+            return;
+        }
+        setActionLoading(appointmentId);
+        await cancelAppointmentAsDoctor(appointmentId);
+        await loadAppointments();
+        setActionLoading(null);
+    };
+
+    const handleNoShow = async (appointmentId: string) => {
+        setActionLoading(appointmentId);
+        await markNoShow(appointmentId);
+        await loadAppointments();
+        setActionLoading(null);
+    };
 
     const filteredAppointments = appointments.filter((apt) => {
         const matchesFilter = activeFilter === "all" ||
-            (activeFilter === "upcoming" && (apt.status === "upcoming" || apt.status === "scheduled")) ||
+            (activeFilter === "upcoming" && ["scheduled", "in_waiting_room"].includes(apt.status)) ||
             (activeFilter === "completed" && apt.status === "completed") ||
-            (activeFilter === "cancelled" && apt.status === "cancelled");
-        const matchesSearch = apt.patient.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            apt.type.toLowerCase().includes(searchQuery.toLowerCase());
+            (activeFilter === "cancelled" && ["cancelled", "no_show"].includes(apt.status));
+        const matchesSearch = apt.patient?.full_name.toLowerCase().includes(searchQuery.toLowerCase()) || false;
         return matchesFilter && matchesSearch;
     });
 
-    const todayAppointments = filteredAppointments.filter(apt => apt.date === "2024-12-14");
-    const upcomingAppointments = filteredAppointments.filter(apt => apt.date !== "2024-12-14");
+    const todayAppointments = filteredAppointments.filter(apt => isToday(apt.scheduled_start));
+    const upcomingAppointments = filteredAppointments.filter(apt => !isToday(apt.scheduled_start) && new Date(apt.scheduled_start) > new Date());
+
+    if (loading) {
+        return (
+            <div className="p-4 md:p-6 lg:p-8 flex items-center justify-center min-h-[60vh]">
+                <div className="animate-spin w-8 h-8 border-2 border-teal-500 border-t-transparent rounded-full" />
+            </div>
+        );
+    }
 
     return (
         <div className="p-4 md:p-6 lg:p-8">
@@ -117,10 +213,6 @@ export default function AppointmentsPage() {
                     </h1>
                     <p className={cn("text-sm md:text-base mt-1", textMuted)}>{t.doctorDashboard.appointmentsPage.subtitle}</p>
                 </div>
-                <button className="flex items-center justify-center gap-2 bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-400 hover:to-teal-500 text-white font-semibold py-2 md:py-2.5 px-4 md:px-5 rounded-xl transition-all shadow-lg shadow-teal-500/20 text-sm md:text-base">
-                    {Icons.plus}
-                    <span>{t.doctorDashboard.appointmentsPage.newAppointment}</span>
-                </button>
             </div>
 
             {/* Search & Filters */}
@@ -184,26 +276,28 @@ export default function AppointmentsPage() {
                                     animate={{ opacity: 1, x: 0 }}
                                     transition={{ delay: idx * 0.05 }}
                                     className={cn(
-                                        "flex flex-col md:grid md:grid-cols-12 gap-3 md:gap-4 p-4 transition-colors cursor-pointer items-start md:items-center active:scale-[0.99] md:active:scale-100",
+                                        "flex flex-col md:grid md:grid-cols-12 gap-3 md:gap-4 p-4 transition-colors items-start md:items-center",
                                         cardHover,
-                                        apt.status === "in-progress" && "bg-teal-500/5 relative overflow-hidden"
+                                        apt.status === "in_progress" && "bg-teal-500/5 relative overflow-hidden"
                                     )}
                                 >
-                                    {apt.status === "in-progress" && (
+                                    {apt.status === "in_progress" && (
                                         <div className="absolute left-0 top-0 bottom-0 w-1 bg-teal-500 md:rounded-l-lg" />
                                     )}
 
                                     {/* Time Block */}
                                     <div className="md:col-span-2 flex items-center gap-2 md:gap-3 w-full md:w-auto justify-between md:justify-start">
-                                        <div className="flex items-center gap-2 cursor-pointer group/time">
-                                            <div className="p-2 rounded-lg bg-teal-500/10 text-teal-500 group-hover/time:bg-teal-500 group-hover/time:text-white transition-colors">
+                                        <div className="flex items-center gap-2">
+                                            <div className="p-2 rounded-lg bg-teal-500/10 text-teal-500">
                                                 {Icons.clock}
                                             </div>
-                                            <span className={cn("text-base md:text-lg font-bold tracking-tight", textPrimary)}>{apt.time}</span>
+                                            <span className={cn("text-base md:text-lg font-bold tracking-tight", textPrimary)}>
+                                                {formatTime(apt.scheduled_start)}
+                                            </span>
                                         </div>
-                                        {/* Mobile Status Badge (Hidden on Desktop) */}
+                                        {/* Mobile Status Badge */}
                                         <div className="md:hidden">
-                                            <Badge isDark={isDark} variant={apt.status === "in-progress" ? "warning" : apt.status === "completed" ? "success" : "primary"}>
+                                            <Badge isDark={isDark} variant={getStatusVariant(apt.status)}>
                                                 {getStatusLabel(apt.status)}
                                             </Badge>
                                         </div>
@@ -211,38 +305,93 @@ export default function AppointmentsPage() {
 
                                     {/* Patient Info */}
                                     <div className="md:col-span-4 flex items-center gap-3 w-full">
-                                        <div className="relative w-10 h-10 md:w-11 md:h-11 rounded-full overflow-hidden border-2 border-teal-500/20 group-hover:border-teal-500/50 transition-colors flex-shrink-0">
-                                            <Image src={apt.image} alt={apt.patient} fill className="object-cover" unoptimized />
+                                        <div className="relative w-10 h-10 md:w-11 md:h-11 rounded-full overflow-hidden border-2 border-teal-500/20 flex-shrink-0">
+                                            {apt.patient?.avatar_url ? (
+                                                <Image src={apt.patient.avatar_url} alt={apt.patient.full_name} fill className="object-cover" unoptimized />
+                                            ) : (
+                                                <div className={cn("w-full h-full flex items-center justify-center text-lg font-bold", isDark ? "bg-teal-500/10 text-teal-400" : "bg-teal-50 text-teal-600")}>
+                                                    {apt.patient?.full_name.charAt(0) || "?"}
+                                                </div>
+                                            )}
                                         </div>
                                         <div className="flex-1 min-w-0">
-                                            <p className={cn("font-semibold truncate text-sm md:text-base", textPrimary)}>{apt.patient}</p>
-                                            <p className={cn("text-xs md:hidden truncate", textMuted)}>{apt.type}</p>
+                                            <p className={cn("font-semibold truncate text-sm md:text-base", textPrimary)}>
+                                                {apt.patient?.full_name || "Unknown Patient"}
+                                            </p>
+                                            <p className={cn("text-xs md:hidden truncate", textMuted)}>
+                                                {apt.patient_notes || t.doctorDashboard.appointmentsPage.types.consultation}
+                                            </p>
                                         </div>
                                     </div>
 
                                     {/* Purpose (Desktop Only) */}
                                     <div className={cn("hidden md:block md:col-span-3 text-sm truncate px-1", textSecondary)}>
-                                        {apt.type}
+                                        {apt.patient_notes || t.doctorDashboard.appointmentsPage.types.consultation}
                                     </div>
 
                                     {/* Actions & Status (Desktop) */}
                                     <div className="md:col-span-3 flex items-center justify-between md:justify-end gap-3 w-full border-t md:border-t-0 pt-3 md:pt-0 mt-1 md:mt-0 border-white/5">
                                         <div className="hidden md:block">
-                                            <Badge isDark={isDark} variant={apt.status === "in-progress" ? "warning" : apt.status === "completed" ? "success" : "primary"}>
+                                            <Badge isDark={isDark} variant={getStatusVariant(apt.status)}>
                                                 {getStatusLabel(apt.status)}
                                             </Badge>
                                         </div>
 
                                         <div className="flex items-center gap-2 w-full md:w-auto justify-end">
-                                            {(apt.status === "upcoming" || apt.status === "in-progress") ? (
-                                                <button className="flex-1 md:flex-none flex items-center justify-center gap-2 px-3 py-1.5 md:py-2 rounded-lg bg-teal-500 text-white hover:bg-teal-600 transition-all text-sm font-medium shadow-lg shadow-teal-500/20">
-                                                    {Icons.video}
-                                                    <span className="md:hidden lg:inline">{t.doctorDashboard.appointmentsPage.actions.join}</span>
-                                                </button>
+                                            {actionLoading === apt.id ? (
+                                                <div className="animate-spin w-5 h-5 border-2 border-teal-500 border-t-transparent rounded-full" />
                                             ) : (
-                                                <button className={cn("flex-1 md:flex-none px-3 py-1.5 text-sm font-medium rounded-lg border transition-colors", isDark ? "border-white/10 hover:bg-white/5 text-gray-400" : "border-gray-200 hover:bg-gray-50 text-gray-600")}>
-                                                    {t.doctorDashboard.appointmentsPage.actions.details}
-                                                </button>
+                                                <>
+                                                    {apt.status === "scheduled" && (
+                                                        <>
+                                                            <button
+                                                                onClick={() => handleStartConsultation(apt.id)}
+                                                                className="flex items-center gap-2 px-3 py-1.5 md:py-2 rounded-lg bg-teal-500 text-white hover:bg-teal-600 transition-all text-sm font-medium shadow-lg shadow-teal-500/20"
+                                                            >
+                                                                {Icons.video}
+                                                                <span className="md:hidden lg:inline">{t.doctorDashboard.appointmentsPage.actions.join}</span>
+                                                            </button>
+                                                            <button
+                                                                onClick={() => handleCancel(apt.id)}
+                                                                className={cn("p-2 rounded-lg transition-colors", isDark ? "text-red-400 hover:bg-red-500/10" : "text-red-500 hover:bg-red-50")}
+                                                                title={isRTL ? "إلغاء" : "Cancel"}
+                                                            >
+                                                                {Icons.x}
+                                                            </button>
+                                                        </>
+                                                    )}
+                                                    {apt.status === "in_waiting_room" && (
+                                                        <>
+                                                            <button
+                                                                onClick={() => handleStartConsultation(apt.id)}
+                                                                className="flex items-center gap-2 px-3 py-1.5 md:py-2 rounded-lg bg-teal-500 text-white hover:bg-teal-600 transition-all text-sm font-medium shadow-lg shadow-teal-500/20"
+                                                            >
+                                                                {Icons.video}
+                                                                <span>{isRTL ? "ابدأ الاستشارة" : "Start"}</span>
+                                                            </button>
+                                                            <button
+                                                                onClick={() => handleNoShow(apt.id)}
+                                                                className={cn("px-3 py-1.5 rounded-lg text-sm font-medium transition-colors", isDark ? "text-gray-400 hover:bg-white/5" : "text-gray-600 hover:bg-gray-100")}
+                                                            >
+                                                                {isRTL ? "لم يحضر" : "No Show"}
+                                                            </button>
+                                                        </>
+                                                    )}
+                                                    {apt.status === "in_progress" && (
+                                                        <button
+                                                            onClick={() => handleEndConsultation(apt.id)}
+                                                            className="flex items-center gap-2 px-3 py-1.5 md:py-2 rounded-lg bg-green-500 text-white hover:bg-green-600 transition-all text-sm font-medium"
+                                                        >
+                                                            {Icons.check}
+                                                            <span>{isRTL ? "إنهاء" : "End"}</span>
+                                                        </button>
+                                                    )}
+                                                    {apt.status === "completed" && (
+                                                        <button className={cn("px-3 py-1.5 text-sm font-medium rounded-lg border transition-colors", isDark ? "border-white/10 hover:bg-white/5 text-gray-400" : "border-gray-200 hover:bg-gray-50 text-gray-600")}>
+                                                            {t.doctorDashboard.appointmentsPage.actions.details}
+                                                        </button>
+                                                    )}
+                                                </>
                                             )}
                                         </div>
                                     </div>
@@ -274,46 +423,56 @@ export default function AppointmentsPage() {
                                     initial={{ opacity: 0, x: -20 }}
                                     animate={{ opacity: 1, x: 0 }}
                                     transition={{ delay: idx * 0.05 }}
-                                    className={cn("flex flex-col md:grid md:grid-cols-12 gap-3 md:gap-4 p-4 transition-colors cursor-pointer items-start md:items-center", cardHover)}
+                                    className={cn("flex flex-col md:grid md:grid-cols-12 gap-3 md:gap-4 p-4 transition-colors items-start md:items-center", cardHover)}
                                 >
                                     {/* Date/Time */}
                                     <div className="md:col-span-2 flex items-center gap-3 w-full md:w-auto justify-between md:justify-start">
                                         <div className="min-w-[70px]">
-                                            <p className={cn("text-xs font-medium uppercase tracking-wide", textMuted)}>{formatNumber(apt.date)}</p>
-                                            <span className={cn("text-base md:text-lg font-bold tracking-tight", textPrimary)}>{apt.time}</span>
+                                            <p className={cn("text-xs font-medium uppercase tracking-wide", textMuted)}>
+                                                {formatDate(apt.scheduled_start)}
+                                            </p>
+                                            <span className={cn("text-base md:text-lg font-bold tracking-tight", textPrimary)}>
+                                                {formatTime(apt.scheduled_start)}
+                                            </span>
                                         </div>
                                         <div className="md:hidden">
-                                            <Badge isDark={isDark} variant="default">{getStatusLabel(apt.status)}</Badge>
+                                            <Badge isDark={isDark} variant={getStatusVariant(apt.status)}>
+                                                {getStatusLabel(apt.status)}
+                                            </Badge>
                                         </div>
                                     </div>
 
                                     {/* Patient */}
                                     <div className="md:col-span-4 flex items-center gap-3 w-full">
                                         <div className="relative w-9 h-9 md:w-10 md:h-10 rounded-full overflow-hidden border border-teal-500/20">
-                                            <Image src={apt.image} alt={apt.patient} fill className="object-cover" unoptimized />
+                                            {apt.patient?.avatar_url ? (
+                                                <Image src={apt.patient.avatar_url} alt={apt.patient.full_name} fill className="object-cover" unoptimized />
+                                            ) : (
+                                                <div className={cn("w-full h-full flex items-center justify-center text-sm font-bold", isDark ? "bg-teal-500/10 text-teal-400" : "bg-teal-50 text-teal-600")}>
+                                                    {apt.patient?.full_name.charAt(0) || "?"}
+                                                </div>
+                                            )}
                                         </div>
                                         <div className="flex-1 min-w-0">
-                                            <p className={cn("font-medium truncate text-sm md:text-base", textPrimary)}>{apt.patient}</p>
-                                            <p className={cn("text-xs md:hidden truncate", textMuted)}>{apt.type}</p>
+                                            <p className={cn("font-medium truncate text-sm md:text-base", textPrimary)}>
+                                                {apt.patient?.full_name || "Unknown Patient"}
+                                            </p>
+                                            <p className={cn("text-xs md:hidden truncate", textMuted)}>
+                                                {apt.patient_notes || t.doctorDashboard.appointmentsPage.types.consultation}
+                                            </p>
                                         </div>
                                     </div>
 
                                     {/* Purpose (Desktop) */}
                                     <div className={cn("hidden md:block md:col-span-3 text-sm truncate px-1", textSecondary)}>
-                                        {apt.type}
+                                        {apt.patient_notes || t.doctorDashboard.appointmentsPage.types.consultation}
                                     </div>
 
-                                    {/* Actions/Status */}
+                                    {/* Status */}
                                     <div className="md:col-span-3 flex items-center justify-end w-full md:w-auto gap-3 hidden md:flex">
-                                        <Badge isDark={isDark} variant="default">{getStatusLabel(apt.status)}</Badge>
-                                        <button className={cn("p-2 rounded-lg transition-colors opacity-0 group-hover:opacity-100", isDark ? "hover:bg-white/10 text-gray-400 hover:text-white" : "hover:bg-gray-100 text-gray-500 hover:text-slate-900")}>
-                                            <div className="rotate-90">...</div>
-                                        </button>
-                                    </div>
-
-                                    {/* Mobile Actions only */}
-                                    <div className="flex md:hidden w-full border-t border-white/5 pt-3 mt-1 justify-end">
-                                        <button className={cn("text-xs font-medium", textSecondary)}>{t.doctorDashboard.appointmentsPage.actions.viewDetails}</button>
+                                        <Badge isDark={isDark} variant={getStatusVariant(apt.status)}>
+                                            {getStatusLabel(apt.status)}
+                                        </Badge>
                                     </div>
                                 </motion.div>
                             ))}

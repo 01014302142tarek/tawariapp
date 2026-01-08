@@ -1,12 +1,21 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useThemeStyles } from "../context/useThemeStyles";
 import { GlowingCard } from "@/components/ui/glowing-card";
 import { useI18n } from "@/app/i18n";
+import { useRouter } from "next/navigation";
+import {
+    getPatientAppointments,
+    cancelAppointmentAsPatient,
+    joinWaitingRoom,
+    getConsultationSession,
+    type AppointmentWithDetails,
+    type AppointmentStatus,
+} from "@/app/actions/appointments";
 
 // Icons
 const Icons = {
@@ -25,16 +34,25 @@ const Icons = {
             <path d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
         </svg>
     ),
+    clock: (
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+    ),
+    x: (
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+        </svg>
+    ),
 };
 
-
-
-const Badge = ({ children, variant = "default" }: { children: React.ReactNode; variant?: "default" | "success" | "warning" | "primary" }) => {
+const Badge = ({ children, variant = "default", isDark = true }: { children: React.ReactNode; variant?: "default" | "success" | "warning" | "primary" | "error"; isDark?: boolean }) => {
     const variants = {
-        default: "bg-slate-700/50 text-slate-300",
-        success: "bg-teal-500/10 text-teal-400 border border-teal-500/20",
+        default: isDark ? "bg-slate-700/50 text-slate-300" : "bg-gray-200 text-gray-700",
+        success: "bg-green-500/10 text-green-400 border border-green-500/20",
         warning: "bg-amber-500/10 text-amber-400 border border-amber-500/20",
         primary: "bg-teal-500/10 text-teal-400 border border-teal-500/20",
+        error: "bg-red-500/10 text-red-400 border border-red-500/20",
     };
     return (
         <span className={cn("px-2.5 py-1 rounded-full text-xs font-medium", variants[variant])}>
@@ -44,17 +62,27 @@ const Badge = ({ children, variant = "default" }: { children: React.ReactNode; v
 };
 
 export default function AppointmentsPage() {
-    const { t, isRTL, formatNumber, formatDate } = useI18n();
+    const { t, isRTL, language } = useI18n();
+    const router = useRouter();
     const [activeFilter, setActiveFilter] = useState("All");
     const { isDark, textPrimary, textMuted } = useThemeStyles();
 
-    // Mock Data
-    const appointments = [
-        { id: 1, date: "2024-12-14", time: isRTL ? "٠٢:٣٠ م" : "2:30 PM", doctor: t.common.demoNames.drAhmedHassan, specialty: t.specialties.cardiology, type: t.doctorDashboard.appointmentsPage.types.followUp, status: "upcoming", image: "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=100&h=100&fit=crop&crop=face" },
-        { id: 2, date: "2024-12-18", time: isRTL ? "١٠:٠٠ ص" : "10:00 AM", doctor: t.common.demoNames.drFatimaKhaled, specialty: t.specialties.general, type: t.doctorDashboard.appointmentsPage.types.generalCheckup, status: "upcoming", image: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=100&h=100&fit=crop&crop=face" },
-        { id: 3, date: "2024-12-10", time: isRTL ? "٠٣:٠٠ م" : "3:00 PM", doctor: t.common.demoNames.drAhmedHassan, specialty: t.specialties.cardiology, type: t.doctorDashboard.appointmentsPage.types.ecgReview, status: "completed", image: "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=100&h=100&fit=crop&crop=face" },
-        { id: 4, date: "2024-12-05", time: isRTL ? "١١:٠٠ ص" : "11:00 AM", doctor: t.common.demoNames.drOmarNasser, specialty: t.specialties.dermatology, type: t.doctorDashboard.appointmentsPage.types.consultation, status: "completed", image: "https://images.unsplash.com/photo-1537368910025-700350fe46c7?w=100&h=100&fit=crop&crop=face" },
-    ];
+    const [appointments, setAppointments] = useState<AppointmentWithDetails[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [actionLoading, setActionLoading] = useState<string | null>(null);
+
+    useEffect(() => {
+        loadAppointments();
+    }, []);
+
+    const loadAppointments = async () => {
+        setLoading(true);
+        const result = await getPatientAppointments();
+        if (result.appointments) {
+            setAppointments(result.appointments);
+        }
+        setLoading(false);
+    };
 
     const filters = [
         { key: "All", label: t.patientDashboard.appointmentsPage.filters.all },
@@ -62,12 +90,94 @@ export default function AppointmentsPage() {
         { key: "Completed", label: t.patientDashboard.appointmentsPage.filters.completed },
     ];
 
+    const getStatusVariant = (status: AppointmentStatus): "default" | "success" | "warning" | "primary" | "error" => {
+        switch (status) {
+            case "in_progress": return "warning";
+            case "completed": return "success";
+            case "scheduled": return "primary";
+            case "in_waiting_room": return "warning";
+            case "cancelled": return "error";
+            case "no_show": return "error";
+            default: return "default";
+        }
+    };
+
+    const getStatusLabel = (status: AppointmentStatus): string => {
+        switch (status) {
+            case "in_progress": return isRTL ? "جاري" : "In Progress";
+            case "completed": return t.patientDashboard.appointmentsPage.filters.completed;
+            case "scheduled": return t.patientDashboard.appointmentsPage.filters.upcoming;
+            case "in_waiting_room": return isRTL ? "في غرفة الانتظار" : "In Waiting Room";
+            case "cancelled": return isRTL ? "ملغي" : "Cancelled";
+            case "no_show": return isRTL ? "لم يحضر" : "No Show";
+            default: return status;
+        }
+    };
+
+    const formatTime = (isoString: string): string => {
+        const date = new Date(isoString);
+        return date.toLocaleTimeString(isRTL ? "ar-EG" : "en-US", {
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: true,
+        });
+    };
+
+    const formatDate = (isoString: string): string => {
+        const date = new Date(isoString);
+        return date.toLocaleDateString(isRTL ? "ar-EG" : "en-US", {
+            year: "numeric",
+            month: "short",
+            day: "numeric",
+        });
+    };
+
+    const handleJoinWaitingRoom = async (appointmentId: string) => {
+        setActionLoading(appointmentId);
+        const result = await joinWaitingRoom(appointmentId);
+        if (result.success) {
+            await loadAppointments();
+        }
+        setActionLoading(null);
+    };
+
+    const handleJoinConsultation = async (appointmentId: string) => {
+        // Navigate to the embedded consultation page
+        router.push(`/${language}/dashboard/consultation/${appointmentId}`);
+    };
+
+    const handleCancel = async (appointmentId: string) => {
+        if (!confirm(isRTL ? "هل أنت متأكد من إلغاء هذا الموعد؟" : "Are you sure you want to cancel this appointment?")) {
+            return;
+        }
+        setActionLoading(appointmentId);
+        await cancelAppointmentAsPatient(appointmentId);
+        await loadAppointments();
+        setActionLoading(null);
+    };
+
     const filteredAppointments = appointments.filter(apt => {
         if (activeFilter === "All") return true;
-        if (activeFilter === "Upcoming") return apt.status === "upcoming";
+        if (activeFilter === "Upcoming") return ["scheduled", "in_waiting_room", "in_progress"].includes(apt.status);
         if (activeFilter === "Completed") return apt.status === "completed";
         return true;
     });
+
+    const formatCurrency = (amount: number): string => {
+        return new Intl.NumberFormat(isRTL ? "ar-EG" : "en-EG", {
+            style: "currency",
+            currency: "EGP",
+            minimumFractionDigits: 0,
+        }).format(amount);
+    };
+
+    if (loading) {
+        return (
+            <div className="p-4 md:p-6 lg:p-8 flex items-center justify-center min-h-[60vh]">
+                <div className="animate-spin w-8 h-8 border-2 border-teal-500 border-t-transparent rounded-full" />
+            </div>
+        );
+    }
 
     return (
         <div className="p-4 md:p-6 lg:p-8">
@@ -76,21 +186,22 @@ export default function AppointmentsPage() {
                 <div>
                     <h1 className={cn("text-xl md:text-2xl font-bold flex items-center gap-2 md:gap-3", textPrimary)}>
                         <span className="w-8 h-8 md:w-10 md:h-10 rounded-lg md:rounded-xl bg-teal-500/10 flex items-center justify-center text-teal-500">
-                            <svg className="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
-                            </svg>
+                            {Icons.calendar}
                         </span>
                         {t.patientDashboard.appointmentsPage.title}
                     </h1>
                     <p className={cn("mt-1 text-sm md:text-base", textMuted)}>{t.patientDashboard.appointmentsPage.subtitle}</p>
                 </div>
-                <button className="flex items-center justify-center gap-2 bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-400 hover:to-teal-500 text-white font-semibold py-2 md:py-2.5 px-4 md:px-5 rounded-lg md:rounded-xl transition-all shadow-lg shadow-teal-500/20 text-sm md:text-base">
+                <button
+                    onClick={() => router.push(`/${language}/dashboard/patient/doctors`)}
+                    className="flex items-center justify-center gap-2 bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-400 hover:to-teal-500 text-white font-semibold py-2 md:py-2.5 px-4 md:px-5 rounded-lg md:rounded-xl transition-all shadow-lg shadow-teal-500/20 text-sm md:text-base"
+                >
                     {Icons.plus}
                     <span>{t.patientDashboard.appointmentsPage.bookNew}</span>
                 </button>
             </div>
 
-            {/* Filters - Scrollable on mobile */}
+            {/* Filters */}
             <div className="flex gap-2 mb-4 md:mb-6 overflow-x-auto pb-2 -mx-4 px-4 md:mx-0 md:px-0 md:overflow-visible scrollbar-hide">
                 {filters.map((filter) => (
                     <button
@@ -111,81 +222,161 @@ export default function AppointmentsPage() {
             </div>
 
             {/* Appointments List */}
-            <div className="grid gap-3 md:gap-4">
-                {filteredAppointments.map((apt, idx) => (
-                    <motion.div
-                        key={apt.id}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: idx * 0.1 }}
-                    >
-                        <GlowingCard glowColor="teal" className="p-3 md:p-5" isDark={isDark}>
-                            <div className="flex flex-col sm:flex-row sm:items-center gap-3 md:gap-4">
-                                <div className="flex items-center gap-3 md:gap-4">
-                                    <div className="relative w-12 h-12 md:w-14 md:h-14 rounded-lg md:rounded-xl overflow-hidden border-2 border-teal-500/30 flex-shrink-0">
-                                        <Image src={apt.image} alt={apt.doctor} fill className="object-cover" unoptimized />
+            {filteredAppointments.length === 0 ? (
+                <GlowingCard glowColor="teal" className="p-12 text-center" isDark={isDark}>
+                    <div className={cn("w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4", isDark ? "bg-slate-900" : "bg-gray-100", textMuted)}>
+                        {Icons.calendar}
+                    </div>
+                    <h3 className={cn("text-lg font-medium mb-2", textPrimary)}>
+                        {isRTL ? "لا توجد مواعيد" : "No appointments found"}
+                    </h3>
+                    <p className={textMuted}>
+                        {isRTL ? "احجز موعدك الأول مع طبيب" : "Book your first appointment with a doctor"}
+                    </p>
+                </GlowingCard>
+            ) : (
+                <div className="grid gap-3 md:gap-4">
+                    {filteredAppointments.map((apt, idx) => (
+                        <motion.div
+                            key={apt.id}
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: idx * 0.1 }}
+                        >
+                            <GlowingCard glowColor="teal" className="p-3 md:p-5" isDark={isDark}>
+                                <div className="flex flex-col sm:flex-row sm:items-center gap-3 md:gap-4">
+                                    <div className="flex items-center gap-3 md:gap-4">
+                                        <div className="relative w-12 h-12 md:w-14 md:h-14 rounded-lg md:rounded-xl overflow-hidden border-2 border-teal-500/30 flex-shrink-0">
+                                            {apt.doctor?.avatar_url ? (
+                                                <Image src={apt.doctor.avatar_url} alt={apt.doctor.full_name} fill className="object-cover" unoptimized />
+                                            ) : (
+                                                <div className={cn("w-full h-full flex items-center justify-center text-xl font-bold", isDark ? "bg-teal-500/10 text-teal-400" : "bg-teal-50 text-teal-600")}>
+                                                    {apt.doctor?.full_name.charAt(0) || "D"}
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className="flex-1 sm:hidden">
+                                            <div className="flex items-center gap-2 mb-0.5">
+                                                <h3 className={cn("font-semibold text-sm", textPrimary)}>
+                                                    {apt.doctor?.full_name || "Doctor"}
+                                                </h3>
+                                                <Badge variant={getStatusVariant(apt.status)} isDark={isDark}>
+                                                    {getStatusLabel(apt.status)}
+                                                </Badge>
+                                            </div>
+                                            <p className={cn("text-xs", textMuted)}>
+                                                {apt.doctor?.specialty || (isRTL ? "استشارة" : "Consultation")}
+                                            </p>
+                                        </div>
                                     </div>
-                                    <div className="flex-1 sm:hidden">
-                                        <div className="flex items-center gap-2 mb-0.5">
-                                            <h3 className={cn("font-semibold text-sm", textPrimary)}>{apt.doctor}</h3>
-                                            <Badge variant={apt.status === "upcoming" ? "primary" : "success"}>
-                                                {apt.status === "upcoming" ? t.patientDashboard.appointmentsPage.filters.upcoming : t.patientDashboard.appointmentsPage.filters.completed}
+                                    <div className="flex-1 hidden sm:block">
+                                        <div className="flex items-center gap-3 mb-1">
+                                            <h3 className={cn("font-semibold", textPrimary)}>
+                                                {apt.doctor?.full_name || "Doctor"}
+                                            </h3>
+                                            <Badge variant={getStatusVariant(apt.status)} isDark={isDark}>
+                                                {getStatusLabel(apt.status)}
                                             </Badge>
                                         </div>
-                                        <p className={cn("text-xs", textMuted)}>{apt.specialty}</p>
+                                        <p className={cn("text-sm", textMuted)}>
+                                            {apt.doctor?.specialty || (isRTL ? "استشارة" : "Consultation")}
+                                            {apt.consultation_fee && ` • ${formatCurrency(apt.consultation_fee)}`}
+                                        </p>
+                                        <div className="flex items-center gap-4 mt-2">
+                                            <span className={cn("text-sm flex items-center gap-1", isDark ? "text-gray-400" : "text-gray-600")}>
+                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
+                                                </svg>
+                                                {formatDate(apt.scheduled_start)}
+                                            </span>
+                                            <span className={cn("text-sm flex items-center gap-1", isDark ? "text-gray-400" : "text-gray-600")}>
+                                                {Icons.clock}
+                                                {formatTime(apt.scheduled_start)}
+                                            </span>
+                                        </div>
                                     </div>
+                                    {/* Mobile: Date/Time row */}
+                                    <div className="flex items-center justify-between sm:hidden">
+                                        <div className="flex items-center gap-3">
+                                            <span className={cn("text-xs flex items-center gap-1", isDark ? "text-gray-400" : "text-gray-600")}>
+                                                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
+                                                </svg>
+                                                {formatDate(apt.scheduled_start)}
+                                            </span>
+                                            <span className={cn("text-xs flex items-center gap-1", isDark ? "text-gray-400" : "text-gray-600")}>
+                                                {Icons.clock}
+                                                {formatTime(apt.scheduled_start)}
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    {/* Actions */}
+                                    {actionLoading === apt.id ? (
+                                        <div className="flex items-center justify-center py-2">
+                                            <div className="animate-spin w-5 h-5 border-2 border-teal-500 border-t-transparent rounded-full" />
+                                        </div>
+                                    ) : (
+                                        <>
+                                            {apt.status === "scheduled" && (
+                                                <div className="flex gap-2 sm:flex-shrink-0">
+                                                    <button
+                                                        onClick={() => handleJoinWaitingRoom(apt.id)}
+                                                        className="flex-1 sm:flex-initial px-4 py-2 rounded-lg bg-teal-500 hover:bg-teal-600 text-white text-sm font-medium transition-colors flex items-center justify-center gap-2"
+                                                    >
+                                                        {Icons.video}
+                                                        {isRTL ? "انضم للانتظار" : "Join Waiting"}
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleCancel(apt.id)}
+                                                        className={cn(
+                                                            "p-2 rounded-lg transition-colors",
+                                                            isDark ? "text-red-400 hover:bg-red-500/10" : "text-red-500 hover:bg-red-50"
+                                                        )}
+                                                        title={isRTL ? "إلغاء" : "Cancel"}
+                                                    >
+                                                        {Icons.x}
+                                                    </button>
+                                                </div>
+                                            )}
+                                            {apt.status === "in_waiting_room" && (
+                                                <div className="flex gap-2 sm:flex-shrink-0">
+                                                    <span className={cn("px-3 py-2 rounded-lg text-sm", isDark ? "bg-amber-500/10 text-amber-400" : "bg-amber-50 text-amber-600")}>
+                                                        {isRTL ? "في انتظار الطبيب..." : "Waiting for doctor..."}
+                                                    </span>
+                                                </div>
+                                            )}
+                                            {apt.status === "in_progress" && (
+                                                <div className="flex gap-2 sm:flex-shrink-0">
+                                                    <button
+                                                        onClick={() => handleJoinConsultation(apt.id)}
+                                                        className="flex-1 sm:flex-initial px-4 py-2 rounded-lg bg-teal-500 hover:bg-teal-600 text-white text-sm font-medium transition-colors flex items-center justify-center gap-2"
+                                                    >
+                                                        {Icons.video}
+                                                        {isRTL ? "انضم للاستشارة" : "Join Call"}
+                                                    </button>
+                                                </div>
+                                            )}
+                                            {apt.status === "completed" && (
+                                                <div className="flex gap-2 sm:flex-shrink-0">
+                                                    <button
+                                                        className={cn(
+                                                            "flex-1 sm:flex-initial px-3 md:px-4 py-2 rounded-lg text-xs md:text-sm font-medium transition-colors",
+                                                            isDark ? "bg-white/10 hover:bg-white/20 text-white" : "bg-gray-100 hover:bg-gray-200 text-gray-700"
+                                                        )}
+                                                    >
+                                                        {isRTL ? "عرض التفاصيل" : "View Details"}
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </>
+                                    )}
                                 </div>
-                                <div className="flex-1 hidden sm:block">
-                                    <div className="flex items-center gap-3 mb-1">
-                                        <h3 className={cn("font-semibold", textPrimary)}>{apt.doctor}</h3>
-                                        <Badge variant={apt.status === "upcoming" ? "primary" : "success"}>
-                                            {apt.status === "upcoming" ? t.patientDashboard.appointmentsPage.filters.upcoming : t.patientDashboard.appointmentsPage.filters.completed}
-                                        </Badge>
-                                    </div>
-                                    <p className={cn("text-sm", textMuted)}>{apt.specialty} • {apt.type}</p>
-                                    <div className="flex items-center gap-4 mt-2">
-                                        <span className={cn("text-sm flex items-center gap-1", isDark ? "text-gray-400" : "text-gray-600")}>
-                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" /></svg>
-                                            {formatDate(apt.date)}
-                                        </span>
-                                        <span className={cn("text-sm flex items-center gap-1", isDark ? "text-gray-400" : "text-gray-600")}>
-                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                                            {isRTL ? apt.time.replace('AM', 'ص').replace('PM', 'م') : formatNumber(apt.time)}
-                                        </span>
-                                    </div>
-                                </div>
-                                {/* Mobile: Date/Time + Type row */}
-                                <div className="flex items-center justify-between sm:hidden">
-                                    <div className="flex items-center gap-3">
-                                        <span className={cn("text-xs flex items-center gap-1", isDark ? "text-gray-400" : "text-gray-600")}>
-                                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" /></svg>
-                                            {formatDate(apt.date)}
-                                        </span>
-                                        <span className={cn("text-xs flex items-center gap-1", isDark ? "text-gray-400" : "text-gray-600")}>
-                                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                                            {isRTL ? apt.time.replace('AM', 'ص').replace('PM', 'م') : formatNumber(apt.time)}
-                                        </span>
-                                    </div>
-                                    <span className={cn("text-xs", textMuted)}>{apt.type}</span>
-                                </div>
-                                {apt.status === "upcoming" && (
-                                    <div className="flex gap-2 sm:flex-shrink-0">
-                                        <button className="p-2 rounded-lg bg-teal-500/10 hover:bg-teal-500 text-teal-500 hover:text-white transition-all">
-                                            {Icons.video}
-                                        </button>
-                                        <button className={cn(
-                                            "flex-1 sm:flex-initial px-3 md:px-4 py-2 rounded-lg text-xs md:text-sm font-medium transition-colors",
-                                            isDark ? "bg-white/10 hover:bg-white/20 text-white" : "bg-gray-100 hover:bg-gray-200 text-gray-700"
-                                        )}>
-                                            {t.patientDashboard.appointmentsPage.reschedule}
-                                        </button>
-                                    </div>
-                                )}
-                            </div>
-                        </GlowingCard>
-                    </motion.div>
-                ))}
-            </div>
+                            </GlowingCard>
+                        </motion.div>
+                    ))}
+                </div>
+            )}
         </div>
     );
 }
