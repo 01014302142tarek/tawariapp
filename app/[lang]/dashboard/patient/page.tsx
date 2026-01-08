@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useTheme } from "./context/ThemeContext";
 import { useI18n } from "@/app/i18n";
+import { useAuth } from "@/app/context/AuthContext";
 
 // Import Aceternity components
 import { GlowingCard } from "@/components/ui/glowing-card";
@@ -95,7 +96,11 @@ const SectionHeader = ({ title, subtitle, action, isDark = true }: { title: stri
 export default function PatientDashboard() {
     const { theme } = useTheme();
     const { t, language, isRTL, formatNumber, formatDate } = useI18n();
+    const { profile } = useAuth();
     const isDark = theme === "dark";
+
+    // Get user's first name from profile
+    const userName = profile?.profile.full_name?.split(' ')[0] || (isRTL ? "سارة" : "Sarah");
 
     const greeting = new Date().getHours() < 12 ? t.doctorDashboard.greeting.morning : new Date().getHours() < 17 ? t.doctorDashboard.greeting.afternoon : t.doctorDashboard.greeting.evening;
 
@@ -154,7 +159,7 @@ export default function PatientDashboard() {
                 {/* Greeting Section */}
                 <section className="mb-6 md:mb-8">
                     <h2 className={cn("text-2xl md:text-3xl font-bold mb-2 flex items-center gap-3", isDark ? "text-white" : "text-slate-900")}>
-                        {greeting}, {isRTL ? "سارة" : "Sarah"} {Icons.hand}
+                        {greeting}, {userName} {Icons.hand}
                     </h2>
                     <p className={cn("text-base md:text-lg", isDark ? "text-gray-400" : "text-gray-600")}>
                         {t.patientDashboard.greeting.subtitle}

@@ -2,10 +2,12 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useTheme } from "../context/ThemeContext";
 import { useI18n } from "@/app/i18n";
+import { useAuth } from "@/app/context/AuthContext";
 import { MovingBorder } from "@/components/ui/moving-border";
 
 // Icons
@@ -78,9 +80,8 @@ const Icons = {
     ),
 };
 
-const patientInfo = {
-    image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop&crop=face",
-};
+// Default avatar for users without profile photo
+const DEFAULT_AVATAR = "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop&crop=face";
 
 // User Dropdown with Theme Appearance submenu
 const UserDropdown = ({
@@ -88,13 +89,15 @@ const UserDropdown = ({
     image,
     isDark,
     themeMode,
-    onSetThemeMode
+    onSetThemeMode,
+    onLogout
 }: {
     name: string;
     image: string;
     isDark: boolean;
     themeMode: "system" | "light" | "dark";
     onSetThemeMode: (mode: "system" | "light" | "dark") => void;
+    onLogout: () => void;
 }) => {
     const [isOpen, setIsOpen] = useState(false);
     const [showThemeMenu, setShowThemeMenu] = useState(false);
@@ -231,7 +234,9 @@ const UserDropdown = ({
                                 {Icons.settings}
                                 <span className="text-sm">{t.common.settings}</span>
                             </button>
-                            <button className={cn(
+                            <button
+                                onClick={onLogout}
+                                className={cn(
                                 "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors",
                                 isDark ? "text-gray-400 hover:text-red-400 hover:bg-red-500/10" : "text-gray-600 hover:text-red-600 hover:bg-red-50"
                             )}>
@@ -248,8 +253,19 @@ const UserDropdown = ({
 
 export default function Header({ onMenuClick }: { onMenuClick?: () => void }) {
     const { theme, themeMode, setThemeMode } = useTheme();
-    const { t, isRTL } = useI18n();
+    const { t, isRTL, language } = useI18n();
+    const { profile, signOut } = useAuth();
+    const router = useRouter();
     const isDark = theme === "dark";
+
+    // Get user's name and avatar from profile
+    const userName = profile?.profile.full_name || t.common.demoNames.sarahJohnson;
+    const userAvatar = profile?.profile.avatar_url || DEFAULT_AVATAR;
+
+    const handleLogout = async () => {
+        await signOut();
+        router.push(`/${language}/login`);
+    };
 
     const currentDate = new Date().toLocaleDateString(isRTL ? "ar-EG" : "en-US", {
         weekday: "long",
@@ -312,11 +328,12 @@ export default function Header({ onMenuClick }: { onMenuClick?: () => void }) {
 
                     {/* User Dropdown */}
                     <UserDropdown
-                        name={t.common.demoNames.sarahJohnson}
-                        image={patientInfo.image}
+                        name={userName}
+                        image={userAvatar}
                         isDark={isDark}
                         themeMode={themeMode}
                         onSetThemeMode={setThemeMode}
+                        onLogout={handleLogout}
                     />
                 </div>
             </div>

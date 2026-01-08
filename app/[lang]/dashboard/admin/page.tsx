@@ -7,6 +7,7 @@ import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useTheme } from "./context/ThemeContext";
 import { useI18n } from "@/app/i18n";
+import { useAuth } from "@/app/context/AuthContext";
 
 // Import Aceternity components
 import { GlowingCard } from "@/components/ui/glowing-card";
@@ -129,7 +130,11 @@ const ProgressBar = ({ value, max, isDark = true }: { value: number; max: number
 export default function AdminDashboard() {
     const { theme } = useTheme();
     const { t, language, isRTL, formatNumber } = useI18n();
+    const { profile } = useAuth();
     const isDark = theme === "dark";
+
+    // Get admin's first name from profile
+    const adminName = profile?.profile.full_name?.split(' ')[0] || (isRTL ? "مدير" : "Admin");
 
     const time = new Date().getHours();
     const greetingKey = time < 12 ? "morning" : time < 17 ? "afternoon" : "evening";
@@ -173,7 +178,7 @@ export default function AdminDashboard() {
                 {/* Greeting */}
                 <section className="mb-6 md:mb-8">
                     <h2 className={cn("text-2xl md:text-3xl font-bold mb-2 flex items-center gap-3", isDark ? "text-white" : "text-slate-900")}>
-                        {greeting}, {isRTL ? "مدير" : "Admin"} {Icons.hand}
+                        {greeting}, {adminName} {Icons.hand}
                     </h2>
                     <p className={cn("text-base md:text-lg", isDark ? "text-gray-400" : "text-gray-600")}>
                         {t.adminDashboard.greeting.subtitle}

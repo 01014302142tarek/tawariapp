@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useTheme } from "./context/ThemeContext";
 import { useI18n } from "@/app/i18n";
+import { useAuth } from "@/app/context/AuthContext";
 
 // Import Aceternity components
 import { GlowingCard } from "@/components/ui/glowing-card";
@@ -167,7 +168,13 @@ const ProgressBar = ({ value, max, isDark = true }: { value: number; max: number
 export default function Doctor2Dashboard() {
     const { theme } = useTheme();
     const { t, language, isRTL, formatNumber } = useI18n();
+    const { profile } = useAuth();
     const isDark = theme === "dark";
+
+    // Get doctor's name from profile (with "Dr." prefix)
+    const doctorName = profile?.profile.full_name
+        ? (isRTL ? `د. ${profile.profile.full_name.split(' ')[0]}` : `Dr. ${profile.profile.full_name.split(' ')[0]}`)
+        : t.common.demoNames.drHassan;
 
     // MOCK DATA moved inside for translations
     // MOCK DATA moved inside for translations
@@ -238,7 +245,7 @@ export default function Doctor2Dashboard() {
                 {/* Greeting Section */}
                 <section className="mb-6 md:mb-8">
                     <h2 className={cn("text-2xl md:text-3xl font-bold mb-2 flex items-center gap-3", isDark ? "text-white" : "text-slate-900")}>
-                        {new Date().getHours() < 12 ? t.doctorDashboard.greeting.morning : new Date().getHours() < 17 ? t.doctorDashboard.greeting.afternoon : t.doctorDashboard.greeting.evening}, {t.common.demoNames.drHassan}
+                        {new Date().getHours() < 12 ? t.doctorDashboard.greeting.morning : new Date().getHours() < 17 ? t.doctorDashboard.greeting.afternoon : t.doctorDashboard.greeting.evening}, {doctorName}
                         <svg className="w-6 h-6 md:w-8 md:h-8 text-teal-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 00-3 0m-6-3V11m0-5.5v-1a1.5 1.5 0 013 0v1m0 0V11m0-5.5a1.5 1.5 0 013 0v3m0 0V11" />
                         </svg>
