@@ -6,7 +6,7 @@ import { useTheme } from "../context/ThemeContext";
 import { GlowingCard } from "@/components/ui/glowing-card";
 import { SparklesCore } from "@/components/ui/sparkles";
 import { useI18n } from "@/app/i18n";
-import { useAuth } from "@/app/context/AuthContext";
+import { useAuth, isDoctorProfile } from "@/app/context/AuthContext";
 
 // Icons
 const Icons = {
@@ -78,6 +78,9 @@ export default function SettingsPage() {
     const { theme } = useTheme();
     const { profile, user } = useAuth();
     const isDark = theme === "dark";
+
+    // Get doctor-specific data if profile is a doctor
+    const doctorBio = profile && isDoctorProfile(profile) ? profile.doctorProfile.bio : "";
 
     const [notifications, setNotifications] = useState({
         email: true,
@@ -193,7 +196,7 @@ export default function SettingsPage() {
                                 </label>
                                 <textarea
                                     rows={3}
-                                    defaultValue={profile?.doctorProfile?.bio || ""}
+                                    defaultValue={doctorBio || ""}
                                     className={cn(
                                         "w-full px-4 py-3 rounded-xl border transition-colors resize-none",
                                         isDark
