@@ -1,1014 +1,361 @@
-# API Endpoints Specification
+# TawariApp API Endpoints
 
-**Last Updated:** January 2, 2026
 **Base URL:** `https://tawariapp.vercel.app/api`
 
 ---
 
-## Table of Contents
+## Conventions
 
-1. [Authentication](#authentication)
-2. [Users](#users)
-3. [Doctors](#doctors)
-4. [Availability](#availability)
-5. [Consultations](#consultations)
-6. [Prescriptions](#prescriptions)
-7. [Payments](#payments)
-8. [Admin](#admin)
-9. [Webhooks](#webhooks)
+- **Auth:** `Authorization: Bearer <supabase_access_token>`
+- **Language:** `Accept-Language: ar` or `en`
+- **Response:** `{ success, data, error }`
+- **Pagination:** `?page=1&limit=20` → returns `{ pagination: { page, limit, total, total_pages, has_next, has_prev } }`
 
 ---
 
-## API Conventions
+## Authentication (Supabase SDK)
 
-### Request Headers
+| Action | Method |
+|--------|--------|
+| Sign Up | `supabase.auth.signUp({ email, password, options: { data: { full_name, role } } })` |
+| Sign In | `supabase.auth.signInWithPassword({ email, password })` |
+| Sign In with Google | `supabase.auth.signInWithOAuth({ provider: 'google' })` |
+| Sign Out | `supabase.auth.signOut()` |
+| Reset Password | `supabase.auth.resetPasswordForEmail(email, { redirectTo })` |
+| Update Password | `supabase.auth.updateUser({ password })` |
+| Resend Verification | `supabase.auth.resend({ type: 'signup', email })` |
+| Get User | `supabase.auth.getUser()` |
 
-```http
-Content-Type: application/json
-Authorization: Bearer <supabase_access_token>
-Accept-Language: ar  # or 'en'
-```
-
-> **Note:** Authentication uses Supabase Auth with email/password (Phase 1). Phone auth will be added in Phase 2.
-
-### Response Format
-
-```json
-{
-  "success": true,
-  "data": { ... },
-  "error": null
-}
-
-// Error response
-{
-  "success": false,
-  "data": null,
-  "error": {
-    "code": "VALIDATION_ERROR",
-    "message": "رقم الهاتف غير صحيح",
-    "details": { ... }
-  }
-}
-```
-
-### Error Codes
-
-| Code | HTTP Status | Description |
-|------|-------------|-------------|
-| `UNAUTHORIZED` | 401 | Missing or invalid token |
-| `FORBIDDEN` | 403 | Insufficient permissions |
-| `NOT_FOUND` | 404 | Resource not found |
-| `VALIDATION_ERROR` | 400 | Invalid input data |
-| `CONFLICT` | 409 | Resource already exists |
-| `INTERNAL_ERROR` | 500 | Server error |
+**Roles:** `patient`, `doctor`, `admin`, `doctor_assistant`, `admin_assistant`
 
 ---
 
-## Authentication
+## Profiles
 
-Authentication is handled by Supabase Auth. These endpoints are called client-side using the Supabase SDK.
-
-### Sign Up
-
-Create a new user account with email and password.
-
-```typescript
-// Client-side using Supabase SDK
-const { data, error } = await supabase.auth.signUp({
-  email: 'user@example.com',
-  password: 'securepassword',
-  options: {
-    data: {
-      name_ar: 'أحمد محمد',
-      name_en: 'Ahmed Mohamed',
-      role: 'patient'
-    }
-  }
-})
-```
-
-**Response:**
-```json
-{
-  "user": {
-    "id": "uuid",
-    "email": "user@example.com",
-    "user_metadata": {
-      "name_ar": "أحمد محمد",
-      "role": "patient"
-    }
-  },
-  "session": {
-    "access_token": "eyJ...",
-    "refresh_token": "..."
-  }
-}
-```
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/profiles/me` | GET | Get current user profile |
+| `/api/profiles/me` | PUT | Update profile (full_name, avatar_url, preferred_language, timezone) |
+| `/api/profiles/avatar` | POST | Upload avatar (multipart/form-data) |
 
 ---
 
-### Sign In
+## Patient Management
 
-Sign in with email and password.
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/patients/me` | GET | Get patient profile |
+| `/api/patients/me` | PUT | Update patient profile |
+| `/api/patients/family-access` | GET | List family access grants |
+| `/api/patients/family-access` | POST | Grant family access |
+| `/api/patients/family-access/:id` | DELETE | Revoke family access |
 
-```typescript
-const { data, error } = await supabase.auth.signInWithPassword({
-  email: 'user@example.com',
-  password: 'securepassword'
-})
-```
-
----
-
-### Sign Out
-
-```typescript
-await supabase.auth.signOut()
-```
+**Access Levels:** `view_only`, `full`, `emergency`
+**Relationships:** `parent`, `child`, `spouse`, `sibling`, `other`
 
 ---
 
-### Password Reset
+## Doctor Management
 
-Request password reset email.
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/doctors` | GET | List verified doctors (query: specialization_id, is_available_now, min_rating, search) |
+| `/api/doctors/:id` | GET | Get doctor details |
+| `/api/doctors/me` | GET | Get own doctor profile |
+| `/api/doctors/me` | PUT | Update doctor profile |
+| `/api/doctors/register` | POST | Register as doctor |
+| `/api/doctors/credentials` | POST | Upload credential (multipart/form-data) |
+| `/api/doctors/:id/specializations` | GET | Get doctor's specializations |
+| `/api/doctors/me/specializations` | POST | Add specialization |
+| `/api/doctors/me/specializations/:id` | PUT | Update specialization (set primary) |
+| `/api/doctors/me/specializations/:id` | DELETE | Remove specialization |
 
-```typescript
-const { error } = await supabase.auth.resetPasswordForEmail(email, {
-  redirectTo: 'https://tawariapp.vercel.app/auth/reset-password'
-})
-```
+**Verification Status:** `pending`, `under_review`, `verified`, `suspended`, `rejected`
+**Credential Types:** `license`, `degree`, `certification`, `id_document`
 
----
+### Specializations
 
-### Get Current User
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/specializations` | GET | List all specializations |
 
-Get the authenticated user's session.
-
-```typescript
-const { data: { user } } = await supabase.auth.getUser()
-```
-
-**Response:**
-```json
-{
-  "user": {
-    "id": "uuid",
-    "email": "user@example.com",
-    "user_metadata": {
-      "name_ar": "أحمد محمد",
-      "role": "patient",
-      "avatar_url": "https://..."
-    }
-  }
-}
-```
+**Categories:** `general`, `specialist`, `sub_specialist`
 
 ---
 
-### Update Profile
+## Assistant Management
 
-Update the authenticated user's metadata.
+### Doctor Assistants
 
-```typescript
-const { data, error } = await supabase.auth.updateUser({
-  data: {
-    name_ar: 'أحمد محمد علي',
-    avatar_url: 'https://...'
-  }
-})
-```
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/doctors/assistants/invite` | POST | Invite assistant |
+| `/api/doctors/assistants` | GET | List my assistants |
+| `/api/doctors/assistants/:id` | PUT | Update permissions |
+| `/api/doctors/assistants/:id/revoke` | POST | Revoke access |
+| `/api/assistants/invitations/:id/accept` | POST | Accept invitation |
+| `/api/assistants/doctors` | GET | List my doctor assignments |
+| `/api/assistants/action-logs` | GET | Get action logs |
 
----
+**Permissions:** can_manage_availability, can_reschedule_appointments, can_view_patient_records, can_send_messages, can_observe_consultations
 
-### Future: Phone Authentication (Phase 2)
+### Admin Assistants
 
-When phone auth is added:
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/admin/assistants/invite` | POST | Invite admin assistant |
+| `/api/admin/assistants` | GET | List admin assistants |
+| `/api/admin/assistants/:id` | PUT | Update permissions |
+| `/api/admin/assistants/:id/revoke` | POST | Revoke access |
 
-```typescript
-// Request OTP
-const { error } = await supabase.auth.signInWithOtp({
-  phone: '+201012345678'
-})
-
-// Verify OTP
-const { data, error } = await supabase.auth.verifyOtp({
-  phone: '+201012345678',
-  token: '123456',
-  type: 'sms'
-})
-```
+**Scopes:** `support`, `verification`, `billing`, `general`
+**Assignment Status:** `pending`, `active`, `suspended`, `revoked`
 
 ---
 
-## Users
+## Scheduling & Availability
 
-### Upload Avatar
-
-Upload a user profile photo.
-
-```http
-POST /api/users/avatar
-Content-Type: multipart/form-data
-```
-
-**Request:**
-```
-file: <image file>
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "data": {
-    "avatar_url": "https://supabase.co/storage/v1/object/public/avatars/..."
-  }
-}
-```
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/doctors/:id/availability` | GET | Get weekly availability |
+| `/api/doctors/:id/slots?date=YYYY-MM-DD` | GET | Get available time slots |
+| `/api/doctors/me/availability` | POST | Create availability slot |
+| `/api/doctors/me/availability/:id` | PUT | Update slot |
+| `/api/doctors/me/availability/:id` | DELETE | Delete slot |
+| `/api/doctors/me/blocked-times` | POST | Create blocked time |
+| `/api/doctors/me/blocked-times/:id` | DELETE | Delete blocked time |
 
 ---
 
-## Doctors
+## Appointments
 
-### List Doctors
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/appointments` | GET | List appointments (query: status, upcoming) |
+| `/api/appointments` | POST | Book appointment |
+| `/api/appointments/:id` | GET | Get appointment details |
+| `/api/appointments/:id/status` | PUT | Update status (doctor) |
+| `/api/appointments/:id/cancel` | POST | Cancel appointment |
+| `/api/appointments/:id/join-waiting-room` | POST | Join waiting room (patient) |
+| `/api/appointments/:id/start` | POST | Start consultation (doctor) |
+| `/api/appointments/:id/end` | POST | End consultation (doctor) |
+| `/api/appointments/:id/session` | GET | Get session details |
+| `/api/appointments/:id/session/recording-consent` | POST | Request recording consent |
+| `/api/appointments/:id/notes` | GET | Get consultation notes |
+| `/api/appointments/:id/notes` | POST | Create/update notes (doctor) |
+| `/api/appointments/:id/observer-consent` | POST | Consent to observer (patient) |
 
-Get paginated list of verified doctors.
-
-```http
-GET /api/doctors
-```
-
-**Query Parameters:**
-
-| Param | Type | Description |
-|-------|------|-------------|
-| `specialty` | string | Filter by specialty |
-| `gender` | string | Filter by doctor gender |
-| `is_online` | boolean | Only show online doctors |
-| `min_rating` | number | Minimum rating (1-5) |
-| `search` | string | Search by name |
-| `page` | number | Page number (default: 1) |
-| `limit` | number | Items per page (default: 20) |
-
-**Response:**
-```json
-{
-  "success": true,
-  "data": {
-    "doctors": [
-      {
-        "id": "uuid",
-        "name_ar": "د. سارة أحمد",
-        "specialty": "طب أطفال",
-        "bio_ar": "طبيبة أطفال متخصصة...",
-        "consultation_fee": 200,
-        "rating_avg": 4.8,
-        "rating_count": 150,
-        "is_online": true,
-        "avatar_url": "https://..."
-      }
-    ],
-    "pagination": {
-      "page": 1,
-      "limit": 20,
-      "total": 45,
-      "totalPages": 3
-    }
-  }
-}
-```
+**Status:** `scheduled`, `in_waiting_room`, `in_progress`, `completed`, `cancelled`, `no_show`
+**Types:** `scheduled`, `on_demand`
 
 ---
 
-### Get Doctor Details
-
-Get detailed doctor profile.
-
-```http
-GET /api/doctors/:id
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "data": {
-    "doctor": {
-      "id": "uuid",
-      "name_ar": "د. سارة أحمد",
-      "name_en": "Dr. Sara Ahmed",
-      "specialty": "طب أطفال",
-      "bio_ar": "طبيبة أطفال متخصصة في...",
-      "years_experience": 10,
-      "consultation_fee": 200,
-      "rating_avg": 4.8,
-      "rating_count": 150,
-      "total_consultations": 500,
-      "is_online": true,
-      "is_accepting_patients": true,
-      "avatar_url": "https://..."
-    },
-    "reviews": [
-      {
-        "patient_name": "م. أحمد",
-        "rating": 5,
-        "review": "طبيبة ممتازة...",
-        "created_at": "2025-12-01T10:00:00Z"
-      }
-    ]
-  }
-}
-```
-
----
-
-### Register as Doctor
-
-Register the current user as a doctor.
-
-```http
-POST /api/doctors/register
-```
-
-**Request:**
-```json
-{
-  "specialty": "طب أطفال",
-  "license_number": "EMS-12345",
-  "years_experience": 10,
-  "bio_ar": "طبيب متخصص في...",
-  "consultation_fee": 200
-}
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "data": {
-    "doctor": {
-      "id": "uuid",
-      "verification_status": "pending"
-    }
-  }
-}
-```
-
----
-
-### Update Doctor Profile
-
-Update doctor profile (for verified doctors).
-
-```http
-PUT /api/doctors/profile
-```
-
-**Request:**
-```json
-{
-  "bio_ar": "Updated bio...",
-  "consultation_fee": 250,
-  "is_online": true,
-  "is_accepting_patients": true
-}
-```
-
----
-
-### Upload Doctor Document
-
-Upload verification document.
-
-```http
-POST /api/doctors/documents
-Content-Type: multipart/form-data
-```
-
-**Request:**
-```
-file: <document file>
-type: medical_license | national_id | certificate | profile_photo
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "data": {
-    "document": {
-      "id": "uuid",
-      "type": "medical_license",
-      "file_url": "https://...",
-      "is_verified": false
-    }
-  }
-}
-```
-
----
-
-## Availability
-
-### Get Doctor Availability
-
-Get a doctor's weekly availability schedule.
-
-```http
-GET /api/availability/:doctorId
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "data": {
-    "slots": [
-      {
-        "id": "uuid",
-        "day_of_week": 0,
-        "day_name_ar": "الأحد",
-        "start_time": "09:00",
-        "end_time": "12:00",
-        "is_active": true
-      }
-    ]
-  }
-}
-```
-
----
-
-### Get Available Time Slots
-
-Get available booking slots for a specific date.
-
-```http
-GET /api/availability/:doctorId/slots
-```
-
-**Query Parameters:**
-
-| Param | Type | Description |
-|-------|------|-------------|
-| `date` | string | Date in YYYY-MM-DD format |
-
-**Response:**
-```json
-{
-  "success": true,
-  "data": {
-    "date": "2025-12-15",
-    "slots": [
-      { "start": "09:00", "end": "09:30", "available": true },
-      { "start": "09:30", "end": "10:00", "available": false },
-      { "start": "10:00", "end": "10:30", "available": true }
-    ]
-  }
-}
-```
-
----
-
-### Create Availability Slot
-
-Create a new availability slot (doctor only).
-
-```http
-POST /api/availability
-```
-
-**Request:**
-```json
-{
-  "day_of_week": 0,
-  "start_time": "09:00",
-  "end_time": "12:00"
-}
-```
-
----
-
-### Update Availability Slot
-
-```http
-PUT /api/availability/:id
-```
-
-**Request:**
-```json
-{
-  "start_time": "10:00",
-  "end_time": "14:00",
-  "is_active": true
-}
-```
-
----
-
-### Delete Availability Slot
-
-```http
-DELETE /api/availability/:id
-```
-
----
-
-## Consultations
-
-### Book Consultation
-
-Create a new consultation booking.
-
-```http
-POST /api/consultations
-```
-
-**Request:**
-```json
-{
-  "doctor_id": "uuid",
-  "scheduled_at": "2025-12-15T10:00:00+02:00",
-  "patient_complaint": "أعاني من صداع مستمر..."
-}
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "data": {
-    "consultation": {
-      "id": "uuid",
-      "status": "scheduled",
-      "scheduled_at": "2025-12-15T10:00:00+02:00",
-      "jitsi_room_id": "tawari-abc123",
-      "consultation_fee": 200
-    },
-    "payment": {
-      "id": "uuid",
-      "amount": 200,
-      "vat": 28,
-      "total": 228,
-      "payment_url": "https://accept.paymob.com/..."
-    }
-  }
-}
-```
-
----
-
-### Get Consultations
-
-Get user's consultation history.
-
-```http
-GET /api/consultations
-```
-
-**Query Parameters:**
-
-| Param | Type | Description |
-|-------|------|-------------|
-| `status` | string | Filter by status |
-| `upcoming` | boolean | Only future consultations |
-| `page` | number | Page number |
-| `limit` | number | Items per page |
-
-**Response:**
-```json
-{
-  "success": true,
-  "data": {
-    "consultations": [
-      {
-        "id": "uuid",
-        "doctor": {
-          "id": "uuid",
-          "name_ar": "د. سارة أحمد",
-          "specialty": "طب أطفال",
-          "avatar_url": "https://..."
-        },
-        "status": "scheduled",
-        "scheduled_at": "2025-12-15T10:00:00+02:00",
-        "consultation_fee": 200
-      }
-    ],
-    "pagination": { ... }
-  }
-}
-```
-
----
-
-### Get Consultation Details
-
-```http
-GET /api/consultations/:id
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "data": {
-    "consultation": {
-      "id": "uuid",
-      "status": "scheduled",
-      "scheduled_at": "2025-12-15T10:00:00+02:00",
-      "jitsi_room_id": "tawari-abc123",
-      "doctor": { ... },
-      "patient": { ... },
-      "prescription": { ... },
-      "payment": { ... }
-    }
-  }
-}
-```
-
----
-
-### Update Consultation Status
-
-Update consultation status (for doctors).
-
-```http
-PUT /api/consultations/:id/status
-```
-
-**Request:**
-```json
-{
-  "status": "in_progress"
-}
-```
-
----
-
-### Cancel Consultation
-
-Cancel a scheduled consultation.
-
-```http
-POST /api/consultations/:id/cancel
-```
-
-**Request:**
-```json
-{
-  "reason": "لقد تغيرت ظروفي"
-}
-```
-
----
-
-### Rate Consultation
-
-Submit a rating after consultation.
-
-```http
-POST /api/consultations/:id/rate
-```
-
-**Request:**
-```json
-{
-  "rating": 5,
-  "review": "طبيبة ممتازة ومتفهمة"
-}
-```
+## Medical Records
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/medical-records` | GET | List records (query: record_type) |
+| `/api/medical-records` | POST | Create record |
+| `/api/medical-records/:id` | PUT | Update record |
+| `/api/medical-records/:id` | DELETE | Soft delete record |
+| `/api/allergies` | GET/POST | List/create allergies |
+| `/api/allergies/:id` | PUT/DELETE | Update/delete allergy |
+| `/api/conditions` | GET/POST | List/create conditions |
+| `/api/conditions/:id` | PUT/DELETE | Update/delete condition |
+| `/api/lab-results` | GET | List lab results |
+| `/api/lab-results` | POST | Upload lab result (multipart/form-data) |
+| `/api/lab-results/:id` | DELETE | Delete lab result |
+
+**Record Types:** `general`, `chronic_condition`, `surgical_history`, `family_history`
+**Allergy Severity:** `mild`, `moderate`, `severe`
+**Condition Status:** `active`, `managed`, `resolved`
 
 ---
 
 ## Prescriptions
 
-### Create Prescription
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/prescriptions` | GET | List prescriptions |
+| `/api/prescriptions` | POST | Create prescription (doctor) |
+| `/api/prescriptions/:id` | GET | Get prescription details |
+| `/api/prescriptions/:id/pdf` | GET | Download PDF |
+| `/api/prescriptions/:id/renewal-request` | POST | Request renewal (patient) |
+| `/api/prescription-renewals/:id` | PUT | Respond to renewal (doctor) |
 
-Create a prescription for a consultation (doctor only).
-
-```http
-POST /api/prescriptions
-```
-
-**Request:**
-```json
-{
-  "consultation_id": "uuid",
-  "medications": [
-    {
-      "name_ar": "باراسيتامول",
-      "name_en": "Paracetamol",
-      "dosage": "500mg",
-      "frequency": "3 مرات يومياً",
-      "duration": "5 أيام",
-      "instructions_ar": "بعد الأكل"
-    }
-  ],
-  "diagnosis_ar": "التهاب في الحلق",
-  "notes_ar": "ينصح بالراحة والإكثار من السوائل"
-}
-```
+**Status:** `active`, `completed`, `cancelled`
+**Renewal Status:** `pending`, `approved`, `denied`, `requires_consultation`
 
 ---
 
-### Get Prescription
+## Payments & Transactions
 
-Get prescription details.
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/payments/initiate` | POST | Initiate payment |
+| `/api/transactions` | GET | List transactions (patient) |
+| `/api/transactions/:id` | GET | Get transaction status |
+| `/api/doctors/me/earnings` | GET | Get earnings summary |
+| `/api/doctors/me/payouts` | GET | List payouts |
+| `/api/doctors/me/payouts` | POST | Request payout |
 
-```http
-GET /api/prescriptions/:id
-```
-
----
-
-### Download Prescription PDF
-
-Download prescription as PDF.
-
-```http
-GET /api/prescriptions/:id/pdf
-```
-
-**Response:** PDF file
+**Transaction Status:** `pending`, `completed`, `failed`, `refunded`
+**Transaction Types:** `consultation`, `renewal`, `refund`
+**Earnings Status:** `pending`, `available`, `paid_out`
+**Payout Status:** `pending`, `processing`, `completed`, `failed`
 
 ---
 
-## Payments
+## Invoices
 
-### Initiate Payment
-
-Start payment process for a consultation.
-
-```http
-POST /api/payments/initiate
-```
-
-**Request:**
-```json
-{
-  "consultation_id": "uuid"
-}
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "data": {
-    "payment_url": "https://accept.paymob.com/api/acceptance/iframes/...",
-    "payment_id": "uuid"
-  }
-}
-```
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/invoices` | GET | List invoices |
+| `/api/invoices/:id` | GET | Get invoice details |
+| `/api/invoices/:id/pdf` | GET | Download PDF |
 
 ---
 
-### Get Payment Status
+## Communication
 
-Check payment status.
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/messages` | GET | List messages (query: conversation_id, with_profile_id) |
+| `/api/messages` | POST | Send message |
+| `/api/messages/:id/read` | PUT | Mark as read |
+| `/api/notifications` | GET | List notifications |
+| `/api/notifications/:id/read` | PUT | Mark as read |
+| `/api/notifications/read-all` | PUT | Mark all as read |
 
-```http
-GET /api/payments/:id
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "data": {
-    "payment": {
-      "id": "uuid",
-      "status": "success",
-      "amount": 200,
-      "vat": 28,
-      "total": 228,
-      "paid_at": "2025-12-15T09:30:00Z"
-    }
-  }
-}
-```
+**Message Types:** `text`, `file`, `system`
 
 ---
 
-### Get Payment History
+## Support Tickets
 
-Get user's payment history.
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/support-tickets` | GET | List my tickets |
+| `/api/support-tickets` | POST | Create ticket |
+| `/api/support-tickets/:id` | GET | Get ticket details |
+| `/api/support-tickets/:id/messages` | POST | Add message |
+| `/api/support-tickets/:id/internal-notes` | POST | Add internal note (admin) |
 
-```http
-GET /api/payments/history
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "data": {
-    "payments": [
-      {
-        "id": "uuid",
-        "consultation": { ... },
-        "amount": 200,
-        "vat": 28,
-        "total": 228,
-        "status": "success",
-        "paid_at": "2025-12-15T09:30:00Z"
-      }
-    ]
-  }
-}
-```
+**Categories:** `technical`, `billing`, `doctor_complaint`, `other`
+**Priorities:** `low`, `normal`, `high`, `urgent`
+**Status:** `open`, `in_progress`, `waiting_response`, `resolved`, `closed`
 
 ---
 
-## Admin
+## Reviews
 
-### Get Pending Doctors
-
-Get list of doctors pending verification.
-
-```http
-GET /api/admin/doctors/pending
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "data": {
-    "doctors": [
-      {
-        "id": "uuid",
-        "name_ar": "د. محمد أحمد",
-        "specialty": "طب عام",
-        "license_number": "EMS-12345",
-        "submitted_at": "2025-12-10T10:00:00Z",
-        "documents": [
-          {
-            "type": "medical_license",
-            "file_url": "https://..."
-          }
-        ]
-      }
-    ]
-  }
-}
-```
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/reviews` | POST | Submit review |
+| `/api/reviews/:id` | PUT | Update review |
+| `/api/doctors/:id/reviews` | GET | Get doctor reviews |
+| `/api/reviews/:id/response` | POST | Doctor response |
 
 ---
 
-### Verify Doctor
+## Announcements
 
-Approve or reject a doctor.
-
-```http
-POST /api/admin/doctors/:id/verify
-```
-
-**Request:**
-```json
-{
-  "action": "approve",  // or "reject"
-  "rejection_reason": "الوثائق غير واضحة"  // required if reject
-}
-```
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/announcements` | GET | Get active announcements |
 
 ---
 
-### Get All Users
+## Admin Operations
 
-Get paginated list of all users.
+### User Management
 
-```http
-GET /api/admin/users
-```
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/admin/users` | GET | List users (query: role, search, is_active) |
+| `/api/admin/users/:id/suspend` | POST | Suspend user |
+| `/api/admin/users/:id/reactivate` | POST | Reactivate user |
 
-**Query Parameters:**
-- `role`: Filter by role
-- `search`: Search by name or phone
-- `page`, `limit`: Pagination
+### Doctor Verification
 
----
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/admin/doctors/pending` | GET | List pending verifications |
+| `/api/admin/doctors/:id/verify` | POST | Verify doctor (action: approve/reject/request_more_info) |
+| `/api/admin/doctors/:id/credentials` | GET | Get credentials |
+| `/api/admin/doctors/credentials/:id/verify` | POST | Verify credential |
 
-### Suspend User
+### Support & Reviews
 
-Suspend a user account.
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/admin/support-tickets` | GET | List all tickets |
+| `/api/admin/support-tickets/:id/assign` | PUT | Assign ticket |
+| `/api/admin/support-tickets/:id/resolve` | POST | Resolve ticket |
+| `/api/admin/reviews/:id/visibility` | PUT | Hide/unhide review |
 
-```http
-POST /api/admin/users/:id/suspend
-```
+### Transactions
 
-**Request:**
-```json
-{
-  "reason": "انتهاك شروط الاستخدام"
-}
-```
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/admin/transactions` | GET | List transactions |
+| `/api/admin/transactions/:id/refund` | POST | Process refund |
 
----
+### System
 
-### Get Transactions
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/admin/settings` | GET | Get settings |
+| `/api/admin/settings/:key` | PUT | Update setting |
+| `/api/admin/announcements` | POST | Create announcement |
+| `/api/admin/announcements/:id` | PUT/DELETE | Update/delete announcement |
+| `/api/admin/audit-logs` | GET | Get audit logs (query: actor_profile_id, action, resource_type, from, to) |
 
-Get all payment transactions.
-
-```http
-GET /api/admin/transactions
-```
-
-**Query Parameters:**
-- `status`: Filter by payment status
-- `from`, `to`: Date range
-- `page`, `limit`: Pagination
-
----
-
-### Process Refund
-
-Process a refund for a payment.
-
-```http
-POST /api/admin/payments/:id/refund
-```
-
-**Request:**
-```json
-{
-  "reason": "إلغاء الاستشارة"
-}
-```
+**Trust Levels:** `support_agent`, `moderator`, `full_admin`, `super_admin`
 
 ---
 
 ## Webhooks
 
-### Paymob Webhook
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/webhooks/paymob` | POST | Paymob payment callback (verify X-Paymob-Signature) |
 
-Handle Paymob payment callbacks.
+---
 
-```http
-POST /api/webhooks/paymob
-```
+## Real-Time Subscriptions
 
-**Headers:**
-```http
-X-Paymob-Signature: hmac_signature
-```
-
-**Request (from Paymob):**
-```json
-{
-  "obj": {
-    "id": 123456,
-    "pending": false,
-    "success": true,
-    "order": {
-      "id": 789012,
-      "merchant_order_id": "consultation_uuid"
-    },
-    "amount_cents": 22800,
-    "currency": "EGP"
-  },
-  "type": "TRANSACTION"
-}
-```
-
-**Processing:**
-1. Verify HMAC signature
-2. Update payment status
-3. Update consultation status
-4. Send confirmation (SMS/notification)
+Subscribe to changes using Supabase Realtime:
+- `appointments` - appointment status changes
+- `messages` - new messages
+- `notifications` - new notifications
 
 ---
 
 ## Rate Limits
 
-| Endpoint | Limit |
+| Category | Limit |
 |----------|-------|
-| `/api/auth/*` | 10 requests/minute |
-| `/api/doctors` | 60 requests/minute |
-| `/api/consultations` | 30 requests/minute |
-| `/api/payments/*` | 10 requests/minute |
-| `/api/admin/*` | 30 requests/minute |
+| Authentication | 10/min |
+| Doctor Listings | 60/min |
+| Appointments | 30/min |
+| Payments | 10/min |
+| Admin | 30/min |
+| File Uploads | 10/min |
 
 ---
 
-## Pagination
+## Error Codes
 
-All list endpoints support pagination:
-
-```json
-{
-  "pagination": {
-    "page": 1,
-    "limit": 20,
-    "total": 100,
-    "totalPages": 5,
-    "hasNext": true,
-    "hasPrev": false
-  }
-}
-```
+| Code | Status | Description |
+|------|--------|-------------|
+| UNAUTHORIZED | 401 | Missing/invalid token |
+| FORBIDDEN | 403 | Insufficient permissions |
+| NOT_FOUND | 404 | Resource not found |
+| VALIDATION_ERROR | 400 | Invalid input |
+| CONFLICT | 409 | Resource exists |
+| INTERNAL_ERROR | 500 | Server error |
 
 ---
 
-*This API specification provides the foundation for TawariApp's backend services.*
+*Aligned with database schema (00001_initial_schema.sql) and backend-plan.md*

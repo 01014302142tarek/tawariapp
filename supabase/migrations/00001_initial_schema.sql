@@ -888,11 +888,11 @@ BEGIN
     VALUES (
         NEW.id,
         COALESCE(NEW.raw_user_meta_data->>'fullName', NEW.raw_user_meta_data->>'full_name', 'New User'),
-        COALESCE(NEW.raw_user_meta_data->>'role', 'patient')::user_role
+        COALESCE(NEW.raw_user_meta_data->>'role', 'patient')::public.user_role
     );
     RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
 CREATE TRIGGER on_auth_user_created
     AFTER INSERT ON auth.users
@@ -906,17 +906,17 @@ CREATE OR REPLACE FUNCTION create_role_profile()
 RETURNS TRIGGER AS $$
 BEGIN
     IF NEW.role = 'patient' THEN
-        INSERT INTO patient_profiles (profile_id) VALUES (NEW.id);
+        INSERT INTO public.patient_profiles (profile_id) VALUES (NEW.id);
     ELSIF NEW.role = 'doctor' THEN
-        INSERT INTO doctor_profiles (profile_id) VALUES (NEW.id);
+        INSERT INTO public.doctor_profiles (profile_id) VALUES (NEW.id);
     ELSIF NEW.role = 'admin' THEN
-        INSERT INTO admin_profiles (profile_id) VALUES (NEW.id);
+        INSERT INTO public.admin_profiles (profile_id) VALUES (NEW.id);
     ELSIF NEW.role IN ('doctor_assistant', 'admin_assistant') THEN
-        INSERT INTO assistant_profiles (profile_id, assistant_type) VALUES (NEW.id, NEW.role);
+        INSERT INTO public.assistant_profiles (profile_id, assistant_type) VALUES (NEW.id, NEW.role);
     END IF;
     RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
 CREATE TRIGGER on_profile_created
     AFTER INSERT ON profiles
