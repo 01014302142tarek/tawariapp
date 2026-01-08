@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { useTheme } from "./context/ThemeContext";
 import { useI18n } from "@/app/i18n";
 import { useAuth } from "@/app/context/AuthContext";
+import { getPendingDoctors, getVerificationStats, approveDoctor, rejectDoctor } from "@/app/actions/admin-verification";
 
 // Import Aceternity components
 import { GlowingCard } from "@/components/ui/glowing-card";
@@ -140,11 +141,63 @@ export default function AdminDashboard() {
     const greetingKey = time < 12 ? "morning" : time < 17 ? "afternoon" : "evening";
     const greeting = t.doctorDashboard.greeting[greetingKey as keyof typeof t.doctorDashboard.greeting];
 
-    const pendingApprovals = [
-        { id: 1, name: t.common.demoNames.drSarahAhmed, email: "sarah.ahmed@email.com", specialty: t.specialties.dermatology, image: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=100&h=100&fit=crop&crop=face", date: isRTL ? `منذ ${formatNumber(2)} ساعات` : `2 ${t.common.time.hoursAgo}` },
-        { id: 2, name: t.common.demoNames.drOmarKhalil, email: "omar.khalil@email.com", specialty: t.specialties.neurology, image: "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=100&h=100&fit=crop&crop=face", date: isRTL ? `منذ ${formatNumber(5)} ساعات` : `5 ${t.common.time.hoursAgo}` },
-        { id: 3, name: t.common.demoNames.drFatimaHassan, email: "fatima.h@email.com", specialty: t.specialties.pediatrics, image: "https://images.unsplash.com/photo-1594824476967-48c8b964273f?w=100&h=100&fit=crop&crop=face", date: t.common.time.dayAgo },
-    ];
+    // State for pending doctors
+    const [pendingApprovals, setPendingApprovals] = useState<Array<{
+        id: string;
+        name: string;
+        email: string;
+        specialty: string | null;
+        image: string;
+        date: string;
+    }>>([]);
+    const [stats, setStats] = useState({ pending: 0, verified: 0, rejected: 0, total: 0 });
+    const [isLoading, setIsLoading] = useState(true);
+
+    // Fetch pending doctors on mount
+    useEffect(() => {
+        async function fetchData() {
+            setIsLoading(true);
+            try {
+                const [doctorsResult, statsResult] = await Promise.all([
+                    getPendingDoctors(),
+                    getVerificationStats(),
+                ]);
+
+                if (doctorsResult.doctors) {
+                    setPendingApprovals(doctorsResult.doctors.slice(0, 3).map(doc => ({
+                        id: doc.id,
+                        name: doc.fullName,
+                        email: doc.email,
+                        specialty: doc.specialty,
+                        image: doc.avatarUrl || "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=100&h=100&fit=crop&crop=face",
+                        date: new Date(doc.createdAt).toLocaleDateString(isRTL ? "ar-EG" : "en-US"),
+                    })));
+                }
+                setStats(statsResult);
+            } catch (error) {
+                console.error("Error fetching admin data:", error);
+            }
+            setIsLoading(false);
+        }
+        fetchData();
+    }, [isRTL]);
+
+    // Handle approve/reject
+    const handleApprove = async (doctorId: string) => {
+        const result = await approveDoctor(doctorId);
+        if (result.success) {
+            setPendingApprovals(prev => prev.filter(d => d.id !== doctorId));
+            setStats(prev => ({ ...prev, pending: prev.pending - 1, verified: prev.verified + 1 }));
+        }
+    };
+
+    const handleReject = async (doctorId: string) => {
+        const result = await rejectDoctor(doctorId, "Application rejected");
+        if (result.success) {
+            setPendingApprovals(prev => prev.filter(d => d.id !== doctorId));
+            setStats(prev => ({ ...prev, pending: prev.pending - 1, rejected: prev.rejected + 1 }));
+        }
+    };
 
     const recentActivity = [
         { id: 1, action: t.adminDashboard.activity.registration, name: t.common.demoNames.drAhmedHassan, time: isRTL ? `منذ ${formatNumber(10)} دقائق` : `10 ${t.common.time.minsAgo}`, type: "registration" },
@@ -230,7 +283,7 @@ export default function AdminDashboard() {
                                     </div>
                                     <div>
                                         <h3 className={cn("font-semibold", isDark ? "text-white" : "text-slate-900")}>{t.adminDashboard.stats.pendingApprovals}</h3>
-                                        <p className={cn("text-sm", isDark ? "text-gray-500" : "text-gray-600")}>{formatNumber(pendingApprovals.length)} {t.adminDashboard.stats.awaitingReview}</p>
+                                        <p className={cn("text-sm", isDark ? "text-gray-500" : "text-gray-600")}>{formatNumber(stats.pending)} {t.adminDashboard.stats.awaitingReview}</p>
                                     </div>
                                 </div>
                                 <Link href="/dashboard/admin/doctors" className="text-teal-500 hover:text-teal-400 text-sm font-medium">
@@ -239,7 +292,18 @@ export default function AdminDashboard() {
                             </div>
 
                             <div className="space-y-3">
-                                {pendingApprovals.map((item, idx) => (
+                                {isLoading ? (
+                                    <div className={cn("p-8 text-center rounded-xl border", isDark ? "border-white/5" : "border-gray-200")}>
+                                        <div className="animate-spin w-6 h-6 border-2 border-teal-500 border-t-transparent rounded-full mx-auto mb-2" />
+                                        <p className={cn("text-sm", isDark ? "text-gray-500" : "text-gray-600")}>Loading...</p>
+                                    </div>
+                                ) : pendingApprovals.length === 0 ? (
+                                    <div className={cn("p-8 text-center rounded-xl border", isDark ? "border-white/5" : "border-gray-200")}>
+                                        <p className={cn("text-sm", isDark ? "text-gray-500" : "text-gray-600")}>
+                                            {isRTL ? "لا توجد طلبات معلقة" : "No pending approvals"}
+                                        </p>
+                                    </div>
+                                ) : pendingApprovals.map((item, idx) => (
                                     <motion.div
                                         key={item.id}
                                         initial={{ opacity: 0, y: 10 }}
@@ -258,10 +322,16 @@ export default function AdminDashboard() {
                                             <p className={cn("text-xs truncate", isDark ? "text-gray-500" : "text-gray-600")}>{item.specialty}</p>
                                         </div>
                                         <div className="flex gap-1.5">
-                                            <button className="p-1.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500 text-emerald-500 hover:text-white transition-all">
+                                            <button
+                                                onClick={() => handleApprove(item.id)}
+                                                className="p-1.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500 text-emerald-500 hover:text-white transition-all"
+                                            >
                                                 {Icons.check}
                                             </button>
-                                            <button className="p-1.5 rounded-lg bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white transition-all">
+                                            <button
+                                                onClick={() => handleReject(item.id)}
+                                                className="p-1.5 rounded-lg bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white transition-all"
+                                            >
                                                 {Icons.x}
                                             </button>
                                         </div>

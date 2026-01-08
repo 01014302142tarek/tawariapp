@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -8,6 +8,8 @@ import { useGlobalTheme } from "@/app/context/GlobalThemeContext";
 import { GlowingCard } from "@/components/ui/glowing-card";
 import { useRouter } from "next/navigation";
 import { useI18n } from "@/app/i18n";
+import { useAuth } from "@/app/context/AuthContext";
+import { completeOnboarding, getDoctorOnboardingStatus } from "@/app/actions/doctor-onboarding";
 
 // ============================================
 // ICONS
@@ -898,9 +900,13 @@ export default function DoctorOnboarding() {
     const { isDark } = useGlobalTheme();
     const { language, isRTL, formatNumber } = useI18n();
     const router = useRouter();
+    const { user, signUp, profile } = useAuth();
 
     const [currentStep, setCurrentStep] = useState(1);
     const [formData, setFormData] = useState<FormData>(initialFormData);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [submitError, setSubmitError] = useState<string | null>(null);
+    const [verificationStatus, setVerificationStatus] = useState<string | null>(null);
 
     // Get translations based on language
     const text = onboardingTranslations[language as keyof typeof onboardingTranslations] || onboardingTranslations.en;
@@ -914,9 +920,38 @@ export default function DoctorOnboarding() {
     const [licenseFile, setLicenseFile] = useState<File | null>(null);
     const [licensePreview, setLicensePreview] = useState<string>("");
 
-    // Allow proceeding without data - validation is optional
+    // Pre-fill form with user data if logged in
+    useEffect(() => {
+        if (profile) {
+            setFormData(prev => ({
+                ...prev,
+                fullName: profile.profile.full_name || prev.fullName,
+                email: user?.email || prev.email,
+            }));
+            // If doctor is already verified, redirect to dashboard
+            if (profile.profile.role === "doctor") {
+                getDoctorOnboardingStatus().then(status => {
+                    if (status.verificationStatus === "verified") {
+                        router.push(`/${language}/dashboard/doctor`);
+                    }
+                    setVerificationStatus(status.verificationStatus);
+                });
+            }
+        }
+    }, [profile, user, language, router]);
+
+    // Validation for Step 1 (account creation)
     const canProceed = () => {
-        // Always allow proceeding through the onboarding flow
+        if (currentStep === 1) {
+            // If user is already logged in, allow proceeding
+            if (user) return true;
+            // Otherwise require email and password
+            return formData.email.length > 0 && formData.password.length >= 6;
+        }
+        if (currentStep === 4) {
+            // Require terms acceptance on verification step
+            return formData.termsAccepted;
+        }
         return true;
     };
 
@@ -933,7 +968,62 @@ export default function DoctorOnboarding() {
         }
     };
 
-    const handleNext = () => {
+    const handleNext = async () => {
+        setSubmitError(null);
+
+        // Step 1: Create account if not logged in
+        if (currentStep === 1 && !user) {
+            setIsSubmitting(true);
+            try {
+                const { error } = await signUp(formData.email, formData.password, {
+                    fullName: formData.fullName,
+                    phone: formData.phone,
+                    role: "doctor",
+                });
+                if (error) {
+                    setSubmitError(error.message);
+                    setIsSubmitting(false);
+                    return;
+                }
+            } catch {
+                setSubmitError("Failed to create account");
+                setIsSubmitting(false);
+                return;
+            }
+            setIsSubmitting(false);
+        }
+
+        // Step 4: Save all data and submit for verification
+        if (currentStep === 4) {
+            setIsSubmitting(true);
+            try {
+                const result = await completeOnboarding({
+                    fullName: formData.fullName,
+                    phone: formData.phone,
+                    specialty: formData.specialty,
+                    experience: formData.experience,
+                    licenseNumber: formData.licenseNumber,
+                    certifications: formData.certifications,
+                    clinicName: formData.clinicName,
+                    address: formData.address,
+                    availableDays: formData.availableDays,
+                    workingHours: formData.workingHours,
+                    consultationFee: formData.consultationFee,
+                    bio: formData.bio,
+                });
+                if (!result.success) {
+                    setSubmitError(result.error || "Failed to save profile");
+                    setIsSubmitting(false);
+                    return;
+                }
+            } catch {
+                setSubmitError("Failed to submit application");
+                setIsSubmitting(false);
+                return;
+            }
+            setIsSubmitting(false);
+        }
+
         if (currentStep < steps.length) {
             setCurrentStep(currentStep + 1);
         }
@@ -999,17 +1089,29 @@ export default function DoctorOnboarding() {
                     </motion.div>
                 </AnimatePresence>
 
+                {/* Error Message */}
+                {submitError && (
+                    <div className={cn(
+                        "mt-4 p-3 rounded-lg text-sm",
+                        isDark ? "bg-red-500/10 text-red-400 border border-red-500/20" : "bg-red-50 text-red-600 border border-red-200"
+                    )}>
+                        {submitError}
+                    </div>
+                )}
+
                 {/* Navigation Buttons - only show for steps 1-4 */}
                 {currentStep < 5 && (
                     <div className={cn("flex items-center justify-between mt-4 pt-4 border-t", isDark ? "border-white/5" : "border-teal-100")}>
                         {currentStep > 1 ? (
                             <button
                                 onClick={handleBack}
+                                disabled={isSubmitting}
                                 className={cn(
                                     "flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
                                     isDark
                                         ? "text-gray-400 hover:text-white hover:bg-white/5"
-                                        : "text-gray-600 hover:text-slate-900 hover:bg-gray-100"
+                                        : "text-gray-600 hover:text-slate-900 hover:bg-gray-100",
+                                    isSubmitting && "opacity-50 cursor-not-allowed"
                                 )}
                             >
                                 {isRTL ? Icons.arrowRight : Icons.arrowLeft}
@@ -1021,18 +1123,22 @@ export default function DoctorOnboarding() {
 
                         <button
                             onClick={handleNext}
-                            disabled={!canProceed()}
+                            disabled={!canProceed() || isSubmitting}
                             className={cn(
                                 "flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-all",
-                                canProceed()
+                                canProceed() && !isSubmitting
                                     ? "bg-teal-500 hover:bg-teal-600 text-white"
                                     : isDark
                                         ? "bg-slate-800 text-gray-500 cursor-not-allowed"
                                         : "bg-gray-100 text-gray-400 cursor-not-allowed"
                             )}
                         >
-                            {text.nav.continue}
-                            {isRTL ? Icons.arrowLeft : Icons.arrowRight}
+                            {isSubmitting ? Icons.spinner : (
+                                <>
+                                    {text.nav.continue}
+                                    {isRTL ? Icons.arrowLeft : Icons.arrowRight}
+                                </>
+                            )}
                         </button>
                     </div>
                 )}

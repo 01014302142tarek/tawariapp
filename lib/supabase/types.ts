@@ -266,6 +266,29 @@ export interface Database {
                     created_at?: string;
                 };
             };
+            doctor_specializations: {
+                Row: {
+                    id: string;
+                    doctor_profile_id: string;
+                    specialization_id: string;
+                    is_primary: boolean;
+                    created_at: string;
+                };
+                Insert: {
+                    id?: string;
+                    doctor_profile_id: string;
+                    specialization_id: string;
+                    is_primary?: boolean;
+                    created_at?: string;
+                };
+                Update: {
+                    id?: string;
+                    doctor_profile_id?: string;
+                    specialization_id?: string;
+                    is_primary?: boolean;
+                    created_at?: string;
+                };
+            };
             doctor_credentials: {
                 Row: {
                     id: string;
