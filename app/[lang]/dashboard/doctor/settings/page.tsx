@@ -76,7 +76,7 @@ const Toggle = ({ enabled, onChange, isDark }: { enabled: boolean; onChange: () 
 export default function SettingsPage() {
     const { isRTL, language, setLanguage } = useI18n();
     const { theme } = useTheme();
-    const { profile } = useAuth();
+    const { profile, user } = useAuth();
     const isDark = theme === "dark";
 
     const [notifications, setNotifications] = useState({
@@ -178,7 +178,7 @@ export default function SettingsPage() {
                                 </label>
                                 <input
                                     type="email"
-                                    defaultValue={profile?.profile?.email || ""}
+                                    defaultValue={user?.email || ""}
                                     className={cn(
                                         "w-full px-4 py-3 rounded-xl border transition-colors",
                                         isDark
