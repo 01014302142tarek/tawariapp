@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -9,6 +9,7 @@ import { useThemeStyles } from "../context/useThemeStyles";
 import { useI18n } from "@/app/i18n";
 import {
     getAvailableDoctors,
+    getSpecializations,
     bookAppointment,
     type DoctorForBooking,
 } from "@/app/actions/appointments";
@@ -24,6 +25,11 @@ const Icons = {
     star: (
         <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
             <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+        </svg>
+    ),
+    starOutline: (
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z" />
         </svg>
     ),
     calendar: (
@@ -56,9 +62,30 @@ const Icons = {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.5 12.75l6 6 9-13.5" />
         </svg>
     ),
+    filter: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h9.75" />
+        </svg>
+    ),
+    online: (
+        <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="10" />
+        </svg>
+    ),
+    sort: (
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 7.5L7.5 3m0 0L12 7.5M7.5 3v13.5m13.5 0L16.5 21m0 0L12 16.5m4.5 4.5V7.5" />
+        </svg>
+    ),
+    x: (
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+        </svg>
+    ),
 };
 
 type ViewMode = "list" | "booking";
+type SortOption = "rating" | "fee_low" | "fee_high" | "experience";
 
 interface BookingState {
     doctor: DoctorForBooking | null;
@@ -69,13 +96,27 @@ interface BookingState {
     loadingSlots: boolean;
 }
 
+interface Filters {
+    search: string;
+    specialization: string;
+    sortBy: SortOption;
+    availableNow: boolean;
+}
+
 export default function DoctorsPage() {
     const { t, isRTL, language } = useI18n();
     const { isDark, textPrimary, textSecondary, textMuted, inputBg, inputFocus, border } = useThemeStyles();
 
     const [doctors, setDoctors] = useState<DoctorForBooking[]>([]);
+    const [specializations, setSpecializations] = useState<{ id: string; name_en: string; name_ar: string }[]>([]);
     const [loading, setLoading] = useState(true);
-    const [searchQuery, setSearchQuery] = useState("");
+    const [showFilters, setShowFilters] = useState(false);
+    const [filters, setFilters] = useState<Filters>({
+        search: "",
+        specialization: "all",
+        sortBy: "rating",
+        availableNow: false,
+    });
     const [viewMode, setViewMode] = useState<ViewMode>("list");
     const [booking, setBooking] = useState<BookingState>({
         doctor: null,
@@ -87,30 +128,43 @@ export default function DoctorsPage() {
     });
     const [bookingStatus, setBookingStatus] = useState<"idle" | "booking" | "success" | "error">("idle");
 
+    // Load specializations on mount
     useEffect(() => {
-        loadDoctors();
+        loadSpecializations();
     }, []);
 
-    const loadDoctors = async () => {
+    // Load doctors when filters change (debounced for search)
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            loadDoctors();
+        }, filters.search ? 300 : 0);
+
+        return () => clearTimeout(timer);
+    }, [filters]);
+
+    const loadSpecializations = async () => {
+        const result = await getSpecializations();
+        if (result.specializations) {
+            setSpecializations(result.specializations);
+        }
+    };
+
+    const loadDoctors = useCallback(async () => {
         setLoading(true);
-        const result = await getAvailableDoctors({ limit: 50 });
+        const result = await getAvailableDoctors({
+            search: filters.search || undefined,
+            specialization: filters.specialization !== "all" ? filters.specialization : undefined,
+            sortBy: filters.sortBy,
+            availableNow: filters.availableNow || undefined,
+            limit: 50,
+        });
         if (result.doctors) {
             setDoctors(result.doctors);
         }
         setLoading(false);
-    };
-
-    const filteredDoctors = doctors.filter(doc => {
-        if (!searchQuery) return true;
-        const query = searchQuery.toLowerCase();
-        return (
-            doc.full_name.toLowerCase().includes(query) ||
-            doc.specializations.some(s => s.toLowerCase().includes(query))
-        );
-    });
+    }, [filters]);
 
     const handleBookDoctor = (doctor: DoctorForBooking) => {
-        // Set default date to tomorrow
         const tomorrow = new Date();
         tomorrow.setDate(tomorrow.getDate() + 1);
         const dateStr = tomorrow.toISOString().split("T")[0];
@@ -175,6 +229,17 @@ export default function DoctorsPage() {
         }
     };
 
+    const clearFilters = () => {
+        setFilters({
+            search: "",
+            specialization: "all",
+            sortBy: "rating",
+            availableNow: false,
+        });
+    };
+
+    const hasActiveFilters = filters.specialization !== "all" || filters.availableNow || filters.sortBy !== "rating";
+
     const formatTime = (isoString: string): string => {
         const date = new Date(isoString);
         return date.toLocaleTimeString(isRTL ? "ar-EG" : "en-US", {
@@ -192,13 +257,25 @@ export default function DoctorsPage() {
         }).format(amount);
     };
 
-    if (loading) {
-        return (
-            <div className="p-4 md:p-6 lg:p-8 flex items-center justify-center min-h-[60vh]">
-                <div className="animate-spin w-8 h-8 border-2 border-teal-500 border-t-transparent rounded-full" />
-            </div>
-        );
-    }
+    const renderStars = (rating: number) => {
+        const stars = [];
+        const fullStars = Math.floor(rating);
+        for (let i = 0; i < 5; i++) {
+            if (i < fullStars) {
+                stars.push(<span key={i} className="text-yellow-400">{Icons.star}</span>);
+            } else {
+                stars.push(<span key={i} className={textMuted}>{Icons.starOutline}</span>);
+            }
+        }
+        return stars;
+    };
+
+    const sortOptions: { value: SortOption; labelEn: string; labelAr: string }[] = [
+        { value: "rating", labelEn: "Top Rated", labelAr: "الأعلى تقييماً" },
+        { value: "fee_low", labelEn: "Lowest Fee", labelAr: "الأقل سعراً" },
+        { value: "fee_high", labelEn: "Highest Fee", labelAr: "الأعلى سعراً" },
+        { value: "experience", labelEn: "Most Experienced", labelAr: "الأكثر خبرة" },
+    ];
 
     return (
         <div className="p-4 md:p-6 lg:p-8">
@@ -223,30 +300,180 @@ export default function DoctorsPage() {
                             </p>
                         </div>
 
-                        {/* Search */}
-                        <div className="mb-6">
-                            <div className="relative max-w-md">
-                                <span className={cn("absolute top-1/2 -translate-y-1/2", isRTL ? "right-4" : "left-4", textMuted)}>
-                                    {Icons.search}
-                                </span>
-                                <input
-                                    type="text"
-                                    placeholder={t.patientDashboard.doctorsPage.searchPlaceholder}
-                                    value={searchQuery}
-                                    onChange={(e) => setSearchQuery(e.target.value)}
-                                    className={cn(
-                                        "w-full py-3 rounded-xl border transition-colors outline-none",
-                                        isRTL ? "pr-12 pl-4" : "pl-12 pr-4",
-                                        inputBg,
-                                        inputFocus,
-                                        border
+                        {/* Search and Filters Bar */}
+                        <div className="mb-6 space-y-4">
+                            {/* Search Row */}
+                            <div className="flex flex-col sm:flex-row gap-3">
+                                {/* Search Input */}
+                                <div className="relative flex-1">
+                                    <span className={cn("absolute top-1/2 -translate-y-1/2", isRTL ? "right-4" : "left-4", textMuted)}>
+                                        {Icons.search}
+                                    </span>
+                                    <input
+                                        type="text"
+                                        placeholder={t.patientDashboard.doctorsPage.searchPlaceholder}
+                                        value={filters.search}
+                                        onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
+                                        className={cn(
+                                            "w-full py-3 rounded-xl border transition-colors outline-none",
+                                            isRTL ? "pr-12 pl-4" : "pl-12 pr-4",
+                                            inputBg,
+                                            inputFocus,
+                                            border
+                                        )}
+                                    />
+                                    {filters.search && (
+                                        <button
+                                            onClick={() => setFilters(prev => ({ ...prev, search: "" }))}
+                                            className={cn("absolute top-1/2 -translate-y-1/2", isRTL ? "left-4" : "right-4", textMuted, "hover:text-red-500")}
+                                        >
+                                            {Icons.x}
+                                        </button>
                                     )}
-                                />
+                                </div>
+
+                                {/* Filter Toggle Button */}
+                                <button
+                                    onClick={() => setShowFilters(!showFilters)}
+                                    className={cn(
+                                        "flex items-center gap-2 px-4 py-3 rounded-xl border transition-colors",
+                                        showFilters
+                                            ? "bg-teal-500 text-white border-teal-500"
+                                            : cn(inputBg, border, textSecondary, "hover:border-teal-500")
+                                    )}
+                                >
+                                    {Icons.filter}
+                                    <span className="font-medium">{isRTL ? "فلترة" : "Filters"}</span>
+                                    {hasActiveFilters && (
+                                        <span className="w-2 h-2 bg-teal-400 rounded-full" />
+                                    )}
+                                </button>
+                            </div>
+
+                            {/* Filters Panel */}
+                            <AnimatePresence>
+                                {showFilters && (
+                                    <motion.div
+                                        initial={{ opacity: 0, height: 0 }}
+                                        animate={{ opacity: 1, height: "auto" }}
+                                        exit={{ opacity: 0, height: 0 }}
+                                        className="overflow-hidden"
+                                    >
+                                        <GlowingCard isDark={isDark} glowColor="teal" className="p-4">
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                                                {/* Specialization Filter */}
+                                                <div>
+                                                    <label className={cn("block text-sm font-medium mb-2", textSecondary)}>
+                                                        {isRTL ? "التخصص" : "Specialization"}
+                                                    </label>
+                                                    <select
+                                                        value={filters.specialization}
+                                                        onChange={(e) => setFilters(prev => ({ ...prev, specialization: e.target.value }))}
+                                                        className={cn(
+                                                            "w-full px-4 py-2.5 rounded-lg border text-sm transition-colors outline-none",
+                                                            inputBg,
+                                                            inputFocus,
+                                                            border
+                                                        )}
+                                                    >
+                                                        <option value="all">{isRTL ? "جميع التخصصات" : "All Specializations"}</option>
+                                                        {specializations.map(spec => (
+                                                            <option key={spec.id} value={spec.name_en}>
+                                                                {isRTL ? spec.name_ar : spec.name_en}
+                                                            </option>
+                                                        ))}
+                                                    </select>
+                                                </div>
+
+                                                {/* Sort By */}
+                                                <div>
+                                                    <label className={cn("block text-sm font-medium mb-2", textSecondary)}>
+                                                        {isRTL ? "ترتيب حسب" : "Sort By"}
+                                                    </label>
+                                                    <select
+                                                        value={filters.sortBy}
+                                                        onChange={(e) => setFilters(prev => ({ ...prev, sortBy: e.target.value as SortOption }))}
+                                                        className={cn(
+                                                            "w-full px-4 py-2.5 rounded-lg border text-sm transition-colors outline-none",
+                                                            inputBg,
+                                                            inputFocus,
+                                                            border
+                                                        )}
+                                                    >
+                                                        {sortOptions.map(opt => (
+                                                            <option key={opt.value} value={opt.value}>
+                                                                {isRTL ? opt.labelAr : opt.labelEn}
+                                                            </option>
+                                                        ))}
+                                                    </select>
+                                                </div>
+
+                                                {/* Available Now Toggle */}
+                                                <div className="flex items-end">
+                                                    <button
+                                                        onClick={() => setFilters(prev => ({ ...prev, availableNow: !prev.availableNow }))}
+                                                        className={cn(
+                                                            "flex items-center gap-2 px-4 py-2.5 rounded-lg border text-sm font-medium transition-colors w-full justify-center",
+                                                            filters.availableNow
+                                                                ? "bg-green-500/10 border-green-500 text-green-500"
+                                                                : cn(inputBg, border, textSecondary, "hover:border-green-500")
+                                                        )}
+                                                    >
+                                                        <span className={cn("w-2 h-2 rounded-full", filters.availableNow ? "bg-green-500" : "bg-gray-400")} />
+                                                        {isRTL ? "متاح الآن" : "Available Now"}
+                                                    </button>
+                                                </div>
+
+                                                {/* Clear Filters */}
+                                                <div className="flex items-end">
+                                                    <button
+                                                        onClick={clearFilters}
+                                                        disabled={!hasActiveFilters && !filters.search}
+                                                        className={cn(
+                                                            "px-4 py-2.5 rounded-lg border text-sm font-medium transition-colors w-full",
+                                                            hasActiveFilters || filters.search
+                                                                ? "border-red-500/50 text-red-500 hover:bg-red-500/10"
+                                                                : cn(border, textMuted, "cursor-not-allowed opacity-50")
+                                                        )}
+                                                    >
+                                                        {isRTL ? "مسح الفلاتر" : "Clear Filters"}
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </GlowingCard>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+
+                            {/* Results Count */}
+                            <div className={cn("text-sm", textMuted)}>
+                                {loading ? (
+                                    isRTL ? "جاري البحث..." : "Searching..."
+                                ) : (
+                                    isRTL
+                                        ? `${doctors.length} طبيب متاح`
+                                        : `${doctors.length} doctor${doctors.length !== 1 ? "s" : ""} found`
+                                )}
                             </div>
                         </div>
 
                         {/* Doctors Grid */}
-                        {filteredDoctors.length === 0 ? (
+                        {loading ? (
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                {[1, 2, 3, 4, 5, 6].map((i) => (
+                                    <div key={i} className={cn("rounded-xl p-4 animate-pulse", isDark ? "bg-white/5" : "bg-gray-100")}>
+                                        <div className="flex items-start gap-4 mb-4">
+                                            <div className={cn("w-16 h-16 rounded-xl", isDark ? "bg-white/10" : "bg-gray-200")} />
+                                            <div className="flex-1">
+                                                <div className={cn("h-5 rounded w-3/4 mb-2", isDark ? "bg-white/10" : "bg-gray-200")} />
+                                                <div className={cn("h-4 rounded w-1/2", isDark ? "bg-white/10" : "bg-gray-200")} />
+                                            </div>
+                                        </div>
+                                        <div className={cn("h-12 rounded", isDark ? "bg-white/10" : "bg-gray-200")} />
+                                    </div>
+                                ))}
+                            </div>
+                        ) : doctors.length === 0 ? (
                             <GlowingCard isDark={isDark} glowColor="teal" className="p-12 text-center">
                                 <div className={cn("w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4", isDark ? "bg-slate-900" : "bg-gray-100", textMuted)}>
                                     {Icons.users}
@@ -255,10 +482,18 @@ export default function DoctorsPage() {
                                     {t.patientDashboard.doctorsPage.noResults}
                                 </h3>
                                 <p className={textMuted}>{t.patientDashboard.doctorsPage.noResultsDesc}</p>
+                                {(hasActiveFilters || filters.search) && (
+                                    <button
+                                        onClick={clearFilters}
+                                        className="mt-4 px-4 py-2 bg-teal-500 text-white rounded-lg text-sm font-medium hover:bg-teal-600 transition-colors"
+                                    >
+                                        {isRTL ? "مسح الفلاتر" : "Clear Filters"}
+                                    </button>
+                                )}
                             </GlowingCard>
                         ) : (
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                {filteredDoctors.map((doctor, idx) => (
+                                {doctors.map((doctor, idx) => (
                                     <motion.div
                                         key={doctor.id}
                                         initial={{ opacity: 0, y: 20 }}
@@ -281,13 +516,16 @@ export default function DoctorsPage() {
                                                             {doctor.full_name.charAt(0)}
                                                         </div>
                                                     )}
+                                                    {doctor.is_available_now && (
+                                                        <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white dark:border-slate-900" />
+                                                    )}
                                                 </div>
                                                 <div className="flex-1 min-w-0">
                                                     <h3 className={cn("font-semibold truncate", textPrimary)}>
                                                         {doctor.full_name}
                                                     </h3>
                                                     <p className={cn("text-sm", textSecondary)}>
-                                                        {doctor.specializations.join(", ") || "General Practice"}
+                                                        {doctor.specializations.join(", ") || (isRTL ? "طب عام" : "General Practice")}
                                                     </p>
                                                     {doctor.years_of_experience && (
                                                         <p className={cn("text-xs mt-1", textMuted)}>
@@ -296,6 +534,23 @@ export default function DoctorsPage() {
                                                     )}
                                                 </div>
                                             </div>
+
+                                            {/* Rating */}
+                                            {doctor.rating_average !== undefined && doctor.rating_average > 0 && (
+                                                <div className="flex items-center gap-2 mb-3">
+                                                    <div className="flex items-center gap-0.5">
+                                                        {renderStars(doctor.rating_average)}
+                                                    </div>
+                                                    <span className={cn("text-sm font-medium", textSecondary)}>
+                                                        {doctor.rating_average.toFixed(1)}
+                                                    </span>
+                                                    {doctor.rating_count !== undefined && doctor.rating_count > 0 && (
+                                                        <span className={cn("text-xs", textMuted)}>
+                                                            ({doctor.rating_count} {isRTL ? "تقييم" : "reviews"})
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            )}
 
                                             {doctor.bio && (
                                                 <p className={cn("text-sm mb-4 line-clamp-2", textMuted)}>
@@ -373,6 +628,16 @@ export default function DoctorsPage() {
                                             <p className={cn("text-sm", textSecondary)}>
                                                 {booking.doctor.specializations.join(", ")}
                                             </p>
+                                            {booking.doctor.rating_average !== undefined && booking.doctor.rating_average > 0 && (
+                                                <div className="flex items-center gap-2 mt-2">
+                                                    <div className="flex items-center gap-0.5">
+                                                        {renderStars(booking.doctor.rating_average)}
+                                                    </div>
+                                                    <span className={cn("text-sm", textSecondary)}>
+                                                        {booking.doctor.rating_average.toFixed(1)}
+                                                    </span>
+                                                </div>
+                                            )}
                                             {booking.doctor.consultation_fee && (
                                                 <p className="text-teal-500 font-semibold mt-2">
                                                     {formatCurrency(booking.doctor.consultation_fee)}

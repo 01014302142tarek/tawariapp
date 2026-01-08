@@ -193,7 +193,7 @@ const testUsers = [
   }
 ];
 
-async function seedTestUsers() {
+async function seedTestUsers(): Promise<{ email: string; userId: string; profileId: string; roleProfileId: string }[]> {
   console.log('Starting test user seeding...\n');
 
   const createdUsers: { email: string; userId: string; profileId: string; roleProfileId: string }[] = [];
@@ -386,6 +386,161 @@ async function seedTestUsers() {
   console.log('4. Run the SQL script from STEP 6 onwards (skip auth users and profiles)');
   console.log('\nNote: The doctor profiles created do NOT have verified_by set.');
   console.log('You can update this manually or run an UPDATE query after creating an admin.');
+
+  return createdUsers;
+}
+
+// Seed specializations
+async function seedSpecializations() {
+  console.log('Seeding specializations...\n');
+
+  const specializations = [
+    { name_en: 'Cardiology', name_ar: 'أمراض القلب', category: 'specialist', min_fee: 200.00, max_fee: 500.00 },
+    { name_en: 'Dermatology', name_ar: 'الأمراض الجلدية', category: 'specialist', min_fee: 150.00, max_fee: 400.00 },
+    { name_en: 'General Practice', name_ar: 'الطب العام', category: 'general', min_fee: 100.00, max_fee: 250.00 },
+    { name_en: 'Pediatrics', name_ar: 'طب الأطفال', category: 'specialist', min_fee: 150.00, max_fee: 350.00 },
+    { name_en: 'Internal Medicine', name_ar: 'الطب الباطني', category: 'specialist', min_fee: 180.00, max_fee: 450.00 },
+  ];
+
+  for (const spec of specializations) {
+    // Check if specialization exists
+    const { data: existing } = await supabase
+      .from('specializations')
+      .select('id')
+      .eq('name_en', spec.name_en)
+      .single();
+
+    if (existing) {
+      console.log(`  ✓ ${spec.name_en} (already exists)`);
+      continue;
+    }
+
+    const { error } = await supabase
+      .from('specializations')
+      .insert(spec);
+
+    if (error) {
+      console.error(`  Error inserting ${spec.name_en}: ${error.message}`);
+    } else {
+      console.log(`  ✓ ${spec.name_en}`);
+    }
+  }
+
+  console.log('\nSpecializations seeded.\n');
+}
+
+// Link doctors to their specializations
+async function linkDoctorSpecializations(createdUsers: { email: string; userId: string; profileId: string; roleProfileId: string }[]) {
+  console.log('Linking doctor specializations...\n');
+
+  // Get all specializations
+  const { data: specs } = await supabase.from('specializations').select('id, name_en');
+  if (!specs) {
+    console.error('  Could not fetch specializations');
+    return;
+  }
+
+  const specMap = new Map(specs.map(s => [s.name_en, s.id]));
+
+  // Helper to insert specialization link
+  async function linkSpec(doctorProfileId: string, specName: string, isPrimary: boolean, doctorName: string) {
+    const specId = specMap.get(specName);
+    if (!specId) return;
+
+    // Check if already exists
+    const { data: existing } = await supabase
+      .from('doctor_specializations')
+      .select('id')
+      .eq('doctor_profile_id', doctorProfileId)
+      .eq('specialization_id', specId)
+      .single();
+
+    if (existing) {
+      console.log(`  ✓ ${doctorName}: ${specName} (already linked)`);
+      return;
+    }
+
+    const { error } = await supabase
+      .from('doctor_specializations')
+      .insert({ doctor_profile_id: doctorProfileId, specialization_id: specId, is_primary: isPrimary });
+
+    if (error) {
+      console.error(`  Error linking ${doctorName} to ${specName}: ${error.message}`);
+    } else {
+      console.log(`  ✓ ${doctorName}: ${specName}${isPrimary ? ' (primary)' : ''}`);
+    }
+  }
+
+  // Doctor 1: Cardiology (primary) + Internal Medicine
+  const doctor1 = createdUsers.find(u => u.email === 'doctor1@tawari.test');
+  if (doctor1 && doctor1.roleProfileId) {
+    await linkSpec(doctor1.roleProfileId, 'Cardiology', true, 'Dr. Mohamed');
+    await linkSpec(doctor1.roleProfileId, 'Internal Medicine', false, 'Dr. Mohamed');
+  }
+
+  // Doctor 2: Dermatology (primary)
+  const doctor2 = createdUsers.find(u => u.email === 'doctor2@tawari.test');
+  if (doctor2 && doctor2.roleProfileId) {
+    await linkSpec(doctor2.roleProfileId, 'Dermatology', true, 'Dr. Nour');
+  }
+
+  console.log('\nDoctor specializations linked.\n');
+}
+
+// Seed doctor availability
+async function seedDoctorAvailability(createdUsers: { email: string; userId: string; profileId: string; roleProfileId: string }[]) {
+  console.log('Seeding doctor availability...\n');
+
+  // Helper to add availability
+  async function addAvailability(doctorProfileId: string, day: number, startTime: string, endTime: string) {
+    // Check if already exists
+    const { data: existing } = await supabase
+      .from('doctor_availability')
+      .select('id')
+      .eq('doctor_profile_id', doctorProfileId)
+      .eq('day_of_week', day)
+      .single();
+
+    if (existing) {
+      return true; // Already exists
+    }
+
+    const { error } = await supabase
+      .from('doctor_availability')
+      .insert({
+        doctor_profile_id: doctorProfileId,
+        day_of_week: day,
+        start_time: startTime,
+        end_time: endTime,
+        is_active: true
+      });
+
+    return !error;
+  }
+
+  // Doctor 1: Sunday to Thursday, 9 AM - 5 PM
+  const doctor1 = createdUsers.find(u => u.email === 'doctor1@tawari.test');
+  if (doctor1 && doctor1.roleProfileId) {
+    let success = true;
+    for (const day of [0, 1, 2, 3, 4]) { // Sunday=0 to Thursday=4
+      const result = await addAvailability(doctor1.roleProfileId, day, '09:00', '17:00');
+      if (!result) success = false;
+    }
+    if (success) console.log('  ✓ Dr. Mohamed: Sun-Thu 9AM-5PM');
+  }
+
+  // Doctor 2: Saturday to Wednesday, 10 AM - 6 PM
+  const doctor2 = createdUsers.find(u => u.email === 'doctor2@tawari.test');
+  if (doctor2 && doctor2.roleProfileId) {
+    let success = true;
+    for (const day of [6, 0, 1, 2, 3]) { // Saturday=6, Sunday=0 to Wednesday=3
+      const result = await addAvailability(doctor2.roleProfileId, day, '10:00', '18:00');
+      if (!result) success = false;
+    }
+    if (success) console.log('  ✓ Dr. Nour: Sat-Wed 10AM-6PM');
+  }
+
+  console.log('\nDoctor availability seeded.\n');
 }
 
 // Run the seeding
@@ -393,8 +548,17 @@ async function main() {
   // First cleanup existing test users
   await cleanupExistingTestUsers();
 
+  // Seed specializations first (needed for linking)
+  await seedSpecializations();
+
   // Then seed fresh test users
-  await seedTestUsers();
+  const createdUsers = await seedTestUsers();
+
+  // Link doctors to specializations
+  await linkDoctorSpecializations(createdUsers);
+
+  // Seed doctor availability
+  await seedDoctorAvailability(createdUsers);
 
   console.log('Done!');
 }

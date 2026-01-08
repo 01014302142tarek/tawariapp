@@ -468,7 +468,7 @@ export async function getPatientContacts(): Promise<{
         return { contacts: [], error: "Patient profile not found" };
     }
 
-    // Get doctors from past appointments
+    // Get doctors from appointments (scheduled, in_progress, or completed)
     const { data, error } = await supabase
         .from("appointments")
         .select(`
@@ -484,7 +484,7 @@ export async function getPatientContacts(): Promise<{
             )
         `)
         .eq("patient_profile_id", patientProfile.id)
-        .in("status", ["completed", "in_progress"]);
+        .in("status", ["scheduled", "in_waiting_room", "in_progress", "completed"]);
 
     if (error) {
         console.error("Error fetching contacts:", error);
@@ -546,7 +546,7 @@ export async function getDoctorContacts(): Promise<{
         return { contacts: [], error: "Doctor profile not found" };
     }
 
-    // Get patients from past appointments
+    // Get patients from appointments (scheduled, in_progress, or completed)
     const { data, error } = await supabase
         .from("appointments")
         .select(`
@@ -562,7 +562,7 @@ export async function getDoctorContacts(): Promise<{
             )
         `)
         .eq("doctor_profile_id", doctorProfile.id)
-        .in("status", ["completed", "in_progress"]);
+        .in("status", ["scheduled", "in_waiting_room", "in_progress", "completed"]);
 
     if (error) {
         console.error("Error fetching contacts:", error);

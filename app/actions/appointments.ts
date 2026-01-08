@@ -743,7 +743,9 @@ export interface DoctorForBooking {
     years_of_experience?: number;
     consultation_fee?: number;
     specializations: string[];
-    rating?: number;
+    rating_average?: number;
+    rating_count?: number;
+    is_available_now?: boolean;
 }
 
 /**
@@ -752,6 +754,10 @@ export interface DoctorForBooking {
 export async function getAvailableDoctors(filters?: {
     specialization?: string;
     search?: string;
+    minFee?: number;
+    maxFee?: number;
+    availableNow?: boolean;
+    sortBy?: "rating" | "fee_low" | "fee_high" | "experience";
     limit?: number;
     offset?: number;
 }): Promise<{ doctors: DoctorForBooking[]; total: number; error?: string }> {
@@ -766,6 +772,9 @@ export async function getAvailableDoctors(filters?: {
             bio,
             years_of_experience,
             consultation_fee,
+            rating_average,
+            rating_count,
+            is_available_now,
             profiles!inner (
                 id,
                 full_name,
@@ -779,6 +788,33 @@ export async function getAvailableDoctors(filters?: {
             )
         `, { count: "exact" })
         .eq("verification_status", "verified");
+
+    // Filter by availability
+    if (filters?.availableNow) {
+        query = query.eq("is_available_now", true);
+    }
+
+    // Filter by fee range
+    if (filters?.minFee !== undefined) {
+        query = query.gte("consultation_fee", filters.minFee);
+    }
+    if (filters?.maxFee !== undefined) {
+        query = query.lte("consultation_fee", filters.maxFee);
+    }
+
+    // Sorting
+    if (filters?.sortBy === "rating") {
+        query = query.order("rating_average", { ascending: false, nullsFirst: false });
+    } else if (filters?.sortBy === "fee_low") {
+        query = query.order("consultation_fee", { ascending: true, nullsFirst: false });
+    } else if (filters?.sortBy === "fee_high") {
+        query = query.order("consultation_fee", { ascending: false, nullsFirst: false });
+    } else if (filters?.sortBy === "experience") {
+        query = query.order("years_of_experience", { ascending: false, nullsFirst: false });
+    } else {
+        // Default: sort by rating
+        query = query.order("rating_average", { ascending: false, nullsFirst: false });
+    }
 
     if (filters?.limit) {
         query = query.limit(filters.limit);
@@ -805,23 +841,27 @@ export async function getAvailableDoctors(filters?: {
         bio: doc.bio,
         years_of_experience: doc.years_of_experience,
         consultation_fee: doc.consultation_fee,
+        rating_average: doc.rating_average,
+        rating_count: doc.rating_count,
+        is_available_now: doc.is_available_now,
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         specializations: (doc.doctor_specializations || []).map((ds: any) =>
             ds.specializations?.name_en || ""
         ).filter(Boolean),
     }));
 
-    // Filter by search if provided
+    // Filter by search if provided (client-side for now due to nested data)
     if (filters?.search) {
         const searchLower = filters.search.toLowerCase();
         doctors = doctors.filter(doc =>
             doc.full_name.toLowerCase().includes(searchLower) ||
-            doc.specializations.some(s => s.toLowerCase().includes(searchLower))
+            doc.specializations.some(s => s.toLowerCase().includes(searchLower)) ||
+            (doc.bio && doc.bio.toLowerCase().includes(searchLower))
         );
     }
 
     // Filter by specialization if provided
-    if (filters?.specialization) {
+    if (filters?.specialization && filters.specialization !== "all") {
         const specLower = filters.specialization.toLowerCase();
         doctors = doctors.filter(doc =>
             doc.specializations.some(s => s.toLowerCase() === specLower)
@@ -829,4 +869,27 @@ export async function getAvailableDoctors(filters?: {
     }
 
     return { doctors, total: count || 0 };
+}
+
+/**
+ * Get list of specializations for filtering
+ */
+export async function getSpecializations(): Promise<{
+    specializations: { id: string; name_en: string; name_ar: string }[];
+    error?: string;
+}> {
+    const supabase = await createClient();
+
+    const { data, error } = await supabase
+        .from("specializations")
+        .select("id, name_en, name_ar")
+        .eq("is_active", true)
+        .order("name_en");
+
+    if (error) {
+        console.error("Error fetching specializations:", error);
+        return { specializations: [], error: error.message };
+    }
+
+    return { specializations: data || [] };
 }
