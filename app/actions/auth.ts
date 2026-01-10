@@ -60,6 +60,24 @@ export async function signInWithPassword(
     // Reset rate limit on successful login
     loginLimiter.reset(rateLimitKey);
 
+    // Sync role from profiles to user_metadata for middleware routing
+    // This ensures existing users get proper role-based redirects
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user && !user.user_metadata?.role) {
+        const { data: profileData } = await supabase
+            .from("profiles")
+            .select("role")
+            .eq("user_id", user.id)
+            .single();
+
+        const profile = profileData as { role: string } | null;
+        if (profile?.role) {
+            await supabase.auth.updateUser({
+                data: { role: profile.role },
+            });
+        }
+    }
+
     return { success: true };
 }
 

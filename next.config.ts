@@ -23,7 +23,7 @@ const nextConfig: NextConfig = {
                             // Fonts
                             "font-src 'self' https://fonts.gstatic.com",
                             // Images - allow data: for base64, blob: for uploads, and specific sources
-                            "img-src 'self' data: blob: https://*.supabase.co https://lh3.googleusercontent.com",
+                            "img-src 'self' data: blob: https://*.supabase.co https://lh3.googleusercontent.com https://images.unsplash.com",
                             // Connect - API calls
                             "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://www.google-analytics.com https://vitals.vercel-insights.com",
                             // Frames - for video calls (Jitsi)
