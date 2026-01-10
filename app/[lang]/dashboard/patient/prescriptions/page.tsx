@@ -1,12 +1,13 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useThemeStyles } from "../context/useThemeStyles";
 import { GlowingCard } from "@/components/ui/glowing-card";
 import { useI18n } from "@/app/i18n";
+import { useToast } from "@/components/ui/toast";
 import {
     getPatientPrescriptions,
     requestPrescriptionRenewal,
@@ -52,6 +53,7 @@ const Badge = ({ variant, children, isDark = true }: { variant: string; children
 
 export default function PrescriptionsPage() {
     const { t, isRTL } = useI18n();
+    const { showToast } = useToast();
     const [activeFilter, setActiveFilter] = useState("All");
     const { isDark, textPrimary, textMuted } = useThemeStyles();
 
@@ -59,26 +61,26 @@ export default function PrescriptionsPage() {
     const [loading, setLoading] = useState(true);
     const [actionLoading, setActionLoading] = useState<string | null>(null);
 
-    useEffect(() => {
-        loadPrescriptions();
-    }, []);
-
-    const loadPrescriptions = async () => {
+    const loadPrescriptions = useCallback(async () => {
         setLoading(true);
         const result = await getPatientPrescriptions();
         if (result.prescriptions) {
             setPrescriptions(result.prescriptions);
         }
         setLoading(false);
-    };
+    }, []);
+
+    useEffect(() => {
+        loadPrescriptions();
+    }, [loadPrescriptions]);
 
     const handleRequestRenewal = async (prescriptionId: string) => {
         setActionLoading(prescriptionId);
         const result = await requestPrescriptionRenewal(prescriptionId);
         if (result.success) {
-            alert(isRTL ? "تم إرسال طلب التجديد بنجاح" : "Renewal request sent successfully");
+            showToast(isRTL ? "تم إرسال طلب التجديد بنجاح" : "Renewal request sent successfully", "success");
         } else {
-            alert(result.error || (isRTL ? "فشل في إرسال الطلب" : "Failed to send request"));
+            showToast(result.error || (isRTL ? "فشل في إرسال الطلب" : "Failed to send request"), "error");
         }
         setActionLoading(null);
     };

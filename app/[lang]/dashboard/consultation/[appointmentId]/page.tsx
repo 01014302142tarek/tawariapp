@@ -168,7 +168,8 @@ export default function ConsultationPage() {
                 if (jitsiApi) {
                     jitsiApi.dispose();
                 }
-                router.push(`/${language}/dashboard/doctor/appointments`);
+                // Redirect to notes page so doctor can write consultation notes
+                router.push(`/${language}/dashboard/consultation/${appointmentId}/notes`);
             } else {
                 setError(result.error || "Failed to end consultation");
             }

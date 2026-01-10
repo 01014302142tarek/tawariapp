@@ -77,7 +77,7 @@ const ProgressBar = ({ value, max, isDark = true }: { value: number; max: number
 
 
 export default function AnalyticsPage() {
-    const { t, formatNumber, isRTL } = useI18n();
+    const { t, formatNumber } = useI18n();
     const { theme } = useTheme();
     const isDark = theme === "dark";
     const [period, setPeriod] = useState("year");

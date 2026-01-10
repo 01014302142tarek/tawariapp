@@ -9,7 +9,17 @@ import { GlowingCard } from "@/components/ui/glowing-card";
 import { useRouter } from "next/navigation";
 import { useI18n } from "@/app/i18n";
 import { useAuth } from "@/app/context/AuthContext";
-import { completeOnboarding, getDoctorOnboardingStatus } from "@/app/actions/doctor-onboarding";
+import { completeOnboarding, getDoctorOnboardingStatus, uploadDoctorAvatar, uploadDoctorCredentials } from "@/app/actions/doctor-onboarding";
+
+// Helper to convert File to base64 string
+const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = reject;
+    });
+};
 
 // ============================================
 // ICONS
@@ -251,8 +261,7 @@ const onboardingTranslations = {
     }
 };
 
-// Default specialties for file-level usage (will be overridden in component)
-const specialties = specialtiesData.en;
+// Note: specialties are retrieved dynamically in the component based on language
 
 // Input Component
 const Input = ({ label, placeholder, value, onChange, type = "text", isDark, required = false, dir }: {
@@ -439,8 +448,11 @@ const FileUpload = ({ label, fileName, onFileChange, isDark, accept = "*", fileP
 // STEP COMPONENTS
 // ============================================
 
+// Onboarding text type for step components
+type OnboardingText = typeof onboardingTranslations.en;
+
 // Step 1: Welcome & Personal Info
-const Step1Welcome = ({ formData, setFormData, isDark, text, isRTL, onPhotoUpload }: { formData: FormData; setFormData: (data: FormData) => void; isDark: boolean; text: any; isRTL: boolean; onPhotoUpload?: (file: File) => void }) => {
+const Step1Welcome = ({ formData, setFormData, isDark, text, isRTL, onPhotoUpload }: { formData: FormData; setFormData: (data: FormData) => void; isDark: boolean; text: OnboardingText; isRTL: boolean; onPhotoUpload?: (file: File) => void }) => {
     const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
@@ -536,7 +548,7 @@ const Step1Welcome = ({ formData, setFormData, isDark, text, isRTL, onPhotoUploa
 };
 
 // Step 2: Professional Details
-const Step2Professional = ({ formData, setFormData, isDark, text, specialties }: { formData: FormData; setFormData: (data: FormData) => void; isDark: boolean; text: any; specialties: string[] }) => (
+const Step2Professional = ({ formData, setFormData, isDark, text, specialties }: { formData: FormData; setFormData: (data: FormData) => void; isDark: boolean; text: OnboardingText; specialties: string[] }) => (
     <div className="space-y-4">
         <div className="text-center mb-4">
             <div className="w-12 h-12 rounded-full bg-teal-500/10 flex items-center justify-center mx-auto mb-2 text-teal-500">
@@ -586,7 +598,7 @@ const Step2Professional = ({ formData, setFormData, isDark, text, specialties }:
 );
 
 // Step 3: Practice Information
-const Step3Practice = ({ formData, setFormData, isDark, text }: { formData: FormData; setFormData: (data: FormData) => void; isDark: boolean; text: any }) => (
+const Step3Practice = ({ formData, setFormData, isDark, text }: { formData: FormData; setFormData: (data: FormData) => void; isDark: boolean; text: OnboardingText }) => (
     <div className="space-y-4">
         <div className="text-center mb-4">
             <div className="w-12 h-12 rounded-full bg-teal-500/10 flex items-center justify-center mx-auto mb-2 text-teal-500">
@@ -642,12 +654,12 @@ const Step3Practice = ({ formData, setFormData, isDark, text }: { formData: Form
 );
 
 // Step 4: Verification & Bio
-const Step4Verification = ({ formData, setFormData, isDark, text, licensePreview, onLicenseUpload, onExtraUpload }: { formData: FormData; setFormData: (data: FormData) => void; isDark: boolean; text: any; licensePreview?: string; onLicenseUpload?: (name: string, file?: File) => void; onExtraUpload?: (file: File) => void }) => {
+const Step4Verification = ({ formData, setFormData, isDark, text, licensePreview, onLicenseUpload, onExtraUpload, onExtraRemove }: { formData: FormData; setFormData: (data: FormData) => void; isDark: boolean; text: OnboardingText; licensePreview?: string; onLicenseUpload?: (name: string, file?: File) => void; onExtraUpload?: (file: File) => void; onExtraRemove?: (docName: string) => void }) => {
 
-    const handleRemoveExtra = (index: number) => {
-        const newDocs = [...formData.extraDocuments];
-        newDocs.splice(index, 1);
+    const handleRemoveExtra = (docName: string) => {
+        const newDocs = formData.extraDocuments.filter(d => d !== docName);
         setFormData({ ...formData, extraDocuments: newDocs });
+        if (onExtraRemove) onExtraRemove(docName);
     };
 
     return (
@@ -685,8 +697,8 @@ const Step4Verification = ({ formData, setFormData, isDark, text, licensePreview
                 {/* List of uploaded files */}
                 {formData.extraDocuments.length > 0 && (
                     <div className="space-y-2 mb-3">
-                        {formData.extraDocuments.map((doc, idx) => (
-                            <div key={idx} className={cn(
+                        {formData.extraDocuments.map((doc) => (
+                            <div key={doc} className={cn(
                                 "flex items-center justify-between p-2 rounded-lg border text-sm",
                                 isDark ? "bg-slate-800/50 border-white/10" : "bg-white border-gray-200"
                             )}>
@@ -695,7 +707,7 @@ const Step4Verification = ({ formData, setFormData, isDark, text, licensePreview
                                     <span className={cn("truncate", isDark ? "text-gray-300" : "text-gray-700")}>{doc}</span>
                                 </div>
                                 <button
-                                    onClick={() => handleRemoveExtra(idx)}
+                                    onClick={() => handleRemoveExtra(doc)}
                                     className="text-red-500 hover:text-red-400 p-1 rounded transition-colors"
                                 >
                                     {Icons.trash}
@@ -758,7 +770,7 @@ const Step4Verification = ({ formData, setFormData, isDark, text, licensePreview
 };
 
 // Step 5: Completion
-const Step5Complete = ({ formData, isDark, text, isApproved = false }: { formData: FormData; isDark: boolean; text: any; isApproved?: boolean }) => (
+const Step5Complete = ({ formData, isDark, text, isApproved = false }: { formData: FormData; isDark: boolean; text: OnboardingText; isApproved?: boolean }) => (
     <div className="text-center py-4">
         <motion.div
             initial={{ scale: 0 }}
@@ -906,7 +918,8 @@ export default function DoctorOnboarding() {
     const [formData, setFormData] = useState<FormData>(initialFormData);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [submitError, setSubmitError] = useState<string | null>(null);
-    const [verificationStatus, setVerificationStatus] = useState<string | null>(null);
+    // Verification status is tracked for future use (e.g., showing pending approval status)
+    const [, setVerificationStatus] = useState<string | null>(null);
 
     // Get translations based on language
     const text = onboardingTranslations[language as keyof typeof onboardingTranslations] || onboardingTranslations.en;
@@ -919,6 +932,7 @@ export default function DoctorOnboarding() {
     const [photoFile, setPhotoFile] = useState<File | null>(null);
     const [licenseFile, setLicenseFile] = useState<File | null>(null);
     const [licensePreview, setLicensePreview] = useState<string>("");
+    const [extraFiles, setExtraFiles] = useState<File[]>([]);
 
     // Pre-fill form with user data if logged in
     useEffect(() => {
@@ -993,10 +1007,50 @@ export default function DoctorOnboarding() {
             setIsSubmitting(false);
         }
 
-        // Step 4: Save all data and submit for verification
+        // Step 4: Save all data, upload files, and submit for verification
         if (currentStep === 4) {
             setIsSubmitting(true);
             try {
+                // 1. Upload avatar if provided
+                if (photoFile) {
+                    const photoBase64 = await fileToBase64(photoFile);
+                    const avatarResult = await uploadDoctorAvatar({
+                        photoBase64,
+                        photoFileName: photoFile.name
+                    });
+                    if (!avatarResult.success) {
+                        setSubmitError(avatarResult.error || "Failed to upload avatar");
+                        setIsSubmitting(false);
+                        return;
+                    }
+                }
+
+                // 2. Upload credential documents if provided
+                if (licenseFile) {
+                    const licenseBase64 = await fileToBase64(licenseFile);
+
+                    // Convert extra files to base64
+                    const extraFilesBase64: string[] = [];
+                    const extraFileNames: string[] = [];
+                    for (const file of extraFiles) {
+                        extraFilesBase64.push(await fileToBase64(file));
+                        extraFileNames.push(file.name);
+                    }
+
+                    const credResult = await uploadDoctorCredentials({
+                        licenseFileBase64: licenseBase64,
+                        licenseFileName: licenseFile.name,
+                        extraFilesBase64: extraFilesBase64.length > 0 ? extraFilesBase64 : undefined,
+                        extraFileNames: extraFileNames.length > 0 ? extraFileNames : undefined,
+                    });
+                    if (!credResult.success) {
+                        setSubmitError(credResult.error || "Failed to upload credentials");
+                        setIsSubmitting(false);
+                        return;
+                    }
+                }
+
+                // 3. Complete onboarding with profile data
                 const result = await completeOnboarding({
                     fullName: formData.fullName,
                     phone: formData.phone,
@@ -1035,10 +1089,6 @@ export default function DoctorOnboarding() {
         }
     };
 
-    const handleComplete = () => {
-        router.push(`/${language}/dashboard/doctor`);
-    };
-
     const renderStep = () => {
         switch (currentStep) {
             case 1:
@@ -1048,7 +1098,16 @@ export default function DoctorOnboarding() {
             case 3:
                 return <Step3Practice formData={formData} setFormData={setFormData} isDark={isDark} text={text} />;
             case 4:
-                return <Step4Verification formData={formData} setFormData={setFormData} isDark={isDark} text={text} licensePreview={licensePreview} onLicenseUpload={handleLicenseUpload} />;
+                return <Step4Verification
+                    formData={formData}
+                    setFormData={setFormData}
+                    isDark={isDark}
+                    text={text}
+                    licensePreview={licensePreview}
+                    onLicenseUpload={handleLicenseUpload}
+                    onExtraUpload={(file) => setExtraFiles(prev => [...prev, file])}
+                    onExtraRemove={(docName) => setExtraFiles(prev => prev.filter(f => f.name !== docName))}
+                />;
             case 5:
                 return <Step5Complete formData={formData} isDark={isDark} text={text} />;
             default:

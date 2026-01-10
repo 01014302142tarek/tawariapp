@@ -1,6 +1,8 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { uploadAvatar, uploadCredential, saveCredentialRecord } from "@/lib/supabase/storage";
+import { professionalDetailsSchema, practiceInfoSchema, doctorBioSchema, validateInput } from "@/lib/validations";
 
 interface DoctorOnboardingData {
     // Step 1 - Account creation (handled separately via signUp)
@@ -34,6 +36,12 @@ export async function saveProfessionalDetails(data: {
     specialty: string;
     certifications?: string;
 }): Promise<{ success: boolean; error?: string }> {
+    // Validate input
+    const validation = validateInput(professionalDetailsSchema, data);
+    if (!validation.success) {
+        return { success: false, error: validation.error };
+    }
+
     const supabase = await createClient();
 
     const { data: { user } } = await supabase.auth.getUser();
@@ -64,7 +72,7 @@ export async function saveProfessionalDetails(data: {
         .eq("profile_id", profile.id);
 
     if (error) {
-        console.error("Error saving professional details:", error);
+        // Error saving professional details - returned to caller
         return { success: false, error: error.message };
     }
 
@@ -124,6 +132,11 @@ export async function savePracticeInfo(data: {
     availableDays?: string;
     workingHours?: string;
 }): Promise<{ success: boolean; error?: string }> {
+    // Validate consultation fee
+    if (data.consultationFee < 0 || data.consultationFee > 10000) {
+        return { success: false, error: "Consultation fee must be between 0 and 10,000 EGP" };
+    }
+
     const supabase = await createClient();
 
     const { data: { user } } = await supabase.auth.getUser();
@@ -153,7 +166,7 @@ export async function savePracticeInfo(data: {
         .eq("profile_id", profile.id);
 
     if (error) {
-        console.error("Error saving practice info:", error);
+        // Error saving practice info - returned to caller
         return { success: false, error: error.message };
     }
 
@@ -166,6 +179,11 @@ export async function savePracticeInfo(data: {
 export async function saveBioAndSubmit(data: {
     bio: string;
 }): Promise<{ success: boolean; error?: string }> {
+    // Validate bio length
+    if (data.bio && data.bio.length > 2000) {
+        return { success: false, error: "Bio must be less than 2000 characters" };
+    }
+
     const supabase = await createClient();
 
     const { data: { user } } = await supabase.auth.getUser();
@@ -196,7 +214,7 @@ export async function saveBioAndSubmit(data: {
         .eq("profile_id", profile.id);
 
     if (error) {
-        console.error("Error submitting for verification:", error);
+        // Error submitting for verification - returned to caller
         return { success: false, error: error.message };
     }
 
@@ -254,7 +272,7 @@ export async function completeOnboarding(data: DoctorOnboardingData): Promise<{ 
         .eq("profile_id", profile.id);
 
     if (doctorError) {
-        console.error("Error completing onboarding:", doctorError);
+        // Error completing onboarding - returned to caller
         return { success: false, error: doctorError.message };
     }
 
@@ -353,4 +371,137 @@ export async function getDoctorOnboardingStatus(): Promise<{
         isComplete,
         verificationStatus: doctorProfile.verification_status,
     };
+}
+
+/**
+ * Upload doctor's avatar photo during onboarding
+ */
+export async function uploadDoctorAvatar(data: {
+    photoBase64: string;
+    photoFileName: string;
+}): Promise<{ success: boolean; avatarUrl?: string; error?: string }> {
+    const supabase = await createClient();
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+        return { success: false, error: "Not authenticated" };
+    }
+
+    // Upload avatar to storage
+    const { url, error: uploadError } = await uploadAvatar(
+        user.id,
+        data.photoBase64,
+        data.photoFileName
+    );
+
+    if (uploadError || !url) {
+        return { success: false, error: uploadError || "Failed to upload avatar" };
+    }
+
+    // Update profile with avatar URL
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error: updateError } = await (supabase as any)
+        .from("profiles")
+        .update({ avatar_url: url })
+        .eq("user_id", user.id);
+
+    if (updateError) {
+        // Error updating profile avatar - returned to caller
+        return { success: false, error: updateError.message };
+    }
+
+    return { success: true, avatarUrl: url };
+}
+
+/**
+ * Upload doctor's credential documents (license, certificates, etc.)
+ */
+export async function uploadDoctorCredentials(data: {
+    licenseFileBase64: string;
+    licenseFileName: string;
+    extraFilesBase64?: string[];
+    extraFileNames?: string[];
+}): Promise<{ success: boolean; error?: string }> {
+    const supabase = await createClient();
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+        return { success: false, error: "Not authenticated" };
+    }
+
+    // Get profile and doctor_profile
+    const { data: profileData } = await supabase
+        .from("profiles")
+        .select("id, role")
+        .eq("user_id", user.id)
+        .single();
+
+    const profile = profileData as { id: string; role: string } | null;
+    if (!profile || profile.role !== "doctor") {
+        return { success: false, error: "Not a doctor profile" };
+    }
+
+    const { data: doctorProfileData } = await supabase
+        .from("doctor_profiles")
+        .select("id")
+        .eq("profile_id", profile.id)
+        .single();
+
+    const doctorProfile = doctorProfileData as { id: string } | null;
+    if (!doctorProfile) {
+        return { success: false, error: "Doctor profile not found" };
+    }
+
+    // Upload license document
+    const { path: licensePath, documentName: licenseDocName, error: licenseError } = await uploadCredential(
+        doctorProfile.id,
+        "license",
+        data.licenseFileBase64,
+        data.licenseFileName
+    );
+
+    if (licenseError || !licensePath) {
+        return { success: false, error: licenseError || "Failed to upload license" };
+    }
+
+    // Save license credential record
+    const { error: saveError } = await saveCredentialRecord(
+        doctorProfile.id,
+        "license",
+        licensePath,
+        licenseDocName || data.licenseFileName
+    );
+
+    if (saveError) {
+        return { success: false, error: saveError };
+    }
+
+    // Upload extra documents if provided
+    if (data.extraFilesBase64 && data.extraFileNames) {
+        for (let i = 0; i < data.extraFilesBase64.length; i++) {
+            const fileBase64 = data.extraFilesBase64[i];
+            const fileName = data.extraFileNames[i];
+
+            const { path, documentName, error: extraError } = await uploadCredential(
+                doctorProfile.id,
+                "certification", // Valid types: license, degree, certification, id_document
+                fileBase64,
+                fileName
+            );
+
+            if (extraError || !path) {
+                // Failed to upload extra document - continuing with other files
+                continue; // Continue with other files even if one fails
+            }
+
+            await saveCredentialRecord(
+                doctorProfile.id,
+                "certification",
+                path,
+                documentName || fileName
+            );
+        }
+    }
+
+    return { success: true };
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -8,11 +8,11 @@ import { useThemeStyles } from "../context/useThemeStyles";
 import { GlowingCard } from "@/components/ui/glowing-card";
 import { useI18n } from "@/app/i18n";
 import { useRouter } from "next/navigation";
+import { useToast } from "@/components/ui/toast";
 import {
     getPatientAppointments,
     cancelAppointmentAsPatient,
     joinWaitingRoom,
-    getConsultationSession,
     type AppointmentWithDetails,
     type AppointmentStatus,
 } from "@/app/actions/appointments";
@@ -64,6 +64,7 @@ const Badge = ({ children, variant = "default", isDark = true }: { children: Rea
 export default function AppointmentsPage() {
     const { t, isRTL, language } = useI18n();
     const router = useRouter();
+    const { showConfirm } = useToast();
     const [activeFilter, setActiveFilter] = useState("All");
     const { isDark, textPrimary, textMuted } = useThemeStyles();
 
@@ -72,7 +73,15 @@ export default function AppointmentsPage() {
     const [actionLoading, setActionLoading] = useState<string | null>(null);
 
     useEffect(() => {
-        loadAppointments();
+        const fetchAppointments = async () => {
+            setLoading(true);
+            const result = await getPatientAppointments();
+            if (result.appointments) {
+                setAppointments(result.appointments);
+            }
+            setLoading(false);
+        };
+        fetchAppointments();
     }, []);
 
     const loadAppointments = async () => {
@@ -146,14 +155,16 @@ export default function AppointmentsPage() {
         router.push(`/${language}/dashboard/consultation/${appointmentId}`);
     };
 
-    const handleCancel = async (appointmentId: string) => {
-        if (!confirm(isRTL ? "هل أنت متأكد من إلغاء هذا الموعد؟" : "Are you sure you want to cancel this appointment?")) {
-            return;
-        }
-        setActionLoading(appointmentId);
-        await cancelAppointmentAsPatient(appointmentId);
-        await loadAppointments();
-        setActionLoading(null);
+    const handleCancel = (appointmentId: string) => {
+        showConfirm(
+            isRTL ? "هل أنت متأكد من إلغاء هذا الموعد؟" : "Are you sure you want to cancel this appointment?",
+            async () => {
+                setActionLoading(appointmentId);
+                await cancelAppointmentAsPatient(appointmentId);
+                await loadAppointments();
+                setActionLoading(null);
+            }
+        );
     };
 
     const filteredAppointments = appointments.filter(apt => {

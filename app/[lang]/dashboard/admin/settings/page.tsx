@@ -1,7 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
-import { motion } from "framer-motion";
+import React, { useState, useRef, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { useTheme } from "../context/ThemeContext";
 import { GlowingCard } from "@/components/ui/glowing-card";
@@ -84,7 +83,7 @@ const SettingsSection = ({
     section: string;
     onToggle: (section: string, id: string) => void;
     isDark: boolean;
-    t: any;
+    t: ReturnType<typeof useI18n>['t'];
 }) => {
     return (
         <GlowingCard glowColor="teal" className="p-4 md:p-6" isDark={isDark}>
@@ -97,7 +96,8 @@ const SettingsSection = ({
             <div className="space-y-3 md:space-y-4">
                 {settings.map((setting) => {
                     // Type-safe access to item translations based on key
-                    const item = t.adminDashboard.settingsPage.items[setting.key];
+                    const items = t.adminDashboard.settingsPage.items as Record<string, { label: string; desc: string }>;
+                    const item = items[setting.key];
                     return (
                         <div
                             key={setting.id}
@@ -171,9 +171,19 @@ export default function SettingsPage() {
         }
     };
 
+    const savedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    // Cleanup timer on unmount
+    useEffect(() => {
+        return () => {
+            if (savedTimerRef.current) clearTimeout(savedTimerRef.current);
+        };
+    }, []);
+
     const handleSave = () => {
         setSaved(true);
-        setTimeout(() => setSaved(false), 3000);
+        if (savedTimerRef.current) clearTimeout(savedTimerRef.current);
+        savedTimerRef.current = setTimeout(() => setSaved(false), 3000);
     };
 
     return (

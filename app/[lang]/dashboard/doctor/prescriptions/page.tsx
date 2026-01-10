@@ -1,12 +1,13 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { GlowingCard } from "@/components/ui/glowing-card";
 import { useThemeStyles } from "../context/useThemeStyles";
 import { useI18n } from "@/app/i18n";
+import { useToast } from "@/components/ui/toast";
 import {
     getDoctorPrescriptions,
     createPrescription,
@@ -16,6 +17,18 @@ import {
     type PrescriptionMedication,
     type PatientForPrescription,
 } from "@/app/actions/prescriptions";
+
+// Local type with id for form state tracking
+type MedicationFormItem = PrescriptionMedication & { _formId: string };
+
+const createMedicationItem = (): MedicationFormItem => ({
+    medication_name: "",
+    dosage: "",
+    frequency: "",
+    duration: "",
+    instructions: "",
+    _formId: `med-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
+});
 
 // Icons
 const Icons = {
@@ -61,7 +74,8 @@ const Badge = ({ children, variant = "default", isDark = true }: { children: Rea
 };
 
 export default function PrescriptionsPage() {
-    const { t, isRTL } = useI18n();
+    const { isRTL } = useI18n();
+    const { showConfirm } = useToast();
     const { isDark, textPrimary, textMuted, inputBg, inputFocus, cardHover } = useThemeStyles();
 
     const [prescriptions, setPrescriptions] = useState<PrescriptionWithDetails[]>([]);
@@ -73,17 +87,13 @@ export default function PrescriptionsPage() {
 
     // Create form state
     const [selectedPatient, setSelectedPatient] = useState<string>("");
-    const [medications, setMedications] = useState<PrescriptionMedication[]>([
-        { medication_name: "", dosage: "", frequency: "", duration: "", instructions: "" }
+    const [medications, setMedications] = useState<MedicationFormItem[]>([
+        createMedicationItem()
     ]);
     const [validUntil, setValidUntil] = useState("");
     const [creating, setCreating] = useState(false);
 
-    useEffect(() => {
-        loadData();
-    }, []);
-
-    const loadData = async () => {
+    const loadData = useCallback(async () => {
         setLoading(true);
         const [prescriptionsResult, patientsResult] = await Promise.all([
             getDoctorPrescriptions(),
@@ -97,13 +107,19 @@ export default function PrescriptionsPage() {
             setPatients(patientsResult.patients);
         }
         setLoading(false);
-    };
+    }, []);
+
+    useEffect(() => {
+        loadData();
+    }, [loadData]);
 
     const handleCreatePrescription = async () => {
         if (!selectedPatient || medications.length === 0) return;
 
-        // Validate at least one medication has a name
-        const validMeds = medications.filter(m => m.medication_name.trim());
+        // Validate at least one medication has a name and strip _formId
+        const validMeds = medications
+            .filter(m => m.medication_name.trim())
+            .map(({ _formId, ...med }) => med);
         if (validMeds.length === 0) return;
 
         setCreating(true);
@@ -121,36 +137,38 @@ export default function PrescriptionsPage() {
         setCreating(false);
     };
 
-    const handleCancelPrescription = async (id: string) => {
-        if (!confirm(isRTL ? "هل أنت متأكد من إلغاء هذه الوصفة؟" : "Are you sure you want to cancel this prescription?")) {
-            return;
-        }
-        setActionLoading(id);
-        await cancelPrescription(id);
-        await loadData();
-        setActionLoading(null);
+    const handleCancelPrescription = (id: string) => {
+        showConfirm(
+            isRTL ? "هل أنت متأكد من إلغاء هذه الوصفة؟" : "Are you sure you want to cancel this prescription?",
+            async () => {
+                setActionLoading(id);
+                await cancelPrescription(id);
+                await loadData();
+                setActionLoading(null);
+            }
+        );
     };
 
     const resetForm = () => {
         setSelectedPatient("");
-        setMedications([{ medication_name: "", dosage: "", frequency: "", duration: "", instructions: "" }]);
+        setMedications([createMedicationItem()]);
         setValidUntil("");
     };
 
     const addMedication = () => {
-        setMedications([...medications, { medication_name: "", dosage: "", frequency: "", duration: "", instructions: "" }]);
+        setMedications([...medications, createMedicationItem()]);
     };
 
-    const removeMedication = (index: number) => {
+    const removeMedication = (formId: string) => {
         if (medications.length > 1) {
-            setMedications(medications.filter((_, i) => i !== index));
+            setMedications(medications.filter(m => m._formId !== formId));
         }
     };
 
-    const updateMedication = (index: number, field: keyof PrescriptionMedication, value: string | number) => {
-        const updated = [...medications];
-        updated[index] = { ...updated[index], [field]: value };
-        setMedications(updated);
+    const updateMedication = (formId: string, field: keyof PrescriptionMedication, value: string | number) => {
+        setMedications(medications.map(m =>
+            m._formId === formId ? { ...m, [field]: value } : m
+        ));
     };
 
     const formatDate = (isoString: string): string => {
@@ -405,7 +423,7 @@ export default function PrescriptionsPage() {
                                     <div className="space-y-4">
                                         {medications.map((med, index) => (
                                             <div
-                                                key={index}
+                                                key={med._formId}
                                                 className={cn(
                                                     "p-4 rounded-xl border",
                                                     isDark ? "bg-slate-800/50 border-white/5" : "bg-gray-50 border-gray-200"
@@ -418,7 +436,7 @@ export default function PrescriptionsPage() {
                                                     {medications.length > 1 && (
                                                         <button
                                                             type="button"
-                                                            onClick={() => removeMedication(index)}
+                                                            onClick={() => removeMedication(med._formId)}
                                                             className={cn("p-1.5 rounded-lg transition-colors", isDark ? "text-red-400 hover:bg-red-500/10" : "text-red-500 hover:bg-red-50")}
                                                         >
                                                             {Icons.trash}
@@ -431,7 +449,7 @@ export default function PrescriptionsPage() {
                                                         type="text"
                                                         placeholder={isRTL ? "اسم الدواء *" : "Medication name *"}
                                                         value={med.medication_name}
-                                                        onChange={(e) => updateMedication(index, "medication_name", e.target.value)}
+                                                        onChange={(e) => updateMedication(med._formId, "medication_name", e.target.value)}
                                                         className={cn(
                                                             "w-full py-2.5 px-3 rounded-lg border text-sm transition-colors outline-none",
                                                             inputBg, inputFocus
@@ -441,7 +459,7 @@ export default function PrescriptionsPage() {
                                                         type="text"
                                                         placeholder={isRTL ? "الجرعة (مثال: 500mg)" : "Dosage (e.g., 500mg)"}
                                                         value={med.dosage}
-                                                        onChange={(e) => updateMedication(index, "dosage", e.target.value)}
+                                                        onChange={(e) => updateMedication(med._formId, "dosage", e.target.value)}
                                                         className={cn(
                                                             "w-full py-2.5 px-3 rounded-lg border text-sm transition-colors outline-none",
                                                             inputBg, inputFocus
@@ -451,7 +469,7 @@ export default function PrescriptionsPage() {
                                                         type="text"
                                                         placeholder={isRTL ? "التكرار (مثال: 3 مرات يومياً)" : "Frequency (e.g., 3x daily)"}
                                                         value={med.frequency}
-                                                        onChange={(e) => updateMedication(index, "frequency", e.target.value)}
+                                                        onChange={(e) => updateMedication(med._formId, "frequency", e.target.value)}
                                                         className={cn(
                                                             "w-full py-2.5 px-3 rounded-lg border text-sm transition-colors outline-none",
                                                             inputBg, inputFocus
@@ -461,7 +479,7 @@ export default function PrescriptionsPage() {
                                                         type="text"
                                                         placeholder={isRTL ? "المدة (مثال: 7 أيام)" : "Duration (e.g., 7 days)"}
                                                         value={med.duration}
-                                                        onChange={(e) => updateMedication(index, "duration", e.target.value)}
+                                                        onChange={(e) => updateMedication(med._formId, "duration", e.target.value)}
                                                         className={cn(
                                                             "w-full py-2.5 px-3 rounded-lg border text-sm transition-colors outline-none",
                                                             inputBg, inputFocus
@@ -471,7 +489,7 @@ export default function PrescriptionsPage() {
                                                 <textarea
                                                     placeholder={isRTL ? "التعليمات (اختياري)" : "Instructions (optional)"}
                                                     value={med.instructions || ""}
-                                                    onChange={(e) => updateMedication(index, "instructions", e.target.value)}
+                                                    onChange={(e) => updateMedication(med._formId, "instructions", e.target.value)}
                                                     rows={2}
                                                     className={cn(
                                                         "w-full mt-3 py-2.5 px-3 rounded-lg border text-sm transition-colors outline-none resize-none",

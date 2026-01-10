@@ -1,0 +1,830 @@
+"use server";
+
+import { createClient } from "@/lib/supabase/server";
+import {
+    getAuthToken,
+    createOrder,
+    getPaymentKey,
+    getIframeUrl,
+    toPaymobCents,
+    fromPaymobCents,
+    calculatePlatformFee,
+    isPaymobConfigured,
+    PaymobBillingData,
+} from "@/lib/payments/paymob";
+
+// Types
+export interface InitiatePaymentResult {
+    success: boolean;
+    transactionId?: string;
+    paymentUrl?: string;
+    error?: string;
+}
+
+export interface PaymentStatusResult {
+    success: boolean;
+    status?: "pending" | "completed" | "failed" | "refunded";
+    transactionId?: string;
+    amount?: number;
+    paidAt?: string;
+    error?: string;
+}
+
+export interface TransactionRecord {
+    id: string;
+    amount: number;
+    status: string;
+    transactionType: string;
+    paymentMethod: string | null;
+    createdAt: string;
+    appointmentId?: string;
+    doctorName?: string;
+}
+
+/**
+ * Initiate a payment for an appointment
+ */
+export async function initiateAppointmentPayment(
+    appointmentId: string
+): Promise<InitiatePaymentResult> {
+    const supabase = await createClient();
+
+    // Get current user
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+        return { success: false, error: "Not authenticated" };
+    }
+
+    // Check if Paymob is configured
+    if (!isPaymobConfigured()) {
+        return { success: false, error: "Payment gateway not configured. Please try again later." };
+    }
+
+    // Get patient profile
+    const { data: profileData } = await supabase
+        .from("profiles")
+        .select("id, full_name, role")
+        .eq("user_id", user.id)
+        .single();
+
+    const profile = profileData as { id: string; full_name: string; role: string } | null;
+    if (!profile || profile.role !== "patient") {
+        return { success: false, error: "Only patients can make payments" };
+    }
+
+    // Get patient_profile with phone number
+    const { data: patientProfileData } = await supabase
+        .from("patient_profiles")
+        .select("id, phone")
+        .eq("profile_id", profile.id)
+        .single();
+
+    const patientProfile = patientProfileData as { id: string; phone: string | null } | null;
+    if (!patientProfile) {
+        return { success: false, error: "Patient profile not found" };
+    }
+
+    // Get appointment with doctor info
+    const { data: appointmentData } = await supabase
+        .from("appointments")
+        .select(`
+            id,
+            consultation_fee,
+            status,
+            patient_profile_id,
+            doctor_profile_id
+        `)
+        .eq("id", appointmentId)
+        .single();
+
+    const appointment = appointmentData as {
+        id: string;
+        consultation_fee: number;
+        status: string;
+        patient_profile_id: string;
+        doctor_profile_id: string;
+    } | null;
+
+    if (!appointment) {
+        return { success: false, error: "Appointment not found" };
+    }
+
+    if (appointment.patient_profile_id !== patientProfile.id) {
+        return { success: false, error: "Unauthorized" };
+    }
+
+    if (appointment.status !== "scheduled") {
+        return { success: false, error: "Appointment cannot be paid for" };
+    }
+
+    // Check if already paid
+    const { data: existingTransaction } = await supabase
+        .from("transactions")
+        .select("id, status")
+        .eq("appointment_id", appointmentId)
+        .eq("status", "completed")
+        .single();
+
+    if (existingTransaction) {
+        return { success: false, error: "Appointment already paid" };
+    }
+
+    // Get doctor name for billing
+    const { data: doctorProfileData } = await supabase
+        .from("doctor_profiles")
+        .select("profile_id")
+        .eq("id", appointment.doctor_profile_id)
+        .single();
+
+    let doctorName = "Doctor";
+    if (doctorProfileData) {
+        const { data: doctorData } = await supabase
+            .from("profiles")
+            .select("full_name")
+            .eq("id", (doctorProfileData as { profile_id: string }).profile_id)
+            .single();
+        if (doctorData) {
+            doctorName = (doctorData as { full_name: string }).full_name;
+        }
+    }
+
+    // Create transaction record
+    const amountCents = toPaymobCents(appointment.consultation_fee);
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: transaction, error: txError } = await (supabase as any)
+        .from("transactions")
+        .insert({
+            patient_profile_id: patientProfile.id,
+            appointment_id: appointmentId,
+            amount: appointment.consultation_fee,
+            currency: "EGP",
+            transaction_type: "consultation",
+            status: "pending",
+        })
+        .select("id")
+        .single();
+
+    if (txError || !transaction) {
+        // Transaction creation failed - error returned to caller
+        return { success: false, error: "Failed to initiate payment" };
+    }
+
+    // Get Paymob auth token
+    const { token: authToken, error: authError } = await getAuthToken();
+    if (authError || !authToken) {
+        return { success: false, error: authError || "Payment gateway authentication failed" };
+    }
+
+    // Create Paymob order
+    const { order, error: orderError } = await createOrder(
+        authToken,
+        amountCents,
+        transaction.id, // Use our transaction ID as merchant order ID
+        [{
+            name: `Consultation with ${doctorName}`,
+            amount_cents: amountCents,
+            quantity: 1,
+        }]
+    );
+
+    if (orderError || !order) {
+        // Update transaction as failed
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        await (supabase as any)
+            .from("transactions")
+            .update({ status: "failed" })
+            .eq("id", transaction.id);
+        return { success: false, error: orderError || "Failed to create payment order" };
+    }
+
+    // Update transaction with Paymob order ID
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (supabase as any)
+        .from("transactions")
+        .update({ paymob_order_id: order.id.toString() })
+        .eq("id", transaction.id);
+
+    // Validate phone number for payment
+    const phoneNumber = patientProfile.phone;
+    if (!phoneNumber) {
+        return { success: false, error: "Phone number is required for payment. Please update your profile." };
+    }
+
+    // Validate Egyptian phone number format (+20XXXXXXXXXX)
+    const egyptPhoneRegex = /^\+20[0-9]{10}$/;
+    if (!egyptPhoneRegex.test(phoneNumber)) {
+        return { success: false, error: "Invalid phone number format. Please use Egyptian format (+20XXXXXXXXXX)." };
+    }
+
+    // Prepare billing data
+    const nameParts = profile.full_name.split(" ");
+    const billingData: PaymobBillingData = {
+        first_name: nameParts[0] || "Patient",
+        last_name: nameParts.slice(1).join(" ") || "User",
+        email: user.email || "patient@tawari.app",
+        phone_number: phoneNumber,
+        city: "Cairo",
+        country: "EG",
+    };
+
+    // Get payment key
+    const { paymentKey, error: keyError } = await getPaymentKey(
+        authToken,
+        order.id,
+        amountCents,
+        billingData
+    );
+
+    if (keyError || !paymentKey) {
+        return { success: false, error: keyError || "Failed to generate payment token" };
+    }
+
+    // Generate iframe URL
+    const paymentUrl = getIframeUrl(paymentKey);
+
+    return {
+        success: true,
+        transactionId: transaction.id,
+        paymentUrl,
+    };
+}
+
+/**
+ * Get payment status for a transaction
+ */
+export async function getPaymentStatus(
+    transactionId: string
+): Promise<PaymentStatusResult> {
+    const supabase = await createClient();
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+        return { success: false, error: "Not authenticated" };
+    }
+
+    const { data: transaction, error } = await supabase
+        .from("transactions")
+        .select("id, amount, status, created_at, patient_profile_id")
+        .eq("id", transactionId)
+        .single();
+
+    if (error || !transaction) {
+        return { success: false, error: "Transaction not found" };
+    }
+
+    // Verify ownership
+    const { data: patientProfile } = await supabase
+        .from("patient_profiles")
+        .select("profile_id")
+        .eq("id", (transaction as { patient_profile_id: string }).patient_profile_id)
+        .single();
+
+    if (patientProfile) {
+        const { data: profile } = await supabase
+            .from("profiles")
+            .select("user_id")
+            .eq("id", (patientProfile as { profile_id: string }).profile_id)
+            .single();
+
+        if (!profile || (profile as { user_id: string }).user_id !== user.id) {
+            return { success: false, error: "Unauthorized" };
+        }
+    }
+
+    const tx = transaction as { id: string; amount: number; status: string; created_at: string };
+    return {
+        success: true,
+        status: tx.status as "pending" | "completed" | "failed" | "refunded",
+        transactionId: tx.id,
+        amount: tx.amount,
+        paidAt: tx.status === "completed" ? tx.created_at : undefined,
+    };
+}
+
+/**
+ * Get patient's transaction history
+ */
+export async function getPatientTransactions(): Promise<{
+    success: boolean;
+    transactions?: TransactionRecord[];
+    error?: string;
+}> {
+    const supabase = await createClient();
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+        return { success: false, error: "Not authenticated" };
+    }
+
+    // Get patient profile
+    const { data: profileData } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("user_id", user.id)
+        .single();
+
+    if (!profileData) {
+        return { success: false, error: "Profile not found" };
+    }
+
+    const { data: patientProfileData } = await supabase
+        .from("patient_profiles")
+        .select("id")
+        .eq("profile_id", (profileData as { id: string }).id)
+        .single();
+
+    if (!patientProfileData) {
+        return { success: false, error: "Patient profile not found" };
+    }
+
+    // Get transactions with appointment/doctor info
+    const { data: transactions, error } = await supabase
+        .from("transactions")
+        .select(`
+            id,
+            amount,
+            status,
+            transaction_type,
+            payment_method,
+            created_at,
+            appointment_id
+        `)
+        .eq("patient_profile_id", (patientProfileData as { id: string }).id)
+        .order("created_at", { ascending: false })
+        .limit(50);
+
+    if (error) {
+        // Query error - return empty array to caller
+        return { success: false, error: "Failed to fetch transactions" };
+    }
+
+    // Map transactions with doctor names
+    const transactionRecords: TransactionRecord[] = [];
+
+    type TransactionRow = {
+        id: string;
+        amount: number;
+        status: string;
+        transaction_type: string;
+        payment_method: string | null;
+        created_at: string;
+        appointment_id: string | null;
+    };
+
+    for (const tx of ((transactions || []) as TransactionRow[])) {
+        const record: TransactionRecord = {
+            id: tx.id,
+            amount: tx.amount,
+            status: tx.status,
+            transactionType: tx.transaction_type,
+            paymentMethod: tx.payment_method,
+            createdAt: tx.created_at,
+            appointmentId: tx.appointment_id || undefined,
+        };
+
+        // Get doctor name if appointment exists
+        if (tx.appointment_id) {
+            const { data: appointment } = await supabase
+                .from("appointments")
+                .select("doctor_profile_id")
+                .eq("id", tx.appointment_id)
+                .single();
+
+            if (appointment) {
+                const { data: doctorProfile } = await supabase
+                    .from("doctor_profiles")
+                    .select("profile_id")
+                    .eq("id", (appointment as { doctor_profile_id: string }).doctor_profile_id)
+                    .single();
+
+                if (doctorProfile) {
+                    const { data: doctor } = await supabase
+                        .from("profiles")
+                        .select("full_name")
+                        .eq("id", (doctorProfile as { profile_id: string }).profile_id)
+                        .single();
+
+                    if (doctor) {
+                        record.doctorName = (doctor as { full_name: string }).full_name;
+                    }
+                }
+            }
+        }
+
+        transactionRecords.push(record);
+    }
+
+    return { success: true, transactions: transactionRecords };
+}
+
+/**
+ * Process Paymob webhook callback (called from API route)
+ */
+export async function processPaymentCallback(
+    paymobTransactionId: string,
+    paymobOrderId: string,
+    success: boolean,
+    amountCents: number,
+    paymentMethod?: string
+): Promise<{ success: boolean; error?: string }> {
+    const supabase = await createClient();
+
+    // Find transaction by Paymob order ID
+    const { data: transactionData, error: findError } = await supabase
+        .from("transactions")
+        .select("id, appointment_id, patient_profile_id, amount")
+        .eq("paymob_order_id", paymobOrderId)
+        .single();
+
+    if (findError || !transactionData) {
+        // Transaction not found - this may be an old/invalid callback
+        return { success: false, error: "Transaction not found" };
+    }
+
+    const transaction = transactionData as {
+        id: string;
+        appointment_id: string;
+        patient_profile_id: string;
+        amount: number;
+    };
+
+    const newStatus = success ? "completed" : "failed";
+
+    // Update transaction
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error: updateError } = await (supabase as any)
+        .from("transactions")
+        .update({
+            paymob_transaction_id: paymobTransactionId.toString(),
+            status: newStatus,
+            payment_method: paymentMethod || "card",
+        })
+        .eq("id", transaction.id);
+
+    if (updateError) {
+        // Failed to update transaction status
+        return { success: false, error: "Failed to update transaction" };
+    }
+
+    // If payment successful, update appointment and create doctor earnings
+    if (success && transaction.appointment_id) {
+        // Update appointment status
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        await (supabase as any)
+            .from("appointments")
+            .update({ status: "confirmed" })
+            .eq("id", transaction.appointment_id);
+
+        // Get doctor profile ID from appointment
+        const { data: appointment } = await supabase
+            .from("appointments")
+            .select("doctor_profile_id, consultation_fee")
+            .eq("id", transaction.appointment_id)
+            .single();
+
+        if (appointment) {
+            const appt = appointment as { doctor_profile_id: string; consultation_fee: number };
+
+            // Calculate earnings
+            const { grossAmount, platformFee, netAmount } = calculatePlatformFee(appt.consultation_fee);
+
+            // Create doctor earnings record
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            await (supabase as any)
+                .from("doctor_earnings")
+                .insert({
+                    doctor_profile_id: appt.doctor_profile_id,
+                    appointment_id: transaction.appointment_id,
+                    transaction_id: transaction.id,
+                    gross_amount: grossAmount,
+                    platform_fee: platformFee,
+                    net_amount: netAmount,
+                    currency: "EGP",
+                    status: "pending",
+                });
+        }
+
+        // Generate invoice
+        await generateInvoice(transaction.id, transaction.patient_profile_id);
+    }
+
+    return { success: true };
+}
+
+/**
+ * Generate invoice for a transaction
+ */
+async function generateInvoice(
+    transactionId: string,
+    patientProfileId: string
+): Promise<void> {
+    const supabase = await createClient();
+
+    // Get transaction details
+    const { data: transaction } = await supabase
+        .from("transactions")
+        .select("amount, appointment_id")
+        .eq("id", transactionId)
+        .single();
+
+    if (!transaction) return;
+
+    const tx = transaction as { amount: number; appointment_id: string };
+
+    // Calculate VAT (14% in Egypt)
+    const vatRate = 0.14;
+    const subtotal = tx.amount / (1 + vatRate);
+    const vatAmount = tx.amount - subtotal;
+
+    // Create invoice
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (supabase as any)
+        .from("invoices")
+        .insert({
+            transaction_id: transactionId,
+            patient_profile_id: patientProfileId,
+            appointment_id: tx.appointment_id,
+            subtotal: Math.round(subtotal * 100) / 100,
+            tax_amount: Math.round(vatAmount * 100) / 100,
+            total_amount: tx.amount,
+            currency: "EGP",
+            status: "issued",
+        });
+}
+
+/**
+ * Get invoice details
+ */
+export async function getInvoice(invoiceId: string): Promise<{
+    success: boolean;
+    invoice?: {
+        id: string;
+        invoiceNumber: string;
+        subtotal: number;
+        taxAmount: number;
+        totalAmount: number;
+        status: string;
+        createdAt: string;
+        doctorName?: string;
+        patientName?: string;
+        appointmentDate?: string;
+    };
+    error?: string;
+}> {
+    const supabase = await createClient();
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+        return { success: false, error: "Not authenticated" };
+    }
+
+    const { data: invoiceData, error } = await supabase
+        .from("invoices")
+        .select(`
+            id,
+            invoice_number,
+            subtotal,
+            tax_amount,
+            total_amount,
+            status,
+            created_at,
+            appointment_id,
+            patient_profile_id
+        `)
+        .eq("id", invoiceId)
+        .single();
+
+    if (error || !invoiceData) {
+        return { success: false, error: "Invoice not found" };
+    }
+
+    const invoice = invoiceData as {
+        id: string;
+        invoice_number: string;
+        subtotal: number;
+        tax_amount: number;
+        total_amount: number;
+        status: string;
+        created_at: string;
+        appointment_id: string;
+        patient_profile_id: string;
+    };
+
+    // Get additional details
+    let doctorName: string | undefined;
+    let patientName: string | undefined;
+    let appointmentDate: string | undefined;
+
+    if (invoice.appointment_id) {
+        const { data: appointment } = await supabase
+            .from("appointments")
+            .select("scheduled_start, doctor_profile_id")
+            .eq("id", invoice.appointment_id)
+            .single();
+
+        if (appointment) {
+            const appt = appointment as { scheduled_start: string; doctor_profile_id: string };
+            appointmentDate = appt.scheduled_start;
+
+            const { data: doctorProfile } = await supabase
+                .from("doctor_profiles")
+                .select("profile_id")
+                .eq("id", appt.doctor_profile_id)
+                .single();
+
+            if (doctorProfile) {
+                const { data: doctor } = await supabase
+                    .from("profiles")
+                    .select("full_name")
+                    .eq("id", (doctorProfile as { profile_id: string }).profile_id)
+                    .single();
+
+                if (doctor) {
+                    doctorName = (doctor as { full_name: string }).full_name;
+                }
+            }
+        }
+    }
+
+    // Get patient name
+    const { data: patientProfile } = await supabase
+        .from("patient_profiles")
+        .select("profile_id")
+        .eq("id", invoice.patient_profile_id)
+        .single();
+
+    if (patientProfile) {
+        const { data: patient } = await supabase
+            .from("profiles")
+            .select("full_name")
+            .eq("id", (patientProfile as { profile_id: string }).profile_id)
+            .single();
+
+        if (patient) {
+            patientName = (patient as { full_name: string }).full_name;
+        }
+    }
+
+    return {
+        success: true,
+        invoice: {
+            id: invoice.id,
+            invoiceNumber: invoice.invoice_number,
+            subtotal: invoice.subtotal,
+            taxAmount: invoice.tax_amount,
+            totalAmount: invoice.total_amount,
+            status: invoice.status,
+            createdAt: invoice.created_at,
+            doctorName,
+            patientName,
+            appointmentDate,
+        },
+    };
+}
+
+/**
+ * Get doctor's earnings summary
+ */
+export async function getDoctorEarnings(): Promise<{
+    success: boolean;
+    earnings?: {
+        totalEarnings: number;
+        pendingEarnings: number;
+        availableForPayout: number;
+        paidOut: number;
+        recentEarnings: Array<{
+            id: string;
+            amount: number;
+            status: string;
+            createdAt: string;
+            patientName?: string;
+        }>;
+    };
+    error?: string;
+}> {
+    const supabase = await createClient();
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+        return { success: false, error: "Not authenticated" };
+    }
+
+    // Get doctor profile
+    const { data: profileData } = await supabase
+        .from("profiles")
+        .select("id, role")
+        .eq("user_id", user.id)
+        .single();
+
+    const profile = profileData as { id: string; role: string } | null;
+    if (!profile || profile.role !== "doctor") {
+        return { success: false, error: "Only doctors can view earnings" };
+    }
+
+    const { data: doctorProfileData } = await supabase
+        .from("doctor_profiles")
+        .select("id")
+        .eq("profile_id", profile.id)
+        .single();
+
+    if (!doctorProfileData) {
+        return { success: false, error: "Doctor profile not found" };
+    }
+
+    const doctorProfile = doctorProfileData as { id: string };
+
+    // Get earnings summary
+    const { data: earnings } = await supabase
+        .from("doctor_earnings")
+        .select("net_amount, status, created_at, appointment_id, id")
+        .eq("doctor_profile_id", doctorProfile.id)
+        .order("created_at", { ascending: false });
+
+    const earningsList = (earnings || []) as Array<{
+        id: string;
+        net_amount: number;
+        status: string;
+        created_at: string;
+        appointment_id: string;
+    }>;
+
+    let totalEarnings = 0;
+    let pendingEarnings = 0;
+    let availableForPayout = 0;
+    let paidOut = 0;
+
+    const recentEarnings: Array<{
+        id: string;
+        amount: number;
+        status: string;
+        createdAt: string;
+        patientName?: string;
+    }> = [];
+
+    for (const earning of earningsList) {
+        totalEarnings += earning.net_amount;
+
+        switch (earning.status) {
+            case "pending":
+                pendingEarnings += earning.net_amount;
+                break;
+            case "available":
+                availableForPayout += earning.net_amount;
+                break;
+            case "paid_out":
+                paidOut += earning.net_amount;
+                break;
+        }
+
+        // Get patient name for recent earnings
+        if (recentEarnings.length < 10 && earning.appointment_id) {
+            let patientName: string | undefined;
+
+            const { data: appointment } = await supabase
+                .from("appointments")
+                .select("patient_profile_id")
+                .eq("id", earning.appointment_id)
+                .single();
+
+            if (appointment) {
+                const { data: patientProfile } = await supabase
+                    .from("patient_profiles")
+                    .select("profile_id")
+                    .eq("id", (appointment as { patient_profile_id: string }).patient_profile_id)
+                    .single();
+
+                if (patientProfile) {
+                    const { data: patient } = await supabase
+                        .from("profiles")
+                        .select("full_name")
+                        .eq("id", (patientProfile as { profile_id: string }).profile_id)
+                        .single();
+
+                    if (patient) {
+                        patientName = (patient as { full_name: string }).full_name;
+                    }
+                }
+            }
+
+            recentEarnings.push({
+                id: earning.id,
+                amount: earning.net_amount,
+                status: earning.status,
+                createdAt: earning.created_at,
+                patientName,
+            });
+        }
+    }
+
+    return {
+        success: true,
+        earnings: {
+            totalEarnings: Math.round(totalEarnings * 100) / 100,
+            pendingEarnings: Math.round(pendingEarnings * 100) / 100,
+            availableForPayout: Math.round(availableForPayout * 100) / 100,
+            paidOut: Math.round(paidOut * 100) / 100,
+            recentEarnings,
+        },
+    };
+}

@@ -6,6 +6,7 @@ import { SpeedInsights } from "@vercel/speed-insights/next";
 import { I18nProvider, Language } from "../i18n";
 import { ThemeProviderWrapper } from "../context/ThemeProviderWrapper";
 import { AuthProvider } from "../context/AuthContext";
+import { ToastProvider } from "@/components/ui/toast";
 import "../globals.css";
 
 const geistSans = Geist({
@@ -49,7 +50,9 @@ export default async function RootLayout({
         <AuthProvider>
           <ThemeProviderWrapper>
             <I18nProvider locale={lang as Language}>
-              {children}
+              <ToastProvider>
+                {children}
+              </ToastProvider>
             </I18nProvider>
           </ThemeProviderWrapper>
         </AuthProvider>

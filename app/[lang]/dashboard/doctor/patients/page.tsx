@@ -59,7 +59,7 @@ export default function PatientsPage() {
     const { t, formatNumber, formatDate } = useI18n();
     const [searchQuery, setSearchQuery] = useState("");
     const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
-    const { isDark, pageBg, textPrimary, textSecondary, textMuted, inputBg, inputFocus, buttonSecondary, buttonSecondaryActive, divider, cardHover, emptyStateBg } = useThemeStyles();
+    const { isDark, textPrimary, textSecondary, textMuted, inputBg, inputFocus, buttonSecondary, buttonSecondaryActive, divider, cardHover, emptyStateBg } = useThemeStyles();
 
     // Mock Data
     const patients = [

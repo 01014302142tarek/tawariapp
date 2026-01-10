@@ -742,6 +742,129 @@ export async function respondToRenewalRequest(
 }
 
 // ============================================
+// Patient Renewal Request Tracking
+// ============================================
+
+export type RenewalRequestStatus = "pending" | "approved" | "denied" | "requires_consultation";
+
+export interface RenewalRequest {
+    id: string;
+    original_prescription_id: string;
+    patient_profile_id: string;
+    doctor_profile_id: string;
+    request_notes?: string;
+    status: RenewalRequestStatus;
+    doctor_response?: string;
+    responded_at?: string;
+    new_prescription_id?: string;
+    created_at: string;
+    prescription?: {
+        medication_name: string;
+        dosage?: string;
+        frequency?: string;
+    };
+    doctor?: {
+        full_name: string;
+    };
+}
+
+/**
+ * Get patient's renewal requests
+ */
+export async function getPatientRenewalRequests(): Promise<{
+    requests: RenewalRequest[];
+    error?: string;
+}> {
+    const supabase = await createClient();
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+        return { requests: [], error: "Not authenticated" };
+    }
+
+    // Get patient profile
+    const { data: profileData } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("user_id", user.id)
+        .single();
+
+    const profile = profileData as { id: string } | null;
+    if (!profile) {
+        return { requests: [], error: "Profile not found" };
+    }
+
+    const { data: patientProfileData } = await supabase
+        .from("patient_profiles")
+        .select("id")
+        .eq("profile_id", profile.id)
+        .single();
+
+    const patientProfile = patientProfileData as { id: string } | null;
+    if (!patientProfile) {
+        return { requests: [], error: "Patient profile not found" };
+    }
+
+    const { data, error } = await supabase
+        .from("prescription_renewal_requests")
+        .select(`
+            id,
+            original_prescription_id,
+            patient_profile_id,
+            doctor_profile_id,
+            request_notes,
+            status,
+            doctor_response,
+            responded_at,
+            new_prescription_id,
+            created_at,
+            prescriptions!inner (
+                medication_name,
+                dosage,
+                frequency
+            ),
+            doctor_profiles!inner (
+                profiles!inner (
+                    full_name
+                )
+            )
+        `)
+        .eq("patient_profile_id", patientProfile.id)
+        .order("created_at", { ascending: false })
+        .limit(20);
+
+    if (error) {
+        console.error("Error fetching patient renewal requests:", error);
+        return { requests: [], error: error.message };
+    }
+
+    // Transform the data
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const requests: RenewalRequest[] = (data || []).map((req: any) => ({
+        id: req.id,
+        original_prescription_id: req.original_prescription_id,
+        patient_profile_id: req.patient_profile_id,
+        doctor_profile_id: req.doctor_profile_id,
+        request_notes: req.request_notes,
+        status: req.status,
+        doctor_response: req.doctor_response,
+        responded_at: req.responded_at,
+        new_prescription_id: req.new_prescription_id,
+        created_at: req.created_at,
+        prescription: {
+            medication_name: req.prescriptions.medication_name,
+            dosage: req.prescriptions.dosage,
+            frequency: req.prescriptions.frequency,
+        },
+        doctor: {
+            full_name: req.doctor_profiles.profiles.full_name,
+        },
+    }));
+
+    return { requests };
+}
+
+// ============================================
 // Get patients for doctor (for prescription creation)
 // ============================================
 

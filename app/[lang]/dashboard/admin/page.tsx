@@ -91,21 +91,6 @@ const Icons = {
 // COMPONENTS
 // ============================================
 
-const Badge = ({ children, variant = "default", className }: { children: React.ReactNode; variant?: "default" | "success" | "warning" | "primary" | "pending"; className?: string }) => {
-    const variants = {
-        default: "bg-slate-700/50 text-slate-300",
-        success: "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20",
-        warning: "bg-amber-500/10 text-amber-400 border border-amber-500/20",
-        primary: "bg-teal-500/10 text-teal-400 border border-teal-500/20",
-        pending: "bg-orange-500/10 text-orange-400 border border-orange-500/20",
-    };
-    return (
-        <span className={cn("px-2.5 py-1 rounded-full text-xs font-medium", variants[variant], className)}>
-            {children}
-        </span>
-    );
-};
-
 const ProgressBar = ({ value, max, isDark = true }: { value: number; max: number; color?: string; isDark?: boolean }) => {
     const percentage = (value / max) * 100;
     return (
@@ -130,7 +115,7 @@ const ProgressBar = ({ value, max, isDark = true }: { value: number; max: number
 
 export default function AdminDashboard() {
     const { theme } = useTheme();
-    const { t, language, isRTL, formatNumber } = useI18n();
+    const { t, isRTL, formatNumber } = useI18n();
     const { profile } = useAuth();
     const isDark = theme === "dark";
 

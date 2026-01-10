@@ -35,7 +35,7 @@ const Icons = {
 export default function ConsultationsPage() {
     const { t, formatNumber, formatDate } = useI18n();
     const [roomCode, setRoomCode] = useState("");
-    const { isDark, pageBg, textPrimary, textSecondary, textMuted, inputBg, inputFocus, divider, cardHover } = useThemeStyles();
+    const { isDark, textPrimary, textSecondary, textMuted, inputBg, inputFocus, divider, cardHover } = useThemeStyles();
 
     // Mock Data
     const consultations = [

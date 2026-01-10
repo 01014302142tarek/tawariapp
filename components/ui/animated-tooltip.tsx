@@ -1,6 +1,5 @@
 "use client";
 
-import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import React, { useState } from "react";
@@ -56,7 +55,7 @@ export const AnimatedTooltip = ({
                         )}
                     </AnimatePresence>
                     <Image
-                        onMouseMove={(e) => setHoveredIndex(item.id)}
+                        onMouseMove={() => setHoveredIndex(item.id)}
                         height={100}
                         width={100}
                         src={item.image}

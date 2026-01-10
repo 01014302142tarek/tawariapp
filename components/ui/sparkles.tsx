@@ -3,6 +3,46 @@
 import { cn } from "@/lib/utils";
 import React, { useEffect, useRef, useState } from "react";
 
+// Particle class for sparkles animation - moved outside component to avoid inline class warning
+class Particle {
+    x: number;
+    y: number;
+    size: number;
+    speedX: number;
+    speedY: number;
+    opacity: number;
+
+    constructor(
+        canvas: HTMLCanvasElement,
+        minSize: number,
+        maxSize: number
+    ) {
+        this.x = Math.random() * canvas.width;
+        this.y = Math.random() * canvas.height;
+        this.size = Math.random() * (maxSize - minSize) + minSize;
+        this.speedX = (Math.random() - 0.5) * 0.5;
+        this.speedY = (Math.random() - 0.5) * 0.5;
+        this.opacity = Math.random();
+    }
+
+    update(canvas: HTMLCanvasElement) {
+        this.x += this.speedX;
+        this.y += this.speedY;
+        this.opacity += (Math.random() - 0.5) * 0.05;
+        this.opacity = Math.max(0.1, Math.min(1, this.opacity));
+
+        if (this.x < 0 || this.x > canvas.width) this.speedX *= -1;
+        if (this.y < 0 || this.y > canvas.height) this.speedY *= -1;
+    }
+
+    draw(ctx: CanvasRenderingContext2D, particleColor: string) {
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(${particleColor}, ${this.opacity})`;
+        ctx.fill();
+    }
+}
+
 export const SparklesCore = ({
     id,
     background,
@@ -25,40 +65,10 @@ export const SparklesCore = ({
     const particles = useRef<Particle[]>([]);
     const animationRef = useRef<number | undefined>(undefined);
 
-    class Particle {
-        x: number;
-        y: number;
-        size: number;
-        speedX: number;
-        speedY: number;
-        opacity: number;
-
-        constructor(canvas: HTMLCanvasElement) {
-            this.x = Math.random() * canvas.width;
-            this.y = Math.random() * canvas.height;
-            this.size = Math.random() * ((maxSize || 2) - (minSize || 0.5)) + (minSize || 0.5);
-            this.speedX = (Math.random() - 0.5) * 0.5;
-            this.speedY = (Math.random() - 0.5) * 0.5;
-            this.opacity = Math.random();
-        }
-
-        update(canvas: HTMLCanvasElement) {
-            this.x += this.speedX;
-            this.y += this.speedY;
-            this.opacity += (Math.random() - 0.5) * 0.05;
-            this.opacity = Math.max(0.1, Math.min(1, this.opacity));
-
-            if (this.x < 0 || this.x > canvas.width) this.speedX *= -1;
-            if (this.y < 0 || this.y > canvas.height) this.speedY *= -1;
-        }
-
-        draw(ctx: CanvasRenderingContext2D) {
-            ctx.beginPath();
-            ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-            ctx.fillStyle = `rgba(${particleColor || "255, 255, 255"}, ${this.opacity})`;
-            ctx.fill();
-        }
-    }
+    // Store props in refs to use in animation loop
+    const minSizeValue = minSize || 0.5;
+    const maxSizeValue = maxSize || 2;
+    const colorValue = particleColor || "255, 255, 255";
 
     useEffect(() => {
         const canvas = canvasRef.current;
@@ -89,14 +99,14 @@ export const SparklesCore = ({
         const density = particleDensity || 100;
         particles.current = Array.from(
             { length: density },
-            () => new Particle(canvas)
+            () => new Particle(canvas, minSizeValue, maxSizeValue)
         );
 
         const animate = () => {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             particles.current.forEach((particle) => {
                 particle.update(canvas);
-                particle.draw(ctx);
+                particle.draw(ctx, colorValue);
             });
             animationRef.current = requestAnimationFrame(animate);
         };
@@ -106,7 +116,7 @@ export const SparklesCore = ({
         return () => {
             if (animationRef.current) cancelAnimationFrame(animationRef.current);
         };
-    }, [canvasSize, particleDensity, minSize, maxSize, particleColor]);
+    }, [canvasSize, particleDensity, minSizeValue, maxSizeValue, colorValue]);
 
     return (
         <canvas

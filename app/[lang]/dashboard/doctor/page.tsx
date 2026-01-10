@@ -13,7 +13,6 @@ import { useAuth } from "@/app/context/AuthContext";
 import { GlowingCard } from "@/components/ui/glowing-card";
 import { AnimatedNumber } from "@/components/ui/animated-number";
 import { SparklesCore } from "@/components/ui/sparkles";
-import { AnimatedTooltip } from "@/components/ui/animated-tooltip";
 
 // ============================================
 // ICONS
@@ -176,16 +175,6 @@ export default function Doctor2Dashboard() {
     const doctorName = profile?.profile.full_name
         ? (isRTL ? `د. ${profile.profile.full_name.split(' ')[0]}` : `Dr. ${profile.profile.full_name.split(' ')[0]}`)
         : t.common.demoNames.drHassan;
-
-    // MOCK DATA moved inside for translations
-    // MOCK DATA moved inside for translations
-    const patients = [
-        { id: 1, name: t.common.demoNames.sarahJohnson, designation: "9:00 AM", image: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&crop=face" },
-        { id: 2, name: t.common.demoNames.mohamedAli, designation: "10:30 AM", image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face" },
-        { id: 3, name: t.common.demoNames.fatimaKhaled, designation: "11:45 AM", image: "https://images.unsplash.com/photo-1489424731084-a5d8b219a5bb?w=100&h=100&fit=crop&crop=face" },
-        { id: 4, name: t.common.demoNames.omarNasser, designation: "2:00 PM", image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face" },
-        { id: 5, name: t.common.demoNames.laylaAhmed, designation: "3:30 PM", image: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&h=100&fit=crop&crop=face" },
-    ];
 
     const appointments = [
         { id: 1, time: isRTL ? "09:00 ص" : "09:00 AM", patient: t.common.demoNames.sarahJohnson, type: t.doctorDashboard.appointmentsPage.types.followUp, status: "completed", image: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&crop=face" },

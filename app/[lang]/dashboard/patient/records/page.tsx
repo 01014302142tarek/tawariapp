@@ -110,7 +110,7 @@ const Badge = ({ children, variant = "default" }: { children: React.ReactNode; v
 
 export default function RecordsPage() {
     const { t, isRTL, formatDate } = useI18n();
-    const { isDark, textPrimary, textMuted, border, inputBg, inputFocus } = useThemeStyles();
+    const { isDark, textPrimary, textMuted, inputBg, inputFocus } = useThemeStyles();
 
     // State
     const [activeTab, setActiveTab] = useState<TabType>("records");

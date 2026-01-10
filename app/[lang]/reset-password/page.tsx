@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useI18n } from "../../i18n";
 import { useGlobalTheme } from "@/app/context/GlobalThemeContext";
 import { createClient } from "@/lib/supabase/client";
+import { updatePassword } from "@/app/actions/auth";
 
 // Logo Component
 const LogoFull = ({ className = "", isDark = true }: { className?: string; isDark?: boolean }) => (
@@ -167,17 +168,18 @@ export default function ResetPasswordPage() {
 
         setIsSubmitting(true);
 
-        const supabase = createClient();
-        const { error } = await supabase.auth.updateUser({ password });
+        // Use rate-limited server action
+        const result = await updatePassword(password);
 
-        if (error) {
-            setError(text.errorGeneric);
+        if (!result.success) {
+            setError(result.error || text.errorGeneric);
             setIsSubmitting(false);
         } else {
             setIsSuccess(true);
             setIsSubmitting(false);
             // Sign out and redirect to login after 3 seconds
             setTimeout(async () => {
+                const supabase = createClient();
                 await supabase.auth.signOut();
                 router.push(`/${language}/login`);
             }, 3000);

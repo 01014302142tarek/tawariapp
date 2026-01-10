@@ -80,7 +80,6 @@ const FadeInDiv = ({
     className,
     tabs,
     active,
-    hovering,
 }: {
     className?: string;
     tabs: Tab[];

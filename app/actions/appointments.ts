@@ -1,6 +1,8 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { appointmentLimiter } from "@/lib/rate-limit";
+import { appointmentSchema, validateInput } from "@/lib/validations";
 
 // ============================================
 // Types
@@ -62,18 +64,30 @@ export interface ConsultationSession {
 
 /**
  * Book a new appointment
+ * Rate limited: 10 bookings per hour per user
  */
 export async function bookAppointment(data: {
     doctorProfileId: string;
     scheduledStart: string;
     scheduledEnd: string;
     patientNotes?: string;
-}): Promise<{ success: boolean; appointmentId?: string; error?: string }> {
+}): Promise<{ success: boolean; appointmentId?: string; error?: string; retryAfter?: number }> {
     const supabase = await createClient();
 
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
         return { success: false, error: "Not authenticated" };
+    }
+
+    // Validate input
+    const validation = validateInput(appointmentSchema, {
+        doctorProfileId: data.doctorProfileId,
+        scheduledStart: data.scheduledStart,
+        scheduledEnd: data.scheduledEnd,
+        patientNotes: data.patientNotes,
+    });
+    if (!validation.success) {
+        return { success: false, error: validation.error };
     }
 
     // Get patient profile
@@ -86,6 +100,17 @@ export async function bookAppointment(data: {
     const profile = profileData as { id: string; role: string } | null;
     if (!profile || profile.role !== "patient") {
         return { success: false, error: "Not a patient profile" };
+    }
+
+    // Check rate limit after auth but before DB operations
+    const rateLimitKey = `appointments:${profile.id}`;
+    const rateLimit = appointmentLimiter.check(rateLimitKey);
+    if (!rateLimit.allowed) {
+        return {
+            success: false,
+            error: "Too many booking attempts. Please try again later.",
+            retryAfter: rateLimit.retryAfter ?? undefined,
+        };
     }
 
     // Get patient_profile
@@ -892,4 +917,189 @@ export async function getSpecializations(): Promise<{
     }
 
     return { specializations: data || [] };
+}
+
+// ============================================
+// Rescheduling Actions
+// ============================================
+
+/**
+ * Reschedule an appointment (doctor or patient)
+ */
+export async function rescheduleAppointment(data: {
+    appointmentId: string;
+    newScheduledStart: string;
+    newScheduledEnd: string;
+    reason?: string;
+}): Promise<{ success: boolean; error?: string }> {
+    const supabase = await createClient();
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+        return { success: false, error: "Not authenticated" };
+    }
+
+    // Get user profile and role
+    const { data: profileData } = await supabase
+        .from("profiles")
+        .select("id, role")
+        .eq("user_id", user.id)
+        .single();
+
+    const profile = profileData as { id: string; role: string } | null;
+    if (!profile) {
+        return { success: false, error: "Profile not found" };
+    }
+
+    // Get the appointment
+    const { data: appointmentData, error: fetchError } = await supabase
+        .from("appointments")
+        .select("id, doctor_profile_id, patient_profile_id, status")
+        .eq("id", data.appointmentId)
+        .single();
+
+    if (fetchError || !appointmentData) {
+        return { success: false, error: "Appointment not found" };
+    }
+
+    const appointment = appointmentData as {
+        id: string;
+        doctor_profile_id: string;
+        patient_profile_id: string;
+        status: string;
+    };
+
+    // Verify the user is either the doctor or the patient
+    let isAuthorized = false;
+
+    if (profile.role === "doctor") {
+        const { data: doctorProfile } = await supabase
+            .from("doctor_profiles")
+            .select("id")
+            .eq("profile_id", profile.id)
+            .single();
+
+        if (doctorProfile && (doctorProfile as { id: string }).id === appointment.doctor_profile_id) {
+            isAuthorized = true;
+        }
+    } else if (profile.role === "patient") {
+        const { data: patientProfile } = await supabase
+            .from("patient_profiles")
+            .select("id")
+            .eq("profile_id", profile.id)
+            .single();
+
+        if (patientProfile && (patientProfile as { id: string }).id === appointment.patient_profile_id) {
+            isAuthorized = true;
+        }
+    }
+
+    if (!isAuthorized) {
+        return { success: false, error: "Not authorized to reschedule this appointment" };
+    }
+
+    // Only scheduled or confirmed appointments can be rescheduled
+    if (!["scheduled", "confirmed"].includes(appointment.status)) {
+        return { success: false, error: "Only scheduled appointments can be rescheduled" };
+    }
+
+    // Check if the new slot is available (no overlapping appointments for the doctor)
+    const { data: existingAppointments } = await supabase
+        .from("appointments")
+        .select("id")
+        .eq("doctor_profile_id", appointment.doctor_profile_id)
+        .neq("id", data.appointmentId) // Exclude current appointment
+        .lt("scheduled_start", data.newScheduledEnd)
+        .gt("scheduled_end", data.newScheduledStart)
+        .in("status", ["scheduled", "confirmed", "in_waiting_room", "in_progress"]);
+
+    if (existingAppointments && existingAppointments.length > 0) {
+        return { success: false, error: "The new time slot is not available" };
+    }
+
+    // Update the appointment
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error: updateError } = await (supabase as any)
+        .from("appointments")
+        .update({
+            scheduled_start: data.newScheduledStart,
+            scheduled_end: data.newScheduledEnd,
+            rescheduled_at: new Date().toISOString(),
+            rescheduled_by: user.id,
+            rescheduled_reason: data.reason || null,
+        })
+        .eq("id", data.appointmentId);
+
+    if (updateError) {
+        console.error("Error rescheduling appointment:", updateError);
+        return { success: false, error: updateError.message };
+    }
+
+    return { success: true };
+}
+
+/**
+ * Get a single appointment by ID
+ */
+export async function getAppointmentById(
+    appointmentId: string
+): Promise<{ appointment: AppointmentWithDetails | null; error?: string }> {
+    const supabase = await createClient();
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+        return { appointment: null, error: "Not authenticated" };
+    }
+
+    const { data, error } = await supabase
+        .from("appointments")
+        .select(`
+            *,
+            doctor_profiles!inner (
+                id,
+                consultation_fee,
+                profiles!inner (
+                    id,
+                    full_name,
+                    avatar_url
+                )
+            ),
+            patient_profiles!inner (
+                id,
+                profiles!inner (
+                    id,
+                    full_name,
+                    avatar_url,
+                    phone
+                )
+            )
+        `)
+        .eq("id", appointmentId)
+        .single();
+
+    if (error || !data) {
+        return { appointment: null, error: error?.message || "Appointment not found" };
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const apt = data as any;
+    const appointment: AppointmentWithDetails = {
+        ...apt,
+        doctor: {
+            id: apt.doctor_profiles.id,
+            full_name: apt.doctor_profiles.profiles.full_name,
+            avatar_url: apt.doctor_profiles.profiles.avatar_url,
+            consultation_fee: apt.doctor_profiles.consultation_fee,
+        },
+        patient: {
+            id: apt.patient_profiles.id,
+            full_name: apt.patient_profiles.profiles.full_name,
+            avatar_url: apt.patient_profiles.profiles.avatar_url,
+            phone: apt.patient_profiles.profiles.phone,
+        },
+        doctor_profiles: undefined,
+        patient_profiles: undefined,
+    };
+
+    return { appointment };
 }

@@ -44,7 +44,7 @@ const Icons = {
 
 export default function AnalyticsPage() {
     const { t, isRTL, formatNumber } = useI18n();
-    const { isDark, pageBg, textPrimary, textSecondary, textMuted } = useThemeStyles();
+    const { isDark, textPrimary, textSecondary, textMuted } = useThemeStyles();
 
     // Chart Data
     const weeklyData = [

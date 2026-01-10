@@ -1,10 +1,43 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 
+// Allowed redirect paths to prevent open redirect attacks
+const ALLOWED_REDIRECT_PREFIXES = [
+    "/en/dashboard",
+    "/ar/dashboard",
+    "/en/",
+    "/ar/",
+];
+
+const DEFAULT_REDIRECT = "/en/dashboard/patient";
+
+/**
+ * Validates redirect URL to prevent open redirect attacks
+ * Only allows relative paths that start with allowed prefixes
+ */
+function isValidRedirectUrl(url: string): boolean {
+    // Must be a relative path starting with /
+    if (!url.startsWith("/")) return false;
+
+    // Block protocol-relative URLs (//evil.com)
+    if (url.startsWith("//")) return false;
+
+    // Block URLs with encoded characters that could bypass checks
+    if (url.includes("%") || url.includes("\\")) return false;
+
+    // Must start with an allowed prefix
+    return ALLOWED_REDIRECT_PREFIXES.some(prefix => url.startsWith(prefix));
+}
+
 export async function GET(request: Request) {
     const { searchParams, origin } = new URL(request.url);
     const code = searchParams.get("code");
-    const next = searchParams.get("next") ?? "/en/dashboard/patient";
+    const requestedNext = searchParams.get("next");
+
+    // Validate and sanitize redirect URL
+    const next = requestedNext && isValidRedirectUrl(requestedNext)
+        ? requestedNext
+        : DEFAULT_REDIRECT;
 
     if (code) {
         const supabase = await createClient();

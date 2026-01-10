@@ -209,7 +209,6 @@ export async function getPatientDashboardData(): Promise<{
 /**
  * Helper function to get recent activity for patient
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function getRecentActivityForPatient(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     supabase: any,

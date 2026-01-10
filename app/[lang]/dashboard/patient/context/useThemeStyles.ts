@@ -3,7 +3,7 @@
 import { useGlobalTheme } from "@/app/context/GlobalThemeContext";
 
 export function useThemeStyles() {
-    const { isDark, theme } = useGlobalTheme();
+    const { isDark } = useGlobalTheme();
 
     return {
         isDark,

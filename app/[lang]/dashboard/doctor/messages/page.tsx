@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -59,52 +59,18 @@ export default function MessagesPage() {
     const [sending, setSending] = useState(false);
     const [currentProfileId, setCurrentProfileId] = useState<string>("");
 
-    useEffect(() => {
-        loadConversations();
-        loadContacts();
+    const scrollToBottom = useCallback(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }, []);
 
-    useEffect(() => {
-        if (selectedConversation) {
-            loadMessages(selectedConversation.id);
-        }
-    }, [selectedConversation?.id]);
-
-    useEffect(() => {
-        scrollToBottom();
-    }, [messages]);
-
-    const scrollToBottom = () => {
-        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    };
-
-    const loadConversations = async () => {
-        setLoading(true);
-        const result = await getConversations();
-        if (result.conversations) {
-            setConversations(result.conversations);
-            if (result.conversations.length > 0 && !selectedConversation) {
-                setSelectedConversation(result.conversations[0]);
-            }
-        }
-        setLoading(false);
-    };
-
-    const loadContacts = async () => {
-        const result = await getDoctorContacts();
-        if (result.contacts) {
-            setContacts(result.contacts);
-        }
-    };
-
-    const loadMessages = async (conversationId: string) => {
+    const loadMessages = useCallback(async (conversationId: string, participantId?: string) => {
         const result = await getMessages(conversationId);
         if (result.messages) {
             setMessages(result.messages);
             // Get current user's profile ID from first message
             if (result.messages.length > 0) {
                 const firstMsg = result.messages[0];
-                if (firstMsg.sender_profile_id !== selectedConversation?.participant_id) {
+                if (firstMsg.sender_profile_id !== participantId) {
                     setCurrentProfileId(firstMsg.sender_profile_id);
                 } else {
                     setCurrentProfileId(firstMsg.recipient_profile_id);
@@ -117,7 +83,38 @@ export default function MessagesPage() {
                 c.id === conversationId ? { ...c, unread_count: 0 } : c
             ));
         }
-    };
+    }, []);
+
+    useEffect(() => {
+        const loadInitialData = async () => {
+            setLoading(true);
+            const [conversationsResult, contactsResult] = await Promise.all([
+                getConversations(),
+                getDoctorContacts()
+            ]);
+            if (conversationsResult.conversations) {
+                setConversations(conversationsResult.conversations);
+                if (conversationsResult.conversations.length > 0) {
+                    setSelectedConversation(conversationsResult.conversations[0]);
+                }
+            }
+            if (contactsResult.contacts) {
+                setContacts(contactsResult.contacts);
+            }
+            setLoading(false);
+        };
+        loadInitialData();
+    }, []);
+
+    useEffect(() => {
+        if (selectedConversation) {
+            loadMessages(selectedConversation.id, selectedConversation.participant_id);
+        }
+    }, [selectedConversation, loadMessages]);
+
+    useEffect(() => {
+        scrollToBottom();
+    }, [messages, scrollToBottom]);
 
     const handleSendMessage = async () => {
         if (!newMessage.trim() || !selectedConversation || sending) return;

@@ -400,6 +400,46 @@ export async function rejectDoctor(
 }
 
 /**
+ * Get a signed URL to view a credential document (admin only)
+ * The URL expires after 1 hour for security
+ */
+export async function getCredentialViewUrl(documentPath: string): Promise<{
+    url: string | null;
+    error?: string;
+}> {
+    const supabase = await createClient();
+
+    // Verify admin access
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+        return { url: null, error: "Not authenticated" };
+    }
+
+    const { data: callerProfileData } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("user_id", user.id)
+        .single();
+
+    const callerProfile = callerProfileData as { role: string } | null;
+    if (!callerProfile || callerProfile.role !== "admin") {
+        return { url: null, error: "Unauthorized - Admin access required" };
+    }
+
+    // Generate signed URL (expires in 1 hour)
+    const { data, error } = await supabase.storage
+        .from("credentials")
+        .createSignedUrl(documentPath, 3600);
+
+    if (error) {
+        console.error("Error creating signed URL:", error);
+        return { url: null, error: error.message };
+    }
+
+    return { url: data.signedUrl };
+}
+
+/**
  * Get verification statistics for admin dashboard
  */
 export async function getVerificationStats(): Promise<{

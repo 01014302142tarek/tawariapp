@@ -5,6 +5,10 @@ import { User, Session } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
 import { getCurrentUserProfile } from "@/app/actions/profile";
 import {
+    signInWithPassword as serverSignIn,
+    signUpWithPassword as serverSignUp,
+} from "@/app/actions/auth";
+import {
     type FullProfile,
     type FullPatientProfile,
     type FullDoctorProfile,
@@ -26,14 +30,19 @@ export type {
 };
 export { isPatientProfile, isDoctorProfile, isAdminProfile, isAssistantProfile };
 
+interface AuthResult {
+    error: Error | null;
+    retryAfter?: number;
+}
+
 interface AuthContextType {
     user: User | null;
     session: Session | null;
     profile: FullProfile | null;
     isLoading: boolean;
     refreshProfile: () => Promise<void>;
-    signUp: (email: string, password: string, metadata?: { fullName?: string; phone?: string; role?: string }) => Promise<{ error: Error | null }>;
-    signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
+    signUp: (email: string, password: string, metadata?: { fullName?: string; phone?: string; role?: string }) => Promise<AuthResult>;
+    signIn: (email: string, password: string) => Promise<AuthResult>;
     signInWithGoogle: () => Promise<{ error: Error | null }>;
     signOut: () => Promise<void>;
     updateUserRole: (role: string) => Promise<{ error: Error | null }>;
@@ -100,27 +109,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         email: string,
         password: string,
         metadata?: { fullName?: string; phone?: string; role?: string }
-    ) => {
-        const { error } = await supabase.auth.signUp({
-            email,
-            password,
-            options: {
-                data: {
-                    full_name: metadata?.fullName,
-                    phone: metadata?.phone,
-                    role: metadata?.role || "patient",
-                },
-            },
-        });
-        return { error: error as Error | null };
+    ): Promise<AuthResult> => {
+        // Use rate-limited server action
+        const result = await serverSignUp(email, password, metadata);
+
+        if (!result.success) {
+            return {
+                error: new Error(result.error || "Sign up failed"),
+                retryAfter: result.retryAfter,
+            };
+        }
+
+        return { error: null };
     };
 
-    const signIn = async (email: string, password: string) => {
-        const { error } = await supabase.auth.signInWithPassword({
-            email,
-            password,
-        });
-        return { error: error as Error | null };
+    const signIn = async (email: string, password: string): Promise<AuthResult> => {
+        // Use rate-limited server action
+        const result = await serverSignIn(email, password);
+
+        if (!result.success) {
+            return {
+                error: new Error(result.error || "Sign in failed"),
+                retryAfter: result.retryAfter,
+            };
+        }
+
+        // After successful server-side auth, refresh the client session
+        // The auth state change listener will update the UI
+        await supabase.auth.getSession();
+
+        return { error: null };
     };
 
     const signInWithGoogle = async () => {

@@ -87,29 +87,19 @@ export default function MessagesPage() {
 
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
-    // Load conversations on mount
-    useEffect(() => {
-        loadConversations();
-    }, []);
-
-    const loadConversations = async () => {
+    // Define loadConversations with useCallback
+    const loadConversations = useCallback(async () => {
         setLoading(true);
         const { conversations: convs } = await getConversations();
         setConversations(convs);
-        if (convs.length > 0 && !selectedConversation) {
-            setSelectedConversation(convs[0]);
+        if (convs.length > 0) {
+            setSelectedConversation(prev => prev || convs[0]);
         }
         setLoading(false);
-    };
+    }, []);
 
-    // Load messages when conversation changes
-    useEffect(() => {
-        if (selectedConversation) {
-            loadMessages(selectedConversation.id);
-        }
-    }, [selectedConversation]);
-
-    const loadMessages = async (conversationId: string) => {
+    // Define loadMessages with useCallback
+    const loadMessages = useCallback(async (conversationId: string) => {
         setLoadingMessages(true);
         const { messages: msgs } = await getMessages(conversationId);
         setMessages(msgs);
@@ -122,7 +112,19 @@ export default function MessagesPage() {
         setConversations(prev =>
             prev.map(c => c.id === conversationId ? { ...c, unread_count: 0 } : c)
         );
-    };
+    }, []);
+
+    // Load conversations on mount
+    useEffect(() => {
+        loadConversations();
+    }, [loadConversations]);
+
+    // Load messages when conversation changes
+    useEffect(() => {
+        if (selectedConversation) {
+            loadMessages(selectedConversation.id);
+        }
+    }, [selectedConversation, loadMessages]);
 
     // Scroll to bottom when messages change
     useEffect(() => {

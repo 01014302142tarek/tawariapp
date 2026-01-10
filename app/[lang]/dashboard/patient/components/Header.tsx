@@ -11,6 +11,7 @@ import { useI18n } from "@/app/i18n";
 import { useAuth } from "@/app/context/AuthContext";
 import { MovingBorder } from "@/components/ui/moving-border";
 import { LanguageSwitch } from "@/components/ui/language-switch";
+import { NotificationDropdown } from "@/components/notifications";
 
 // Icons
 const Icons = {
@@ -327,15 +328,7 @@ export default function Header({ onMenuClick }: { onMenuClick?: () => void }) {
                     </MovingBorder>
 
                     {/* Notifications - visible on all screens */}
-                    <button className={cn(
-                        "relative p-2 md:p-2.5 rounded-xl border transition-colors",
-                        isDark
-                            ? "bg-white/5 hover:bg-white/10 border-white/5 text-gray-400"
-                            : "bg-gray-100 hover:bg-gray-200 border-gray-200 text-gray-600"
-                    )}>
-                        {Icons.bell}
-                        <span className="absolute -top-1 -right-1 w-4 h-4 md:w-5 md:h-5 bg-teal-500 text-white text-[10px] md:text-xs font-bold rounded-full flex items-center justify-center">2</span>
-                    </button>
+                    <NotificationDropdown isDark={isDark} dashboardType="patient" />
 
                     {/* User Dropdown */}
                     <UserDropdown

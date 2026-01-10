@@ -2,6 +2,40 @@
 
 import { createClient } from "./server";
 
+// Maximum file sizes
+const MAX_AVATAR_SIZE = 5 * 1024 * 1024; // 5MB
+const MAX_CREDENTIAL_SIZE = 10 * 1024 * 1024; // 10MB
+
+// File signature (magic bytes) validation
+const FILE_SIGNATURES: Record<string, number[][]> = {
+    jpg: [[0xFF, 0xD8, 0xFF]],
+    jpeg: [[0xFF, 0xD8, 0xFF]],
+    png: [[0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]],
+    webp: [[0x52, 0x49, 0x46, 0x46]], // RIFF header (followed by WEBP)
+    pdf: [[0x25, 0x50, 0x44, 0x46]], // %PDF
+};
+
+/**
+ * Validates file content by checking magic bytes (file signatures)
+ * This prevents attacks where malicious files are renamed with safe extensions
+ */
+function validateFileContent(buffer: Buffer, expectedType: string): boolean {
+    const signatures = FILE_SIGNATURES[expectedType];
+    if (!signatures) return false;
+
+    return signatures.some(signature => {
+        if (buffer.length < signature.length) return false;
+        return signature.every((byte, index) => buffer[index] === byte);
+    });
+}
+
+/**
+ * Validates file size
+ */
+function validateFileSize(buffer: Buffer, maxSize: number): boolean {
+    return buffer.length <= maxSize;
+}
+
 /**
  * Upload an avatar image for a user
  * @param userId - The user's auth ID
@@ -26,8 +60,19 @@ export async function uploadAvatar(
     const base64Data = fileBase64.replace(/^data:image\/\w+;base64,/, "");
     const buffer = Buffer.from(base64Data, "base64");
 
-    // Generate unique file path
-    const filePath = `${userId}/avatar.${ext}`;
+    // Validate file size
+    if (!validateFileSize(buffer, MAX_AVATAR_SIZE)) {
+        return { url: null, error: "File too large. Maximum size is 5MB." };
+    }
+
+    // Validate file content (magic bytes) to prevent malicious file uploads
+    if (!validateFileContent(buffer, ext)) {
+        return { url: null, error: "File content does not match the expected type. Please upload a valid image." };
+    }
+
+    // Generate unique file path using UUID to prevent path traversal
+    const fileId = crypto.randomUUID();
+    const filePath = `${userId}/${fileId}.${ext}`;
 
     // Upload to avatars bucket
     const { error: uploadError } = await supabase.storage
@@ -38,7 +83,7 @@ export async function uploadAvatar(
         });
 
     if (uploadError) {
-        console.error("Error uploading avatar:", uploadError);
+        // Error details are returned to the caller, no need to log
         return { url: null, error: uploadError.message };
     }
 
@@ -66,6 +111,12 @@ export async function uploadCredential(
 ): Promise<{ path: string | null; documentName: string | null; error?: string }> {
     const supabase = await createClient();
 
+    // Validate credential type to prevent path traversal
+    const allowedCredentialTypes = ["license", "diploma", "certification", "id", "other"];
+    const safeCredentialType = allowedCredentialTypes.includes(credentialType)
+        ? credentialType
+        : "other";
+
     // Validate file extension
     const ext = fileName.split(".").pop()?.toLowerCase();
     if (!ext || !["jpg", "jpeg", "png", "pdf", "webp"].includes(ext)) {
@@ -76,10 +127,20 @@ export async function uploadCredential(
     const base64Data = fileBase64.replace(/^data:(image|application)\/\w+;base64,/, "");
     const buffer = Buffer.from(base64Data, "base64");
 
-    // Generate unique file path with timestamp
-    const timestamp = Date.now();
-    const sanitizedName = fileName.replace(/[^a-zA-Z0-9.-]/g, "_");
-    const filePath = `${doctorProfileId}/${credentialType}/${timestamp}_${sanitizedName}`;
+    // Validate file size
+    if (!validateFileSize(buffer, MAX_CREDENTIAL_SIZE)) {
+        return { path: null, documentName: null, error: "File too large. Maximum size is 10MB." };
+    }
+
+    // Validate file content (magic bytes) to prevent malicious file uploads
+    if (!validateFileContent(buffer, ext)) {
+        return { path: null, documentName: null, error: "File content does not match the expected type. Please upload a valid file." };
+    }
+
+    // Generate unique file path using UUID to prevent path traversal
+    const fileId = crypto.randomUUID();
+    const sanitizedName = fileName.replace(/[^a-zA-Z0-9.-]/g, "_").substring(0, 100); // Limit name length
+    const filePath = `${doctorProfileId}/${safeCredentialType}/${fileId}_${sanitizedName}`;
 
     // Determine content type
     let contentType = "application/octet-stream";
@@ -102,7 +163,7 @@ export async function uploadCredential(
         });
 
     if (uploadError) {
-        console.error("Error uploading credential:", uploadError);
+        // Error details are returned to the caller, no need to log
         return { path: null, documentName: null, error: uploadError.message };
     }
 
@@ -144,7 +205,7 @@ export async function getCredentialSignedUrl(
         .createSignedUrl(path, expiresIn);
 
     if (error) {
-        console.error("Error creating signed URL:", error);
+        // Error details are returned to the caller, no need to log
         return { url: null, error: error.message };
     }
 
@@ -164,7 +225,7 @@ export async function deleteAvatar(userId: string): Promise<{ success: boolean; 
         .list(userId);
 
     if (listError) {
-        console.error("Error listing avatars:", listError);
+        // Error details are returned to the caller, no need to log
         return { success: false, error: listError.message };
     }
 
@@ -179,7 +240,7 @@ export async function deleteAvatar(userId: string): Promise<{ success: boolean; 
         .remove(filePaths);
 
     if (deleteError) {
-        console.error("Error deleting avatars:", deleteError);
+        // Error details are returned to the caller, no need to log
         return { success: false, error: deleteError.message };
     }
 
@@ -241,7 +302,7 @@ export async function saveCredentialRecord(
         .single();
 
     if (error) {
-        console.error("Error saving credential record:", error);
+        // Error details are returned to the caller, no need to log
         return { success: false, error: error.message };
     }
 

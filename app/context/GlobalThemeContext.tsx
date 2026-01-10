@@ -32,20 +32,17 @@ export function GlobalThemeProvider({ children }: { children: React.ReactNode })
 
     // Initialize theme on mount
     useEffect(() => {
-        setMounted(true);
         const savedMode = localStorage.getItem(THEME_STORAGE_KEY) as ThemeMode;
         if (savedMode && ["system", "light", "dark"].includes(savedMode)) {
+            const initialTheme = savedMode === "system" ? getSystemTheme() : savedMode;
             setThemeModeState(savedMode);
-            if (savedMode === "system") {
-                setTheme(getSystemTheme());
-            } else {
-                setTheme(savedMode);
-            }
+            setTheme(initialTheme);
         } else {
             // Default to dark theme
             setThemeModeState("dark");
             setTheme("dark");
         }
+        setMounted(true);
     }, []);
 
     // Apply theme to document and handle system theme changes
@@ -62,7 +59,11 @@ export function GlobalThemeProvider({ children }: { children: React.ReactNode })
                 setTheme(newTheme);
                 document.documentElement.setAttribute("data-theme", newTheme);
             };
-            setTheme(getSystemTheme());
+            // Only update if the system theme differs from current
+            const systemTheme = getSystemTheme();
+            if (theme !== systemTheme) {
+                setTheme(systemTheme);
+            }
             mediaQuery.addEventListener("change", handleChange);
             return () => mediaQuery.removeEventListener("change", handleChange);
         }

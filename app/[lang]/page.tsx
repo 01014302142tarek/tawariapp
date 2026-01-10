@@ -58,35 +58,6 @@ const LogoFull = ({ className = "", isDark = true }: { className?: string; isDar
   </div>
 );
 
-// Small Logo Icon only (for favicon-like usage)
-const LogoIcon = () => (
-  <svg className="h-10 w-10" viewBox="0 0 100 90" fill="none">
-    <defs>
-      <linearGradient id="heartGradientSmall" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#2DD4BF" />
-        <stop offset="50%" stopColor="#14B8A6" />
-        <stop offset="100%" stopColor="#0D9488" />
-      </linearGradient>
-    </defs>
-    <path
-      d="M50 85 C50 85 10 55 10 30 C10 15 22 5 35 5 C42 5 48 10 50 15 C52 10 58 5 65 5 C78 5 90 15 90 30 C90 55 50 85 50 85Z"
-      fill="none"
-      stroke="url(#heartGradientSmall)"
-      strokeWidth="6"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-    <path
-      d="M5 45 L25 45 L35 25 L50 65 L65 35 L75 45 L95 45"
-      fill="none"
-      stroke="#F59E0B"
-      strokeWidth="5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-  </svg>
-);
-
 // Professional SVG Icons
 const Icons = {
   menu: <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>,
@@ -229,9 +200,6 @@ function LandingPageContent() {
   const textSecondary = isDark ? 'text-gray-400' : 'text-slate-600';
   const textMuted = isDark ? 'text-gray-500' : 'text-slate-500';
   const borderColor = isDark ? 'border-white/5' : 'border-slate-200';
-  const cardBg = isDark ? 'bg-[#1E293B]/50' : 'bg-white';
-  const cardBorder = isDark ? 'border-white/5' : 'border-slate-200';
-  const cardHoverBorder = isDark ? 'hover:border-white/20' : 'hover:border-teal-300';
   const navBg = isDark ? 'bg-[#0F172A]/80' : 'bg-white/90';
 
   // Glowing card styles for light mode - using teal borders

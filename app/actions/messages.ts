@@ -1,6 +1,8 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { messageLimiter } from "@/lib/rate-limit";
+import { messageSchema, validateInput } from "@/lib/validations";
 
 // ============================================
 // Types
@@ -248,6 +250,7 @@ export async function getMessages(
 
 /**
  * Send a message
+ * Rate limited: 30 messages per minute per user
  */
 export async function sendMessage(data: {
     conversationId: string;
@@ -256,7 +259,7 @@ export async function sendMessage(data: {
     messageType?: MessageType;
     attachmentUrl?: string;
     attachmentType?: string;
-}): Promise<{ message: Message | null; error?: string }> {
+}): Promise<{ message: Message | null; error?: string; retryAfter?: number }> {
     const supabase = await createClient();
 
     const { data: { user } } = await supabase.auth.getUser();
@@ -273,6 +276,27 @@ export async function sendMessage(data: {
     const profile = profileData as { id: string } | null;
     if (!profile) {
         return { message: null, error: "Profile not found" };
+    }
+
+    // Validate input
+    const validation = validateInput(messageSchema, {
+        conversationId: data.conversationId,
+        recipientProfileId: data.recipientProfileId,
+        content: data.content,
+    });
+    if (!validation.success) {
+        return { message: null, error: validation.error };
+    }
+
+    // Check rate limit
+    const rateLimitKey = `messages:${profile.id}`;
+    const rateLimit = messageLimiter.check(rateLimitKey);
+    if (!rateLimit.allowed) {
+        return {
+            message: null,
+            error: "Too many messages sent. Please wait before sending more.",
+            retryAfter: rateLimit.retryAfter ?? undefined,
+        };
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -293,7 +317,6 @@ export async function sendMessage(data: {
         .single();
 
     if (error) {
-        console.error("Error sending message:", error);
         return { message: null, error: error.message };
     }
 

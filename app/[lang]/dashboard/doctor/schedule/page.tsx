@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { GlowingCard } from "@/components/ui/glowing-card";
@@ -12,7 +12,6 @@ import {
     getBlockedTimes,
     addBlockedTime,
     removeBlockedTime,
-    type DoctorAvailability,
     type BlockedTime,
 } from "@/app/actions/availability";
 
@@ -65,6 +64,14 @@ export default function SchedulePage() {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState<number | null>(null);
     const [savedDays, setSavedDays] = useState<Set<number>>(new Set());
+    const savedTimersRef = useRef<Map<number, ReturnType<typeof setTimeout>>>(new Map());
+
+    // Cleanup timers on unmount
+    useEffect(() => {
+        return () => {
+            savedTimersRef.current.forEach(timer => clearTimeout(timer));
+        };
+    }, []);
 
     // Blocked time form state
     const [showBlockedForm, setShowBlockedForm] = useState(false);
@@ -84,18 +91,7 @@ export default function SchedulePage() {
         t.doctorDashboard.schedulePage.days.saturday,
     ];
 
-    // Initialize schedule with empty days
-    useEffect(() => {
-        const initSchedule: DaySchedule[] = Array.from({ length: 7 }, (_, i) => ({
-            dayOfWeek: i,
-            slots: [],
-            isActive: true,
-        }));
-        setSchedule(initSchedule);
-        loadData();
-    }, []);
-
-    const loadData = async () => {
+    const loadData = useCallback(async () => {
         setLoading(true);
         try {
             const [availResult, blockedResult] = await Promise.all([
@@ -127,7 +123,18 @@ export default function SchedulePage() {
             console.error("Error loading schedule data:", error);
         }
         setLoading(false);
-    };
+    }, []);
+
+    // Initialize schedule with empty days and load data
+    useEffect(() => {
+        const initSchedule: DaySchedule[] = Array.from({ length: 7 }, (_, i) => ({
+            dayOfWeek: i,
+            slots: [],
+            isActive: true,
+        }));
+        setSchedule(initSchedule);
+        loadData();
+    }, [loadData]);
 
     const addTimeSlot = (dayOfWeek: number) => {
         setSchedule(prev =>
@@ -191,13 +198,19 @@ export default function SchedulePage() {
         const result = await setDayAvailability(dayOfWeek, day.slots);
         if (result.success) {
             setSavedDays(prev => new Set([...prev, dayOfWeek]));
-            setTimeout(() => {
+            // Clear any existing timer for this day
+            const existingTimer = savedTimersRef.current.get(dayOfWeek);
+            if (existingTimer) clearTimeout(existingTimer);
+            // Set new timer and store reference
+            const timer = setTimeout(() => {
                 setSavedDays(prev => {
                     const newSet = new Set(prev);
                     newSet.delete(dayOfWeek);
                     return newSet;
                 });
+                savedTimersRef.current.delete(dayOfWeek);
             }, 2000);
+            savedTimersRef.current.set(dayOfWeek, timer);
         }
         setSaving(null);
     };

@@ -2774,7 +2774,7 @@ export function I18nProvider({ children, locale }: { children: React.ReactNode; 
             };
 
             return new Intl.DateTimeFormat(language === 'ar' ? 'ar-EG' : 'en-US', options || defaultOptions).format(d);
-        } catch (e) {
+        } catch {
             return date.toString();
         }
     };

@@ -117,7 +117,6 @@ function UserTypeCard({
     features,
     ctaText,
     ctaLink,
-    isRTL,
     isDark = true,
 }: {
     type: "patient" | "doctor";
@@ -127,7 +126,6 @@ function UserTypeCard({
     features: string[];
     ctaText: string;
     ctaLink: string;
-    isRTL: boolean;
     isDark?: boolean;
 }) {
     return (
@@ -237,7 +235,6 @@ export default function GetStartedPage() {
                         ]}
                         ctaText={t.getStartedPage.patientCta}
                         ctaLink={`/${language}/register`}
-                        isRTL={isRTL}
                         isDark={isDark}
                     />
 
@@ -253,7 +250,6 @@ export default function GetStartedPage() {
                         ]}
                         ctaText={t.getStartedPage.doctorCta}
                         ctaLink={`/${language}/doctor-onboarding`}
-                        isRTL={isRTL}
                         isDark={isDark}
                     />
                 </div>

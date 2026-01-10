@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { GlowingCard } from "@/components/ui/glowing-card";
@@ -104,8 +105,9 @@ interface Filters {
 }
 
 export default function DoctorsPage() {
-    const { t, isRTL } = useI18n();
+    const { t, isRTL, language } = useI18n();
     const { isDark, textPrimary, textSecondary, textMuted, inputBg, inputFocus, border } = useThemeStyles();
+    const router = useRouter();
 
     const [mounted, setMounted] = useState(false);
     const [doctors, setDoctors] = useState<DoctorForBooking[]>([]);
@@ -128,10 +130,14 @@ export default function DoctorsPage() {
         loadingSlots: false,
     });
     const [bookingStatus, setBookingStatus] = useState<"idle" | "booking" | "success" | "error">("idle");
+    const bookingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-    // Handle hydration
+    // Handle hydration and cleanup
     useEffect(() => {
         setMounted(true);
+        return () => {
+            if (bookingTimerRef.current) clearTimeout(bookingTimerRef.current);
+        };
     }, []);
 
     const loadSpecializations = useCallback(async () => {
@@ -215,23 +221,13 @@ export default function DoctorsPage() {
             patientNotes: booking.patientNotes || undefined,
         });
 
-        if (result.success) {
-            setBookingStatus("success");
-            setTimeout(() => {
-                setViewMode("list");
-                setBookingStatus("idle");
-                setBooking({
-                    doctor: null,
-                    selectedDate: "",
-                    selectedSlot: null,
-                    patientNotes: "",
-                    availableSlots: [],
-                    loadingSlots: false,
-                });
-            }, 2000);
+        if (result.success && result.appointmentId) {
+            // Redirect to checkout page for payment
+            router.push(`/${language}/checkout?appointment=${result.appointmentId}`);
         } else {
             setBookingStatus("error");
-            setTimeout(() => setBookingStatus("idle"), 3000);
+            if (bookingTimerRef.current) clearTimeout(bookingTimerRef.current);
+            bookingTimerRef.current = setTimeout(() => setBookingStatus("idle"), 3000);
         }
     };
 
@@ -705,9 +701,9 @@ export default function DoctorsPage() {
                                             </p>
                                         ) : (
                                             <div className="grid grid-cols-3 gap-2">
-                                                {booking.availableSlots.map((slot, idx) => (
+                                                {booking.availableSlots.map((slot) => (
                                                     <button
-                                                        key={idx}
+                                                        key={slot.start}
                                                         onClick={() => setBooking(prev => ({ ...prev, selectedSlot: slot }))}
                                                         className={cn(
                                                             "px-3 py-2 rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-1",

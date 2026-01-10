@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { useI18n } from "../../i18n";
 import { useGlobalTheme } from "@/app/context/GlobalThemeContext";
-import { createClient } from "@/lib/supabase/client";
+import { requestPasswordReset } from "@/app/actions/auth";
 
 // Logo Component
 const LogoFull = ({ className = "", isDark = true }: { className?: string; isDark?: boolean }) => (
@@ -100,6 +100,8 @@ export default function ForgotPasswordPage() {
             successTitle: "Check Your Email",
             successMessage: "We've sent a password reset link to your email address. Please check your inbox and follow the instructions.",
             errorGeneric: "Failed to send reset link. Please try again.",
+            errorRateLimit: "Too many reset attempts. Please try again in",
+            minutes: "minutes",
         },
         ar: {
             title: "نسيت كلمة المرور؟",
@@ -111,6 +113,8 @@ export default function ForgotPasswordPage() {
             successTitle: "تحقق من بريدك الإلكتروني",
             successMessage: "لقد أرسلنا رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني. يرجى التحقق من صندوق الوارد واتباع التعليمات.",
             errorGeneric: "فشل إرسال رابط إعادة التعيين. يرجى المحاولة مرة أخرى.",
+            errorRateLimit: "محاولات كثيرة جداً. يرجى المحاولة مرة أخرى خلال",
+            minutes: "دقائق",
         },
     };
 
@@ -121,13 +125,16 @@ export default function ForgotPasswordPage() {
         setError(null);
         setIsSubmitting(true);
 
-        const supabase = createClient();
-        const { error } = await supabase.auth.resetPasswordForEmail(email, {
-            redirectTo: `${window.location.origin}/${language}/reset-password`,
-        });
+        const redirectTo = `${window.location.origin}/${language}/reset-password`;
+        const result = await requestPasswordReset(email, redirectTo);
 
-        if (error) {
-            setError(text.errorGeneric);
+        if (!result.success) {
+            if (result.retryAfter) {
+                const minutes = Math.ceil(result.retryAfter / 60);
+                setError(`${text.errorRateLimit} ${minutes} ${text.minutes}`);
+            } else {
+                setError(result.error || text.errorGeneric);
+            }
             setIsSubmitting(false);
         } else {
             setIsSuccess(true);
