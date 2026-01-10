@@ -100,6 +100,10 @@ async function getTestUsers() {
         adminProfile = adminProfileData;
     }
 
+    if (!patientProfile || !doctorProfile) {
+        throw new Error("Patient or doctor profile not found");
+    }
+
     return {
         patient: { ...patientProfileData, patientProfile },
         doctor: { ...doctorProfileData, doctorProfile },
@@ -683,13 +687,13 @@ async function testDoctorRatingCalculation() {
         const expectedCount = initialCount + ratings.length;
 
         if (updatedRating?.rating_count === expectedCount) {
-            success(`Rating count updated (${updatedRating.rating_count} reviews)`);
+            success(`Rating count updated (${updatedRating?.rating_count} reviews)`);
         } else {
             fail(`Rating count mismatch - expected ${expectedCount}, got ${updatedRating?.rating_count}`);
         }
 
         if (updatedRating?.rating_average !== undefined) {
-            success(`Rating average calculated: ${updatedRating.rating_average}`);
+            success(`Rating average calculated: ${updatedRating?.rating_average}`);
         } else {
             fail("Rating average not calculated");
         }
