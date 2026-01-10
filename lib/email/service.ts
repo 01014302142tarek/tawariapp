@@ -1,14 +1,15 @@
 /**
  * Email Service
  *
- * This module provides email notification functionality.
- * Currently uses console logging as a placeholder.
+ * This module provides email notification functionality using Resend.
  *
- * To integrate with an email provider:
- * 1. Add SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASSWORD to .env.local
- * 2. Or use a service like Resend, SendGrid, or AWS SES
- * 3. Update the sendEmail function to use the provider's API
+ * Setup:
+ * 1. Add RESEND_API_KEY to .env.local
+ * 2. Verify your domain in Resend dashboard
+ * 3. Add the DNS records (DKIM, SPF) to your domain
  */
+
+import { Resend } from "resend";
 
 export interface EmailOptions {
     to: string;
@@ -23,32 +24,58 @@ export interface EmailResult {
     error?: string;
 }
 
+// Initialize Resend client
+const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
+
+// Email sender address (must be from verified domain)
+const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || "Tawari <noreply@tawariapp.com>";
+
 /**
- * Send an email
- * Currently logs to console - replace with actual email provider
+ * Send an email using Resend
+ * Falls back to console logging if RESEND_API_KEY is not configured
  */
 export async function sendEmail(options: EmailOptions): Promise<EmailResult> {
-    // In development/production without email config, log the email
-    console.log("[EMAIL SERVICE] Sending email:");
-    console.log(`  To: ${options.to}`);
-    console.log(`  Subject: ${options.subject}`);
-    console.log(`  Body Preview: ${options.text?.substring(0, 100) || options.html.substring(0, 100)}...`);
+    // If Resend is not configured, log to console (development mode)
+    if (!resend) {
+        console.log("[EMAIL SERVICE] Resend not configured, logging email:");
+        console.log(`  To: ${options.to}`);
+        console.log(`  Subject: ${options.subject}`);
+        console.log(`  Body Preview: ${options.text?.substring(0, 100) || options.html.substring(0, 100)}...`);
+        return {
+            success: true,
+            messageId: `dev-${Date.now()}`,
+        };
+    }
 
-    // TODO: Integrate with email provider
-    // Example with Resend:
-    // const resend = new Resend(process.env.RESEND_API_KEY);
-    // const { data, error } = await resend.emails.send({
-    //     from: 'Tawari <noreply@tawariapp.com>',
-    //     to: options.to,
-    //     subject: options.subject,
-    //     html: options.html,
-    // });
+    try {
+        const { data, error } = await resend.emails.send({
+            from: FROM_EMAIL,
+            to: options.to,
+            subject: options.subject,
+            html: options.html,
+            text: options.text,
+        });
 
-    // For now, simulate success
-    return {
-        success: true,
-        messageId: `mock-${Date.now()}`,
-    };
+        if (error) {
+            console.error("[EMAIL SERVICE] Resend error:", error);
+            return {
+                success: false,
+                error: error.message,
+            };
+        }
+
+        console.log("[EMAIL SERVICE] Email sent successfully:", data?.id);
+        return {
+            success: true,
+            messageId: data?.id,
+        };
+    } catch (err) {
+        console.error("[EMAIL SERVICE] Failed to send email:", err);
+        return {
+            success: false,
+            error: err instanceof Error ? err.message : "Unknown error",
+        };
+    }
 }
 
 /**

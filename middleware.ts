@@ -110,6 +110,26 @@ export async function middleware(request: NextRequest) {
             loginUrl.searchParams.set('redirect', pathname)
             return NextResponse.redirect(loginUrl)
         }
+
+        const pathWithoutLocale = pathname.replace(/^\/(en|ar)/, '')
+        const role = user.user_metadata?.role || 'patient'
+
+        // Redirect /dashboard to role-specific dashboard
+        if (pathWithoutLocale === '/dashboard' || pathWithoutLocale === '/dashboard/') {
+            const dashboardUrl = new URL(`/${currentLocale}/dashboard/${role}`, request.url)
+            return NextResponse.redirect(dashboardUrl)
+        }
+
+        // Role-based access control: users can only access their own dashboard
+        const dashboardRoleMatch = pathWithoutLocale.match(/^\/dashboard\/(patient|doctor|admin)/)
+        if (dashboardRoleMatch) {
+            const requestedRole = dashboardRoleMatch[1]
+            if (requestedRole !== role) {
+                // Redirect to user's own dashboard if trying to access wrong role's dashboard
+                const correctDashboardUrl = new URL(`/${currentLocale}/dashboard/${role}`, request.url)
+                return NextResponse.redirect(correctDashboardUrl)
+            }
+        }
     }
 
     // Redirect authenticated users away from auth pages to dashboard

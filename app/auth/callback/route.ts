@@ -9,7 +9,8 @@ const ALLOWED_REDIRECT_PREFIXES = [
     "/ar/",
 ];
 
-const DEFAULT_REDIRECT = "/en/dashboard/patient";
+// Default to generic /dashboard - middleware will redirect to role-specific dashboard
+const DEFAULT_REDIRECT = "/en/dashboard";
 
 /**
  * Validates redirect URL to prevent open redirect attacks

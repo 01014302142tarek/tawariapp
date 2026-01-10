@@ -3,7 +3,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useTheme } from "../context/ThemeContext";
@@ -265,7 +264,6 @@ export default function Header({ onMenuClick }: { onMenuClick?: () => void }) {
     const { theme, themeMode, setThemeMode } = useTheme();
     const { t, isRTL, language } = useI18n();
     const { profile, signOut } = useAuth();
-    const router = useRouter();
     const isDark = theme === "dark";
 
     // Get user's name and avatar from profile
@@ -274,15 +272,21 @@ export default function Header({ onMenuClick }: { onMenuClick?: () => void }) {
 
     const handleLogout = async () => {
         await signOut();
-        router.push(`/${language}/login`);
+        // Use window.location for a full page reload to ensure clean auth state
+        window.location.href = `/${language}/login`;
     };
 
-    const currentDate = new Date().toLocaleDateString(isRTL ? "ar-EG" : "en-US", {
-        weekday: "long",
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-    });
+    // Use state for date to avoid hydration mismatch (server/client timezone differences)
+    const [currentDate, setCurrentDate] = useState("");
+
+    useEffect(() => {
+        setCurrentDate(new Date().toLocaleDateString(isRTL ? "ar-EG" : "en-US", {
+            weekday: "long",
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+        }));
+    }, [isRTL]);
 
     return (
         <header className={cn(

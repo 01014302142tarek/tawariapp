@@ -86,14 +86,20 @@ export default function PatientsPage() {
         loadPatients();
     }, []);
 
+    // Store current date in state to avoid hydration mismatch
+    const [currentDate, setCurrentDate] = useState<Date | null>(null);
+
+    useEffect(() => {
+        setCurrentDate(new Date());
+    }, []);
+
     // Calculate age from date of birth
     const calculateAge = (dateOfBirth?: string): number | null => {
-        if (!dateOfBirth) return null;
+        if (!dateOfBirth || !currentDate) return null;
         const birth = new Date(dateOfBirth);
-        const today = new Date();
-        let age = today.getFullYear() - birth.getFullYear();
-        const monthDiff = today.getMonth() - birth.getMonth();
-        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+        let age = currentDate.getFullYear() - birth.getFullYear();
+        const monthDiff = currentDate.getMonth() - birth.getMonth();
+        if (monthDiff < 0 || (monthDiff === 0 && currentDate.getDate() < birth.getDate())) {
             age--;
         }
         return age;
@@ -112,14 +118,16 @@ export default function PatientsPage() {
         ? (patients.reduce((sum, p) => sum + p.total_appointments, 0) / patients.length).toFixed(1)
         : 0;
 
+    // Calculate new this month (using state-based currentDate to avoid hydration issues)
+    const newThisMonth = currentDate ? patients.filter(p => {
+        const created = new Date(p.created_at);
+        return created.getMonth() === currentDate.getMonth() && created.getFullYear() === currentDate.getFullYear();
+    }).length : 0;
+
     const stats = [
         { label: t.adminDashboard.patientsPage.stats.totalPatients, value: totalPatients, icon: Icons.patient, color: "teal" },
         { label: t.adminDashboard.patientsPage.stats.active, value: activePatients, icon: Icons.check, color: "emerald" },
-        { label: t.adminDashboard.patientsPage.stats.newThisMonth, value: patients.filter(p => {
-            const created = new Date(p.created_at);
-            const now = new Date();
-            return created.getMonth() === now.getMonth() && created.getFullYear() === now.getFullYear();
-        }).length, icon: Icons.sparkle, color: "blue" },
+        { label: t.adminDashboard.patientsPage.stats.newThisMonth, value: newThisMonth, icon: Icons.sparkle, color: "blue" },
         { label: t.adminDashboard.patientsPage.stats.avgAppointments, value: Number(avgAppointments), icon: Icons.calendar, color: "amber" },
     ];
 

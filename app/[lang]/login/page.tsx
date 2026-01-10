@@ -166,10 +166,11 @@ function InputField({
 function LoginPageContent() {
     const { isRTL, language } = useI18n();
     const { theme } = useGlobalTheme();
-    const { signIn, signInWithGoogle, isLoading: authLoading } = useAuth();
+    const { signIn, signInWithGoogle, isLoading: authLoading, user } = useAuth();
     const router = useRouter();
     const searchParams = useSearchParams();
-    const redirectUrl = searchParams.get('redirect') || `/${language}/dashboard/patient`;
+    // Use explicit redirect param, or let middleware determine based on user role
+    const redirectParam = searchParams.get('redirect');
 
     const isDark = theme === "dark";
     const [showPassword, setShowPassword] = useState(false);
@@ -192,7 +193,10 @@ function LoginPageContent() {
             setError(language === 'ar' ? 'البريد الإلكتروني أو كلمة المرور غير صحيحة' : 'Invalid email or password');
             setIsSubmitting(false);
         } else {
-            router.push(redirectUrl);
+            // If explicit redirect provided, use it; otherwise go to generic dashboard
+            // and let middleware redirect based on user role from user_metadata
+            const targetUrl = redirectParam || `/${language}/dashboard`;
+            router.push(targetUrl);
         }
     };
 

@@ -122,9 +122,15 @@ export default function AdminDashboard() {
     // Get admin's first name from profile
     const adminName = profile?.profile.full_name?.split(' ')[0] || (isRTL ? "مدير" : "Admin");
 
-    const time = new Date().getHours();
-    const greetingKey = time < 12 ? "morning" : time < 17 ? "afternoon" : "evening";
-    const greeting = t.doctorDashboard.greeting[greetingKey as keyof typeof t.doctorDashboard.greeting];
+    // Use state for time-based greeting to avoid hydration mismatch
+    const [greetingKey, setGreetingKey] = useState<"morning" | "afternoon" | "evening">("morning");
+
+    useEffect(() => {
+        const time = new Date().getHours();
+        setGreetingKey(time < 12 ? "morning" : time < 17 ? "afternoon" : "evening");
+    }, []);
+
+    const greeting = t.doctorDashboard.greeting[greetingKey];
 
     // State for pending doctors
     const [pendingApprovals, setPendingApprovals] = useState<Array<{
