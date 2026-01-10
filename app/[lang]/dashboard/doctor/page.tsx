@@ -7,7 +7,8 @@ import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useTheme } from "./context/ThemeContext";
 import { useI18n } from "@/app/i18n";
-import { useAuth } from "@/app/context/AuthContext";
+import { useAuth, isDoctorProfile } from "@/app/context/AuthContext";
+import { ReviewsList } from "@/components/reviews";
 
 // Import Aceternity components
 import { GlowingCard } from "@/components/ui/glowing-card";
@@ -521,6 +522,29 @@ export default function Doctor2Dashboard() {
                             </div>
                         </GlowingCard>
 
+                        {/* Patient Reviews */}
+                        {profile && isDoctorProfile(profile) && profile.doctorProfile && (
+                            <GlowingCard isDark={isDark} glowColor="teal" className="p-4 md:p-6">
+                                <SectionHeader
+                                    title={isRTL ? "تقييمات المرضى" : "Patient Reviews"}
+                                    subtitle={isRTL ? "آراء المرضى عن خدماتك" : "What patients say about you"}
+                                    isDark={isDark}
+                                    action={
+                                        <Link href={`/${language}/dashboard/doctor/reviews`} className="text-teal-500 hover:text-teal-400 text-sm font-medium transition-colors">
+                                            {t.common.viewAll} →
+                                        </Link>
+                                    }
+                                />
+                                <ReviewsList
+                                    doctorProfileId={profile.doctorProfile.id}
+                                    isDark={isDark}
+                                    isRTL={isRTL}
+                                    canRespond={true}
+                                    showSummary={true}
+                                    limit={3}
+                                />
+                            </GlowingCard>
+                        )}
 
                     </div>
                 </div>

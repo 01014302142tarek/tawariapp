@@ -9,6 +9,7 @@ import { useTheme } from "./context/ThemeContext";
 import { useI18n } from "@/app/i18n";
 import { useAuth } from "@/app/context/AuthContext";
 import { getPatientDashboardData, PatientDashboardData } from "@/app/actions/patient-dashboard";
+import { PendingReviews } from "@/components/reviews";
 
 // Import Aceternity components
 import { GlowingCard } from "@/components/ui/glowing-card";
@@ -245,6 +246,11 @@ export default function PatientDashboard() {
                     <p className={cn("text-base md:text-lg", isDark ? "text-gray-400" : "text-gray-600")}>
                         {t.patientDashboard.greeting.subtitle}
                     </p>
+                </section>
+
+                {/* Pending Reviews - prompts patient to review completed appointments */}
+                <section className="mb-6 md:mb-8">
+                    <PendingReviews isDark={isDark} isRTL={isRTL} />
                 </section>
 
                 {/* Stats Row */}
