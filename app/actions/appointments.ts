@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { appointmentLimiter } from "@/lib/rate-limit";
 import { appointmentSchema, validateInput } from "@/lib/validations";
+import { notifyNewAppointment, notifyAppointmentCancelled } from "./notifications";
 
 // ============================================
 // Types
@@ -125,14 +126,14 @@ export async function bookAppointment(data: {
         return { success: false, error: "Patient profile not found" };
     }
 
-    // Get doctor's consultation fee
+    // Get doctor's consultation fee and profile_id for notification
     const { data: doctorData } = await supabase
         .from("doctor_profiles")
-        .select("consultation_fee")
+        .select("consultation_fee, profile_id")
         .eq("id", data.doctorProfileId)
         .single();
 
-    const doctor = doctorData as { consultation_fee: number | null } | null;
+    const doctor = doctorData as { consultation_fee: number | null; profile_id: string } | null;
     const consultationFee = doctor?.consultation_fee || 0;
 
     // Check if slot is still available (no overlapping appointments)
@@ -167,6 +168,27 @@ export async function bookAppointment(data: {
     if (error) {
         console.error("Error booking appointment:", error);
         return { success: false, error: error.message };
+    }
+
+    // Send notification to doctor about new appointment
+    if (doctor?.profile_id && insertedData?.id) {
+        // Get patient name for notification
+        const { data: patientData } = await supabase
+            .from("profiles")
+            .select("full_name")
+            .eq("id", profile.id)
+            .single();
+
+        const patientName = (patientData as { full_name: string } | null)?.full_name || "A patient";
+        const appointmentDate = new Date(data.scheduledStart).toLocaleString();
+
+        // Fire and forget - don't block on notification
+        notifyNewAppointment(
+            doctor.profile_id,
+            patientName,
+            appointmentDate,
+            insertedData.id
+        ).catch(err => console.error("Failed to send appointment notification:", err));
     }
 
     return { success: true, appointmentId: insertedData?.id };
@@ -280,11 +302,11 @@ export async function cancelAppointmentAsPatient(
     // Verify ownership
     const { data: profileData } = await supabase
         .from("profiles")
-        .select("id")
+        .select("id, full_name")
         .eq("user_id", user.id)
         .single();
 
-    const profile = profileData as { id: string } | null;
+    const profile = profileData as { id: string; full_name: string } | null;
     if (!profile) {
         return { success: false, error: "Profile not found" };
     }
@@ -299,6 +321,21 @@ export async function cancelAppointmentAsPatient(
     if (!patientProfile) {
         return { success: false, error: "Patient profile not found" };
     }
+
+    // Get appointment details for notification before cancelling
+    const { data: appointmentData } = await supabase
+        .from("appointments")
+        .select(`
+            scheduled_start,
+            doctor_profiles!inner (
+                profile_id
+            )
+        `)
+        .eq("id", appointmentId)
+        .single();
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const appointment = appointmentData as any;
 
     // Update appointment
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -316,6 +353,19 @@ export async function cancelAppointmentAsPatient(
     if (error) {
         console.error("Error cancelling appointment:", error);
         return { success: false, error: error.message };
+    }
+
+    // Send notification to doctor about cancellation
+    // isPatient=false because the doctor is receiving the notification (they're not the patient)
+    if (appointment?.doctor_profiles?.profile_id) {
+        const appointmentDate = new Date(appointment.scheduled_start).toLocaleString();
+        notifyAppointmentCancelled(
+            appointment.doctor_profiles.profile_id,
+            profile.full_name || "A patient",
+            appointmentDate,
+            appointmentId,
+            false
+        ).catch(err => console.error("Failed to send cancellation notification:", err));
     }
 
     return { success: true };

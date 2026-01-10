@@ -347,6 +347,265 @@ export async function removeBlockedTime(
 // Available Slots Calculation
 // ============================================
 
+// ============================================
+// Doctor Online Status Auto-Sync
+// ============================================
+
+/**
+ * Check if current time falls within any of the doctor's active availability slots
+ * and update their is_available_now status accordingly
+ */
+export async function syncDoctorAvailabilityStatus(): Promise<{
+    isAvailable: boolean;
+    error?: string;
+}> {
+    const supabase = await createClient();
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+        return { isAvailable: false, error: "Not authenticated" };
+    }
+
+    // Get doctor profile
+    const { data: profileData } = await supabase
+        .from("profiles")
+        .select("id, role")
+        .eq("user_id", user.id)
+        .single();
+
+    const profile = profileData as { id: string; role: string } | null;
+    if (!profile || profile.role !== "doctor") {
+        return { isAvailable: false, error: "Not a doctor profile" };
+    }
+
+    const { data: doctorProfileData } = await supabase
+        .from("doctor_profiles")
+        .select("id")
+        .eq("profile_id", profile.id)
+        .single();
+
+    const doctorProfile = doctorProfileData as { id: string } | null;
+    if (!doctorProfile) {
+        return { isAvailable: false, error: "Doctor profile not found" };
+    }
+
+    // Check availability status
+    const isAvailable = await checkDoctorAvailability(supabase, doctorProfile.id);
+
+    // Update the doctor's is_available_now status
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error: updateError } = await (supabase as any)
+        .from("doctor_profiles")
+        .update({ is_available_now: isAvailable })
+        .eq("id", doctorProfile.id);
+
+    if (updateError) {
+        console.error("Error updating availability status:", updateError);
+        return { isAvailable, error: updateError.message };
+    }
+
+    return { isAvailable };
+}
+
+/**
+ * Check if a doctor is currently available based on their schedule
+ * Does NOT update the database - use syncDoctorAvailabilityStatus for that
+ */
+async function checkDoctorAvailability(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    supabase: any,
+    doctorProfileId: string
+): Promise<boolean> {
+    const now = new Date();
+    const dayOfWeek = now.getDay(); // 0 = Sunday, 6 = Saturday
+    const currentTime = now.toTimeString().slice(0, 5); // HH:MM format
+
+    // Get doctor's availability for today
+    const { data: availabilityData } = await supabase
+        .from("doctor_availability")
+        .select("start_time, end_time")
+        .eq("doctor_profile_id", doctorProfileId)
+        .eq("day_of_week", dayOfWeek)
+        .eq("is_active", true);
+
+    const availability = availabilityData as { start_time: string; end_time: string }[] | null;
+    if (!availability || availability.length === 0) {
+        return false; // No availability slots for today
+    }
+
+    // Check if current time falls within any availability window
+    const isWithinSchedule = availability.some(slot => {
+        return currentTime >= slot.start_time && currentTime < slot.end_time;
+    });
+
+    if (!isWithinSchedule) {
+        return false; // Not within scheduled hours
+    }
+
+    // Check if there's a blocked time right now
+    const { data: blockedData } = await supabase
+        .from("doctor_blocked_times")
+        .select("id")
+        .eq("doctor_profile_id", doctorProfileId)
+        .lte("start_datetime", now.toISOString())
+        .gte("end_datetime", now.toISOString())
+        .limit(1);
+
+    if (blockedData && blockedData.length > 0) {
+        return false; // Currently in a blocked time period
+    }
+
+    return true;
+}
+
+/**
+ * Manually set doctor's online status (override schedule)
+ * This allows doctors to go offline even during scheduled hours
+ */
+export async function setDoctorOnlineStatus(
+    isOnline: boolean
+): Promise<{ success: boolean; error?: string }> {
+    const supabase = await createClient();
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+        return { success: false, error: "Not authenticated" };
+    }
+
+    const { data: profileData } = await supabase
+        .from("profiles")
+        .select("id, role")
+        .eq("user_id", user.id)
+        .single();
+
+    const profile = profileData as { id: string; role: string } | null;
+    if (!profile || profile.role !== "doctor") {
+        return { success: false, error: "Not a doctor profile" };
+    }
+
+    const { data: doctorProfileData } = await supabase
+        .from("doctor_profiles")
+        .select("id")
+        .eq("profile_id", profile.id)
+        .single();
+
+    const doctorProfile = doctorProfileData as { id: string } | null;
+    if (!doctorProfile) {
+        return { success: false, error: "Doctor profile not found" };
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error } = await (supabase as any)
+        .from("doctor_profiles")
+        .update({ is_available_now: isOnline })
+        .eq("id", doctorProfile.id);
+
+    if (error) {
+        console.error("Error setting online status:", error);
+        return { success: false, error: error.message };
+    }
+
+    return { success: true };
+}
+
+/**
+ * Get doctor's current online status and schedule info
+ */
+export async function getDoctorOnlineStatus(): Promise<{
+    isOnline: boolean;
+    nextAvailableSlot?: { start: string; end: string };
+    error?: string;
+}> {
+    const supabase = await createClient();
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+        return { isOnline: false, error: "Not authenticated" };
+    }
+
+    const { data: profileData } = await supabase
+        .from("profiles")
+        .select("id, role")
+        .eq("user_id", user.id)
+        .single();
+
+    const profile = profileData as { id: string; role: string } | null;
+    if (!profile || profile.role !== "doctor") {
+        return { isOnline: false, error: "Not a doctor profile" };
+    }
+
+    const { data: doctorProfileData } = await supabase
+        .from("doctor_profiles")
+        .select("id, is_available_now")
+        .eq("profile_id", profile.id)
+        .single();
+
+    const doctorProfile = doctorProfileData as { id: string; is_available_now: boolean } | null;
+    if (!doctorProfile) {
+        return { isOnline: false, error: "Doctor profile not found" };
+    }
+
+    // Find next available slot if not currently online
+    let nextAvailableSlot: { start: string; end: string } | undefined;
+
+    if (!doctorProfile.is_available_now) {
+        const now = new Date();
+        const currentDayOfWeek = now.getDay();
+        const currentTime = now.toTimeString().slice(0, 5);
+
+        // Check remaining slots today
+        const { data: todaySlots } = await supabase
+            .from("doctor_availability")
+            .select("start_time, end_time")
+            .eq("doctor_profile_id", doctorProfile.id)
+            .eq("day_of_week", currentDayOfWeek)
+            .eq("is_active", true)
+            .gt("start_time", currentTime)
+            .order("start_time", { ascending: true })
+            .limit(1);
+
+        if (todaySlots && todaySlots.length > 0) {
+            const slot = todaySlots[0] as { start_time: string; end_time: string };
+            const today = now.toISOString().split("T")[0];
+            nextAvailableSlot = {
+                start: `${today}T${slot.start_time}:00`,
+                end: `${today}T${slot.end_time}:00`,
+            };
+        } else {
+            // Check next 7 days for availability
+            for (let i = 1; i <= 7; i++) {
+                const checkDay = (currentDayOfWeek + i) % 7;
+                const checkDate = new Date(now);
+                checkDate.setDate(checkDate.getDate() + i);
+                const dateStr = checkDate.toISOString().split("T")[0];
+
+                const { data: futureSlots } = await supabase
+                    .from("doctor_availability")
+                    .select("start_time, end_time")
+                    .eq("doctor_profile_id", doctorProfile.id)
+                    .eq("day_of_week", checkDay)
+                    .eq("is_active", true)
+                    .order("start_time", { ascending: true })
+                    .limit(1);
+
+                if (futureSlots && futureSlots.length > 0) {
+                    const slot = futureSlots[0] as { start_time: string; end_time: string };
+                    nextAvailableSlot = {
+                        start: `${dateStr}T${slot.start_time}:00`,
+                        end: `${dateStr}T${slot.end_time}:00`,
+                    };
+                    break;
+                }
+            }
+        }
+    }
+
+    return {
+        isOnline: doctorProfile.is_available_now,
+        nextAvailableSlot,
+    };
+}
+
 /**
  * Get available appointment slots for a doctor on a specific date
  * Takes into account: weekly availability, blocked times, and existing appointments

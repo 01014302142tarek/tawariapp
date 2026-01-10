@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 import { useTheme } from "./context/ThemeContext";
 import { useI18n } from "@/app/i18n";
 import { useAuth } from "@/app/context/AuthContext";
-import { getPendingDoctors, getVerificationStats, approveDoctor, rejectDoctor } from "@/app/actions/admin-verification";
+import { getPendingDoctors, getVerificationStats, approveDoctor, rejectDoctor, getRecentActivity, type AdminActivityItem } from "@/app/actions/admin-verification";
 
 // Import Aceternity components
 import { GlowingCard } from "@/components/ui/glowing-card";
@@ -136,6 +136,7 @@ export default function AdminDashboard() {
         date: string;
     }>>([]);
     const [stats, setStats] = useState({ pending: 0, verified: 0, rejected: 0, total: 0 });
+    const [recentActivity, setRecentActivity] = useState<AdminActivityItem[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
     // Fetch pending doctors on mount
@@ -143,9 +144,10 @@ export default function AdminDashboard() {
         async function fetchData() {
             setIsLoading(true);
             try {
-                const [doctorsResult, statsResult] = await Promise.all([
+                const [doctorsResult, statsResult, activityResult] = await Promise.all([
                     getPendingDoctors(),
                     getVerificationStats(),
+                    getRecentActivity(),
                 ]);
 
                 if (doctorsResult.doctors) {
@@ -159,6 +161,7 @@ export default function AdminDashboard() {
                     })));
                 }
                 setStats(statsResult);
+                setRecentActivity(activityResult);
             } catch (error) {
                 console.error("Error fetching admin data:", error);
             }
@@ -184,12 +187,40 @@ export default function AdminDashboard() {
         }
     };
 
-    const recentActivity = [
-        { id: 1, action: t.adminDashboard.activity.registration, name: t.common.demoNames.drAhmedHassan, time: isRTL ? `منذ ${formatNumber(10)} دقائق` : `10 ${t.common.time.minsAgo}`, type: "registration" },
-        { id: 2, action: t.adminDashboard.activity.payment, name: isRTL ? `٥٠٠ ج.م` : "EGP 500", time: isRTL ? `منذ ${formatNumber(25)} دقيقة` : `25 ${t.common.time.minsAgo}`, type: "payment" },
-        { id: 3, action: t.adminDashboard.activity.appointment, name: t.common.demoNames.sarahJohnson, time: t.common.time.hourAgo, type: "appointment" },
-        { id: 4, action: t.adminDashboard.activity.approval, name: isRTL ? "د. ليلى ناصر" : "Dr. Layla Nasser", time: isRTL ? `منذ ${formatNumber(3)} ساعات` : `3 ${t.common.time.hoursAgo}`, type: "approval" },
-    ];
+    // Helper function to format relative time
+    const formatRelativeTime = (timestamp: string): string => {
+        const now = Date.now();
+        const then = new Date(timestamp).getTime();
+        const diffMinutes = Math.floor((now - then) / (1000 * 60));
+
+        if (diffMinutes < 1) {
+            return isRTL ? "الآن" : "Just now";
+        } else if (diffMinutes < 60) {
+            return isRTL ? `منذ ${formatNumber(diffMinutes)} دقيقة` : `${diffMinutes} ${t.common.time.minsAgo}`;
+        } else if (diffMinutes < 1440) {
+            const hours = Math.floor(diffMinutes / 60);
+            return isRTL ? `منذ ${formatNumber(hours)} ساعة` : `${hours} ${t.common.time.hoursAgo}`;
+        } else {
+            const days = Math.floor(diffMinutes / 1440);
+            return isRTL ? `منذ ${formatNumber(days)} يوم` : `${days}d ago`;
+        }
+    };
+
+    // Map activity action types to translated labels
+    const getActivityLabel = (actionType: string, action: string): string => {
+        switch (actionType) {
+            case "registration":
+                return action.includes("doctor") ? t.adminDashboard.activity.registration : t.adminDashboard.activity.registration;
+            case "payment":
+                return t.adminDashboard.activity.payment;
+            case "appointment":
+                return t.adminDashboard.activity.appointment;
+            case "approval":
+                return t.adminDashboard.activity.approval;
+            default:
+                return action;
+        }
+    };
 
     return (
         <div className="relative overflow-hidden">
@@ -383,7 +414,11 @@ export default function AdminDashboard() {
                             </div>
 
                             <div className="space-y-4">
-                                {recentActivity.map((activity, idx) => (
+                                {recentActivity.length === 0 ? (
+                                    <div className={cn("p-4 text-center", isDark ? "text-gray-500" : "text-gray-600")}>
+                                        <p className="text-sm">{isRTL ? "لا يوجد نشاط حديث" : "No recent activity"}</p>
+                                    </div>
+                                ) : recentActivity.map((activity, idx) => (
                                     <motion.div
                                         key={activity.id}
                                         initial={{ opacity: 0, x: -10 }}
@@ -393,13 +428,17 @@ export default function AdminDashboard() {
                                     >
                                         <div className={cn(
                                             "w-2 h-2 rounded-full mt-2 flex-shrink-0",
-                                            activity.type === "registration" ? "bg-teal-500" :
-                                                activity.type === "payment" ? "bg-emerald-500" :
-                                                    activity.type === "approval" ? "bg-blue-500" : "bg-amber-500"
+                                            activity.actionType === "registration" ? "bg-teal-500" :
+                                                activity.actionType === "payment" ? "bg-emerald-500" :
+                                                    activity.actionType === "approval" ? "bg-blue-500" : "bg-amber-500"
                                         )} />
                                         <div className="flex-1 min-w-0">
-                                            <p className={cn("text-sm font-medium", isDark ? "text-white" : "text-slate-900")}>{activity.action}</p>
-                                            <p className={cn("text-xs", isDark ? "text-gray-500" : "text-gray-600")}>{activity.name} • {activity.time}</p>
+                                            <p className={cn("text-sm font-medium", isDark ? "text-white" : "text-slate-900")}>
+                                                {getActivityLabel(activity.actionType, activity.action)}
+                                            </p>
+                                            <p className={cn("text-xs", isDark ? "text-gray-500" : "text-gray-600")}>
+                                                {activity.name} • {formatRelativeTime(activity.timestamp)}
+                                            </p>
                                         </div>
                                     </motion.div>
                                 ))}

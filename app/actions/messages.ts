@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { messageLimiter } from "@/lib/rate-limit";
 import { messageSchema, validateInput } from "@/lib/validations";
+import { notifyNewMessage } from "./notifications";
 
 // ============================================
 // Types
@@ -299,6 +300,15 @@ export async function sendMessage(data: {
         };
     }
 
+    // Get sender name for notification
+    const { data: senderData } = await supabase
+        .from("profiles")
+        .select("full_name")
+        .eq("id", profile.id)
+        .single();
+
+    const senderName = (senderData as { full_name: string } | null)?.full_name || "Someone";
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: insertedData, error } = await (supabase as any)
         .from("messages")
@@ -319,6 +329,13 @@ export async function sendMessage(data: {
     if (error) {
         return { message: null, error: error.message };
     }
+
+    // Send notification to recipient about new message
+    notifyNewMessage(
+        data.recipientProfileId,
+        senderName,
+        data.conversationId
+    ).catch(err => console.error("Failed to send message notification:", err));
 
     return { message: insertedData as Message };
 }

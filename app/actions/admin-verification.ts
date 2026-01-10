@@ -556,3 +556,137 @@ export async function getVerificationStats(): Promise<{
 
     return stats;
 }
+
+// ============================================
+// Recent Activity Types
+// ============================================
+
+export interface AdminActivityItem {
+    id: string;
+    action: string;
+    actionType: "registration" | "payment" | "appointment" | "approval" | "message";
+    name: string;
+    timestamp: string;
+}
+
+/**
+ * Get recent platform activity for admin dashboard
+ * Aggregates recent events from multiple sources
+ */
+export async function getRecentActivity(): Promise<AdminActivityItem[]> {
+    const supabase = await createClient();
+    const activities: AdminActivityItem[] = [];
+
+    // Get recent user registrations (last 24 hours)
+    const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+
+    type ProfileRegistration = { id: string; full_name: string; role: string; created_at: string };
+    const { data: recentRegistrations } = await supabase
+        .from("profiles")
+        .select("id, full_name, role, created_at")
+        .gte("created_at", oneDayAgo)
+        .order("created_at", { ascending: false })
+        .limit(5);
+
+    (recentRegistrations as ProfileRegistration[] || []).forEach((reg) => {
+        activities.push({
+            id: `reg-${reg.id}`,
+            action: reg.role === "doctor" ? "New doctor registration" : "New patient registration",
+            actionType: "registration",
+            name: reg.full_name || "Unknown",
+            timestamp: reg.created_at,
+        });
+    });
+
+    // Get recent payments (completed appointments with fees)
+    type PaymentRecord = { id: string; consultation_fee: number; actual_end: string };
+    const { data: recentPayments } = await supabase
+        .from("appointments")
+        .select("id, consultation_fee, actual_end")
+        .eq("status", "completed")
+        .not("consultation_fee", "is", null)
+        .gte("actual_end", oneDayAgo)
+        .order("actual_end", { ascending: false })
+        .limit(5);
+
+    (recentPayments as PaymentRecord[] || []).forEach((payment) => {
+        activities.push({
+            id: `pay-${payment.id}`,
+            action: "Payment received",
+            actionType: "payment",
+            name: `EGP ${payment.consultation_fee}`,
+            timestamp: payment.actual_end,
+        });
+    });
+
+    // Get recent scheduled appointments
+    type AppointmentRecord = {
+        id: string;
+        scheduled_start: string;
+        patient_profiles: { profiles: { full_name: string } } | null;
+    };
+    const { data: recentAppointments } = await supabase
+        .from("appointments")
+        .select(`
+            id,
+            scheduled_start,
+            patient_profiles!inner (
+                profiles!inner (
+                    full_name
+                )
+            )
+        `)
+        .eq("status", "scheduled")
+        .gte("created_at", oneDayAgo)
+        .order("created_at", { ascending: false })
+        .limit(5);
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (recentAppointments as any[] || []).forEach((apt) => {
+        const patientName = apt.patient_profiles?.profiles?.full_name || "Patient";
+        activities.push({
+            id: `apt-${apt.id}`,
+            action: "Appointment booked",
+            actionType: "appointment",
+            name: patientName,
+            timestamp: apt.scheduled_start,
+        });
+    });
+
+    // Get recent doctor approvals
+    type ApprovalRecord = {
+        id: string;
+        verified_at: string;
+        profiles: { full_name: string } | null;
+    };
+    const { data: recentApprovals } = await supabase
+        .from("doctor_profiles")
+        .select(`
+            id,
+            verified_at,
+            profiles!inner (
+                full_name
+            )
+        `)
+        .eq("verification_status", "verified")
+        .not("verified_at", "is", null)
+        .gte("verified_at", oneDayAgo)
+        .order("verified_at", { ascending: false })
+        .limit(5);
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (recentApprovals as any[] || []).forEach((approval) => {
+        const doctorName = approval.profiles?.full_name || "Doctor";
+        activities.push({
+            id: `apv-${approval.id}`,
+            action: "Doctor approved",
+            actionType: "approval",
+            name: `Dr. ${doctorName}`,
+            timestamp: approval.verified_at,
+        });
+    });
+
+    // Sort all activities by timestamp (most recent first) and return top 6
+    activities.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+    return activities.slice(0, 6);
+}

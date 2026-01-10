@@ -5,13 +5,14 @@ import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useI18n } from "@/app/i18n";
+import { useRealtimeNotifications } from "@/lib/useRealtimeNotifications";
 import {
     getNotifications,
     getUnreadCount,
     markAsRead,
     markAllAsRead,
-    Notification,
-    NotificationType,
+    type Notification,
+    type NotificationType,
 } from "@/app/actions/notifications";
 
 // Icons for notification types
@@ -144,46 +145,40 @@ interface NotificationDropdownProps {
 
 export default function NotificationDropdown({ isDark, dashboardType }: NotificationDropdownProps) {
     const [isOpen, setIsOpen] = useState(false);
-    const [notifications, setNotifications] = useState<Notification[]>([]);
-    const [unreadCount, setUnreadCount] = useState(0);
-    const [isLoading, setIsLoading] = useState(true);
     const [isMarkingAll, setIsMarkingAll] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
-    const { t, isRTL, language } = useI18n();
+    const { isRTL, language } = useI18n();
 
-    // Fetch notifications and unread count
-    const fetchData = useCallback(async () => {
-        setIsLoading(true);
-        try {
-            const [notifResult, countResult] = await Promise.all([
-                getNotifications({ limit: 10 }),
-                getUnreadCount(),
-            ]);
-
-            if (!notifResult.error) {
-                setNotifications(notifResult.notifications);
+    // Use realtime notifications hook for live updates
+    const {
+        notifications,
+        unreadCount,
+        isConnected,
+        markAsRead: markNotificationAsRead,
+        markAllAsRead: markAllNotificationsAsRead,
+        refresh,
+    } = useRealtimeNotifications({
+        enabled: true,
+        onNewNotification: (notification) => {
+            // Show browser notification for new notifications if permission granted
+            if (typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted") {
+                new Notification(notification.title, {
+                    body: notification.body,
+                    icon: "/icon.png",
+                });
             }
-            if (!countResult.error) {
-                setUnreadCount(countResult.count);
-            }
-        } catch (error) {
-            console.error("Error fetching notifications:", error);
-        } finally {
-            setIsLoading(false);
-        }
-    }, []);
+        },
+    });
 
-    // Initial fetch
-    useEffect(() => {
-        fetchData();
-    }, [fetchData]);
+    // Loading state is false once connected or we have notifications
+    const isLoading = !isConnected && notifications.length === 0;
 
-    // Refresh on open
+    // Refresh on open (fallback for any missed updates)
     useEffect(() => {
         if (isOpen) {
-            fetchData();
+            refresh();
         }
-    }, [isOpen, fetchData]);
+    }, [isOpen, refresh]);
 
     // Close dropdown when clicking outside
     useEffect(() => {
@@ -205,13 +200,7 @@ export default function NotificationDropdown({ isDark, dashboardType }: Notifica
     // Handle notification click
     const handleNotificationClick = async (notification: Notification) => {
         if (!notification.is_read) {
-            await markAsRead(notification.id);
-            setNotifications((prev) =>
-                prev.map((n) =>
-                    n.id === notification.id ? { ...n, is_read: true } : n
-                )
-            );
-            setUnreadCount((prev) => Math.max(0, prev - 1));
+            await markNotificationAsRead(notification.id);
         }
 
         // Navigate based on notification type
@@ -259,13 +248,7 @@ export default function NotificationDropdown({ isDark, dashboardType }: Notifica
     // Handle mark all as read
     const handleMarkAllAsRead = async () => {
         setIsMarkingAll(true);
-        const result = await markAllAsRead();
-        if (result.success) {
-            setNotifications((prev) =>
-                prev.map((n) => ({ ...n, is_read: true }))
-            );
-            setUnreadCount(0);
-        }
+        await markAllNotificationsAsRead();
         setIsMarkingAll(false);
     };
 

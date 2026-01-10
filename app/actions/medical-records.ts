@@ -74,6 +74,47 @@ export interface LabResult {
 }
 
 // ============================================
+// Helper Functions
+// ============================================
+
+/**
+ * Get current patient's profile ID
+ * Used for client-side file uploads
+ */
+export async function getPatientProfileId(): Promise<{ patientProfileId: string | null; error?: string }> {
+    const supabase = await createClient();
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+        return { patientProfileId: null, error: "Not authenticated" };
+    }
+
+    const { data: profileData } = await supabase
+        .from("profiles")
+        .select("id, role")
+        .eq("user_id", user.id)
+        .single();
+
+    const profile = profileData as { id: string; role: string } | null;
+    if (!profile || profile.role !== "patient") {
+        return { patientProfileId: null, error: "Not a patient profile" };
+    }
+
+    const { data: patientProfileData } = await supabase
+        .from("patient_profiles")
+        .select("id")
+        .eq("profile_id", profile.id)
+        .single();
+
+    const patientProfile = patientProfileData as { id: string } | null;
+    if (!patientProfile) {
+        return { patientProfileId: null, error: "Patient profile not found" };
+    }
+
+    return { patientProfileId: patientProfile.id };
+}
+
+// ============================================
 // Medical Records Functions
 // ============================================
 

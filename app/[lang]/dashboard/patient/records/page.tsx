@@ -21,6 +21,12 @@ import {
     deleteAllergy,
     deleteCondition,
     updateConditionStatus,
+    uploadMedicalDocument,
+    getMedicalDocumentSignedUrl,
+    getPatientProfileId,
+    addMedicalRecordAttachment,
+    uploadLabResultDocument,
+    getLabResultDocumentUrl,
     type MedicalRecord,
     type LabResult,
     type Allergy,
@@ -29,6 +35,7 @@ import {
     type RecordType,
     type AllergySeverity,
     type ConditionStatus,
+    type MedicalDocumentType,
 } from "@/app/actions/medical-records";
 
 // Icons
@@ -89,6 +96,22 @@ const Icons = {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m6.75 12H9m1.5-12H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
         </svg>
     ),
+    upload: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+        </svg>
+    ),
+    paperclip: (
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M18.375 12.739l-7.693 7.693a4.5 4.5 0 01-6.364-6.364l10.94-10.94A3 3 0 1119.5 7.372L8.552 18.32m.009-.01l-.01.01m5.699-9.941l-7.81 7.81a1.5 1.5 0 002.112 2.13" />
+        </svg>
+    ),
+    eye: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+        </svg>
+    ),
 };
 
 type TabType = "records" | "lab" | "allergies" | "conditions";
@@ -146,14 +169,21 @@ export default function RecordsPage() {
         notes: "",
     });
 
+    // File upload state
+    const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+    const [uploadProgress, setUploadProgress] = useState<string | null>(null);
+    const [patientProfileId, setPatientProfileId] = useState<string | null>(null);
+    const fileInputRef = React.useRef<HTMLInputElement>(null);
+
     const loadData = useCallback(async () => {
         setLoading(true);
-        const [recordsRes, labRes, allergiesRes, conditionsRes, summaryRes] = await Promise.all([
+        const [recordsRes, labRes, allergiesRes, conditionsRes, summaryRes, profileIdRes] = await Promise.all([
             getMedicalRecords(),
             getLabResults(),
             getAllergies(),
             getConditions(),
             getHealthDataSummary(),
+            getPatientProfileId(),
         ]);
 
         setRecords(recordsRes.records);
@@ -161,12 +191,50 @@ export default function RecordsPage() {
         setAllergies(allergiesRes.allergies);
         setConditions(conditionsRes.conditions);
         setSummary(summaryRes.summary);
+        if (profileIdRes.patientProfileId) {
+            setPatientProfileId(profileIdRes.patientProfileId);
+        }
         setLoading(false);
     }, []);
 
     useEffect(() => {
         loadData();
     }, [loadData]);
+
+    // Helper to convert File to base64
+    const fileToBase64 = (file: File): Promise<string> => {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = () => resolve(reader.result as string);
+            reader.onerror = reject;
+        });
+    };
+
+    // Handle file selection
+    const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const files = Array.from(e.target.files || []);
+        const validFiles = files.filter(file => {
+            const ext = file.name.split('.').pop()?.toLowerCase();
+            const validExts = ['jpg', 'jpeg', 'png', 'pdf', 'webp'];
+            const maxSize = 10 * 1024 * 1024; // 10MB
+            if (!ext || !validExts.includes(ext)) {
+                alert(isRTL ? 'نوع ملف غير صالح' : 'Invalid file type');
+                return false;
+            }
+            if (file.size > maxSize) {
+                alert(isRTL ? 'الملف كبير جداً (الحد الأقصى 10MB)' : 'File too large (max 10MB)');
+                return false;
+            }
+            return true;
+        });
+        setSelectedFiles(prev => [...prev, ...validFiles]);
+    };
+
+    // Remove selected file
+    const handleRemoveFile = (index: number) => {
+        setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+    };
 
     const tabs = [
         { id: "records" as TabType, label: isRTL ? "السجلات الطبية" : "Medical Records", count: summary?.recordsCount || 0 },
@@ -177,15 +245,39 @@ export default function RecordsPage() {
 
     const handleAddItem = async () => {
         setAddingItem(true);
+        setUploadProgress(null);
 
         try {
             switch (activeTab) {
                 case "records": {
+                    // First upload files if any
+                    const attachmentPaths: string[] = [];
+                    if (selectedFiles.length > 0 && patientProfileId) {
+                        setUploadProgress(isRTL ? 'جاري رفع الملفات...' : 'Uploading files...');
+                        for (let i = 0; i < selectedFiles.length; i++) {
+                            const file = selectedFiles[i];
+                            setUploadProgress(isRTL
+                                ? `جاري رفع الملف ${i + 1} من ${selectedFiles.length}...`
+                                : `Uploading file ${i + 1} of ${selectedFiles.length}...`
+                            );
+                            const base64 = await fileToBase64(file);
+                            const docType: MedicalDocumentType = formData.recordType === 'general' ? 'medical_record' : 'medical_record';
+                            const result = await uploadMedicalDocument(patientProfileId, docType, base64, file.name);
+                            if (result.path) {
+                                attachmentPaths.push(result.path);
+                            } else if (result.error) {
+                                console.error('Upload error:', result.error);
+                            }
+                        }
+                    }
+
+                    setUploadProgress(isRTL ? 'جاري الحفظ...' : 'Saving...');
                     const { record } = await addMedicalRecord({
                         recordType: formData.recordType,
                         title: formData.title,
                         description: formData.description || undefined,
                         dateRecorded: formData.dateRecorded || undefined,
+                        attachments: attachmentPaths.length > 0 ? attachmentPaths : undefined,
                     });
                     if (record) {
                         setRecords(prev => [record, ...prev]);
@@ -194,14 +286,32 @@ export default function RecordsPage() {
                     break;
                 }
                 case "lab": {
+                    // First create the lab result
+                    setUploadProgress(isRTL ? 'جاري الحفظ...' : 'Saving...');
                     const { result } = await addLabResult({
                         testName: formData.testName,
                         testDate: formData.testDate,
                         labName: formData.labName || undefined,
                         resultsSummary: formData.resultsSummary || undefined,
                     });
+
                     if (result) {
-                        setLabResults(prev => [result, ...prev]);
+                        // Then upload file if any (only one file for lab results)
+                        let updatedResult = result;
+                        if (selectedFiles.length > 0) {
+                            setUploadProgress(isRTL ? 'جاري رفع الملف...' : 'Uploading file...');
+                            const file = selectedFiles[0];
+                            const base64 = await fileToBase64(file);
+                            const uploadRes = await uploadLabResultDocument({
+                                labResultId: result.id,
+                                fileBase64: base64,
+                                fileName: file.name,
+                            });
+                            if (uploadRes.documentUrl) {
+                                updatedResult = { ...result, document_url: uploadRes.documentUrl };
+                            }
+                        }
+                        setLabResults(prev => [updatedResult, ...prev]);
                         setSummary(prev => prev ? { ...prev, labResultsCount: prev.labResultsCount + 1 } : null);
                     }
                     break;
@@ -251,9 +361,12 @@ export default function RecordsPage() {
                 status: "active",
                 notes: "",
             });
+            setSelectedFiles([]);
+            setUploadProgress(null);
             setShowAddModal(false);
         } catch (error) {
             console.error("Error adding item:", error);
+            setUploadProgress(null);
         }
 
         setAddingItem(false);
@@ -396,6 +509,63 @@ export default function RecordsPage() {
                                 className={cn("w-full px-4 py-3 rounded-xl border transition-colors", inputBg, inputFocus)}
                             />
                         </div>
+                        {/* File Upload Section */}
+                        <div>
+                            <label className={cn("block text-sm font-medium mb-2", textPrimary)}>
+                                {isRTL ? "المرفقات" : "Attachments"}
+                            </label>
+                            <div
+                                onClick={() => fileInputRef.current?.click()}
+                                className={cn(
+                                    "border-2 border-dashed rounded-xl p-4 text-center cursor-pointer transition-colors",
+                                    isDark ? "border-gray-600 hover:border-teal-500" : "border-gray-300 hover:border-teal-500"
+                                )}
+                            >
+                                <input
+                                    ref={fileInputRef}
+                                    type="file"
+                                    multiple
+                                    accept=".jpg,.jpeg,.png,.pdf,.webp"
+                                    onChange={handleFileSelect}
+                                    className="hidden"
+                                />
+                                <div className="flex flex-col items-center gap-2">
+                                    <span className="text-teal-500">{Icons.upload}</span>
+                                    <span className={cn("text-sm", textMuted)}>
+                                        {isRTL ? "اضغط لرفع الملفات (PDF, صور)" : "Click to upload files (PDF, Images)"}
+                                    </span>
+                                    <span className={cn("text-xs", textMuted)}>
+                                        {isRTL ? "الحد الأقصى: 10MB لكل ملف" : "Max: 10MB per file"}
+                                    </span>
+                                </div>
+                            </div>
+                            {/* Selected Files List */}
+                            {selectedFiles.length > 0 && (
+                                <div className="mt-3 space-y-2">
+                                    {selectedFiles.map((file, idx) => (
+                                        <div key={idx} className={cn(
+                                            "flex items-center justify-between px-3 py-2 rounded-lg",
+                                            isDark ? "bg-white/5" : "bg-gray-100"
+                                        )}>
+                                            <div className="flex items-center gap-2 min-w-0">
+                                                <span className="text-teal-500">{Icons.paperclip}</span>
+                                                <span className={cn("text-sm truncate", textPrimary)}>{file.name}</span>
+                                                <span className={cn("text-xs flex-shrink-0", textMuted)}>
+                                                    ({(file.size / 1024 / 1024).toFixed(1)}MB)
+                                                </span>
+                                            </div>
+                                            <button
+                                                type="button"
+                                                onClick={() => handleRemoveFile(idx)}
+                                                className="p-1 hover:bg-red-500/10 rounded text-red-500"
+                                            >
+                                                {Icons.close}
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
                     </>
                 );
 
@@ -447,6 +617,60 @@ export default function RecordsPage() {
                                 className={cn("w-full px-4 py-3 rounded-xl border transition-colors min-h-[100px]", inputBg, inputFocus)}
                                 placeholder={isRTL ? "ملخص نتائج الفحص..." : "Summary of test results..."}
                             />
+                        </div>
+                        {/* File Upload Section for Lab Results */}
+                        <div>
+                            <label className={cn("block text-sm font-medium mb-2", textPrimary)}>
+                                {isRTL ? "نتيجة المختبر (ملف)" : "Lab Report Document"}
+                            </label>
+                            <div
+                                onClick={() => fileInputRef.current?.click()}
+                                className={cn(
+                                    "border-2 border-dashed rounded-xl p-4 text-center cursor-pointer transition-colors",
+                                    isDark ? "border-gray-600 hover:border-blue-500" : "border-gray-300 hover:border-blue-500"
+                                )}
+                            >
+                                <input
+                                    ref={fileInputRef}
+                                    type="file"
+                                    accept=".jpg,.jpeg,.png,.pdf,.webp"
+                                    onChange={handleFileSelect}
+                                    className="hidden"
+                                />
+                                <div className="flex flex-col items-center gap-2">
+                                    <span className="text-blue-500">{Icons.upload}</span>
+                                    <span className={cn("text-sm", textMuted)}>
+                                        {isRTL ? "اضغط لرفع ملف النتيجة" : "Click to upload lab report"}
+                                    </span>
+                                    <span className={cn("text-xs", textMuted)}>
+                                        {isRTL ? "PDF أو صورة (الحد الأقصى: 10MB)" : "PDF or Image (Max: 10MB)"}
+                                    </span>
+                                </div>
+                            </div>
+                            {/* Selected File */}
+                            {selectedFiles.length > 0 && (
+                                <div className="mt-3">
+                                    <div className={cn(
+                                        "flex items-center justify-between px-3 py-2 rounded-lg",
+                                        isDark ? "bg-white/5" : "bg-gray-100"
+                                    )}>
+                                        <div className="flex items-center gap-2 min-w-0">
+                                            <span className="text-blue-500">{Icons.paperclip}</span>
+                                            <span className={cn("text-sm truncate", textPrimary)}>{selectedFiles[0].name}</span>
+                                            <span className={cn("text-xs flex-shrink-0", textMuted)}>
+                                                ({(selectedFiles[0].size / 1024 / 1024).toFixed(1)}MB)
+                                            </span>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={() => handleRemoveFile(0)}
+                                            className="p-1 hover:bg-red-500/10 rounded text-red-500"
+                                        >
+                                            {Icons.close}
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     </>
                 );
@@ -680,6 +904,12 @@ export default function RecordsPage() {
                                                 <div className="flex items-center gap-2 mb-0.5 md:mb-1">
                                                     <h3 className={cn("font-medium text-sm md:text-base truncate", textPrimary)}>{record.title}</h3>
                                                     <Badge>{getRecordTypeLabel(record.record_type)}</Badge>
+                                                    {record.attachments && record.attachments.length > 0 && (
+                                                        <span className="flex items-center gap-1 text-xs text-teal-500">
+                                                            {Icons.paperclip}
+                                                            {record.attachments.length}
+                                                        </span>
+                                                    )}
                                                 </div>
                                                 <p className={cn("text-xs md:text-sm truncate", textMuted)}>
                                                     {record.description || (isRTL ? "لا يوجد وصف" : "No description")}
@@ -737,7 +967,14 @@ export default function RecordsPage() {
                                                 </span>
                                             </div>
                                             <div className="flex-1 min-w-0">
-                                                <h3 className={cn("font-medium text-sm md:text-base truncate", textPrimary)}>{result.test_name}</h3>
+                                                <div className="flex items-center gap-2">
+                                                    <h3 className={cn("font-medium text-sm md:text-base truncate", textPrimary)}>{result.test_name}</h3>
+                                                    {result.document_url && (
+                                                        <span className="flex items-center text-xs text-blue-500">
+                                                            {Icons.paperclip}
+                                                        </span>
+                                                    )}
+                                                </div>
                                                 {result.lab_name && (
                                                     <p className={cn("text-xs md:text-sm truncate", textMuted)}>
                                                         {result.lab_name}
@@ -747,15 +984,32 @@ export default function RecordsPage() {
                                                     {formatDate(result.test_date)}
                                                 </p>
                                             </div>
-                                            <button
-                                                onClick={() => handleDeleteLabResult(result.id)}
-                                                className={cn(
-                                                    "p-1.5 md:p-2 rounded-lg transition-colors flex-shrink-0",
-                                                    isDark ? "hover:bg-white/10 text-gray-400 hover:text-red-400" : "hover:bg-gray-100 text-gray-600 hover:text-red-500"
+                                            <div className="flex items-center gap-1">
+                                                {result.document_url && (
+                                                    <button
+                                                        onClick={async () => {
+                                                            const { url } = await getLabResultDocumentUrl(result.id);
+                                                            if (url) window.open(url, '_blank');
+                                                        }}
+                                                        className={cn(
+                                                            "p-1.5 md:p-2 rounded-lg transition-colors flex-shrink-0",
+                                                            isDark ? "hover:bg-white/10 text-blue-400" : "hover:bg-gray-100 text-blue-500"
+                                                        )}
+                                                        title={isRTL ? "عرض الملف" : "View document"}
+                                                    >
+                                                        {Icons.eye}
+                                                    </button>
                                                 )}
-                                            >
-                                                {Icons.trash}
-                                            </button>
+                                                <button
+                                                    onClick={() => handleDeleteLabResult(result.id)}
+                                                    className={cn(
+                                                        "p-1.5 md:p-2 rounded-lg transition-colors flex-shrink-0",
+                                                        isDark ? "hover:bg-white/10 text-gray-400 hover:text-red-400" : "hover:bg-gray-100 text-gray-600 hover:text-red-500"
+                                                    )}
+                                                >
+                                                    {Icons.trash}
+                                                </button>
+                                            </div>
                                         </div>
                                     </GlowingCard>
                                 </motion.div>
@@ -947,12 +1201,28 @@ export default function RecordsPage() {
                                 {renderModalForm()}
                             </div>
 
+                            {/* Upload progress indicator */}
+                            {uploadProgress && (
+                                <div className={cn("mt-4 text-center text-sm py-2", textMuted)}>
+                                    <div className="flex items-center justify-center gap-2">
+                                        {Icons.spinner}
+                                        <span>{uploadProgress}</span>
+                                    </div>
+                                </div>
+                            )}
+
                             <div className="flex gap-3 mt-6">
                                 <button
-                                    onClick={() => setShowAddModal(false)}
+                                    onClick={() => {
+                                        setShowAddModal(false);
+                                        setSelectedFiles([]);
+                                    }}
+                                    disabled={addingItem}
                                     className={cn(
                                         "flex-1 py-3 rounded-xl font-medium transition-colors",
-                                        isDark ? "bg-white/5 hover:bg-white/10 text-gray-300" : "bg-gray-100 hover:bg-gray-200 text-gray-700"
+                                        addingItem
+                                            ? "opacity-50 cursor-not-allowed"
+                                            : isDark ? "bg-white/5 hover:bg-white/10 text-gray-300" : "bg-gray-100 hover:bg-gray-200 text-gray-700"
                                     )}
                                 >
                                     {isRTL ? "إلغاء" : "Cancel"}
@@ -968,7 +1238,9 @@ export default function RecordsPage() {
                                     )}
                                 >
                                     {addingItem && Icons.spinner}
-                                    {isRTL ? "إضافة" : "Add"}
+                                    {addingItem
+                                        ? (isRTL ? "جاري الإضافة..." : "Adding...")
+                                        : (isRTL ? "إضافة" : "Add")}
                                 </button>
                             </div>
                         </motion.div>

@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { notifyPrescriptionIssued } from "./notifications";
 
 // ============================================
 // Types
@@ -105,8 +106,27 @@ export async function createPrescription(data: {
         return { success: false, error: "Doctor not verified" };
     }
 
+    // Get patient's base profile_id for notification
+    const { data: patientProfileData } = await supabase
+        .from("patient_profiles")
+        .select("profile_id")
+        .eq("id", data.patientProfileId)
+        .single();
+
+    const patientProfile = patientProfileData as { profile_id: string } | null;
+
+    // Get doctor name for notification
+    const { data: doctorNameData } = await supabase
+        .from("profiles")
+        .select("full_name")
+        .eq("id", profile.id)
+        .single();
+
+    const doctorName = (doctorNameData as { full_name: string } | null)?.full_name || "Your doctor";
+
     // Create prescriptions for each medication
     const prescriptionIds: string[] = [];
+    const medicationNames: string[] = [];
 
     for (const med of data.medications) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -139,7 +159,19 @@ export async function createPrescription(data: {
 
         if (insertedData?.id) {
             prescriptionIds.push(insertedData.id);
+            medicationNames.push(med.medication_name);
         }
+    }
+
+    // Send notification to patient about new prescription(s)
+    if (patientProfile?.profile_id && prescriptionIds.length > 0) {
+        const medicationList = medicationNames.join(", ");
+        notifyPrescriptionIssued(
+            patientProfile.profile_id,
+            doctorName,
+            medicationList,
+            prescriptionIds[0] // Link to first prescription
+        ).catch(err => console.error("Failed to send prescription notification:", err));
     }
 
     return { success: true, prescriptionIds };
@@ -241,6 +273,121 @@ export async function getDoctorPrescriptions(filters?: {
     }));
 
     return { prescriptions };
+}
+
+/**
+ * Update an existing prescription
+ * Only the prescribing doctor can update their own prescriptions
+ */
+export async function updatePrescription(data: {
+    prescriptionId: string;
+    medicationName?: string;
+    dosage?: string;
+    frequency?: string;
+    duration?: string;
+    instructions?: string;
+    quantity?: number;
+    refillsAllowed?: number;
+    validUntil?: string;
+    status?: PrescriptionStatus;
+}): Promise<{ success: boolean; error?: string }> {
+    const supabase = await createClient();
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+        return { success: false, error: "Not authenticated" };
+    }
+
+    // Get doctor profile
+    const { data: profileData } = await supabase
+        .from("profiles")
+        .select("id, role")
+        .eq("user_id", user.id)
+        .single();
+
+    const profile = profileData as { id: string; role: string } | null;
+    if (!profile || profile.role !== "doctor") {
+        return { success: false, error: "Not a doctor profile" };
+    }
+
+    const { data: doctorProfileData } = await supabase
+        .from("doctor_profiles")
+        .select("id")
+        .eq("profile_id", profile.id)
+        .single();
+
+    const doctorProfile = doctorProfileData as { id: string } | null;
+    if (!doctorProfile) {
+        return { success: false, error: "Doctor profile not found" };
+    }
+
+    // Verify the prescription belongs to this doctor and get current data
+    const { data: existingPrescription } = await supabase
+        .from("prescriptions")
+        .select("id, doctor_profile_id, status")
+        .eq("id", data.prescriptionId)
+        .single();
+
+    const prescription = existingPrescription as { id: string; doctor_profile_id: string; status: string } | null;
+    if (!prescription) {
+        return { success: false, error: "Prescription not found" };
+    }
+
+    if (prescription.doctor_profile_id !== doctorProfile.id) {
+        return { success: false, error: "You can only edit your own prescriptions" };
+    }
+
+    // Don't allow editing cancelled prescriptions
+    if (prescription.status === "cancelled") {
+        return { success: false, error: "Cannot edit a cancelled prescription" };
+    }
+
+    // Build update object with only provided fields
+    const updateData: Record<string, unknown> = {
+        updated_at: new Date().toISOString(),
+    };
+
+    if (data.medicationName !== undefined) {
+        updateData.medication_name = data.medicationName;
+    }
+    if (data.dosage !== undefined) {
+        updateData.dosage = data.dosage || null;
+    }
+    if (data.frequency !== undefined) {
+        updateData.frequency = data.frequency || null;
+    }
+    if (data.duration !== undefined) {
+        updateData.duration = data.duration || null;
+    }
+    if (data.instructions !== undefined) {
+        updateData.instructions = data.instructions || null;
+    }
+    if (data.quantity !== undefined) {
+        updateData.quantity = data.quantity || null;
+    }
+    if (data.refillsAllowed !== undefined) {
+        updateData.refills_allowed = data.refillsAllowed;
+    }
+    if (data.validUntil !== undefined) {
+        updateData.valid_until = data.validUntil || null;
+    }
+    if (data.status !== undefined) {
+        updateData.status = data.status;
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error } = await (supabase as any)
+        .from("prescriptions")
+        .update(updateData)
+        .eq("id", data.prescriptionId)
+        .eq("doctor_profile_id", doctorProfile.id);
+
+    if (error) {
+        console.error("Error updating prescription:", error);
+        return { success: false, error: error.message };
+    }
+
+    return { success: true };
 }
 
 /**

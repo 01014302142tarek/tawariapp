@@ -9,6 +9,7 @@ import { useTheme } from "./context/ThemeContext";
 import { useI18n } from "@/app/i18n";
 import { useAuth, isDoctorProfile } from "@/app/context/AuthContext";
 import { ReviewsList } from "@/components/reviews";
+import { useDoctorAvailabilitySync } from "@/lib/useDoctorAvailabilitySync";
 
 // Import Aceternity components
 import { GlowingCard } from "@/components/ui/glowing-card";
@@ -171,6 +172,12 @@ export default function Doctor2Dashboard() {
     const { t, language, isRTL, formatNumber } = useI18n();
     const { profile } = useAuth();
     const isDark = theme === "dark";
+
+    // Auto-sync doctor availability status based on schedule
+    const { isOnline, nextAvailableSlot, isSyncing } = useDoctorAvailabilitySync({
+        enabled: profile?.profile.role === "doctor",
+        syncIntervalMs: 60000, // Sync every minute
+    });
 
     // Get doctor's name from profile (with "Dr." prefix)
     const doctorName = profile?.profile.full_name
@@ -468,12 +475,35 @@ export default function Doctor2Dashboard() {
                             <div className={cn("mt-6 pt-5 border-t", isDark ? "border-white/5" : "border-gray-200")}>
                                 <div className="flex items-center gap-3">
                                     <span className="relative flex h-3 w-3">
-                                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-teal-400 opacity-75" />
-                                        <span className="relative inline-flex rounded-full h-3 w-3 bg-teal-500" />
+                                        {isOnline ? (
+                                            <>
+                                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-teal-400 opacity-75" />
+                                                <span className="relative inline-flex rounded-full h-3 w-3 bg-teal-500" />
+                                            </>
+                                        ) : (
+                                            <span className="relative inline-flex rounded-full h-3 w-3 bg-gray-400" />
+                                        )}
                                     </span>
-                                    <div>
-                                        <p className={cn("text-sm font-medium", isDark ? "text-white" : "text-slate-900")}>{t.doctorDashboard.performance.youreOnline}</p>
-                                        <p className={cn("text-xs", isDark ? "text-gray-500" : "text-gray-600")}>{t.doctorDashboard.performance.availableForConsultations}</p>
+                                    <div className="flex-1">
+                                        <div className="flex items-center gap-2">
+                                            <p className={cn("text-sm font-medium", isDark ? "text-white" : "text-slate-900")}>
+                                                {isOnline
+                                                    ? t.doctorDashboard.performance.youreOnline
+                                                    : (isRTL ? "غير متصل" : "You're Offline")}
+                                            </p>
+                                            {isSyncing && (
+                                                <span className="w-3 h-3 border border-teal-500 border-t-transparent rounded-full animate-spin" />
+                                            )}
+                                        </div>
+                                        <p className={cn("text-xs", isDark ? "text-gray-500" : "text-gray-600")}>
+                                            {isOnline
+                                                ? t.doctorDashboard.performance.availableForConsultations
+                                                : nextAvailableSlot
+                                                    ? (isRTL
+                                                        ? `متاح من ${new Date(nextAvailableSlot.start).toLocaleTimeString("ar-EG", { hour: "2-digit", minute: "2-digit" })}`
+                                                        : `Available from ${new Date(nextAvailableSlot.start).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}`)
+                                                    : (isRTL ? "لا توجد مواعيد متاحة" : "No upcoming slots")}
+                                        </p>
                                     </div>
                                 </div>
                             </div>
