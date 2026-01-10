@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -9,6 +9,7 @@ import { GlowingCard } from "@/components/ui/glowing-card";
 import { SparklesCore } from "@/components/ui/sparkles";
 import { AnimatedNumber } from "@/components/ui/animated-number";
 import { useI18n } from "@/app/i18n";
+import { getAdminUsers, getAdminUserStats, updateUserStatus, AdminUser, AdminUserStats, UserRole, UserStatus } from "@/app/actions/admin-users";
 
 // Icons
 const Icons = {
@@ -52,61 +53,124 @@ const Icons = {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
         </svg>
     ),
+    spinner: (
+        <svg className="w-6 h-6 animate-spin" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+    ),
 };
-
-// Mock user data
-
 
 const Badge = ({ variant, children }: { variant: string; children: React.ReactNode }) => {
     const variants: Record<string, string> = {
         active: "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20",
         pending: "bg-orange-500/10 text-orange-400 border border-orange-500/20",
         inactive: "bg-gray-500/10 text-gray-400 border border-gray-500/20",
-        Doctor: "bg-teal-500/10 text-teal-400 border border-teal-500/20",
-        Patient: "bg-blue-500/10 text-blue-400 border border-blue-500/20",
-        Admin: "bg-amber-500/10 text-amber-400 border border-amber-500/20",
+        suspended: "bg-red-500/10 text-red-400 border border-red-500/20",
+        doctor: "bg-teal-500/10 text-teal-400 border border-teal-500/20",
+        patient: "bg-blue-500/10 text-blue-400 border border-blue-500/20",
+        admin: "bg-amber-500/10 text-amber-400 border border-amber-500/20",
     };
     return (
-        <span className={cn("px-2.5 py-1 rounded-full text-xs font-medium", variants[variant])}>
+        <span className={cn("px-2.5 py-1 rounded-full text-xs font-medium", variants[variant] || variants.inactive)}>
             {children}
         </span>
     );
 };
 
 export default function UsersPage() {
-    const { t, isRTL, formatNumber, formatDate } = useI18n();
+    const { t, isRTL, formatNumber, formatDate, language } = useI18n();
     const { theme } = useTheme();
     const isDark = theme === "dark";
-    const [filter, setFilter] = useState("all");
+    const [filter, setFilter] = useState<string>("all");
     const [search, setSearch] = useState("");
+    const [loading, setLoading] = useState(true);
+    const [users, setUsers] = useState<AdminUser[]>([]);
+    const [stats, setStats] = useState<AdminUserStats>({ total_users: 0, doctors: 0, patients: 0, admins: 0 });
+    const [actionLoading, setActionLoading] = useState<string | null>(null);
+    const [showStatusModal, setShowStatusModal] = useState<AdminUser | null>(null);
 
-    // Mock user data
-    const users = [
-        { id: 1, name: t.common.demoNames.drAhmedHassan, email: "ahmed.hassan@email.com", role: t.common.roles.doctor, status: "active", joinDate: "Dec 1, 2024", image: "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=100&h=100&fit=crop&crop=face" },
-        { id: 2, name: t.common.demoNames.sarahJohnson, email: "sarah.j@email.com", role: t.common.roles.patient, status: "active", joinDate: "Nov 28, 2024", image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop&crop=face" },
-        { id: 3, name: t.common.demoNames.drFatimaKhaled, email: "fatima.k@email.com", role: t.common.roles.doctor, status: "pending", joinDate: "Dec 10, 2024", image: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=100&h=100&fit=crop&crop=face" },
-        { id: 4, name: t.common.demoNames.mohamedAli, email: "mohamed.ali@email.com", role: t.common.roles.patient, status: "active", joinDate: "Nov 15, 2024", image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face" },
-        { id: 5, name: t.common.demoNames.drOmarNasser, email: "omar.n@email.com", role: t.common.roles.doctor, status: "inactive", joinDate: "Oct 20, 2024", image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face" },
-        { id: 6, name: t.common.demoNames.laylaAhmed, email: "layla.a@email.com", role: t.common.roles.patient, status: "active", joinDate: "Dec 5, 2024", image: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&h=100&fit=crop&crop=face" },
-    ];
+    // Load data from database
+    useEffect(() => {
+        async function loadData() {
+            setLoading(true);
 
+            const [usersResult, statsResult] = await Promise.all([
+                getAdminUsers({ limit: 50 }),
+                getAdminUserStats()
+            ]);
+
+            if (!usersResult.error) {
+                setUsers(usersResult.users);
+            }
+            if (!statsResult.error) {
+                setStats(statsResult.stats);
+            }
+
+            setLoading(false);
+        }
+        loadData();
+    }, []);
+
+    // Handle status change
+    const handleStatusChange = async (userId: string, newStatus: UserStatus) => {
+        setActionLoading(userId);
+        const result = await updateUserStatus(userId, newStatus);
+
+        if (result.success) {
+            // Update local state
+            setUsers(prev => prev.map(user =>
+                user.id === userId ? { ...user, status: newStatus } : user
+            ));
+            setShowStatusModal(null);
+        } else {
+            alert(result.error || (language === "ar" ? "حدث خطأ" : "An error occurred"));
+        }
+
+        setActionLoading(null);
+    };
+
+    // Filter users based on search and filter
     const filteredUsers = users.filter(user => {
-        const matchesFilter = filter === "all" || user.role.toLowerCase() === filter || user.status === filter;
-        const matchesSearch = user.name.toLowerCase().includes(search.toLowerCase()) ||
+        const roleFilter = filter === "all" ||
+            filter === user.role ||
+            filter === user.status;
+        const searchFilter = search === "" ||
+            user.full_name.toLowerCase().includes(search.toLowerCase()) ||
             user.email.toLowerCase().includes(search.toLowerCase());
-        return matchesFilter && matchesSearch;
+        return roleFilter && searchFilter;
     });
 
-    const stats = [
-        { label: t.adminDashboard.usersPage.stats.totalUsers, value: 1247, icon: Icons.users, color: "teal" },
-        { label: t.adminDashboard.usersPage.stats.doctors, value: 89, icon: Icons.doctor, color: "emerald" },
-        { label: t.adminDashboard.usersPage.stats.patients, value: 1153, icon: Icons.patient, color: "blue" },
-        { label: t.adminDashboard.usersPage.stats.admins, value: 5, icon: Icons.admin, color: "amber" },
+    const statCards = [
+        { label: t.adminDashboard.usersPage.stats.totalUsers, value: stats.total_users, icon: Icons.users, color: "teal" },
+        { label: t.adminDashboard.usersPage.stats.doctors, value: stats.doctors, icon: Icons.doctor, color: "emerald" },
+        { label: t.adminDashboard.usersPage.stats.patients, value: stats.patients, icon: Icons.patient, color: "blue" },
+        { label: t.adminDashboard.usersPage.stats.admins, value: stats.admins, icon: Icons.admin, color: "amber" },
     ];
 
     const getFilterLabel = (key: string) => {
-        return t.adminDashboard.usersPage.filters[key as keyof typeof t.adminDashboard.usersPage.filters] || key;
+        const labels: Record<string, string> = {
+            all: language === "ar" ? "الكل" : "All",
+            doctor: language === "ar" ? "طبيب" : "Doctor",
+            patient: language === "ar" ? "مريض" : "Patient",
+            admin: language === "ar" ? "مدير" : "Admin",
+            active: language === "ar" ? "نشط" : "Active",
+            pending: language === "ar" ? "معلق" : "Pending",
+            inactive: language === "ar" ? "غير نشط" : "Inactive",
+        };
+        return labels[key] || key;
     };
+
+    if (loading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center">
+                <div className="text-center">
+                    <div className="text-teal-500 mb-4 flex justify-center">{Icons.spinner}</div>
+                    <p className={isDark ? "text-gray-400" : "text-gray-600"}>{t.common.loading || "Loading..."}</p>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="relative overflow-hidden min-h-screen">
@@ -145,7 +209,7 @@ export default function UsersPage() {
 
                 {/* Stats Row */}
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-6 md:mb-8">
-                    {stats.map((stat, idx) => (
+                    {statCards.map((stat, idx) => (
                         <GlowingCard key={idx} glowColor="teal" className="p-3 md:p-4" isDark={isDark}>
                             <div className="flex items-center gap-2 md:gap-3">
                                 <div className="w-8 h-8 md:w-10 md:h-10 rounded-lg md:rounded-xl flex items-center justify-center bg-teal-500/10 text-teal-500">
@@ -205,50 +269,192 @@ export default function UsersPage() {
                 </GlowingCard>
 
                 {/* Users Grid - Card Layout */}
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 md:gap-4">
-                    {filteredUsers.map((user, idx) => (
-                        <motion.div
-                            key={user.id}
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: idx * 0.05 }}
-                        >
-                            <GlowingCard glowColor="teal" className="p-3 md:p-5" isDark={isDark}>
-                                <div className="flex items-start justify-between mb-3 md:mb-4">
-                                    <div className="flex items-center gap-2 md:gap-3">
-                                        <div className="relative w-10 h-10 md:w-12 md:h-12 rounded-lg md:rounded-xl overflow-hidden border-2 border-teal-500/30">
-                                            <Image src={user.image} alt={user.name} fill className="object-cover" unoptimized />
+                {filteredUsers.length > 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 md:gap-4">
+                        {filteredUsers.map((user, idx) => (
+                            <motion.div
+                                key={user.id}
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: idx * 0.05 }}
+                            >
+                                <GlowingCard glowColor="teal" className="p-3 md:p-5" isDark={isDark}>
+                                    <div className="flex items-start justify-between mb-3 md:mb-4">
+                                        <div className="flex items-center gap-2 md:gap-3">
+                                            <div className="relative w-10 h-10 md:w-12 md:h-12 rounded-lg md:rounded-xl overflow-hidden border-2 border-teal-500/30">
+                                                {user.avatar_url ? (
+                                                    <Image src={user.avatar_url} alt={user.full_name} fill className="object-cover" unoptimized />
+                                                ) : (
+                                                    <div className={cn("w-full h-full flex items-center justify-center text-lg font-semibold", isDark ? "bg-slate-700 text-gray-300" : "bg-gray-200 text-gray-600")}>
+                                                        {user.full_name.charAt(0)}
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <div className="min-w-0">
+                                                <p className={cn("font-semibold text-sm md:text-base truncate", isDark ? "text-white" : "text-slate-900")}>{user.full_name}</p>
+                                                <p className={cn("text-xs md:text-sm truncate", isDark ? "text-gray-500" : "text-gray-600")}>{user.email || user.phone || "-"}</p>
+                                            </div>
                                         </div>
-                                        <div className="min-w-0">
-                                            <p className={cn("font-semibold text-sm md:text-base truncate", isDark ? "text-white" : "text-slate-900")}>{user.name}</p>
-                                            <p className={cn("text-xs md:text-sm truncate", isDark ? "text-gray-500" : "text-gray-600")}>{user.email}</p>
+                                    </div>
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex gap-1.5 md:gap-2">
+                                            <Badge variant={user.role}>{getFilterLabel(user.role)}</Badge>
+                                            <Badge variant={user.status}>{getFilterLabel(user.status)}</Badge>
+                                        </div>
+                                        <div className="flex gap-1">
+                                            <button
+                                                onClick={() => setShowStatusModal(user)}
+                                                disabled={actionLoading === user.id}
+                                                className={cn(
+                                                    "p-1.5 md:p-2 rounded-lg transition-colors",
+                                                    isDark ? "hover:bg-white/5 text-gray-400" : "hover:bg-gray-100 text-gray-500"
+                                                )}
+                                            >
+                                                {actionLoading === user.id ? (
+                                                    <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                                                    </svg>
+                                                ) : Icons.edit}
+                                            </button>
+                                            <button
+                                                onClick={() => handleStatusChange(user.id, "suspended")}
+                                                disabled={actionLoading === user.id || user.status === "suspended"}
+                                                className={cn(
+                                                    "p-1.5 md:p-2 rounded-lg transition-colors text-red-500 disabled:opacity-50",
+                                                    isDark ? "hover:bg-red-500/10" : "hover:bg-red-50"
+                                                )}
+                                            >
+                                                {Icons.trash}
+                                            </button>
                                         </div>
                                     </div>
-                                </div>
-                                <div className="flex items-center justify-between">
-                                    <div className="flex gap-1.5 md:gap-2">
-                                        <Badge variant={user.role}>{getFilterLabel(user.role.toLowerCase())}</Badge>
-                                        <Badge variant={user.status}>{getFilterLabel(user.status)}</Badge>
-                                    </div>
-                                    <div className="flex gap-1">
-                                        <button className={cn(
-                                            "p-1.5 md:p-2 rounded-lg transition-colors",
-                                            isDark ? "hover:bg-white/5 text-gray-400" : "hover:bg-gray-100 text-gray-500"
-                                        )}>{Icons.edit}</button>
-                                        <button className={cn(
-                                            "p-1.5 md:p-2 rounded-lg transition-colors text-red-500",
-                                            isDark ? "hover:bg-red-500/10" : "hover:bg-red-50"
-                                        )}>{Icons.trash}</button>
-                                    </div>
-                                </div>
-                                <p className={cn("text-[10px] md:text-xs mt-2 md:mt-3 pt-2 md:pt-3 border-t", isDark ? "text-gray-500 border-white/5" : "text-gray-500 border-gray-200")}>
-                                    {t.adminDashboard.usersPage.table.joined} {formatDate(user.joinDate)}
-                                </p>
-                            </GlowingCard>
-                        </motion.div>
-                    ))}
-                </div>
+                                    <p className={cn("text-[10px] md:text-xs mt-2 md:mt-3 pt-2 md:pt-3 border-t", isDark ? "text-gray-500 border-white/5" : "text-gray-500 border-gray-200")}>
+                                        {t.adminDashboard.usersPage.table.joined} {formatDate(user.created_at)}
+                                    </p>
+                                </GlowingCard>
+                            </motion.div>
+                        ))}
+                    </div>
+                ) : (
+                    <div className="text-center py-16">
+                        <div className={cn("w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4", isDark ? "bg-white/5" : "bg-gray-100")}>
+                            {Icons.users}
+                        </div>
+                        <h3 className={cn("text-lg font-medium mb-2", isDark ? "text-white" : "text-slate-900")}>
+                            {language === "ar" ? "لا يوجد مستخدمون" : "No users found"}
+                        </h3>
+                        <p className={isDark ? "text-gray-400" : "text-gray-600"}>
+                            {language === "ar" ? "حاول تعديل الفلاتر أو البحث" : "Try adjusting filters or search"}
+                        </p>
+                    </div>
+                )}
             </main>
+
+            {/* Status Change Modal */}
+            {showStatusModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                    <div
+                        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+                        onClick={() => setShowStatusModal(null)}
+                    />
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className={cn(
+                            "relative w-full max-w-md rounded-2xl p-6",
+                            isDark ? "bg-slate-900 border border-white/10" : "bg-white shadow-xl"
+                        )}
+                    >
+                        <h3 className={cn("text-lg font-semibold mb-4", isDark ? "text-white" : "text-slate-900")}>
+                            {language === "ar" ? "تغيير حالة المستخدم" : "Change User Status"}
+                        </h3>
+
+                        <div className="flex items-center gap-3 mb-6">
+                            <div className="relative w-12 h-12 rounded-xl overflow-hidden border-2 border-teal-500/30">
+                                {showStatusModal.avatar_url ? (
+                                    <Image src={showStatusModal.avatar_url} alt={showStatusModal.full_name} fill className="object-cover" unoptimized />
+                                ) : (
+                                    <div className={cn("w-full h-full flex items-center justify-center text-lg font-semibold", isDark ? "bg-slate-700 text-gray-300" : "bg-gray-200 text-gray-600")}>
+                                        {showStatusModal.full_name.charAt(0)}
+                                    </div>
+                                )}
+                            </div>
+                            <div>
+                                <p className={cn("font-semibold", isDark ? "text-white" : "text-slate-900")}>{showStatusModal.full_name}</p>
+                                <p className={cn("text-sm", isDark ? "text-gray-400" : "text-gray-600")}>
+                                    {language === "ar" ? "الحالة الحالية:" : "Current status:"} <Badge variant={showStatusModal.status}>{getFilterLabel(showStatusModal.status)}</Badge>
+                                </p>
+                            </div>
+                        </div>
+
+                        <p className={cn("text-sm mb-4", isDark ? "text-gray-400" : "text-gray-600")}>
+                            {language === "ar" ? "اختر الحالة الجديدة:" : "Select new status:"}
+                        </p>
+
+                        <div className="space-y-2 mb-6">
+                            {(["active", "suspended"] as UserStatus[]).map((status) => (
+                                <button
+                                    key={status}
+                                    onClick={() => handleStatusChange(showStatusModal.id, status)}
+                                    disabled={actionLoading === showStatusModal.id || showStatusModal.status === status}
+                                    className={cn(
+                                        "w-full p-3 rounded-xl text-left flex items-center justify-between transition-colors disabled:opacity-50",
+                                        status === "active"
+                                            ? isDark
+                                                ? "bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20"
+                                                : "bg-emerald-50 hover:bg-emerald-100 border border-emerald-200"
+                                            : isDark
+                                                ? "bg-red-500/10 hover:bg-red-500/20 border border-red-500/20"
+                                                : "bg-red-50 hover:bg-red-100 border border-red-200"
+                                    )}
+                                >
+                                    <div>
+                                        <p className={cn(
+                                            "font-medium",
+                                            status === "active"
+                                                ? "text-emerald-500"
+                                                : "text-red-500"
+                                        )}>
+                                            {status === "active"
+                                                ? (language === "ar" ? "تفعيل" : "Activate")
+                                                : (language === "ar" ? "تعليق" : "Suspend")}
+                                        </p>
+                                        <p className={cn("text-xs", isDark ? "text-gray-500" : "text-gray-600")}>
+                                            {status === "active"
+                                                ? (language === "ar" ? "السماح للمستخدم بالوصول للنظام" : "Allow user access to the system")
+                                                : (language === "ar" ? "منع المستخدم من الوصول" : "Block user access")}
+                                        </p>
+                                    </div>
+                                    {actionLoading === showStatusModal.id && (
+                                        <svg className="w-5 h-5 animate-spin text-teal-500" fill="none" viewBox="0 0 24 24">
+                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                                        </svg>
+                                    )}
+                                    {showStatusModal.status === status && (
+                                        <span className={cn("text-xs px-2 py-1 rounded-full", isDark ? "bg-white/10 text-gray-400" : "bg-gray-100 text-gray-500")}>
+                                            {language === "ar" ? "الحالية" : "Current"}
+                                        </span>
+                                    )}
+                                </button>
+                            ))}
+                        </div>
+
+                        <button
+                            onClick={() => setShowStatusModal(null)}
+                            className={cn(
+                                "w-full py-2.5 rounded-xl font-medium transition-colors",
+                                isDark
+                                    ? "bg-white/5 hover:bg-white/10 text-gray-400"
+                                    : "bg-gray-100 hover:bg-gray-200 text-gray-600"
+                            )}
+                        >
+                            {language === "ar" ? "إلغاء" : "Cancel"}
+                        </button>
+                    </motion.div>
+                </div>
+            )}
         </div>
     );
 }

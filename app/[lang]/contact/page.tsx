@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { useI18n } from "../../i18n";
 import { useGlobalTheme } from "@/app/context/GlobalThemeContext";
+import { submitContactForm } from "@/app/actions/contact";
 
 // Logo Component
 const LogoFull = ({ className = "", isDark = true }: { className?: string; isDark?: boolean }) => (
@@ -54,6 +55,8 @@ export default function ContactPage() {
     const isDark = theme === "dark";
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [formData, setFormData] = useState({ name: "", email: "", subject: "", message: "" });
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [submitStatus, setSubmitStatus] = useState<{ type: "success" | "error"; message: string } | null>(null);
 
     const translations = {
         en: {
@@ -64,6 +67,7 @@ export default function ContactPage() {
             subject: "Subject",
             message: "Your Message",
             send: "Send Message",
+            sending: "Sending...",
             contactInfo: "Contact Information",
             emailUs: "Email Us",
             emailValue: "support@tawariapp.com",
@@ -73,6 +77,8 @@ export default function ContactPage() {
             visitValue: "Cairo, Egypt",
             hours: "Working Hours",
             hoursValue: "24/7 Support Available",
+            successMessage: "Thank you! Your message has been sent successfully. We'll get back to you soon.",
+            errorMessage: "Something went wrong. Please try again.",
         },
         ar: {
             title: "تواصل معنا",
@@ -82,6 +88,7 @@ export default function ContactPage() {
             subject: "الموضوع",
             message: "رسالتك",
             send: "إرسال الرسالة",
+            sending: "جاري الإرسال...",
             contactInfo: "معلومات التواصل",
             emailUs: "راسلنا",
             emailValue: "support@tawariapp.com",
@@ -91,14 +98,32 @@ export default function ContactPage() {
             visitValue: "القاهرة، مصر",
             hours: "ساعات العمل",
             hoursValue: "دعم متاح على مدار الساعة",
+            successMessage: "شكراً لك! تم إرسال رسالتك بنجاح. سنتواصل معك قريباً.",
+            errorMessage: "حدث خطأ ما. يرجى المحاولة مرة أخرى.",
         }
     };
 
     const text = translations[language as keyof typeof translations] || translations.en;
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        // TODO: Implement actual contact form submission
+        setIsSubmitting(true);
+        setSubmitStatus(null);
+
+        try {
+            const result = await submitContactForm(formData);
+
+            if (result.success) {
+                setSubmitStatus({ type: "success", message: text.successMessage });
+                setFormData({ name: "", email: "", subject: "", message: "" });
+            } else {
+                setSubmitStatus({ type: "error", message: result.error || text.errorMessage });
+            }
+        } catch {
+            setSubmitStatus({ type: "error", message: text.errorMessage });
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     return (
@@ -143,20 +168,29 @@ export default function ContactPage() {
 
                 <div className="grid lg:grid-cols-2 gap-8">
                     <form onSubmit={handleSubmit} className={`rounded-2xl p-6 md:p-8 space-y-5 ${isDark ? 'bg-slate-800/30 border border-white/10' : 'bg-white border border-gray-200 shadow-lg'}`}>
+                        {submitStatus && (
+                            <div className={`p-4 rounded-xl ${
+                                submitStatus.type === "success"
+                                    ? isDark ? "bg-green-500/20 border border-green-500/30 text-green-400" : "bg-green-50 border border-green-200 text-green-700"
+                                    : isDark ? "bg-red-500/20 border border-red-500/30 text-red-400" : "bg-red-50 border border-red-200 text-red-700"
+                            }`}>
+                                {submitStatus.message}
+                            </div>
+                        )}
                         <div>
-                            <input type="text" placeholder={text.name} value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className={`w-full px-4 py-3.5 border rounded-xl transition-all outline-none ${isDark ? 'bg-slate-800/50 border-white/10 text-white placeholder-gray-500 focus:border-teal-500/50 focus:ring-2 focus:ring-teal-500/20' : 'bg-gray-50 border-gray-200 text-slate-900 placeholder-gray-400 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20'}`} />
+                            <input type="text" placeholder={text.name} value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} disabled={isSubmitting} className={`w-full px-4 py-3.5 border rounded-xl transition-all outline-none disabled:opacity-50 ${isDark ? 'bg-slate-800/50 border-white/10 text-white placeholder-gray-500 focus:border-teal-500/50 focus:ring-2 focus:ring-teal-500/20' : 'bg-gray-50 border-gray-200 text-slate-900 placeholder-gray-400 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20'}`} />
                         </div>
                         <div>
-                            <input type="email" placeholder={text.email} value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} className={`w-full px-4 py-3.5 border rounded-xl transition-all outline-none ${isDark ? 'bg-slate-800/50 border-white/10 text-white placeholder-gray-500 focus:border-teal-500/50 focus:ring-2 focus:ring-teal-500/20' : 'bg-gray-50 border-gray-200 text-slate-900 placeholder-gray-400 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20'}`} />
+                            <input type="email" placeholder={text.email} value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} disabled={isSubmitting} className={`w-full px-4 py-3.5 border rounded-xl transition-all outline-none disabled:opacity-50 ${isDark ? 'bg-slate-800/50 border-white/10 text-white placeholder-gray-500 focus:border-teal-500/50 focus:ring-2 focus:ring-teal-500/20' : 'bg-gray-50 border-gray-200 text-slate-900 placeholder-gray-400 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20'}`} />
                         </div>
                         <div>
-                            <input type="text" placeholder={text.subject} value={formData.subject} onChange={(e) => setFormData({ ...formData, subject: e.target.value })} className={`w-full px-4 py-3.5 border rounded-xl transition-all outline-none ${isDark ? 'bg-slate-800/50 border-white/10 text-white placeholder-gray-500 focus:border-teal-500/50 focus:ring-2 focus:ring-teal-500/20' : 'bg-gray-50 border-gray-200 text-slate-900 placeholder-gray-400 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20'}`} />
+                            <input type="text" placeholder={text.subject} value={formData.subject} onChange={(e) => setFormData({ ...formData, subject: e.target.value })} disabled={isSubmitting} className={`w-full px-4 py-3.5 border rounded-xl transition-all outline-none disabled:opacity-50 ${isDark ? 'bg-slate-800/50 border-white/10 text-white placeholder-gray-500 focus:border-teal-500/50 focus:ring-2 focus:ring-teal-500/20' : 'bg-gray-50 border-gray-200 text-slate-900 placeholder-gray-400 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20'}`} />
                         </div>
                         <div>
-                            <textarea placeholder={text.message} value={formData.message} onChange={(e) => setFormData({ ...formData, message: e.target.value })} rows={5} className={`w-full px-4 py-3.5 border rounded-xl transition-all outline-none resize-none ${isDark ? 'bg-slate-800/50 border-white/10 text-white placeholder-gray-500 focus:border-teal-500/50 focus:ring-2 focus:ring-teal-500/20' : 'bg-gray-50 border-gray-200 text-slate-900 placeholder-gray-400 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20'}`} />
+                            <textarea placeholder={text.message} value={formData.message} onChange={(e) => setFormData({ ...formData, message: e.target.value })} disabled={isSubmitting} rows={5} className={`w-full px-4 py-3.5 border rounded-xl transition-all outline-none resize-none disabled:opacity-50 ${isDark ? 'bg-slate-800/50 border-white/10 text-white placeholder-gray-500 focus:border-teal-500/50 focus:ring-2 focus:ring-teal-500/20' : 'bg-gray-50 border-gray-200 text-slate-900 placeholder-gray-400 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20'}`} />
                         </div>
-                        <button type="submit" className="w-full py-3.5 rounded-xl font-semibold text-white bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-400 hover:to-teal-500 shadow-lg shadow-teal-500/25 transition-all">
-                            {text.send}
+                        <button type="submit" disabled={isSubmitting} className="w-full py-3.5 rounded-xl font-semibold text-white bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-400 hover:to-teal-500 shadow-lg shadow-teal-500/25 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+                            {isSubmitting ? text.sending : text.send}
                         </button>
                     </form>
 

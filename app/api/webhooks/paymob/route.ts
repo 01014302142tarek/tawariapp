@@ -85,6 +85,24 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ received: true, processed: false }, { status: 200 });
         }
 
+        // If payment failed, notify patient
+        if (!success) {
+            await supabase
+                .from("notifications")
+                .insert({
+                    profile_id: transaction.patient_profile_id,
+                    title: "Payment Failed",
+                    body: "Your payment could not be processed. Please try again or use a different payment method.",
+                    notification_type: "payment_failed",
+                    data: {
+                        transactionId: transaction.id,
+                        appointmentId: transaction.appointment_id,
+                    },
+                    is_read: false,
+                    is_pushed: false,
+                });
+        }
+
         // If payment successful, update appointment and create doctor earnings
         if (success && transaction.appointment_id) {
             // Update appointment status to confirmed
@@ -139,6 +157,62 @@ export async function POST(request: NextRequest) {
                     currency: "EGP",
                     status: "issued",
                 });
+
+            // Create notification for patient (payment success)
+            await supabase
+                .from("notifications")
+                .insert({
+                    profile_id: transaction.patient_profile_id,
+                    title: "Payment Successful",
+                    body: `Your payment of ${transaction.amount} EGP has been confirmed. Your appointment is now scheduled.`,
+                    notification_type: "payment_success",
+                    data: {
+                        transactionId: transaction.id,
+                        appointmentId: transaction.appointment_id,
+                        amount: transaction.amount,
+                    },
+                    is_read: false,
+                    is_pushed: false,
+                });
+
+            // Get patient info for doctor notification
+            const { data: patientProfile } = await supabase
+                .from("profiles")
+                .select("full_name")
+                .eq("id", transaction.patient_profile_id)
+                .single();
+
+            // Get appointment details for doctor notification
+            const { data: appointmentDetails } = await supabase
+                .from("appointments")
+                .select("doctor_profile_id, scheduled_start")
+                .eq("id", transaction.appointment_id)
+                .single();
+
+            if (appointmentDetails && patientProfile) {
+                const apptDetails = appointmentDetails as { doctor_profile_id: string; scheduled_start: string };
+                const patient = patientProfile as { full_name: string };
+                const appointmentDate = new Date(apptDetails.scheduled_start).toLocaleString("en-US", {
+                    dateStyle: "medium",
+                    timeStyle: "short",
+                });
+
+                // Create notification for doctor (new appointment)
+                await supabase
+                    .from("notifications")
+                    .insert({
+                        profile_id: apptDetails.doctor_profile_id,
+                        title: "New Appointment Booked",
+                        body: `${patient.full_name} has booked an appointment for ${appointmentDate}.`,
+                        notification_type: "new_appointment",
+                        data: {
+                            appointmentId: transaction.appointment_id,
+                            patientName: patient.full_name,
+                        },
+                        is_read: false,
+                        is_pushed: false,
+                    });
+            }
 
             // Log success in development only
             if (process.env.NODE_ENV === "development") {

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -9,6 +9,7 @@ import { GlowingCard } from "@/components/ui/glowing-card";
 import { SparklesCore } from "@/components/ui/sparkles";
 import { AnimatedNumber } from "@/components/ui/animated-number";
 import { useI18n } from "@/app/i18n";
+import { getAdminPatients, AdminPatient } from "@/app/actions/admin-users";
 
 // Icons
 const Icons = {
@@ -32,11 +33,6 @@ const Icons = {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
         </svg>
     ),
-    plus: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-        </svg>
-    ),
     search: (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
@@ -47,10 +43,13 @@ const Icons = {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M2.25 12.75V12A2.25 2.25 0 014.5 9.75h15A2.25 2.25 0 0121.75 12v.75m-8.69-6.44l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.379a1.5 1.5 0 01-1.06-.44z" />
         </svg>
     ),
+    spinner: (
+        <svg className="w-6 h-6 animate-spin" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+    ),
 };
-
-// Mock patient data
-
 
 const Badge = ({ variant, children }: { variant: string; children: React.ReactNode }) => {
     const variants: Record<string, string> = {
@@ -58,47 +57,91 @@ const Badge = ({ variant, children }: { variant: string; children: React.ReactNo
         inactive: "bg-gray-500/10 text-gray-400 border border-gray-500/20",
     };
     return (
-        <span className={cn("px-2.5 py-1 rounded-full text-xs font-medium", variants[variant])}>
+        <span className={cn("px-2.5 py-1 rounded-full text-xs font-medium", variants[variant] || variants.inactive)}>
             {children}
         </span>
     );
 };
 
 export default function PatientsPage() {
-    const { t, isRTL, formatNumber, formatDate } = useI18n();
+    const { t, isRTL, formatNumber, formatDate, language } = useI18n();
     const { theme } = useTheme();
     const isDark = theme === "dark";
     const [search, setSearch] = useState("");
-    const [filter, setFilter] = useState("all");
+    const [loading, setLoading] = useState(true);
+    const [patients, setPatients] = useState<AdminPatient[]>([]);
+    const [totalPatients, setTotalPatients] = useState(0);
 
-    // Mock patient data
-    const patients = [
-        { id: 1, name: t.common.demoNames.sarahJohnson, email: "sarah.j@email.com", age: 34, lastVisit: "Dec 12, 2024", doctor: t.common.demoNames.drAhmedHassan, status: "active", appointments: 12, image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop&crop=face" },
-        { id: 2, name: t.common.demoNames.mohamedAli, email: "mohamed.ali@email.com", age: 45, lastVisit: "Dec 10, 2024", doctor: t.common.demoNames.drOmarKhalil, status: "active", appointments: 8, image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face" },
-        { id: 3, name: t.common.demoNames.laylaAhmed, email: "layla.a@email.com", age: 28, lastVisit: "Dec 8, 2024", doctor: isRTL ? "د. فاطمة حسن" : "Dr. Fatima Hassan", status: "active", appointments: 5, image: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&h=100&fit=crop&crop=face" },
-        { id: 4, name: t.common.demoNames.omarNasser, email: "omar.n@email.com", age: 52, lastVisit: "Nov 28, 2024", doctor: t.common.demoNames.drAhmedHassan, status: "inactive", appointments: 15, image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face" },
-        { id: 5, name: t.common.demoNames.fatimaKhaled, email: "fatima.k@email.com", age: 38, lastVisit: "Dec 14, 2024", doctor: isRTL ? "د. سارة أحمد" : "Dr. Sarah Ahmed", status: "active", appointments: 3, image: "https://images.unsplash.com/photo-1489424731084-a5d8b219a5bb?w=100&h=100&fit=crop&crop=face" },
-        { id: 6, name: t.common.demoNames.ahmedHassan, email: "ahmed.m@email.com", age: 41, lastVisit: "Dec 11, 2024", doctor: t.common.demoNames.drOmarKhalil, status: "active", appointments: 9, image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop&crop=face" },
-    ];
+    // Load patients from database
+    useEffect(() => {
+        async function loadPatients() {
+            setLoading(true);
+            const result = await getAdminPatients({ limit: 50 });
+            if (!result.error) {
+                setPatients(result.patients);
+                setTotalPatients(result.total);
+            }
+            setLoading(false);
+        }
+        loadPatients();
+    }, []);
 
+    // Calculate age from date of birth
+    const calculateAge = (dateOfBirth?: string): number | null => {
+        if (!dateOfBirth) return null;
+        const birth = new Date(dateOfBirth);
+        const today = new Date();
+        let age = today.getFullYear() - birth.getFullYear();
+        const monthDiff = today.getMonth() - birth.getMonth();
+        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+            age--;
+        }
+        return age;
+    };
+
+    // Filter patients by search
     const filteredPatients = patients.filter(patient => {
-        const matchesFilter = filter === "all" || patient.status === filter;
-        const matchesSearch = patient.name.toLowerCase().includes(search.toLowerCase()) ||
-            patient.email.toLowerCase().includes(search.toLowerCase()) ||
-            patient.doctor.toLowerCase().includes(search.toLowerCase());
-        return matchesFilter && matchesSearch;
+        if (search === "") return true;
+        return patient.full_name.toLowerCase().includes(search.toLowerCase()) ||
+            patient.email.toLowerCase().includes(search.toLowerCase());
     });
 
+    // Calculate stats from real data
+    const activePatients = patients.filter(p => p.total_appointments > 0).length;
+    const avgAppointments = patients.length > 0
+        ? (patients.reduce((sum, p) => sum + p.total_appointments, 0) / patients.length).toFixed(1)
+        : 0;
+
     const stats = [
-        { label: t.adminDashboard.patientsPage.stats.totalPatients, value: 1158, icon: Icons.patient, color: "teal" },
-        { label: t.adminDashboard.patientsPage.stats.active, value: 1089, icon: Icons.check, color: "emerald" },
-        { label: t.adminDashboard.patientsPage.stats.newThisMonth, value: 47, icon: Icons.sparkle, color: "blue" },
-        { label: t.adminDashboard.patientsPage.stats.avgAppointments, value: 8.5, icon: Icons.calendar, color: "amber" },
+        { label: t.adminDashboard.patientsPage.stats.totalPatients, value: totalPatients, icon: Icons.patient, color: "teal" },
+        { label: t.adminDashboard.patientsPage.stats.active, value: activePatients, icon: Icons.check, color: "emerald" },
+        { label: t.adminDashboard.patientsPage.stats.newThisMonth, value: patients.filter(p => {
+            const created = new Date(p.created_at);
+            const now = new Date();
+            return created.getMonth() === now.getMonth() && created.getFullYear() === now.getFullYear();
+        }).length, icon: Icons.sparkle, color: "blue" },
+        { label: t.adminDashboard.patientsPage.stats.avgAppointments, value: Number(avgAppointments), icon: Icons.calendar, color: "amber" },
     ];
 
     const getFilterLabel = (key: string) => {
-        return t.adminDashboard.patientsPage.filters[key as keyof typeof t.adminDashboard.patientsPage.filters] || key;
+        const labels: Record<string, string> = {
+            all: language === "ar" ? "الكل" : "All",
+            active: language === "ar" ? "نشط" : "Active",
+            inactive: language === "ar" ? "غير نشط" : "Inactive",
+        };
+        return labels[key] || key;
     };
+
+    if (loading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center">
+                <div className="text-center">
+                    <div className="text-teal-500 mb-4 flex justify-center">{Icons.spinner}</div>
+                    <p className={isDark ? "text-gray-400" : "text-gray-600"}>{t.common.loading || "Loading..."}</p>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="relative overflow-hidden min-h-screen">
@@ -129,10 +172,6 @@ export default function PatientsPage() {
                             {t.adminDashboard.patientsPage.subtitle}
                         </p>
                     </div>
-                    <button className="px-4 md:px-5 py-2 md:py-2.5 bg-teal-500 hover:bg-teal-600 text-white font-medium rounded-xl transition-colors flex items-center gap-2 self-start text-sm md:text-base">
-                        {Icons.plus}
-                        {t.adminDashboard.patientsPage.addPatient}
-                    </button>
                 </div>
 
                 {/* Stats Row */}
@@ -156,104 +195,129 @@ export default function PatientsPage() {
                     ))}
                 </div>
 
-                {/* Search and Filters */}
+                {/* Search */}
                 <GlowingCard glowColor="teal" className="p-3 md:p-4 mb-4 md:mb-6" isDark={isDark}>
-                    <div className="flex flex-col md:flex-row gap-4">
-                        <div className="flex-1 relative">
-                            <div className={cn("absolute top-1/2 -translate-y-1/2 text-gray-500", isRTL ? "right-3" : "left-3")}>{Icons.search}</div>
-                            <input
-                                type="text"
-                                placeholder={t.adminDashboard.patientsPage.searchPlaceholder}
-                                value={search}
-                                onChange={(e) => setSearch(e.target.value)}
-                                className={cn(
-                                    "w-full py-2.5 rounded-xl border outline-none transition-colors",
-                                    isRTL ? "pr-10 pl-4" : "pl-10 pr-4",
-                                    isDark
-                                        ? "bg-slate-800/50 border-white/10 text-white placeholder-gray-500 focus:border-teal-500/50"
-                                        : "bg-gray-50 border-gray-200 text-slate-900 placeholder-gray-400 focus:border-teal-500"
-                                )}
-                            />
-                        </div>
-                        <div className="flex gap-2 flex-wrap">
-                            {["all", "active", "inactive"].map((f) => (
-                                <button
-                                    key={f}
-                                    onClick={() => setFilter(f)}
-                                    className={cn(
-                                        "px-4 py-2.5 rounded-xl text-sm font-medium transition-colors capitalize",
-                                        filter === f
-                                            ? "bg-teal-500 text-white"
-                                            : isDark
-                                                ? "bg-white/5 text-gray-400 hover:bg-white/10"
-                                                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                                    )}
-                                >
-                                    {getFilterLabel(f)}
-                                </button>
-                            ))}
-                        </div>
+                    <div className="flex-1 relative">
+                        <div className={cn("absolute top-1/2 -translate-y-1/2 text-gray-500", isRTL ? "right-3" : "left-3")}>{Icons.search}</div>
+                        <input
+                            type="text"
+                            placeholder={t.adminDashboard.patientsPage.searchPlaceholder}
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            className={cn(
+                                "w-full py-2.5 rounded-xl border outline-none transition-colors",
+                                isRTL ? "pr-10 pl-4" : "pl-10 pr-4",
+                                isDark
+                                    ? "bg-slate-800/50 border-white/10 text-white placeholder-gray-500 focus:border-teal-500/50"
+                                    : "bg-gray-50 border-gray-200 text-slate-900 placeholder-gray-400 focus:border-teal-500"
+                            )}
+                        />
                     </div>
                 </GlowingCard>
 
                 {/* Patients - Horizontal List Layout */}
-                <div className="space-y-4">
-                    {filteredPatients.map((patient, idx) => (
-                        <motion.div
-                            key={patient.id}
-                            initial={{ opacity: 0, x: -20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: idx * 0.05 }}
-                        >
-                            <GlowingCard glowColor="teal" className="p-3 md:p-5" isDark={isDark}>
-                                <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4">
-                                    {/* Patient Info */}
-                                    <div className="flex items-center gap-3 md:gap-4 flex-1">
-                                        <div className="relative w-10 h-10 md:w-14 md:h-14 rounded-lg md:rounded-xl overflow-hidden border-2 border-teal-500/30 flex-shrink-0">
-                                            <Image src={patient.image} alt={patient.name} fill className="object-cover" unoptimized />
-                                        </div>
-                                        <div className="flex-1 min-w-0">
-                                            <div className="flex items-center gap-2 mb-0.5 md:mb-1">
-                                                <h3 className={cn("font-semibold text-sm md:text-base", isDark ? "text-white" : "text-slate-900")}>{patient.name}</h3>
-                                                <Badge variant={patient.status}>{getFilterLabel(patient.status)}</Badge>
+                {filteredPatients.length > 0 ? (
+                    <div className="space-y-4">
+                        {filteredPatients.map((patient, idx) => {
+                            const age = calculateAge(patient.date_of_birth);
+                            const isActive = patient.total_appointments > 0;
+
+                            return (
+                                <motion.div
+                                    key={patient.id}
+                                    initial={{ opacity: 0, x: -20 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    transition={{ delay: idx * 0.05 }}
+                                >
+                                    <GlowingCard glowColor="teal" className="p-3 md:p-5" isDark={isDark}>
+                                        <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4">
+                                            {/* Patient Info */}
+                                            <div className="flex items-center gap-3 md:gap-4 flex-1">
+                                                <div className="relative w-10 h-10 md:w-14 md:h-14 rounded-lg md:rounded-xl overflow-hidden border-2 border-teal-500/30 flex-shrink-0">
+                                                    {patient.avatar_url ? (
+                                                        <Image src={patient.avatar_url} alt={patient.full_name} fill className="object-cover" unoptimized />
+                                                    ) : (
+                                                        <div className={cn("w-full h-full flex items-center justify-center text-lg font-semibold", isDark ? "bg-slate-700 text-gray-300" : "bg-gray-200 text-gray-600")}>
+                                                            {patient.full_name.charAt(0)}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="flex items-center gap-2 mb-0.5 md:mb-1">
+                                                        <h3 className={cn("font-semibold text-sm md:text-base", isDark ? "text-white" : "text-slate-900")}>{patient.full_name}</h3>
+                                                        <Badge variant={isActive ? "active" : "inactive"}>
+                                                            {getFilterLabel(isActive ? "active" : "inactive")}
+                                                        </Badge>
+                                                    </div>
+                                                    <p className={cn("text-xs md:text-sm truncate", isDark ? "text-gray-500" : "text-gray-600")}>{patient.email || "-"}</p>
+                                                </div>
                                             </div>
-                                            <p className={cn("text-xs md:text-sm truncate", isDark ? "text-gray-500" : "text-gray-600")}>{patient.email}</p>
-                                        </div>
-                                    </div>
 
-                                    {/* Patient Details */}
-                                    <div className="flex flex-wrap items-center gap-4 md:gap-6 lg:gap-8">
-                                        <div className="text-center">
-                                            <p className={cn("text-sm md:text-lg font-bold", isDark ? "text-white" : "text-slate-900")}>{formatNumber(patient.age)}</p>
-                                            <p className={cn("text-[10px] md:text-xs", isDark ? "text-gray-500" : "text-gray-600")}>{t.adminDashboard.patientsPage.card.age}</p>
-                                        </div>
-                                        <div className="text-center">
-                                            <p className={cn("text-sm md:text-lg font-bold", isDark ? "text-white" : "text-slate-900")}>{formatNumber(patient.appointments)}</p>
-                                            <p className={cn("text-[10px] md:text-xs", isDark ? "text-gray-500" : "text-gray-600")}>{t.adminDashboard.patientsPage.card.visits}</p>
-                                        </div>
-                                        <div className="hidden lg:block">
-                                            <p className={cn("text-xs md:text-sm font-medium", isDark ? "text-white" : "text-slate-900")}>{patient.doctor}</p>
-                                            <p className={cn("text-[10px] md:text-xs", isDark ? "text-gray-500" : "text-gray-600")}>{t.adminDashboard.patientsPage.card.primaryDoctor}</p>
-                                        </div>
-                                        <div className="hidden lg:block">
-                                            <p className={cn("text-xs md:text-sm font-medium", isDark ? "text-white" : "text-slate-900")}>{formatDate(patient.lastVisit)}</p>
-                                            <p className={cn("text-[10px] md:text-xs", isDark ? "text-gray-500" : "text-gray-600")}>{t.adminDashboard.patientsPage.card.lastVisit}</p>
-                                        </div>
-                                    </div>
+                                            {/* Patient Details */}
+                                            <div className="flex flex-wrap items-center gap-4 md:gap-6 lg:gap-8">
+                                                {age !== null && (
+                                                    <div className="text-center">
+                                                        <p className={cn("text-sm md:text-lg font-bold", isDark ? "text-white" : "text-slate-900")}>{formatNumber(age)}</p>
+                                                        <p className={cn("text-[10px] md:text-xs", isDark ? "text-gray-500" : "text-gray-600")}>{t.adminDashboard.patientsPage.card.age}</p>
+                                                    </div>
+                                                )}
+                                                {patient.gender && (
+                                                    <div className="text-center">
+                                                        <p className={cn("text-sm md:text-lg font-bold capitalize", isDark ? "text-white" : "text-slate-900")}>
+                                                            {patient.gender === "male" ? (language === "ar" ? "ذكر" : "Male") : (language === "ar" ? "أنثى" : "Female")}
+                                                        </p>
+                                                        <p className={cn("text-[10px] md:text-xs", isDark ? "text-gray-500" : "text-gray-600")}>
+                                                            {language === "ar" ? "الجنس" : "Gender"}
+                                                        </p>
+                                                    </div>
+                                                )}
+                                                {patient.blood_type && (
+                                                    <div className="text-center">
+                                                        <p className={cn("text-sm md:text-lg font-bold", isDark ? "text-white" : "text-slate-900")}>{patient.blood_type}</p>
+                                                        <p className={cn("text-[10px] md:text-xs", isDark ? "text-gray-500" : "text-gray-600")}>
+                                                            {language === "ar" ? "فصيلة الدم" : "Blood Type"}
+                                                        </p>
+                                                    </div>
+                                                )}
+                                                <div className="text-center">
+                                                    <p className={cn("text-sm md:text-lg font-bold", isDark ? "text-white" : "text-slate-900")}>{formatNumber(patient.total_appointments)}</p>
+                                                    <p className={cn("text-[10px] md:text-xs", isDark ? "text-gray-500" : "text-gray-600")}>{t.adminDashboard.patientsPage.card.visits}</p>
+                                                </div>
+                                                <div className="hidden lg:block">
+                                                    <p className={cn("text-xs md:text-sm font-medium", isDark ? "text-white" : "text-slate-900")}>{formatDate(patient.created_at)}</p>
+                                                    <p className={cn("text-[10px] md:text-xs", isDark ? "text-gray-500" : "text-gray-600")}>
+                                                        {language === "ar" ? "تاريخ التسجيل" : "Joined"}
+                                                    </p>
+                                                </div>
+                                            </div>
 
-                                    {/* Action */}
-                                    <button className={cn(
-                                        "px-3 md:px-4 py-1.5 md:py-2 rounded-lg md:rounded-xl text-xs md:text-sm font-medium transition-colors flex items-center gap-1.5 md:gap-2",
-                                        isDark ? "bg-white/5 hover:bg-white/10 text-white" : "bg-gray-100 hover:bg-gray-200 text-gray-700"
-                                    )}>
-                                        {Icons.folder}
-                                        {t.adminDashboard.patientsPage.card.viewRecords}
-                                    </button>
-                                </div>
-                            </GlowingCard>
-                        </motion.div>
-                    ))}
-                </div>
+                                            {/* Action */}
+                                            <button className={cn(
+                                                "px-3 md:px-4 py-1.5 md:py-2 rounded-lg md:rounded-xl text-xs md:text-sm font-medium transition-colors flex items-center gap-1.5 md:gap-2",
+                                                isDark ? "bg-white/5 hover:bg-white/10 text-white" : "bg-gray-100 hover:bg-gray-200 text-gray-700"
+                                            )}>
+                                                {Icons.folder}
+                                                {t.adminDashboard.patientsPage.card.viewRecords}
+                                            </button>
+                                        </div>
+                                    </GlowingCard>
+                                </motion.div>
+                            );
+                        })}
+                    </div>
+                ) : (
+                    <div className="text-center py-16">
+                        <div className={cn("w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4", isDark ? "bg-white/5" : "bg-gray-100")}>
+                            {Icons.patient}
+                        </div>
+                        <h3 className={cn("text-lg font-medium mb-2", isDark ? "text-white" : "text-slate-900")}>
+                            {language === "ar" ? "لا يوجد مرضى" : "No patients found"}
+                        </h3>
+                        <p className={isDark ? "text-gray-400" : "text-gray-600"}>
+                            {language === "ar" ? "حاول تعديل البحث" : "Try adjusting your search"}
+                        </p>
+                    </div>
+                )}
             </main>
         </div>
     );

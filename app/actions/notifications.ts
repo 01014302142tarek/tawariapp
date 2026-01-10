@@ -50,6 +50,7 @@ export async function getNotifications(options?: {
     limit?: number;
     offset?: number;
     unreadOnly?: boolean;
+    type?: NotificationType;
 }): Promise<{ notifications: Notification[]; total: number; error?: string }> {
     const supabase = await createClient();
 
@@ -83,6 +84,10 @@ export async function getNotifications(options?: {
 
     if (options?.unreadOnly) {
         query = query.eq("is_read", false);
+    }
+
+    if (options?.type) {
+        query = query.eq("notification_type", options.type);
     }
 
     const { data, error, count } = await query;

@@ -145,7 +145,8 @@ export default function AppointmentsPage() {
         setActionLoading(appointmentId);
         const result = await joinWaitingRoom(appointmentId);
         if (result.success) {
-            await loadAppointments();
+            // Navigate to the waiting room page
+            router.push(`/${language}/dashboard/consultation/${appointmentId}/waiting-room`);
         }
         setActionLoading(null);
     };
@@ -352,9 +353,13 @@ export default function AppointmentsPage() {
                                             )}
                                             {apt.status === "in_waiting_room" && (
                                                 <div className="flex gap-2 sm:flex-shrink-0">
-                                                    <span className={cn("px-3 py-2 rounded-lg text-sm", isDark ? "bg-amber-500/10 text-amber-400" : "bg-amber-50 text-amber-600")}>
-                                                        {isRTL ? "في انتظار الطبيب..." : "Waiting for doctor..."}
-                                                    </span>
+                                                    <button
+                                                        onClick={() => router.push(`/${language}/dashboard/consultation/${apt.id}/waiting-room`)}
+                                                        className="flex-1 sm:flex-initial px-4 py-2 rounded-lg bg-amber-500 hover:bg-amber-600 text-white text-sm font-medium transition-colors flex items-center justify-center gap-2"
+                                                    >
+                                                        {Icons.clock}
+                                                        {isRTL ? "العودة لغرفة الانتظار" : "Back to Waiting Room"}
+                                                    </button>
                                                 </div>
                                             )}
                                             {apt.status === "in_progress" && (

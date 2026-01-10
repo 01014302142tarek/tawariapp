@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useTheme } from "../context/ThemeContext";
@@ -8,6 +8,7 @@ import { GlowingCard } from "@/components/ui/glowing-card";
 import { SparklesCore } from "@/components/ui/sparkles";
 import { AnimatedNumber } from "@/components/ui/animated-number";
 import { useI18n } from "@/app/i18n";
+import { getAdminAnalytics, AdminAnalytics } from "@/app/actions/admin-analytics";
 
 // Icons
 const Icons = {
@@ -56,6 +57,12 @@ const Icons = {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
         </svg>
     ),
+    spinner: (
+        <svg className="w-6 h-6 animate-spin" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+    ),
 };
 
 // Progress Bar
@@ -73,38 +80,45 @@ const ProgressBar = ({ value, max, isDark = true }: { value: number; max: number
     );
 };
 
-// Mock data
-
-
 export default function AnalyticsPage() {
-    const { t, formatNumber } = useI18n();
+    const { t, formatNumber, language } = useI18n();
     const { theme } = useTheme();
     const isDark = theme === "dark";
     const [period, setPeriod] = useState("year");
+    const [loading, setLoading] = useState(true);
+    const [analytics, setAnalytics] = useState<AdminAnalytics | null>(null);
 
-    // Mock data
-    const monthlyData = [
-        { month: "Jan", value: 32 }, { month: "Feb", value: 38 }, { month: "Mar", value: 41 },
-        { month: "Apr", value: 45 }, { month: "May", value: 48 }, { month: "Jun", value: 52 },
-        { month: "Jul", value: 54 }, { month: "Aug", value: 51 }, { month: "Sep", value: 53 },
-        { month: "Oct", value: 56 }, { month: "Nov", value: 58 }, { month: "Dec", value: 45 },
+    // Load analytics from database
+    useEffect(() => {
+        async function loadAnalytics() {
+            setLoading(true);
+            const result = await getAdminAnalytics();
+            if (!result.error) {
+                setAnalytics(result.analytics);
+            }
+            setLoading(false);
+        }
+        loadAnalytics();
+    }, []);
+
+    // Use real data or fallback to defaults
+    const monthlyData = analytics?.monthly_appointments || [
+        { month: "Jan", value: 0 }, { month: "Feb", value: 0 }, { month: "Mar", value: 0 },
+        { month: "Apr", value: 0 }, { month: "May", value: 0 }, { month: "Jun", value: 0 },
+        { month: "Jul", value: 0 }, { month: "Aug", value: 0 }, { month: "Sep", value: 0 },
+        { month: "Oct", value: 0 }, { month: "Nov", value: 0 }, { month: "Dec", value: 0 },
     ];
 
-    const topDoctors = [
-        { rank: 1, name: t.common.demoNames.drAhmedHassan, specialty: t.specialties.cardiology, revenue: 89200, patients: 312 },
-        { rank: 2, name: t.common.demoNames.drOmarKhalil, specialty: t.specialties.neurology, revenue: 67800, patients: 203 },
-        { rank: 3, name: t.common.demoNames.drFatimaHassan, specialty: t.specialties.pediatrics, revenue: 54600, patients: 178 },
-        { rank: 4, name: t.common.demoNames.drSarahAhmed, specialty: t.specialties.dermatology, revenue: 45600, patients: 156 },
-        { rank: 5, name: t.common.demoNames.drLaylaMahmoud, specialty: t.specialties.mental, revenue: 42300, patients: 134 },
-    ];
+    const topDoctors = analytics?.top_doctors || [];
+    const maxValue = Math.max(...monthlyData.map(d => d.value), 1);
 
-    const maxValue = Math.max(...monthlyData.map(d => d.value));
+    const revenueInK = analytics ? Math.round(analytics.total_revenue / 1000) : 0;
 
     const stats = [
-        { label: t.adminDashboard.analyticsPage.stats.revenue, value: 598, suffix: ` ${t.common.units.kEgp}`, change: "+23%", icon: Icons.money, color: "teal" },
-        { label: t.adminDashboard.analyticsPage.stats.users, value: 1247, change: "+12%", icon: Icons.users, color: "blue" },
-        { label: t.adminDashboard.analyticsPage.stats.appointments, value: 4637, change: "+18%", icon: Icons.calendar, color: "emerald" },
-        { label: t.adminDashboard.analyticsPage.stats.session, value: 12.5, suffix: ` ${t.common.units.min}`, change: "+5%", icon: Icons.clock, color: "amber" },
+        { label: t.adminDashboard.analyticsPage.stats.revenue, value: revenueInK, suffix: ` ${t.common.units.kEgp}`, icon: Icons.money, color: "teal" },
+        { label: t.adminDashboard.analyticsPage.stats.users, value: analytics?.total_users || 0, icon: Icons.users, color: "blue" },
+        { label: t.adminDashboard.analyticsPage.stats.appointments, value: analytics?.total_appointments || 0, icon: Icons.calendar, color: "emerald" },
+        { label: t.adminDashboard.analyticsPage.stats.session, value: analytics?.avg_session_minutes || 0, suffix: ` ${t.common.units.min}`, icon: Icons.clock, color: "amber" },
     ];
 
     const trafficSources = [
@@ -117,6 +131,17 @@ export default function AnalyticsPage() {
     const getPeriodLabel = (key: string) => {
         return t.adminDashboard.analyticsPage.periods[key as keyof typeof t.adminDashboard.analyticsPage.periods] || key;
     };
+
+    if (loading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center">
+                <div className="text-center">
+                    <div className="text-teal-500 mb-4 flex justify-center">{Icons.spinner}</div>
+                    <p className={isDark ? "text-gray-400" : "text-gray-600"}>{t.common.loading || "Loading..."}</p>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="relative overflow-hidden min-h-screen">
@@ -177,10 +202,6 @@ export default function AnalyticsPage() {
                                         {stat.icon}
                                     </span>
                                 </div>
-                                <div className="flex items-center gap-0.5 md:gap-1 text-emerald-500 text-xs md:text-sm font-medium">
-                                    {Icons.arrowUp}
-                                    {formatNumber(stat.change)}
-                                </div>
                             </div>
                             <div className="flex items-baseline gap-0.5 md:gap-1">
                                 <span className={cn("text-lg md:text-2xl font-bold", isDark ? "text-white" : "text-slate-900")}>
@@ -195,24 +216,32 @@ export default function AnalyticsPage() {
 
                 {/* Charts - 2 Column Layout */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 mb-6 md:mb-8">
-                    {/* Revenue Chart */}
+                    {/* Appointments Chart */}
                     <GlowingCard glowColor="teal" className="p-4 md:p-6 overflow-visible" isDark={isDark}>
-                        <h3 className={cn("text-base md:text-lg font-semibold mb-4 md:mb-6", isDark ? "text-white" : "text-slate-900")}>{t.adminDashboard.analyticsPage.charts.revenue}</h3>
+                        <h3 className={cn("text-base md:text-lg font-semibold mb-4 md:mb-6", isDark ? "text-white" : "text-slate-900")}>
+                            {language === "ar" ? "المواعيد الشهرية" : "Monthly Appointments"}
+                        </h3>
                         <div className="overflow-x-auto">
                             <div className="min-w-[280px]">
                                 {/* Chart container with fixed height */}
                                 <div className="relative h-36 md:h-48 flex items-end gap-[2px] md:gap-1">
                                     {monthlyData.map((data, idx) => {
-                                        const heightPercent = (data.value / maxValue) * 100;
+                                        const heightPercent = maxValue > 0 ? (data.value / maxValue) * 100 : 0;
                                         return (
-                                            <div key={idx} className="flex-1 flex flex-col h-full justify-end">
+                                            <div key={idx} className="flex-1 flex flex-col h-full justify-end group relative">
                                                 <motion.div
                                                     initial={{ height: 0 }}
-                                                    animate={{ height: `${heightPercent}%` }}
+                                                    animate={{ height: `${Math.max(heightPercent, 2)}%` }}
                                                     transition={{ delay: idx * 0.05, duration: 0.5 }}
                                                     className="w-full rounded-t-sm md:rounded-t-md bg-gradient-to-t from-teal-600 to-teal-400 hover:from-teal-500 hover:to-teal-300 transition-colors cursor-pointer"
                                                     style={{ minHeight: '4px' }}
                                                 />
+                                                {/* Tooltip */}
+                                                <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                                                    <div className="bg-slate-800 text-white text-xs px-2 py-1 rounded whitespace-nowrap">
+                                                        {formatNumber(data.value)}
+                                                    </div>
+                                                </div>
                                             </div>
                                         );
                                     })}
@@ -265,40 +294,48 @@ export default function AnalyticsPage() {
                             </svg>
                         </div>
                     </div>
-                    <div className="overflow-x-auto -mx-4 md:mx-0 scrollbar-thin scrollbar-thumb-teal-500/20 scrollbar-track-transparent">
-                        <table className="w-full min-w-[500px]">
-                            <thead>
-                                <tr className={cn("border-b", isDark ? "border-white/5" : "border-gray-200")}>
-                                    <th className={cn("px-3 md:px-4 py-2 md:py-3 text-start text-xs md:text-sm font-medium", isDark ? "text-gray-400" : "text-gray-500")}>{t.adminDashboard.analyticsPage.table.rank}</th>
-                                    <th className={cn("px-3 md:px-4 py-2 md:py-3 text-start text-xs md:text-sm font-medium", isDark ? "text-gray-400" : "text-gray-500")}>{t.adminDashboard.analyticsPage.table.doctor}</th>
-                                    <th className={cn("px-3 md:px-4 py-2 md:py-3 text-start text-xs md:text-sm font-medium", isDark ? "text-gray-400" : "text-gray-500")}>{t.adminDashboard.analyticsPage.table.specialty}</th>
-                                    <th className={cn("px-3 md:px-4 py-2 md:py-3 text-start text-xs md:text-sm font-medium", isDark ? "text-gray-400" : "text-gray-500")}>{t.adminDashboard.analyticsPage.table.patients}</th>
-                                    <th className={cn("px-3 md:px-4 py-2 md:py-3 text-start text-xs md:text-sm font-medium", isDark ? "text-gray-400" : "text-gray-500")}>{t.adminDashboard.analyticsPage.table.revenue}</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {topDoctors.map((doctor, idx) => (
-                                    <motion.tr
-                                        key={idx}
-                                        initial={{ opacity: 0, x: -10 }}
-                                        animate={{ opacity: 1, x: 0 }}
-                                        transition={{ delay: idx * 0.1 }}
-                                        className={cn("border-b", isDark ? "border-white/5" : "border-gray-100")}
-                                    >
-                                        <td className="px-3 md:px-4 py-3 md:py-4">
-                                            <span className="w-6 h-6 md:w-8 md:h-8 rounded-full flex items-center justify-center font-bold text-xs md:text-sm bg-teal-500/20 text-teal-500">
-                                                {formatNumber(doctor.rank)}
-                                            </span>
-                                        </td>
-                                        <td className={cn("px-3 md:px-4 py-3 md:py-4 font-medium text-xs md:text-base", isDark ? "text-white" : "text-slate-900")}>{doctor.name}</td>
-                                        <td className={cn("px-3 md:px-4 py-3 md:py-4 text-xs md:text-sm", isDark ? "text-gray-400" : "text-gray-600")}>{doctor.specialty}</td>
-                                        <td className={cn("px-3 md:px-4 py-3 md:py-4 text-xs md:text-base", isDark ? "text-white" : "text-slate-900")}>{formatNumber(doctor.patients)}</td>
-                                        <td className="px-3 md:px-4 py-3 md:py-4 text-teal-500 font-medium text-xs md:text-base">{formatNumber(doctor.revenue.toLocaleString())} {t.common.units.egp}</td>
-                                    </motion.tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
+                    {topDoctors.length > 0 ? (
+                        <div className="overflow-x-auto -mx-4 md:mx-0 scrollbar-thin scrollbar-thumb-teal-500/20 scrollbar-track-transparent">
+                            <table className="w-full min-w-[500px]">
+                                <thead>
+                                    <tr className={cn("border-b", isDark ? "border-white/5" : "border-gray-200")}>
+                                        <th className={cn("px-3 md:px-4 py-2 md:py-3 text-start text-xs md:text-sm font-medium", isDark ? "text-gray-400" : "text-gray-500")}>{t.adminDashboard.analyticsPage.table.rank}</th>
+                                        <th className={cn("px-3 md:px-4 py-2 md:py-3 text-start text-xs md:text-sm font-medium", isDark ? "text-gray-400" : "text-gray-500")}>{t.adminDashboard.analyticsPage.table.doctor}</th>
+                                        <th className={cn("px-3 md:px-4 py-2 md:py-3 text-start text-xs md:text-sm font-medium", isDark ? "text-gray-400" : "text-gray-500")}>{t.adminDashboard.analyticsPage.table.specialty}</th>
+                                        <th className={cn("px-3 md:px-4 py-2 md:py-3 text-start text-xs md:text-sm font-medium", isDark ? "text-gray-400" : "text-gray-500")}>{t.adminDashboard.analyticsPage.table.patients}</th>
+                                        <th className={cn("px-3 md:px-4 py-2 md:py-3 text-start text-xs md:text-sm font-medium", isDark ? "text-gray-400" : "text-gray-500")}>{t.adminDashboard.analyticsPage.table.revenue}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {topDoctors.map((doctor, idx) => (
+                                        <motion.tr
+                                            key={doctor.id || idx}
+                                            initial={{ opacity: 0, x: -10 }}
+                                            animate={{ opacity: 1, x: 0 }}
+                                            transition={{ delay: idx * 0.1 }}
+                                            className={cn("border-b", isDark ? "border-white/5" : "border-gray-100")}
+                                        >
+                                            <td className="px-3 md:px-4 py-3 md:py-4">
+                                                <span className="w-6 h-6 md:w-8 md:h-8 rounded-full flex items-center justify-center font-bold text-xs md:text-sm bg-teal-500/20 text-teal-500">
+                                                    {formatNumber(doctor.rank)}
+                                                </span>
+                                            </td>
+                                            <td className={cn("px-3 md:px-4 py-3 md:py-4 font-medium text-xs md:text-base", isDark ? "text-white" : "text-slate-900")}>{doctor.name}</td>
+                                            <td className={cn("px-3 md:px-4 py-3 md:py-4 text-xs md:text-sm", isDark ? "text-gray-400" : "text-gray-600")}>{doctor.specialty}</td>
+                                            <td className={cn("px-3 md:px-4 py-3 md:py-4 text-xs md:text-base", isDark ? "text-white" : "text-slate-900")}>{formatNumber(doctor.patients)}</td>
+                                            <td className="px-3 md:px-4 py-3 md:py-4 text-teal-500 font-medium text-xs md:text-base">{formatNumber(doctor.revenue.toLocaleString())} {t.common.units.egp}</td>
+                                        </motion.tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    ) : (
+                        <div className="text-center py-8">
+                            <p className={isDark ? "text-gray-400" : "text-gray-600"}>
+                                {language === "ar" ? "لا توجد بيانات بعد" : "No data available yet"}
+                            </p>
+                        </div>
+                    )}
                 </GlowingCard>
             </main>
         </div>

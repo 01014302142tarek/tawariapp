@@ -6,7 +6,7 @@ import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useI18n } from "@/app/i18n";
 import { GlowingCard } from "@/components/ui/glowing-card";
-import { getDoctorEarnings } from "@/app/actions/payments";
+import { getDoctorEarnings, requestPayout } from "@/app/actions/payments";
 
 // Icons
 const Icons = {
@@ -73,6 +73,15 @@ export default function DoctorEarningsPage() {
     const [loading, setLoading] = useState(true);
     const [earnings, setEarnings] = useState<EarningsData | null>(null);
     const [error, setError] = useState<string | null>(null);
+    const [showWithdrawModal, setShowWithdrawModal] = useState(false);
+    const [withdrawing, setWithdrawing] = useState(false);
+    const [withdrawError, setWithdrawError] = useState<string | null>(null);
+    const [withdrawSuccess, setWithdrawSuccess] = useState(false);
+    const [bankDetails, setBankDetails] = useState({
+        bankName: "",
+        accountNumber: "",
+        accountHolderName: "",
+    });
 
     // Load earnings
     useEffect(() => {
@@ -89,6 +98,33 @@ export default function DoctorEarningsPage() {
 
         loadEarnings();
     }, [isRTL]);
+
+    // Handle withdrawal request
+    const handleWithdraw = async () => {
+        setWithdrawing(true);
+        setWithdrawError(null);
+
+        const result = await requestPayout(bankDetails);
+
+        if (result.success) {
+            setWithdrawSuccess(true);
+            // Reload earnings to reflect the change
+            const updatedEarnings = await getDoctorEarnings();
+            if (updatedEarnings.success && updatedEarnings.earnings) {
+                setEarnings(updatedEarnings.earnings);
+            }
+            // Close modal after 2 seconds
+            setTimeout(() => {
+                setShowWithdrawModal(false);
+                setWithdrawSuccess(false);
+                setBankDetails({ bankName: "", accountNumber: "", accountHolderName: "" });
+            }, 2000);
+        } else {
+            setWithdrawError(result.error || (isRTL ? "فشل طلب السحب" : "Failed to request withdrawal"));
+        }
+
+        setWithdrawing(false);
+    };
 
     // Get status display
     const getStatusDisplay = (status: string) => {
@@ -256,6 +292,7 @@ export default function DoctorEarningsPage() {
                                         </p>
                                     </div>
                                     <button
+                                        onClick={() => setShowWithdrawModal(true)}
                                         className="px-4 py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-600 transition-colors flex items-center gap-2"
                                     >
                                         {Icons.bank}
@@ -346,6 +383,131 @@ export default function DoctorEarningsPage() {
                     </>
                 )}
             </div>
+
+            {/* Withdrawal Modal */}
+            {showWithdrawModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="w-full max-w-md bg-slate-900 rounded-2xl border border-white/10 p-6"
+                    >
+                        {withdrawSuccess ? (
+                            <div className="text-center py-8">
+                                <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <span className="text-green-400">{Icons.check}</span>
+                                </div>
+                                <h3 className="text-xl font-bold text-white mb-2">
+                                    {isRTL ? "تم تقديم الطلب بنجاح!" : "Request Submitted!"}
+                                </h3>
+                                <p className="text-gray-400">
+                                    {isRTL
+                                        ? "سيتم معالجة طلب السحب خلال 3-5 أيام عمل"
+                                        : "Your withdrawal will be processed within 3-5 business days"}
+                                </p>
+                            </div>
+                        ) : (
+                            <>
+                                <div className="flex items-center justify-between mb-6">
+                                    <h3 className="text-xl font-bold text-white">
+                                        {isRTL ? "طلب سحب الأرباح" : "Request Withdrawal"}
+                                    </h3>
+                                    <button
+                                        onClick={() => setShowWithdrawModal(false)}
+                                        className="text-gray-400 hover:text-white"
+                                    >
+                                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                    </button>
+                                </div>
+
+                                <div className="mb-4 p-3 bg-teal-500/10 border border-teal-500/20 rounded-lg">
+                                    <p className="text-teal-400 text-sm">
+                                        {isRTL
+                                            ? `المبلغ المتاح للسحب: ${earnings?.availableForPayout.toFixed(2)} ج.م`
+                                            : `Available for withdrawal: ${earnings?.availableForPayout.toFixed(2)} EGP`}
+                                    </p>
+                                </div>
+
+                                {withdrawError && (
+                                    <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
+                                        <p className="text-red-400 text-sm">{withdrawError}</p>
+                                    </div>
+                                )}
+
+                                <div className="space-y-4">
+                                    <div>
+                                        <label className="block text-gray-400 text-sm mb-1">
+                                            {isRTL ? "اسم البنك" : "Bank Name"}
+                                        </label>
+                                        <input
+                                            type="text"
+                                            value={bankDetails.bankName}
+                                            onChange={(e) => setBankDetails({ ...bankDetails, bankName: e.target.value })}
+                                            placeholder={isRTL ? "مثال: البنك الأهلي المصري" : "e.g., National Bank of Egypt"}
+                                            className="w-full px-4 py-3 bg-slate-800 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:border-teal-500 focus:outline-none"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-gray-400 text-sm mb-1">
+                                            {isRTL ? "رقم الحساب" : "Account Number"}
+                                        </label>
+                                        <input
+                                            type="text"
+                                            value={bankDetails.accountNumber}
+                                            onChange={(e) => setBankDetails({ ...bankDetails, accountNumber: e.target.value })}
+                                            placeholder={isRTL ? "رقم الحساب البنكي" : "Bank account number"}
+                                            className="w-full px-4 py-3 bg-slate-800 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:border-teal-500 focus:outline-none"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-gray-400 text-sm mb-1">
+                                            {isRTL ? "اسم صاحب الحساب" : "Account Holder Name"}
+                                        </label>
+                                        <input
+                                            type="text"
+                                            value={bankDetails.accountHolderName}
+                                            onChange={(e) => setBankDetails({ ...bankDetails, accountHolderName: e.target.value })}
+                                            placeholder={isRTL ? "الاسم كما يظهر في الحساب" : "Name as it appears on account"}
+                                            className="w-full px-4 py-3 bg-slate-800 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:border-teal-500 focus:outline-none"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="mt-6 flex gap-3">
+                                    <button
+                                        onClick={() => setShowWithdrawModal(false)}
+                                        className="flex-1 px-4 py-3 border border-white/10 text-white rounded-lg hover:bg-white/5 transition-colors"
+                                    >
+                                        {isRTL ? "إلغاء" : "Cancel"}
+                                    </button>
+                                    <button
+                                        onClick={handleWithdraw}
+                                        disabled={withdrawing || !bankDetails.bankName || !bankDetails.accountNumber || !bankDetails.accountHolderName}
+                                        className="flex-1 px-4 py-3 bg-teal-500 text-white rounded-lg hover:bg-teal-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                    >
+                                        {withdrawing ? (
+                                            <>
+                                                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                                <span>{isRTL ? "جاري الإرسال..." : "Submitting..."}</span>
+                                            </>
+                                        ) : (
+                                            <span>{isRTL ? "تأكيد السحب" : "Confirm Withdrawal"}</span>
+                                        )}
+                                    </button>
+                                </div>
+
+                                <p className="mt-4 text-gray-500 text-xs text-center">
+                                    {isRTL
+                                        ? "سيتم معالجة طلب السحب خلال 3-5 أيام عمل"
+                                        : "Withdrawal requests are processed within 3-5 business days"}
+                                </p>
+                            </>
+                        )}
+                    </motion.div>
+                </div>
+            )}
         </div>
     );
 }

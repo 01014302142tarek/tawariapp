@@ -1158,3 +1158,274 @@ export async function getMedicalRecordAttachmentUrl(
 ): Promise<{ url: string | null; error?: string }> {
     return getMedicalDocumentSignedUrl(attachmentPath);
 }
+
+// ============================================
+// Doctor Access Functions
+// ============================================
+
+export interface PatientHealthSummary {
+    patient: {
+        id: string;
+        full_name: string;
+        avatar_url?: string;
+        date_of_birth?: string;
+        gender?: string;
+    };
+    allergies: Allergy[];
+    conditions: Condition[];
+    medicalRecordsCount: number;
+    labResultsCount: number;
+}
+
+/**
+ * Get patient health summary for a doctor (requires active/completed appointment)
+ */
+export async function getPatientHealthSummaryForDoctor(
+    patientProfileId: string
+): Promise<{ summary: PatientHealthSummary | null; error?: string }> {
+    const supabase = await createClient();
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+        return { summary: null, error: "Not authenticated" };
+    }
+
+    // Get doctor profile
+    const { data: profileData } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("user_id", user.id)
+        .single();
+
+    const profile = profileData as { id: string } | null;
+    if (!profile) {
+        return { summary: null, error: "Profile not found" };
+    }
+
+    const { data: doctorProfileData } = await supabase
+        .from("doctor_profiles")
+        .select("id")
+        .eq("profile_id", profile.id)
+        .single();
+
+    const doctorProfile = doctorProfileData as { id: string } | null;
+    if (!doctorProfile) {
+        return { summary: null, error: "Doctor profile not found" };
+    }
+
+    // Verify doctor has an active or completed appointment with this patient
+    const { data: appointmentData } = await supabase
+        .from("appointments")
+        .select("id")
+        .eq("doctor_profile_id", doctorProfile.id)
+        .eq("patient_profile_id", patientProfileId)
+        .in("status", ["scheduled", "in_waiting_room", "in_progress", "completed"])
+        .limit(1);
+
+    if (!appointmentData || appointmentData.length === 0) {
+        return { summary: null, error: "Unauthorized - no appointment relationship" };
+    }
+
+    // Get patient profile info
+    const { data: patientData } = await supabase
+        .from("patient_profiles")
+        .select(`
+            id,
+            profiles!inner (
+                id,
+                full_name,
+                avatar_url,
+                date_of_birth,
+                gender
+            )
+        `)
+        .eq("id", patientProfileId)
+        .single();
+
+    if (!patientData) {
+        return { summary: null, error: "Patient not found" };
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const patient = patientData as any;
+
+    // Get allergies
+    const { data: allergies } = await supabase
+        .from("allergies")
+        .select("*")
+        .eq("patient_profile_id", patientProfileId)
+        .eq("is_active", true)
+        .order("severity", { ascending: false });
+
+    // Get conditions
+    const { data: conditions } = await supabase
+        .from("conditions")
+        .select("*")
+        .eq("patient_profile_id", patientProfileId)
+        .order("status", { ascending: true });
+
+    // Get record counts
+    const { count: recordsCount } = await supabase
+        .from("medical_records")
+        .select("*", { count: "exact", head: true })
+        .eq("patient_profile_id", patientProfileId)
+        .eq("is_deleted", false);
+
+    const { count: labCount } = await supabase
+        .from("lab_results")
+        .select("*", { count: "exact", head: true })
+        .eq("patient_profile_id", patientProfileId)
+        .eq("is_deleted", false);
+
+    return {
+        summary: {
+            patient: {
+                id: patientProfileId,
+                full_name: patient.profiles?.full_name || "Unknown",
+                avatar_url: patient.profiles?.avatar_url,
+                date_of_birth: patient.profiles?.date_of_birth,
+                gender: patient.profiles?.gender,
+            },
+            allergies: (allergies || []) as Allergy[],
+            conditions: (conditions || []) as Condition[],
+            medicalRecordsCount: recordsCount || 0,
+            labResultsCount: labCount || 0,
+        },
+    };
+}
+
+/**
+ * Get patient's medical records for a doctor view
+ */
+export async function getPatientMedicalRecordsForDoctor(
+    patientProfileId: string,
+    recordType?: RecordType
+): Promise<{ records: MedicalRecord[]; error?: string }> {
+    const supabase = await createClient();
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+        return { records: [], error: "Not authenticated" };
+    }
+
+    // Get doctor profile
+    const { data: profileData } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("user_id", user.id)
+        .single();
+
+    const profile = profileData as { id: string } | null;
+    if (!profile) {
+        return { records: [], error: "Profile not found" };
+    }
+
+    const { data: doctorProfileData } = await supabase
+        .from("doctor_profiles")
+        .select("id")
+        .eq("profile_id", profile.id)
+        .single();
+
+    const doctorProfile = doctorProfileData as { id: string } | null;
+    if (!doctorProfile) {
+        return { records: [], error: "Doctor profile not found" };
+    }
+
+    // Verify doctor has an active or completed appointment with this patient
+    const { data: appointmentData } = await supabase
+        .from("appointments")
+        .select("id")
+        .eq("doctor_profile_id", doctorProfile.id)
+        .eq("patient_profile_id", patientProfileId)
+        .in("status", ["scheduled", "in_waiting_room", "in_progress", "completed"])
+        .limit(1);
+
+    if (!appointmentData || appointmentData.length === 0) {
+        return { records: [], error: "Unauthorized - no appointment relationship" };
+    }
+
+    // Build query
+    let query = supabase
+        .from("medical_records")
+        .select("*")
+        .eq("patient_profile_id", patientProfileId)
+        .eq("is_deleted", false)
+        .order("date_recorded", { ascending: false, nullsFirst: false });
+
+    if (recordType) {
+        query = query.eq("record_type", recordType);
+    }
+
+    const { data, error } = await query;
+
+    if (error) {
+        console.error("Error fetching patient records:", error);
+        return { records: [], error: error.message };
+    }
+
+    return { records: (data || []) as MedicalRecord[] };
+}
+
+/**
+ * Get patient's lab results for a doctor view
+ */
+export async function getPatientLabResultsForDoctor(
+    patientProfileId: string
+): Promise<{ results: LabResult[]; error?: string }> {
+    const supabase = await createClient();
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+        return { results: [], error: "Not authenticated" };
+    }
+
+    // Get doctor profile
+    const { data: profileData } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("user_id", user.id)
+        .single();
+
+    const profile = profileData as { id: string } | null;
+    if (!profile) {
+        return { results: [], error: "Profile not found" };
+    }
+
+    const { data: doctorProfileData } = await supabase
+        .from("doctor_profiles")
+        .select("id")
+        .eq("profile_id", profile.id)
+        .single();
+
+    const doctorProfile = doctorProfileData as { id: string } | null;
+    if (!doctorProfile) {
+        return { results: [], error: "Doctor profile not found" };
+    }
+
+    // Verify doctor has an active or completed appointment with this patient
+    const { data: appointmentData } = await supabase
+        .from("appointments")
+        .select("id")
+        .eq("doctor_profile_id", doctorProfile.id)
+        .eq("patient_profile_id", patientProfileId)
+        .in("status", ["scheduled", "in_waiting_room", "in_progress", "completed"])
+        .limit(1);
+
+    if (!appointmentData || appointmentData.length === 0) {
+        return { results: [], error: "Unauthorized - no appointment relationship" };
+    }
+
+    const { data, error } = await supabase
+        .from("lab_results")
+        .select("*")
+        .eq("patient_profile_id", patientProfileId)
+        .eq("is_deleted", false)
+        .order("test_date", { ascending: false, nullsFirst: false });
+
+    if (error) {
+        console.error("Error fetching patient lab results:", error);
+        return { results: [], error: error.message };
+    }
+
+    return { results: (data || []) as LabResult[] };
+}

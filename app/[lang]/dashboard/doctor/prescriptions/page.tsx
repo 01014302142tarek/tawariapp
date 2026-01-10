@@ -13,6 +13,8 @@ import {
     createPrescription,
     cancelPrescription,
     getDoctorPatients,
+    getPendingRenewalRequests,
+    respondToRenewalRequest,
     type PrescriptionWithDetails,
     type PrescriptionMedication,
     type PatientForPrescription,
@@ -80,10 +82,13 @@ export default function PrescriptionsPage() {
 
     const [prescriptions, setPrescriptions] = useState<PrescriptionWithDetails[]>([]);
     const [patients, setPatients] = useState<PatientForPrescription[]>([]);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const [renewalRequests, setRenewalRequests] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
     const [actionLoading, setActionLoading] = useState<string | null>(null);
+    const [activeTab, setActiveTab] = useState<"prescriptions" | "renewals">("prescriptions");
 
     // Create form state
     const [selectedPatient, setSelectedPatient] = useState<string>("");
@@ -95,9 +100,10 @@ export default function PrescriptionsPage() {
 
     const loadData = useCallback(async () => {
         setLoading(true);
-        const [prescriptionsResult, patientsResult] = await Promise.all([
+        const [prescriptionsResult, patientsResult, renewalsResult] = await Promise.all([
             getDoctorPrescriptions(),
             getDoctorPatients(),
+            getPendingRenewalRequests(),
         ]);
 
         if (prescriptionsResult.prescriptions) {
@@ -105,6 +111,9 @@ export default function PrescriptionsPage() {
         }
         if (patientsResult.patients) {
             setPatients(patientsResult.patients);
+        }
+        if (renewalsResult.requests) {
+            setRenewalRequests(renewalsResult.requests);
         }
         setLoading(false);
     }, []);
@@ -180,9 +189,34 @@ export default function PrescriptionsPage() {
         });
     };
 
+    const handleApproveRenewal = async (requestId: string) => {
+        setActionLoading(requestId);
+        await respondToRenewalRequest(requestId, true);
+        await loadData();
+        setActionLoading(null);
+    };
+
+    const handleDenyRenewal = (requestId: string) => {
+        showConfirm(
+            isRTL ? "هل أنت متأكد من رفض طلب التجديد؟" : "Are you sure you want to deny this renewal request?",
+            async () => {
+                setActionLoading(requestId);
+                await respondToRenewalRequest(requestId, false, "Request denied by doctor");
+                await loadData();
+                setActionLoading(null);
+            }
+        );
+    };
+
     const filteredPrescriptions = prescriptions.filter(rx =>
         rx.patient?.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         rx.medication_name.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const filteredRenewals = renewalRequests.filter((req: any) =>
+        req.patient_profiles?.profiles?.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        req.prescriptions?.medication_name?.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
     if (loading) {
@@ -217,6 +251,37 @@ export default function PrescriptionsPage() {
                 </button>
             </div>
 
+            {/* Tabs */}
+            <div className="flex gap-2 mb-6">
+                <button
+                    onClick={() => setActiveTab("prescriptions")}
+                    className={cn(
+                        "px-4 py-2.5 rounded-xl text-sm font-medium transition-all border",
+                        activeTab === "prescriptions"
+                            ? "bg-teal-500 text-white border-teal-500 shadow-lg shadow-teal-500/20"
+                            : cn("border-transparent", isDark ? "bg-white/5 text-gray-400 hover:bg-white/10" : "bg-gray-100 text-gray-600 hover:bg-gray-200")
+                    )}
+                >
+                    {isRTL ? "الوصفات" : "Prescriptions"}
+                </button>
+                <button
+                    onClick={() => setActiveTab("renewals")}
+                    className={cn(
+                        "px-4 py-2.5 rounded-xl text-sm font-medium transition-all border relative",
+                        activeTab === "renewals"
+                            ? "bg-teal-500 text-white border-teal-500 shadow-lg shadow-teal-500/20"
+                            : cn("border-transparent", isDark ? "bg-white/5 text-gray-400 hover:bg-white/10" : "bg-gray-100 text-gray-600 hover:bg-gray-200")
+                    )}
+                >
+                    {isRTL ? "طلبات التجديد" : "Renewal Requests"}
+                    {renewalRequests.length > 0 && (
+                        <span className="absolute -top-1 -right-1 w-5 h-5 bg-amber-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
+                            {renewalRequests.length}
+                        </span>
+                    )}
+                </button>
+            </div>
+
             {/* Search */}
             <div className="relative mb-6">
                 <span className={cn("absolute top-1/2 -translate-y-1/2", isRTL ? "right-4" : "left-4", textMuted)}>
@@ -235,7 +300,97 @@ export default function PrescriptionsPage() {
                 />
             </div>
 
+            {/* Renewal Requests Tab */}
+            {activeTab === "renewals" && (
+                <>
+                    {filteredRenewals.length === 0 ? (
+                        <GlowingCard glowColor="teal" className="p-12 text-center" isDark={isDark}>
+                            <div className={cn("w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4", isDark ? "bg-slate-900" : "bg-gray-100", textMuted)}>
+                                <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+                                </svg>
+                            </div>
+                            <h3 className={cn("text-lg font-medium mb-2", textPrimary)}>
+                                {isRTL ? "لا توجد طلبات تجديد" : "No renewal requests"}
+                            </h3>
+                            <p className={textMuted}>
+                                {isRTL ? "ستظهر طلبات التجديد من المرضى هنا" : "Patient renewal requests will appear here"}
+                            </p>
+                        </GlowingCard>
+                    ) : (
+                        <GlowingCard glowColor="teal" className="p-0 overflow-hidden" isDark={isDark}>
+                            <div className={cn("divide-y", isDark ? "divide-white/5" : "divide-gray-100")}>
+                                {filteredRenewals.map((request, idx) => (
+                                    <motion.div
+                                        key={request.id}
+                                        initial={{ opacity: 0, y: 20 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ delay: idx * 0.05 }}
+                                        className={cn("p-4 md:p-5 transition-colors", cardHover)}
+                                    >
+                                        <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                                            {/* Patient Info */}
+                                            <div className="flex items-center gap-3 flex-1">
+                                                <div className="relative w-11 h-11 rounded-full overflow-hidden border-2 border-amber-500/30 flex-shrink-0">
+                                                    {request.patient_profiles?.profiles?.avatar_url ? (
+                                                        <Image src={request.patient_profiles.profiles.avatar_url} alt={request.patient_profiles.profiles.full_name} fill className="object-cover" unoptimized />
+                                                    ) : (
+                                                        <div className={cn("w-full h-full flex items-center justify-center text-lg font-bold", isDark ? "bg-amber-500/10 text-amber-400" : "bg-amber-50 text-amber-600")}>
+                                                            {request.patient_profiles?.profiles?.full_name?.charAt(0) || "?"}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <p className={cn("font-semibold truncate", textPrimary)}>
+                                                        {request.patient_profiles?.profiles?.full_name || (isRTL ? "مريض" : "Patient")}
+                                                    </p>
+                                                    <p className={cn("text-sm truncate", textMuted)}>
+                                                        {request.prescriptions?.medication_name} {request.prescriptions?.dosage && `- ${request.prescriptions.dosage}`}
+                                                    </p>
+                                                    {request.request_notes && (
+                                                        <p className={cn("text-xs mt-1 italic", textMuted)}>
+                                                            &ldquo;{request.request_notes}&rdquo;
+                                                        </p>
+                                                    )}
+                                                </div>
+                                            </div>
+
+                                            {/* Actions */}
+                                            <div className="flex items-center gap-2 flex-shrink-0">
+                                                {actionLoading === request.id ? (
+                                                    <div className="animate-spin w-5 h-5 border-2 border-teal-500 border-t-transparent rounded-full" />
+                                                ) : (
+                                                    <>
+                                                        <button
+                                                            onClick={() => handleApproveRenewal(request.id)}
+                                                            className="px-4 py-2 rounded-lg bg-green-500 text-white text-sm font-medium hover:bg-green-600 transition-colors"
+                                                        >
+                                                            {isRTL ? "موافقة" : "Approve"}
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleDenyRenewal(request.id)}
+                                                            className={cn(
+                                                                "px-4 py-2 rounded-lg text-sm font-medium transition-colors",
+                                                                isDark ? "text-red-400 hover:bg-red-500/10" : "text-red-500 hover:bg-red-50"
+                                                            )}
+                                                        >
+                                                            {isRTL ? "رفض" : "Deny"}
+                                                        </button>
+                                                    </>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </motion.div>
+                                ))}
+                            </div>
+                        </GlowingCard>
+                    )}
+                </>
+            )}
+
             {/* Prescriptions List */}
+            {activeTab === "prescriptions" && (
+            <>
             {filteredPrescriptions.length === 0 ? (
                 <GlowingCard glowColor="teal" className="p-12 text-center" isDark={isDark}>
                     <div className={cn("w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4", isDark ? "bg-slate-900" : "bg-gray-100", textMuted)}>
@@ -329,6 +484,8 @@ export default function PrescriptionsPage() {
                         </motion.div>
                     ))}
                 </div>
+            )}
+            </>
             )}
 
             {/* Create Prescription Modal */}

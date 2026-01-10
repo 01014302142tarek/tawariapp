@@ -1103,3 +1103,380 @@ export async function getAppointmentById(
 
     return { appointment };
 }
+
+// ============================================
+// Doctor Profile (for patient viewing)
+// ============================================
+
+export interface DoctorProfileDetail extends DoctorForBooking {
+    languages?: string[];
+    education?: string;
+    certifications?: string[];
+    hospital?: string;
+    working_hours_summary?: string;
+    reviews_preview: Array<{
+        id: string;
+        rating: number;
+        comment?: string;
+        patient_name: string;
+        created_at: string;
+    }>;
+}
+
+/**
+ * Get detailed doctor profile for patients to view before booking
+ */
+export async function getDoctorById(
+    doctorId: string
+): Promise<{ doctor: DoctorProfileDetail | null; error?: string }> {
+    const supabase = await createClient();
+
+    // Get doctor profile with all details
+    const { data, error } = await supabase
+        .from("doctor_profiles")
+        .select(`
+            id,
+            profile_id,
+            bio,
+            years_of_experience,
+            consultation_fee,
+            rating_average,
+            rating_count,
+            is_available_now,
+            languages,
+            education,
+            hospital,
+            profiles!inner (
+                id,
+                full_name,
+                avatar_url
+            ),
+            doctor_specializations (
+                specializations (
+                    name_en,
+                    name_ar
+                )
+            )
+        `)
+        .eq("id", doctorId)
+        .eq("verification_status", "verified")
+        .single();
+
+    if (error || !data) {
+        return { doctor: null, error: error?.message || "Doctor not found" };
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const doc = data as any;
+
+    // Get recent reviews (top 5)
+    const { data: reviewsData } = await supabase
+        .from("reviews")
+        .select(`
+            id,
+            rating,
+            comment,
+            created_at,
+            patient_profiles!inner (
+                profiles!inner (
+                    full_name
+                )
+            )
+        `)
+        .eq("doctor_profile_id", doctorId)
+        .eq("is_visible", true)
+        .order("created_at", { ascending: false })
+        .limit(5);
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const reviews = (reviewsData || []).map((r: any) => ({
+        id: r.id,
+        rating: r.rating,
+        comment: r.comment,
+        patient_name: r.patient_profiles?.profiles?.full_name || "Patient",
+        created_at: r.created_at,
+    }));
+
+    // Build specializations array
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const specializations = (doc.doctor_specializations || []).map((ds: any) =>
+        ds.specializations?.name_en || ""
+    ).filter(Boolean);
+
+    return {
+        doctor: {
+            id: doc.id,
+            profile_id: doc.profile_id,
+            full_name: doc.profiles?.full_name || "",
+            avatar_url: doc.profiles?.avatar_url,
+            bio: doc.bio,
+            years_of_experience: doc.years_of_experience,
+            consultation_fee: doc.consultation_fee,
+            rating_average: doc.rating_average,
+            rating_count: doc.rating_count,
+            is_available_now: doc.is_available_now,
+            specializations,
+            languages: doc.languages || [],
+            education: doc.education,
+            hospital: doc.hospital,
+            reviews_preview: reviews,
+        },
+    };
+}
+
+// ============================================
+// Doctor's Patients
+// ============================================
+
+export interface DoctorPatient {
+    id: string;
+    profile_id: string;
+    full_name: string;
+    avatar_url?: string;
+    age?: number;
+    last_visit?: string;
+    last_condition?: string;
+    total_visits: number;
+    status: "active" | "inactive";
+}
+
+/**
+ * Get list of patients who have had appointments with this doctor
+ * Includes last visit date, condition, and visit count
+ */
+export async function getDoctorPatientsWithDetails(): Promise<{
+    patients: DoctorPatient[];
+    error?: string;
+}> {
+    const supabase = await createClient();
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+        return { patients: [], error: "Not authenticated" };
+    }
+
+    // Get doctor profile
+    const { data: profileData } = await supabase
+        .from("profiles")
+        .select("id, role")
+        .eq("user_id", user.id)
+        .single();
+
+    const profile = profileData as { id: string; role: string } | null;
+    if (!profile || profile.role !== "doctor") {
+        return { patients: [], error: "Not a doctor profile" };
+    }
+
+    const { data: doctorProfileData } = await supabase
+        .from("doctor_profiles")
+        .select("id")
+        .eq("profile_id", profile.id)
+        .single();
+
+    const doctorProfile = doctorProfileData as { id: string } | null;
+    if (!doctorProfile) {
+        return { patients: [], error: "Doctor profile not found" };
+    }
+
+    // Get all appointments for this doctor with patient details
+    const { data, error } = await supabase
+        .from("appointments")
+        .select(`
+            id,
+            scheduled_start,
+            status,
+            patient_notes,
+            patient_profiles!inner (
+                id,
+                profile_id,
+                date_of_birth,
+                profiles!inner (
+                    id,
+                    full_name,
+                    avatar_url
+                )
+            )
+        `)
+        .eq("doctor_profile_id", doctorProfile.id)
+        .in("status", ["completed", "in_progress", "scheduled", "confirmed"])
+        .order("scheduled_start", { ascending: false });
+
+    if (error) {
+        console.error("Error fetching doctor's patients:", error);
+        return { patients: [], error: error.message };
+    }
+
+    // Process and deduplicate patients, keeping track of visit counts and last visit
+    const patientMap = new Map<string, DoctorPatient>();
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (data || []).forEach((apt: any) => {
+        const pp = apt.patient_profiles;
+        const patientId = pp.id;
+
+        // Calculate age from date of birth
+        let age: number | undefined;
+        if (pp.date_of_birth) {
+            const birthDate = new Date(pp.date_of_birth);
+            const today = new Date();
+            age = today.getFullYear() - birthDate.getFullYear();
+            const monthDiff = today.getMonth() - birthDate.getMonth();
+            if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+                age--;
+            }
+        }
+
+        const existing = patientMap.get(patientId);
+        if (!existing) {
+            // Determine if patient is active (had appointment in last 30 days)
+            const lastVisitDate = new Date(apt.scheduled_start);
+            const isActive = lastVisitDate >= thirtyDaysAgo;
+
+            patientMap.set(patientId, {
+                id: patientId,
+                profile_id: pp.profile_id,
+                full_name: pp.profiles.full_name,
+                avatar_url: pp.profiles.avatar_url,
+                age,
+                last_visit: apt.scheduled_start,
+                last_condition: apt.patient_notes || undefined,
+                total_visits: 1,
+                status: isActive ? "active" : "inactive",
+            });
+        } else {
+            // Update visit count
+            existing.total_visits += 1;
+        }
+    });
+
+    return { patients: Array.from(patientMap.values()) };
+}
+
+// ============================================
+// Consultation History
+// ============================================
+
+export interface ConsultationHistoryItem {
+    id: string;
+    appointment_id: string;
+    patient_name: string;
+    patient_avatar?: string;
+    consultation_type?: string;
+    duration_minutes?: number;
+    scheduled_start: string;
+    actual_start?: string;
+    actual_end?: string;
+    status: AppointmentStatus;
+}
+
+/**
+ * Get consultation history for a doctor
+ * Returns both active/in-progress and completed consultations
+ */
+export async function getDoctorConsultations(options?: {
+    status?: "active" | "history" | "all";
+    limit?: number;
+}): Promise<{
+    active: ConsultationHistoryItem[];
+    history: ConsultationHistoryItem[];
+    error?: string;
+}> {
+    const supabase = await createClient();
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+        return { active: [], history: [], error: "Not authenticated" };
+    }
+
+    // Get doctor profile
+    const { data: profileData } = await supabase
+        .from("profiles")
+        .select("id, role")
+        .eq("user_id", user.id)
+        .single();
+
+    const profile = profileData as { id: string; role: string } | null;
+    if (!profile || profile.role !== "doctor") {
+        return { active: [], history: [], error: "Not a doctor profile" };
+    }
+
+    const { data: doctorProfileData } = await supabase
+        .from("doctor_profiles")
+        .select("id")
+        .eq("profile_id", profile.id)
+        .single();
+
+    const doctorProfile = doctorProfileData as { id: string } | null;
+    if (!doctorProfile) {
+        return { active: [], history: [], error: "Doctor profile not found" };
+    }
+
+    // Get appointments with patient details
+    let query = supabase
+        .from("appointments")
+        .select(`
+            id,
+            scheduled_start,
+            actual_start,
+            actual_end,
+            status,
+            patient_notes,
+            patient_profiles!inner (
+                id,
+                profiles!inner (
+                    full_name,
+                    avatar_url
+                )
+            )
+        `)
+        .eq("doctor_profile_id", doctorProfile.id)
+        .order("scheduled_start", { ascending: false });
+
+    if (options?.limit) {
+        query = query.limit(options.limit);
+    }
+
+    const { data, error } = await query;
+
+    if (error) {
+        console.error("Error fetching consultations:", error);
+        return { active: [], history: [], error: error.message };
+    }
+
+    const active: ConsultationHistoryItem[] = [];
+    const history: ConsultationHistoryItem[] = [];
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (data || []).forEach((apt: any) => {
+        // Calculate duration in minutes
+        let durationMinutes: number | undefined;
+        if (apt.actual_start && apt.actual_end) {
+            const start = new Date(apt.actual_start);
+            const end = new Date(apt.actual_end);
+            durationMinutes = Math.round((end.getTime() - start.getTime()) / 60000);
+        }
+
+        const item: ConsultationHistoryItem = {
+            id: apt.id,
+            appointment_id: apt.id,
+            patient_name: apt.patient_profiles?.profiles?.full_name || "Unknown",
+            patient_avatar: apt.patient_profiles?.profiles?.avatar_url,
+            consultation_type: apt.patient_notes || undefined,
+            duration_minutes: durationMinutes,
+            scheduled_start: apt.scheduled_start,
+            actual_start: apt.actual_start,
+            actual_end: apt.actual_end,
+            status: apt.status,
+        };
+
+        if (apt.status === "in_progress" || apt.status === "in_waiting_room") {
+            active.push(item);
+        } else if (apt.status === "completed") {
+            history.push(item);
+        }
+    });
+
+    return { active, history };
+}

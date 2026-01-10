@@ -828,3 +828,207 @@ export async function getDoctorEarnings(): Promise<{
         },
     };
 }
+
+/**
+ * Request a payout for available earnings
+ */
+export async function requestPayout(bankDetails: {
+    bankName: string;
+    accountNumber: string;
+    accountHolderName: string;
+}): Promise<{
+    success: boolean;
+    payoutId?: string;
+    error?: string;
+}> {
+    const supabase = await createClient();
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+        return { success: false, error: "Not authenticated" };
+    }
+
+    // Validate bank details
+    if (!bankDetails.bankName || bankDetails.bankName.trim().length < 2) {
+        return { success: false, error: "Bank name is required" };
+    }
+    if (!bankDetails.accountNumber || bankDetails.accountNumber.trim().length < 10) {
+        return { success: false, error: "Valid account number is required" };
+    }
+    if (!bankDetails.accountHolderName || bankDetails.accountHolderName.trim().length < 2) {
+        return { success: false, error: "Account holder name is required" };
+    }
+
+    // Get doctor profile
+    const { data: profileData } = await supabase
+        .from("profiles")
+        .select("id, role")
+        .eq("user_id", user.id)
+        .single();
+
+    const profile = profileData as { id: string; role: string } | null;
+    if (!profile || profile.role !== "doctor") {
+        return { success: false, error: "Only doctors can request payouts" };
+    }
+
+    const { data: doctorProfileData } = await supabase
+        .from("doctor_profiles")
+        .select("id")
+        .eq("profile_id", profile.id)
+        .single();
+
+    if (!doctorProfileData) {
+        return { success: false, error: "Doctor profile not found" };
+    }
+
+    const doctorProfile = doctorProfileData as { id: string };
+
+    // Get available earnings
+    const { data: availableEarnings } = await supabase
+        .from("doctor_earnings")
+        .select("id, net_amount")
+        .eq("doctor_profile_id", doctorProfile.id)
+        .eq("status", "available");
+
+    const earnings = (availableEarnings || []) as Array<{ id: string; net_amount: number }>;
+
+    if (earnings.length === 0) {
+        return { success: false, error: "No available earnings for payout" };
+    }
+
+    // Calculate total available amount
+    const totalAmount = earnings.reduce((sum, e) => sum + e.net_amount, 0);
+
+    // Minimum payout threshold (100 EGP)
+    const MIN_PAYOUT = 100;
+    if (totalAmount < MIN_PAYOUT) {
+        return { success: false, error: `Minimum payout amount is ${MIN_PAYOUT} EGP` };
+    }
+
+    // Check for pending payout requests
+    const { data: pendingPayout } = await supabase
+        .from("doctor_payouts")
+        .select("id")
+        .eq("doctor_profile_id", doctorProfile.id)
+        .in("status", ["pending", "processing"])
+        .single();
+
+    if (pendingPayout) {
+        return { success: false, error: "You already have a pending payout request" };
+    }
+
+    // Create payout request
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: payout, error: payoutError } = await (supabase as any)
+        .from("doctor_payouts")
+        .insert({
+            doctor_profile_id: doctorProfile.id,
+            amount: Math.round(totalAmount * 100) / 100,
+            currency: "EGP",
+            status: "pending",
+            bank_account_details: {
+                bank_name: bankDetails.bankName.trim(),
+                account_number: bankDetails.accountNumber.trim(),
+                account_holder_name: bankDetails.accountHolderName.trim(),
+            },
+        })
+        .select("id")
+        .single();
+
+    if (payoutError || !payout) {
+        return { success: false, error: "Failed to create payout request" };
+    }
+
+    // Update earnings status to 'processing'
+    const earningIds = earnings.map(e => e.id);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (supabase as any)
+        .from("doctor_earnings")
+        .update({ status: "processing" })
+        .in("id", earningIds);
+
+    return {
+        success: true,
+        payoutId: payout.id,
+    };
+}
+
+/**
+ * Get doctor's payout history
+ */
+export async function getDoctorPayouts(): Promise<{
+    success: boolean;
+    payouts?: Array<{
+        id: string;
+        amount: number;
+        status: string;
+        createdAt: string;
+        processedAt?: string;
+        referenceNumber?: string;
+    }>;
+    error?: string;
+}> {
+    const supabase = await createClient();
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+        return { success: false, error: "Not authenticated" };
+    }
+
+    // Get doctor profile
+    const { data: profileData } = await supabase
+        .from("profiles")
+        .select("id, role")
+        .eq("user_id", user.id)
+        .single();
+
+    const profile = profileData as { id: string; role: string } | null;
+    if (!profile || profile.role !== "doctor") {
+        return { success: false, error: "Only doctors can view payouts" };
+    }
+
+    const { data: doctorProfileData } = await supabase
+        .from("doctor_profiles")
+        .select("id")
+        .eq("profile_id", profile.id)
+        .single();
+
+    if (!doctorProfileData) {
+        return { success: false, error: "Doctor profile not found" };
+    }
+
+    const doctorProfile = doctorProfileData as { id: string };
+
+    // Get payouts
+    const { data: payouts, error } = await supabase
+        .from("doctor_payouts")
+        .select("id, amount, status, created_at, processed_at, reference_number")
+        .eq("doctor_profile_id", doctorProfile.id)
+        .order("created_at", { ascending: false })
+        .limit(20);
+
+    if (error) {
+        return { success: false, error: "Failed to fetch payouts" };
+    }
+
+    type PayoutRow = {
+        id: string;
+        amount: number;
+        status: string;
+        created_at: string;
+        processed_at: string | null;
+        reference_number: string | null;
+    };
+
+    return {
+        success: true,
+        payouts: ((payouts || []) as PayoutRow[]).map(p => ({
+            id: p.id,
+            amount: p.amount,
+            status: p.status,
+            createdAt: p.created_at,
+            processedAt: p.processed_at || undefined,
+            referenceNumber: p.reference_number || undefined,
+        })),
+    };
+}
