@@ -25,8 +25,8 @@ export function OrganizationJsonLd() {
         "@type": "MedicalOrganization",
         name: "TawariApp",
         alternateName: "تواري",
-        url: "https://tawari.app",
-        logo: "https://tawari.app/logo.png",
+        url: "https://www.tawariapp.com",
+        logo: "https://www.tawariapp.com/logo.png",
         description:
             "Connect with licensed doctors in Egypt for video consultations. Get medical advice, prescriptions, and follow-up care from the comfort of your home.",
         address: {
@@ -53,7 +53,7 @@ export function MedicalServiceJsonLd() {
         name: "TawariApp",
         description:
             "Telemedicine platform connecting patients with licensed doctors in Egypt for online video consultations.",
-        url: "https://tawari.app",
+        url: "https://www.tawariapp.com",
         priceRange: "$$",
         medicalSpecialty: [
             "GeneralPractice",
@@ -85,13 +85,13 @@ export function WebsiteJsonLd() {
         "@context": "https://schema.org",
         "@type": "WebSite",
         name: "TawariApp",
-        url: "https://tawari.app",
+        url: "https://www.tawariapp.com",
         potentialAction: {
             "@type": "SearchAction",
             target: {
                 "@type": "EntryPoint",
                 urlTemplate:
-                    "https://tawari.app/en/dashboard/patient/doctors?search={search_term_string}",
+                    "https://www.tawariapp.com/en/dashboard/patient/doctors?search={search_term_string}",
             },
             "query-input": "required name=search_term_string",
         },
@@ -203,14 +203,14 @@ export function LocalBusinessJsonLd() {
     const data = {
         "@context": "https://schema.org",
         "@type": "MedicalBusiness",
-        "@id": "https://tawari.app/#organization",
+        "@id": "https://www.tawariapp.com/#organization",
         name: "TawariApp",
         alternateName: "تواري",
         description:
             "Egypt's leading telemedicine platform connecting patients with licensed doctors for video consultations.",
-        url: "https://tawari.app",
-        logo: "https://tawari.app/logo.png",
-        image: "https://tawari.app/og-image.png",
+        url: "https://www.tawariapp.com",
+        logo: "https://www.tawariapp.com/logo.png",
+        image: "https://www.tawariapp.com/og-image.png",
         priceRange: "$$",
         currenciesAccepted: "EGP",
         paymentAccepted: "Credit Card, Debit Card, Vodafone Cash",

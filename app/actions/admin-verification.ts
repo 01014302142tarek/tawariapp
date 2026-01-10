@@ -1,6 +1,13 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import {
+    sendEmail,
+    getDoctorApprovalEmailHtml,
+    getDoctorApprovalEmailText,
+    getDoctorRejectionEmailHtml,
+    getDoctorRejectionEmailText,
+} from "@/lib/email/service";
 
 interface PendingDoctor {
     id: string;
@@ -330,6 +337,27 @@ export async function approveDoctor(doctorProfileId: string): Promise<{ success:
         return { success: false, error: "Unauthorized" };
     }
 
+    // Get doctor info before updating
+    const { data: doctorProfileData } = await supabase
+        .from("doctor_profiles")
+        .select("profile_id")
+        .eq("id", doctorProfileId)
+        .single();
+
+    const doctorProfile = doctorProfileData as { profile_id: string } | null;
+    if (!doctorProfile) {
+        return { success: false, error: "Doctor profile not found" };
+    }
+
+    // Get doctor's profile for name
+    const { data: profileData } = await supabase
+        .from("profiles")
+        .select("full_name, user_id")
+        .eq("id", doctorProfile.profile_id)
+        .single();
+
+    const profile = profileData as { full_name: string; user_id: string } | null;
+
     // Update doctor profile
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { error } = await (supabase as any)
@@ -346,7 +374,26 @@ export async function approveDoctor(doctorProfileId: string): Promise<{ success:
         return { success: false, error: error.message };
     }
 
-    // TODO: Send notification email to doctor
+    // Send notification email to doctor
+    if (profile) {
+        let doctorEmail = "";
+        try {
+            const { data: { user: doctorUser } } = await supabase.auth.admin.getUserById(profile.user_id);
+            doctorEmail = doctorUser?.email || "";
+        } catch {
+            console.warn("Could not fetch doctor email");
+        }
+
+        if (doctorEmail) {
+            const doctorName = profile.full_name || "Doctor";
+            await sendEmail({
+                to: doctorEmail,
+                subject: "Your Tawari Account is Verified! | تم اعتماد حسابك في تواري",
+                html: getDoctorApprovalEmailHtml(doctorName, "en"),
+                text: getDoctorApprovalEmailText(doctorName, "en"),
+            });
+        }
+    }
 
     return { success: true };
 }
@@ -377,6 +424,27 @@ export async function rejectDoctor(
         return { success: false, error: "Unauthorized" };
     }
 
+    // Get doctor info before updating
+    const { data: doctorProfileData } = await supabase
+        .from("doctor_profiles")
+        .select("profile_id")
+        .eq("id", doctorProfileId)
+        .single();
+
+    const doctorProfile = doctorProfileData as { profile_id: string } | null;
+    if (!doctorProfile) {
+        return { success: false, error: "Doctor profile not found" };
+    }
+
+    // Get doctor's profile for name
+    const { data: profileData } = await supabase
+        .from("profiles")
+        .select("full_name, user_id")
+        .eq("id", doctorProfile.profile_id)
+        .single();
+
+    const profile = profileData as { full_name: string; user_id: string } | null;
+
     // Update doctor profile
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { error } = await (supabase as any)
@@ -394,7 +462,26 @@ export async function rejectDoctor(
         return { success: false, error: error.message };
     }
 
-    // TODO: Send notification email to doctor with rejection reason
+    // Send notification email to doctor with rejection reason
+    if (profile) {
+        let doctorEmail = "";
+        try {
+            const { data: { user: doctorUser } } = await supabase.auth.admin.getUserById(profile.user_id);
+            doctorEmail = doctorUser?.email || "";
+        } catch {
+            console.warn("Could not fetch doctor email");
+        }
+
+        if (doctorEmail) {
+            const doctorName = profile.full_name || "Doctor";
+            await sendEmail({
+                to: doctorEmail,
+                subject: "Update on Your Tawari Application | تحديث بخصوص طلبك في تواري",
+                html: getDoctorRejectionEmailHtml(doctorName, reason, "en"),
+                text: getDoctorRejectionEmailText(doctorName, reason, "en"),
+            });
+        }
+    }
 
     return { success: true };
 }

@@ -6,7 +6,7 @@
 export const siteConfig = {
     name: "TawariApp",
     nameAr: "تواري",
-    url: process.env.NEXT_PUBLIC_SITE_URL || "https://tawari.app",
+    url: process.env.NEXT_PUBLIC_SITE_URL || "https://www.tawariapp.com",
     description: {
         en: "Connect with licensed doctors in Egypt for video consultations. Get medical advice, prescriptions, and follow-up care from the comfort of your home.",
         ar: "تواصل مع أطباء مرخصين في مصر للاستشارات عبر الفيديو. احصل على المشورة الطبية والوصفات الطبية ومتابعة الرعاية من راحة منزلك.",

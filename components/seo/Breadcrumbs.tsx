@@ -21,7 +21,7 @@ export function Breadcrumbs({ items, className = "" }: BreadcrumbsProps) {
     const { theme } = useGlobalTheme();
     const isDark = theme === "dark";
 
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://tawari.app";
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.tawariapp.com";
 
     // Generate JSON-LD structured data
     const structuredData = {
