@@ -222,7 +222,7 @@ export async function initiateAppointmentPayment(
     const billingData: PaymobBillingData = {
         first_name: nameParts[0] || "Patient",
         last_name: nameParts.slice(1).join(" ") || "User",
-        email: user.email || "patient@tawari.app",
+        email: user.email || "patient@tawariapp.com",
         phone_number: phoneNumber,
         city: "Cairo",
         country: "EG",

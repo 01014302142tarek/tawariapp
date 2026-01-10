@@ -38,7 +38,7 @@ export async function sendEmail(options: EmailOptions): Promise<EmailResult> {
     // Example with Resend:
     // const resend = new Resend(process.env.RESEND_API_KEY);
     // const { data, error } = await resend.emails.send({
-    //     from: 'Tawari <noreply@tawari.app>',
+    //     from: 'Tawari <noreply@www.tawariapp.com>',
     //     to: options.to,
     //     subject: options.subject,
     //     html: options.html,
@@ -86,7 +86,7 @@ export function getDoctorApprovalEmailHtml(doctorName: string, language: "en" | 
                 <li>إدارة ملفك الشخصي والأرباح</li>
             </ul>
             <p style="text-align: center;">
-                <a href="https://tawari.app/ar/login" class="button">تسجيل الدخول الآن</a>
+                <a href="https://www.tawariapp.com/ar/login" class="button">تسجيل الدخول الآن</a>
             </p>
             <p>شكراً لانضمامك إلى تواري!</p>
         </div>
@@ -130,7 +130,7 @@ export function getDoctorApprovalEmailHtml(doctorName: string, language: "en" | 
                 <li>Manage your profile and earnings</li>
             </ul>
             <p style="text-align: center;">
-                <a href="https://tawari.app/en/login" class="button">Login Now</a>
+                <a href="https://www.tawariapp.com/en/login" class="button">Login Now</a>
             </p>
             <p>Thank you for joining Tawari!</p>
         </div>
@@ -182,7 +182,7 @@ export function getDoctorRejectionEmailHtml(
             </div>
             <p>يمكنك تحديث معلوماتك وإعادة التقديم. إذا كانت لديك أي أسئلة، يرجى التواصل مع فريق الدعم.</p>
             <p style="text-align: center;">
-                <a href="https://tawari.app/ar/contact" class="button">تواصل معنا</a>
+                <a href="https://www.tawariapp.com/ar/contact" class="button">تواصل معنا</a>
             </p>
         </div>
         <div class="footer">
@@ -224,7 +224,7 @@ export function getDoctorRejectionEmailHtml(
             </div>
             <p>You can update your information and reapply. If you have any questions, please contact our support team.</p>
             <p style="text-align: center;">
-                <a href="https://tawari.app/en/contact" class="button">Contact Us</a>
+                <a href="https://www.tawariapp.com/en/contact" class="button">Contact Us</a>
             </p>
         </div>
         <div class="footer">
@@ -255,7 +255,7 @@ export function getDoctorApprovalEmailText(doctorName: string, language: "en" | 
 - إجراء استشارات فيديو مع المرضى
 - إدارة ملفك الشخصي والأرباح
 
-قم بتسجيل الدخول الآن: https://tawari.app/ar/login
+قم بتسجيل الدخول الآن: https://www.tawariapp.com/ar/login
 
 شكراً لانضمامك إلى تواري!
 
@@ -276,7 +276,7 @@ You can now:
 - Conduct video consultations
 - Manage your profile and earnings
 
-Login now: https://tawari.app/en/login
+Login now: https://www.tawariapp.com/en/login
 
 Thank you for joining Tawari!
 
@@ -304,7 +304,7 @@ export function getDoctorRejectionEmailText(
 
 يمكنك تحديث معلوماتك وإعادة التقديم. إذا كانت لديك أي أسئلة، يرجى التواصل مع فريق الدعم.
 
-تواصل معنا: https://tawari.app/ar/contact
+تواصل معنا: https://www.tawariapp.com/ar/contact
 
 فريق تواري
         `.trim();
@@ -321,7 +321,7 @@ Reason: ${reason}
 
 You can update your information and reapply. If you have any questions, please contact our support team.
 
-Contact us: https://tawari.app/en/contact
+Contact us: https://www.tawariapp.com/en/contact
 
 The Tawari Team
     `.trim();
