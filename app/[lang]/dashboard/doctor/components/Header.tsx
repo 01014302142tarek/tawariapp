@@ -10,6 +10,7 @@ import { useTheme } from "../context/ThemeContext";
 import { useI18n } from "@/app/i18n";
 import { useAuth } from "@/app/context/AuthContext";
 import { MovingBorder } from "@/components/ui/moving-border";
+import { LanguageSwitch } from "@/components/ui/language-switch";
 
 // Icons
 const Icons = {
@@ -311,6 +312,9 @@ export default function Header({ onMenuClick }: { onMenuClick?: () => void }) {
 
                 {/* Right: Actions */}
                 <div className="flex items-center gap-2 md:gap-3">
+                    {/* Language Switch */}
+                    <LanguageSwitch isDark={isDark} />
+
                     {/* Video Call Button - visible on all screens */}
                     <MovingBorder
                         duration={3000}

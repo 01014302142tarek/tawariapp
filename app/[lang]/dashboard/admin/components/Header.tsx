@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import { useTheme } from "../context/ThemeContext";
 import { useI18n } from "@/app/i18n";
 import { useAuth } from "@/app/context/AuthContext";
+import { LanguageSwitch } from "@/components/ui/language-switch";
 
 // Icons
 const Icons = {
@@ -303,6 +304,9 @@ export default function Header({ onMenuClick }: { onMenuClick?: () => void }) {
                 </div>
 
                 <div className="flex items-center gap-2 md:gap-3">
+                    {/* Language Switch */}
+                    <LanguageSwitch isDark={isDark} />
+
                     {/* Notifications - visible on all screens */}
                     <button className={cn(
                         "relative p-2 md:p-2.5 rounded-xl border transition-colors",
