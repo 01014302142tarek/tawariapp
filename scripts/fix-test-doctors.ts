@@ -172,15 +172,23 @@ async function main() {
   // 5. Add doctor availability
   console.log('\n5. Adding doctor availability...');
 
-  async function addAvailability(doctorProfileId: string, day: number, startTime: string, endTime: string, doctorName: string) {
+  async function addAvailability(doctorProfileId: string, day: number, startTime: string, endTime: string) {
     const { data: existing } = await supabase
       .from('doctor_availability')
-      .select('id')
+      .select('id, start_time, end_time')
       .eq('doctor_profile_id', doctorProfileId)
       .eq('day_of_week', day)
       .single();
 
     if (existing) {
+      // Update existing entry to 24/7 if not already
+      if (existing.start_time !== startTime || existing.end_time !== endTime) {
+        await supabase
+          .from('doctor_availability')
+          .update({ start_time: startTime, end_time: endTime, is_active: true })
+          .eq('id', existing.id);
+        return 'updated';
+      }
       return 'exists';
     }
 
@@ -197,44 +205,59 @@ async function main() {
     return error ? 'error' : 'added';
   }
 
+  // Both doctors available 24/7 (all 7 days)
+  const allDays = [0, 1, 2, 3, 4, 5, 6]; // Sunday=0 through Saturday=6
+
   if (doctor1) {
-    let added = 0, existed = 0;
-    for (const day of [0, 1, 2, 3, 4]) { // Sunday=0 to Thursday=4
-      const result = await addAvailability(doctor1.doctorProfileId, day, '09:00', '17:00', 'Dr. Mohamed');
+    let added = 0, existed = 0, updated = 0;
+    for (const day of allDays) {
+      const result = await addAvailability(doctor1.doctorProfileId, day, '00:00', '23:59');
       if (result === 'added') added++;
       if (result === 'exists') existed++;
+      if (result === 'updated') updated++;
     }
-    console.log(`  ✓ Dr. Mohamed: Sun-Thu 9AM-5PM (${added} added, ${existed} existed)`);
+    console.log(`  ✓ Dr. Mohamed: 24/7 availability (${added} added, ${updated} updated, ${existed} existed)`);
   }
 
   if (doctor2) {
-    let added = 0, existed = 0;
-    for (const day of [6, 0, 1, 2, 3]) { // Saturday=6, Sunday=0 to Wednesday=3
-      const result = await addAvailability(doctor2.doctorProfileId, day, '10:00', '18:00', 'Dr. Nour');
+    let added = 0, existed = 0, updated = 0;
+    for (const day of allDays) {
+      const result = await addAvailability(doctor2.doctorProfileId, day, '00:00', '23:59');
       if (result === 'added') added++;
       if (result === 'exists') existed++;
+      if (result === 'updated') updated++;
     }
-    console.log(`  ✓ Dr. Nour: Sat-Wed 10AM-6PM (${added} added, ${existed} existed)`);
+    console.log(`  ✓ Dr. Nour: 24/7 availability (${added} added, ${updated} updated, ${existed} existed)`);
   }
 
-  // 6. Verify doctors are verified
-  console.log('\n6. Verifying doctor verification status...');
+  // 6. Verify doctors are verified and set is_available_now = true
+  console.log('\n6. Verifying doctor verification status and availability...');
   for (const doc of doctors) {
     const { data: dp } = await supabase
       .from('doctor_profiles')
-      .select('verification_status')
+      .select('verification_status, is_available_now')
       .eq('id', doc.doctorProfileId)
       .single();
 
-    if (dp?.verification_status === 'verified') {
-      console.log(`  ✓ ${doc.email}: verified`);
-    } else {
-      console.log(`  ✗ ${doc.email}: ${dp?.verification_status || 'unknown'} - updating...`);
+    const updates: Record<string, unknown> = {};
+
+    if (dp?.verification_status !== 'verified') {
+      updates.verification_status = 'verified';
+      updates.verified_at = new Date().toISOString();
+    }
+
+    if (!dp?.is_available_now) {
+      updates.is_available_now = true;
+    }
+
+    if (Object.keys(updates).length > 0) {
       await supabase
         .from('doctor_profiles')
-        .update({ verification_status: 'verified', verified_at: new Date().toISOString() })
+        .update(updates)
         .eq('id', doc.doctorProfileId);
-      console.log(`  ✓ ${doc.email}: now verified`);
+      console.log(`  ✓ ${doc.email}: updated (verified: true, is_available_now: true)`);
+    } else {
+      console.log(`  ✓ ${doc.email}: already verified and available`);
     }
   }
 

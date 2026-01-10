@@ -104,9 +104,10 @@ interface Filters {
 }
 
 export default function DoctorsPage() {
-    const { t, isRTL, language } = useI18n();
+    const { t, isRTL } = useI18n();
     const { isDark, textPrimary, textSecondary, textMuted, inputBg, inputFocus, border } = useThemeStyles();
 
+    const [mounted, setMounted] = useState(false);
     const [doctors, setDoctors] = useState<DoctorForBooking[]>([]);
     const [specializations, setSpecializations] = useState<{ id: string; name_en: string; name_ar: string }[]>([]);
     const [loading, setLoading] = useState(true);
@@ -128,26 +129,17 @@ export default function DoctorsPage() {
     });
     const [bookingStatus, setBookingStatus] = useState<"idle" | "booking" | "success" | "error">("idle");
 
-    // Load specializations on mount
+    // Handle hydration
     useEffect(() => {
-        loadSpecializations();
+        setMounted(true);
     }, []);
 
-    // Load doctors when filters change (debounced for search)
-    useEffect(() => {
-        const timer = setTimeout(() => {
-            loadDoctors();
-        }, filters.search ? 300 : 0);
-
-        return () => clearTimeout(timer);
-    }, [filters]);
-
-    const loadSpecializations = async () => {
+    const loadSpecializations = useCallback(async () => {
         const result = await getSpecializations();
         if (result.specializations) {
             setSpecializations(result.specializations);
         }
-    };
+    }, []);
 
     const loadDoctors = useCallback(async () => {
         setLoading(true);
@@ -162,7 +154,21 @@ export default function DoctorsPage() {
             setDoctors(result.doctors);
         }
         setLoading(false);
-    }, [filters]);
+    }, [filters.search, filters.specialization, filters.sortBy, filters.availableNow]);
+
+    // Load specializations on mount
+    useEffect(() => {
+        loadSpecializations();
+    }, [loadSpecializations]);
+
+    // Load doctors when filters change (debounced for search)
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            loadDoctors();
+        }, filters.search ? 300 : 0);
+
+        return () => clearTimeout(timer);
+    }, [filters.search, filters.specialization, filters.sortBy, filters.availableNow, loadDoctors]);
 
     const handleBookDoctor = (doctor: DoctorForBooking) => {
         const tomorrow = new Date();
@@ -276,6 +282,15 @@ export default function DoctorsPage() {
         { value: "fee_high", labelEn: "Highest Fee", labelAr: "الأعلى سعراً" },
         { value: "experience", labelEn: "Most Experienced", labelAr: "الأكثر خبرة" },
     ];
+
+    // Prevent hydration mismatch by not rendering until mounted
+    if (!mounted) {
+        return (
+            <div className="p-4 md:p-6 lg:p-8 flex items-center justify-center min-h-[60vh]">
+                <div className="animate-spin w-8 h-8 border-2 border-teal-500 border-t-transparent rounded-full" />
+            </div>
+        );
+    }
 
     return (
         <div className="p-4 md:p-6 lg:p-8">
