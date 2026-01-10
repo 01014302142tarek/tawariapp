@@ -14,16 +14,21 @@ import "../globals.css";
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
+  display: "swap",
 });
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+  display: "swap",
+  preload: false, // Only needed for code blocks, not critical for initial render
 });
 
 const cairo = Cairo({
   variable: "--font-cairo",
   subsets: ["arabic", "latin"],
+  display: "swap",
+  preload: false, // Loaded on-demand when Arabic content is rendered
 });
 
 export const metadata: Metadata = {
