@@ -1,6 +1,16 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import {
+    uploadMedicalDocument,
+    getMedicalDocumentSignedUrl,
+    deleteMedicalDocument,
+    type MedicalDocumentType,
+} from "@/lib/supabase/storage";
+
+// Re-export storage functions for convenience
+export { uploadMedicalDocument, getMedicalDocumentSignedUrl, deleteMedicalDocument };
+export type { MedicalDocumentType };
 
 // ============================================
 // Types
@@ -861,4 +871,290 @@ export async function getHealthDataSummary(): Promise<{
             activeConditions: activeConditionsResult.count || 0,
         },
     };
+}
+
+// ============================================
+// Lab Result Document Upload
+// ============================================
+
+/**
+ * Upload a document for a lab result and update the record
+ */
+export async function uploadLabResultDocument(data: {
+    labResultId: string;
+    fileBase64: string;
+    fileName: string;
+}): Promise<{ documentUrl: string | null; error?: string }> {
+    const supabase = await createClient();
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+        return { documentUrl: null, error: "Not authenticated" };
+    }
+
+    const { data: profileData } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("user_id", user.id)
+        .single();
+
+    const profile = profileData as { id: string } | null;
+    if (!profile) {
+        return { documentUrl: null, error: "Profile not found" };
+    }
+
+    const { data: patientProfileData } = await supabase
+        .from("patient_profiles")
+        .select("id")
+        .eq("profile_id", profile.id)
+        .single();
+
+    const patientProfile = patientProfileData as { id: string } | null;
+    if (!patientProfile) {
+        return { documentUrl: null, error: "Patient profile not found" };
+    }
+
+    // Verify the lab result belongs to this patient
+    const { data: labResultData } = await supabase
+        .from("lab_results")
+        .select("id, patient_profile_id")
+        .eq("id", data.labResultId)
+        .single();
+
+    const labResult = labResultData as { id: string; patient_profile_id: string } | null;
+    if (!labResult || labResult.patient_profile_id !== patientProfile.id) {
+        return { documentUrl: null, error: "Lab result not found or unauthorized" };
+    }
+
+    // Upload the document
+    const uploadResult = await uploadMedicalDocument(
+        patientProfile.id,
+        "lab_result",
+        data.fileBase64,
+        data.fileName
+    );
+
+    if (uploadResult.error || !uploadResult.path) {
+        return { documentUrl: null, error: uploadResult.error || "Upload failed" };
+    }
+
+    // Update the lab result with the document URL (store path for signed URL generation)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error: updateError } = await (supabase as any)
+        .from("lab_results")
+        .update({ document_url: uploadResult.path })
+        .eq("id", data.labResultId);
+
+    if (updateError) {
+        // Try to clean up the uploaded file
+        await deleteMedicalDocument(uploadResult.path);
+        return { documentUrl: null, error: updateError.message };
+    }
+
+    return { documentUrl: uploadResult.url };
+}
+
+/**
+ * Get signed URL for viewing a lab result document
+ */
+export async function getLabResultDocumentUrl(
+    labResultId: string
+): Promise<{ url: string | null; error?: string }> {
+    const supabase = await createClient();
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+        return { url: null, error: "Not authenticated" };
+    }
+
+    const { data: profileData } = await supabase
+        .from("profiles")
+        .select("id, role")
+        .eq("user_id", user.id)
+        .single();
+
+    const profile = profileData as { id: string; role: string } | null;
+    if (!profile) {
+        return { url: null, error: "Profile not found" };
+    }
+
+    // Get the lab result
+    const { data: labResultData } = await supabase
+        .from("lab_results")
+        .select("document_url, patient_profile_id")
+        .eq("id", labResultId)
+        .single();
+
+    const labResult = labResultData as { document_url: string | null; patient_profile_id: string } | null;
+    if (!labResult || !labResult.document_url) {
+        return { url: null, error: "Lab result not found or no document attached" };
+    }
+
+    // The getMedicalDocumentSignedUrl will handle authorization checks
+    return getMedicalDocumentSignedUrl(labResult.document_url);
+}
+
+// ============================================
+// Medical Record Attachments
+// ============================================
+
+/**
+ * Add an attachment to a medical record
+ */
+export async function addMedicalRecordAttachment(data: {
+    recordId: string;
+    fileBase64: string;
+    fileName: string;
+}): Promise<{ attachmentPath: string | null; error?: string }> {
+    const supabase = await createClient();
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+        return { attachmentPath: null, error: "Not authenticated" };
+    }
+
+    const { data: profileData } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("user_id", user.id)
+        .single();
+
+    const profile = profileData as { id: string } | null;
+    if (!profile) {
+        return { attachmentPath: null, error: "Profile not found" };
+    }
+
+    const { data: patientProfileData } = await supabase
+        .from("patient_profiles")
+        .select("id")
+        .eq("profile_id", profile.id)
+        .single();
+
+    const patientProfile = patientProfileData as { id: string } | null;
+    if (!patientProfile) {
+        return { attachmentPath: null, error: "Patient profile not found" };
+    }
+
+    // Verify the medical record belongs to this patient
+    const { data: recordData } = await supabase
+        .from("medical_records")
+        .select("id, patient_profile_id, attachments")
+        .eq("id", data.recordId)
+        .single();
+
+    const record = recordData as { id: string; patient_profile_id: string; attachments: string[] } | null;
+    if (!record || record.patient_profile_id !== patientProfile.id) {
+        return { attachmentPath: null, error: "Medical record not found or unauthorized" };
+    }
+
+    // Upload the document
+    const uploadResult = await uploadMedicalDocument(
+        patientProfile.id,
+        "medical_record",
+        data.fileBase64,
+        data.fileName
+    );
+
+    if (uploadResult.error || !uploadResult.path) {
+        return { attachmentPath: null, error: uploadResult.error || "Upload failed" };
+    }
+
+    // Add the path to the attachments array
+    const updatedAttachments = [...(record.attachments || []), uploadResult.path];
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error: updateError } = await (supabase as any)
+        .from("medical_records")
+        .update({ attachments: updatedAttachments })
+        .eq("id", data.recordId);
+
+    if (updateError) {
+        // Try to clean up the uploaded file
+        await deleteMedicalDocument(uploadResult.path);
+        return { attachmentPath: null, error: updateError.message };
+    }
+
+    return { attachmentPath: uploadResult.path };
+}
+
+/**
+ * Remove an attachment from a medical record
+ */
+export async function removeMedicalRecordAttachment(data: {
+    recordId: string;
+    attachmentPath: string;
+}): Promise<{ success: boolean; error?: string }> {
+    const supabase = await createClient();
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+        return { success: false, error: "Not authenticated" };
+    }
+
+    const { data: profileData } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("user_id", user.id)
+        .single();
+
+    const profile = profileData as { id: string } | null;
+    if (!profile) {
+        return { success: false, error: "Profile not found" };
+    }
+
+    const { data: patientProfileData } = await supabase
+        .from("patient_profiles")
+        .select("id")
+        .eq("profile_id", profile.id)
+        .single();
+
+    const patientProfile = patientProfileData as { id: string } | null;
+    if (!patientProfile) {
+        return { success: false, error: "Patient profile not found" };
+    }
+
+    // Verify the medical record belongs to this patient
+    const { data: recordData } = await supabase
+        .from("medical_records")
+        .select("id, patient_profile_id, attachments")
+        .eq("id", data.recordId)
+        .single();
+
+    const record = recordData as { id: string; patient_profile_id: string; attachments: string[] } | null;
+    if (!record || record.patient_profile_id !== patientProfile.id) {
+        return { success: false, error: "Medical record not found or unauthorized" };
+    }
+
+    // Remove the path from the attachments array
+    const updatedAttachments = (record.attachments || []).filter(
+        (path) => path !== data.attachmentPath
+    );
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error: updateError } = await (supabase as any)
+        .from("medical_records")
+        .update({ attachments: updatedAttachments })
+        .eq("id", data.recordId);
+
+    if (updateError) {
+        return { success: false, error: updateError.message };
+    }
+
+    // Delete the file from storage
+    const deleteResult = await deleteMedicalDocument(data.attachmentPath);
+    if (deleteResult.error) {
+        // Log but don't fail - the record is already updated
+        console.warn("Failed to delete attachment file:", deleteResult.error);
+    }
+
+    return { success: true };
+}
+
+/**
+ * Get signed URL for viewing a medical record attachment
+ */
+export async function getMedicalRecordAttachmentUrl(
+    attachmentPath: string
+): Promise<{ url: string | null; error?: string }> {
+    return getMedicalDocumentSignedUrl(attachmentPath);
 }

@@ -5,6 +5,7 @@ import { createClient } from "./server";
 // Maximum file sizes
 const MAX_AVATAR_SIZE = 5 * 1024 * 1024; // 5MB
 const MAX_CREDENTIAL_SIZE = 10 * 1024 * 1024; // 10MB
+const MAX_MEDICAL_DOCUMENT_SIZE = 10 * 1024 * 1024; // 10MB
 
 // File signature (magic bytes) validation
 const FILE_SIGNATURES: Record<string, number[][]> = {
@@ -307,4 +308,254 @@ export async function saveCredentialRecord(
     }
 
     return { success: true, credentialId: data?.id };
+}
+
+// ============================================
+// Medical Documents Storage
+// ============================================
+
+export type MedicalDocumentType = "lab_result" | "medical_record" | "imaging" | "prescription" | "other";
+
+/**
+ * Upload a medical document for a patient
+ * @param patientProfileId - The patient's profile ID
+ * @param documentType - Type of medical document
+ * @param fileBase64 - Base64 encoded file
+ * @param fileName - Original file name
+ * @returns The storage path and public URL
+ */
+export async function uploadMedicalDocument(
+    patientProfileId: string,
+    documentType: MedicalDocumentType,
+    fileBase64: string,
+    fileName: string
+): Promise<{ path: string | null; url: string | null; error?: string }> {
+    const supabase = await createClient();
+
+    // Verify caller owns this patient profile
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+        return { path: null, url: null, error: "Not authenticated" };
+    }
+
+    const { data: profileData } = await supabase
+        .from("profiles")
+        .select("id, role")
+        .eq("user_id", user.id)
+        .single();
+
+    const profile = profileData as { id: string; role: string } | null;
+    if (!profile) {
+        return { path: null, url: null, error: "Profile not found" };
+    }
+
+    // Verify patient profile belongs to this user
+    const { data: patientProfileData } = await supabase
+        .from("patient_profiles")
+        .select("id")
+        .eq("profile_id", profile.id)
+        .single();
+
+    const patientProfile = patientProfileData as { id: string } | null;
+    if (!patientProfile || patientProfile.id !== patientProfileId) {
+        return { path: null, url: null, error: "Unauthorized" };
+    }
+
+    // Validate file extension
+    const ext = fileName.split(".").pop()?.toLowerCase();
+    if (!ext || !["jpg", "jpeg", "png", "pdf", "webp"].includes(ext)) {
+        return { path: null, url: null, error: "Invalid file type. Only JPG, PNG, WebP, and PDF are allowed." };
+    }
+
+    // Convert base64 to buffer
+    const base64Data = fileBase64.replace(/^data:(image|application)\/\w+;base64,/, "");
+    const buffer = Buffer.from(base64Data, "base64");
+
+    // Validate file size
+    if (!validateFileSize(buffer, MAX_MEDICAL_DOCUMENT_SIZE)) {
+        return { path: null, url: null, error: "File too large. Maximum size is 10MB." };
+    }
+
+    // Validate file content (magic bytes) to prevent malicious file uploads
+    if (!validateFileContent(buffer, ext)) {
+        return { path: null, url: null, error: "File content does not match the expected type. Please upload a valid file." };
+    }
+
+    // Generate unique file path using UUID to prevent path traversal
+    const fileId = crypto.randomUUID();
+    const sanitizedName = fileName.replace(/[^a-zA-Z0-9.-]/g, "_").substring(0, 100);
+    const filePath = `${patientProfileId}/${documentType}/${fileId}_${sanitizedName}`;
+
+    // Determine content type
+    let contentType = "application/octet-stream";
+    if (ext === "pdf") {
+        contentType = "application/pdf";
+    } else if (["jpg", "jpeg"].includes(ext)) {
+        contentType = "image/jpeg";
+    } else if (ext === "png") {
+        contentType = "image/png";
+    } else if (ext === "webp") {
+        contentType = "image/webp";
+    }
+
+    // Upload to medical_documents bucket (private)
+    const { error: uploadError } = await supabase.storage
+        .from("medical_documents")
+        .upload(filePath, buffer, {
+            contentType,
+            upsert: false,
+        });
+
+    if (uploadError) {
+        return { path: null, url: null, error: uploadError.message };
+    }
+
+    // Generate signed URL for immediate access (1 hour expiry)
+    const { data: signedUrlData } = await supabase.storage
+        .from("medical_documents")
+        .createSignedUrl(filePath, 3600);
+
+    return {
+        path: filePath,
+        url: signedUrlData?.signedUrl || null
+    };
+}
+
+/**
+ * Get a signed URL for viewing a private medical document
+ * Only the patient who owns the document or their doctor can view it
+ * @param path - The storage path of the document
+ * @param expiresIn - URL expiration in seconds (default 1 hour)
+ */
+export async function getMedicalDocumentSignedUrl(
+    path: string,
+    expiresIn: number = 3600
+): Promise<{ url: string | null; error?: string }> {
+    const supabase = await createClient();
+
+    // Verify caller is authenticated
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+        return { url: null, error: "Not authenticated" };
+    }
+
+    const { data: profileData } = await supabase
+        .from("profiles")
+        .select("id, role")
+        .eq("user_id", user.id)
+        .single();
+
+    const profile = profileData as { id: string; role: string } | null;
+    if (!profile) {
+        return { url: null, error: "Profile not found" };
+    }
+
+    // Extract patient profile ID from path (first segment)
+    const patientProfileIdFromPath = path.split("/")[0];
+
+    // Check authorization based on role
+    if (profile.role === "patient") {
+        // Patient can only access their own documents
+        const { data: patientProfileData } = await supabase
+            .from("patient_profiles")
+            .select("id")
+            .eq("profile_id", profile.id)
+            .single();
+
+        const patientProfile = patientProfileData as { id: string } | null;
+        if (!patientProfile || patientProfile.id !== patientProfileIdFromPath) {
+            return { url: null, error: "Unauthorized" };
+        }
+    } else if (profile.role === "doctor") {
+        // Doctors can access documents of patients they have active appointments with
+        const { data: doctorProfileData } = await supabase
+            .from("doctor_profiles")
+            .select("id")
+            .eq("profile_id", profile.id)
+            .single();
+
+        const doctorProfile = doctorProfileData as { id: string } | null;
+        if (!doctorProfile) {
+            return { url: null, error: "Doctor profile not found" };
+        }
+
+        // Check if doctor has an appointment with this patient
+        const { count } = await supabase
+            .from("appointments")
+            .select("*", { count: "exact", head: true })
+            .eq("doctor_profile_id", doctorProfile.id)
+            .eq("patient_profile_id", patientProfileIdFromPath)
+            .in("status", ["scheduled", "in_waiting_room", "in_progress", "completed"]);
+
+        if (!count || count === 0) {
+            return { url: null, error: "Unauthorized - No appointment relationship" };
+        }
+    } else if (profile.role !== "admin") {
+        return { url: null, error: "Unauthorized" };
+    }
+
+    // Generate signed URL
+    const { data, error } = await supabase.storage
+        .from("medical_documents")
+        .createSignedUrl(path, expiresIn);
+
+    if (error) {
+        return { url: null, error: error.message };
+    }
+
+    return { url: data.signedUrl };
+}
+
+/**
+ * Delete a medical document
+ * Only the patient who owns the document can delete it
+ * @param path - The storage path of the document
+ */
+export async function deleteMedicalDocument(
+    path: string
+): Promise<{ success: boolean; error?: string }> {
+    const supabase = await createClient();
+
+    // Verify caller is authenticated
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+        return { success: false, error: "Not authenticated" };
+    }
+
+    const { data: profileData } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("user_id", user.id)
+        .single();
+
+    const profile = profileData as { id: string } | null;
+    if (!profile) {
+        return { success: false, error: "Profile not found" };
+    }
+
+    // Extract patient profile ID from path (first segment)
+    const patientProfileIdFromPath = path.split("/")[0];
+
+    // Verify patient profile belongs to this user
+    const { data: patientProfileData } = await supabase
+        .from("patient_profiles")
+        .select("id")
+        .eq("profile_id", profile.id)
+        .single();
+
+    const patientProfile = patientProfileData as { id: string } | null;
+    if (!patientProfile || patientProfile.id !== patientProfileIdFromPath) {
+        return { success: false, error: "Unauthorized" };
+    }
+
+    // Delete the file
+    const { error } = await supabase.storage
+        .from("medical_documents")
+        .remove([path]);
+
+    if (error) {
+        return { success: false, error: error.message };
+    }
+
+    return { success: true };
 }
