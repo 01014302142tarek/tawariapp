@@ -7,6 +7,8 @@ import { I18nProvider, Language } from "../i18n";
 import { ThemeProviderWrapper } from "../context/ThemeProviderWrapper";
 import { AuthProvider } from "../context/AuthContext";
 import { ToastProvider } from "@/components/ui/toast";
+import { OrganizationJsonLd, MedicalServiceJsonLd, WebsiteJsonLd, LocalBusinessJsonLd } from "@/components/seo/JsonLd";
+import { siteConfig } from "@/lib/seo/config";
 import "../globals.css";
 
 const geistSans = Geist({
@@ -25,8 +27,53 @@ const cairo = Cairo({
 });
 
 export const metadata: Metadata = {
-  title: "TawariApp - Healthcare at Your Fingertips",
-  description: "Connect with licensed Egyptian doctors for video consultations. Get medical advice, prescriptions, and care from anywhere.",
+  title: {
+    default: "TawariApp - Healthcare at Your Fingertips",
+    template: "%s | TawariApp",
+  },
+  description: siteConfig.description.en,
+  keywords: siteConfig.keywords.en,
+  authors: [{ name: siteConfig.creator }],
+  creator: siteConfig.creator,
+  metadataBase: new URL(siteConfig.url),
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    url: siteConfig.url,
+    siteName: siteConfig.name,
+    title: "TawariApp - Healthcare at Your Fingertips",
+    description: siteConfig.description.en,
+    images: [
+      {
+        url: siteConfig.ogImage,
+        width: 1200,
+        height: 630,
+        alt: "TawariApp - Telemedicine Platform",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "TawariApp - Healthcare at Your Fingertips",
+    description: siteConfig.description.en,
+    site: siteConfig.twitterHandle,
+    images: [siteConfig.ogImage],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
+  verification: {
+    // Add when available
+    // google: "your-google-verification-code",
+  },
 };
 
 export async function generateStaticParams() {
@@ -43,6 +90,19 @@ export default async function RootLayout({
   const { lang } = await params;
   return (
     <html lang={lang} dir={lang === 'ar' ? 'rtl' : 'ltr'} suppressHydrationWarning>
+      <head>
+        {/* DNS Prefetch for faster resource loading */}
+        <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
+        <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+
+        {/* Structured Data */}
+        <OrganizationJsonLd />
+        <MedicalServiceJsonLd />
+        <WebsiteJsonLd />
+        <LocalBusinessJsonLd />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${cairo.variable} antialiased`}
         suppressHydrationWarning
