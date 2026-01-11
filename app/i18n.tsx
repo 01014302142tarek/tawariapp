@@ -181,6 +181,7 @@ interface TranslationStrings {
         lightMode: string;
         themeAppearance: string;
         systemTheme: string;
+        language: string;
         error: string;
         goBack: string;
         time: {
@@ -1076,6 +1077,7 @@ const translations: Record<Language, TranslationStrings> = {
             lightMode: "Light",
             themeAppearance: "Theme Appearance",
             systemTheme: "System",
+            language: "Language",
             error: "Error",
             goBack: "Go Back",
             time: {
@@ -1970,6 +1972,7 @@ const translations: Record<Language, TranslationStrings> = {
             lightMode: "فاتح",
             themeAppearance: "مظهر السمة",
             systemTheme: "النظام",
+            language: "اللغة",
             error: "خطأ",
             goBack: "رجوع",
             time: {

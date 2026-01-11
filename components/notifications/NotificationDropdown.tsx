@@ -84,24 +84,10 @@ const NotificationIcons: Record<NotificationType, React.ReactNode> = {
     ),
 };
 
-// Get icon background color based on notification type
+// Get icon background color based on notification type - All using main teal color
 const getIconBgColor = (type: NotificationType, isDark: boolean): string => {
-    const colors: Record<string, { dark: string; light: string }> = {
-        appointment_confirmation: { dark: "bg-green-500/20 text-green-400", light: "bg-green-100 text-green-600" },
-        appointment_cancelled: { dark: "bg-red-500/20 text-red-400", light: "bg-red-100 text-red-600" },
-        appointment_reminder: { dark: "bg-amber-500/20 text-amber-400", light: "bg-amber-100 text-amber-600" },
-        appointment_rescheduled: { dark: "bg-blue-500/20 text-blue-400", light: "bg-blue-100 text-blue-600" },
-        new_appointment: { dark: "bg-teal-500/20 text-teal-400", light: "bg-teal-100 text-teal-600" },
-        prescription: { dark: "bg-purple-500/20 text-purple-400", light: "bg-purple-100 text-purple-600" },
-        prescription_renewal: { dark: "bg-indigo-500/20 text-indigo-400", light: "bg-indigo-100 text-indigo-600" },
-        message: { dark: "bg-sky-500/20 text-sky-400", light: "bg-sky-100 text-sky-600" },
-        new_patient_message: { dark: "bg-sky-500/20 text-sky-400", light: "bg-sky-100 text-sky-600" },
-        doctor_verification: { dark: "bg-emerald-500/20 text-emerald-400", light: "bg-emerald-100 text-emerald-600" },
-        payment_success: { dark: "bg-green-500/20 text-green-400", light: "bg-green-100 text-green-600" },
-        payment_failed: { dark: "bg-red-500/20 text-red-400", light: "bg-red-100 text-red-600" },
-        system: { dark: "bg-gray-500/20 text-gray-400", light: "bg-gray-100 text-gray-600" },
-    };
-    return colors[type]?.[isDark ? "dark" : "light"] || colors.system[isDark ? "dark" : "light"];
+    // Unified teal color for all notification types
+    return isDark ? "bg-teal-500/20 text-teal-400" : "bg-teal-100 text-teal-600";
 };
 
 // Format relative time
@@ -264,16 +250,16 @@ export default function NotificationDropdown({ isDark, dashboardType }: Notifica
             <button
                 onClick={() => setIsOpen(!isOpen)}
                 className={cn(
-                    "relative p-2 md:p-2.5 rounded-xl border transition-colors",
+                    "relative p-1.5 md:p-2 rounded-xl transition-colors border border-black",
                     isDark
-                        ? "bg-white/5 hover:bg-white/10 border-white/5 text-gray-400"
-                        : "bg-gray-100 hover:bg-gray-200 border-gray-200 text-gray-600"
+                        ? "hover:bg-white/5 text-gray-400 hover:text-white"
+                        : "hover:bg-gray-100 text-gray-600 hover:text-gray-900"
                 )}
                 aria-label={notificationsLabel}
             >
                 {BellIcon}
                 {unreadCount > 0 && (
-                    <span className="absolute -top-1 -right-1 w-4 h-4 md:w-5 md:h-5 bg-teal-500 text-white text-[10px] md:text-xs font-bold rounded-full flex items-center justify-center">
+                    <span className="absolute -top-1 -right-1 w-4 h-4 md:w-5 md:h-5 bg-teal-500 text-white text-[10px] md:text-xs font-bold rounded-full flex items-center justify-center shadow-lg shadow-teal-500/50">
                         {unreadCount > 9 ? "9+" : unreadCount}
                     </span>
                 )}
@@ -288,11 +274,11 @@ export default function NotificationDropdown({ isDark, dashboardType }: Notifica
                         exit={{ opacity: 0, y: 10, scale: 0.95 }}
                         transition={{ duration: 0.15 }}
                         className={cn(
-                            "absolute top-full mt-2 w-80 md:w-96 rounded-xl shadow-2xl overflow-hidden z-[100]",
+                            "absolute top-full mt-2 w-80 md:w-96 rounded-2xl shadow-2xl overflow-hidden z-[100] border backdrop-blur-xl",
                             isRTL ? "left-0" : "right-0",
                             isDark
-                                ? "bg-slate-900 border border-white/10"
-                                : "bg-white border border-gray-200"
+                                ? "bg-slate-900/95 border-white/10"
+                                : "bg-white/95 border-gray-200"
                         )}
                     >
                         {/* Header */}

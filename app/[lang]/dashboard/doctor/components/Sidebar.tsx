@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useTheme } from "../context/ThemeContext";
 import { useI18n } from "@/app/i18n";
+import { useDoctorSidebar } from "../context/SidebarContext";
 
 // Tooltip component for collapsed state
 function Tooltip({ children, label, isExpanded, isRTL }: { children: React.ReactNode; label: string; isExpanded: boolean; isRTL: boolean }) {
@@ -52,6 +53,7 @@ export default function Sidebar({ isMobileOpen, onClose }: { isMobileOpen?: bool
     const { t, isRTL, language } = useI18n();
     const isDark = theme === "dark";
     const [isExpanded, setIsExpanded] = useState(false);
+    const { data: sidebarData } = useDoctorSidebar();
 
     const navItems = [
         {
@@ -107,7 +109,7 @@ export default function Sidebar({ isMobileOpen, onClose }: { isMobileOpen?: bool
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
                 </svg>
             ),
-            count: 3,
+            count: sidebarData.unreadMessages > 0 ? sidebarData.unreadMessages : undefined, // Only show count if > 0
         },
         {
             name: t.doctorDashboard.sidebar.analytics,

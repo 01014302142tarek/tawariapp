@@ -4,6 +4,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useI18n } from "@/app/i18n";
+import { GlowingCard } from "@/components/ui/glowing-card";
 import {
     getNotifications,
     markAsRead,
@@ -82,24 +83,10 @@ const NotificationIcons: Record<NotificationType, React.ReactNode> = {
     ),
 };
 
-// Get icon background color based on notification type
+// Get icon background color based on notification type - All using main teal color
 const getIconBgColor = (type: NotificationType, isDark: boolean): string => {
-    const colors: Record<string, { dark: string; light: string }> = {
-        appointment_confirmation: { dark: "bg-green-500/20 text-green-400", light: "bg-green-100 text-green-600" },
-        appointment_cancelled: { dark: "bg-red-500/20 text-red-400", light: "bg-red-100 text-red-600" },
-        appointment_reminder: { dark: "bg-amber-500/20 text-amber-400", light: "bg-amber-100 text-amber-600" },
-        appointment_rescheduled: { dark: "bg-blue-500/20 text-blue-400", light: "bg-blue-100 text-blue-600" },
-        new_appointment: { dark: "bg-teal-500/20 text-teal-400", light: "bg-teal-100 text-teal-600" },
-        prescription: { dark: "bg-purple-500/20 text-purple-400", light: "bg-purple-100 text-purple-600" },
-        prescription_renewal: { dark: "bg-indigo-500/20 text-indigo-400", light: "bg-indigo-100 text-indigo-600" },
-        message: { dark: "bg-sky-500/20 text-sky-400", light: "bg-sky-100 text-sky-600" },
-        new_patient_message: { dark: "bg-sky-500/20 text-sky-400", light: "bg-sky-100 text-sky-600" },
-        doctor_verification: { dark: "bg-emerald-500/20 text-emerald-400", light: "bg-emerald-100 text-emerald-600" },
-        payment_success: { dark: "bg-green-500/20 text-green-400", light: "bg-green-100 text-green-600" },
-        payment_failed: { dark: "bg-red-500/20 text-red-400", light: "bg-red-100 text-red-600" },
-        system: { dark: "bg-gray-500/20 text-gray-400", light: "bg-gray-100 text-gray-600" },
-    };
-    return colors[type]?.[isDark ? "dark" : "light"] || colors.system[isDark ? "dark" : "light"];
+    // Unified teal color for all notification types
+    return isDark ? "bg-teal-500/20 text-teal-400" : "bg-teal-100 text-teal-600";
 };
 
 // Format relative time
@@ -295,12 +282,12 @@ export default function NotificationsPage({ isDark, dashboardType }: Notificatio
     const unreadCount = notifications.filter((n) => !n.is_read).length;
 
     return (
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-4xl mx-auto p-4 md:p-6">
             {/* Header */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
                 <div>
                     <h1 className={cn(
-                        "text-2xl font-bold",
+                        "text-2xl md:text-3xl font-bold",
                         isDark ? "text-white" : "text-gray-900"
                     )}>
                         {labels.title}
@@ -322,10 +309,10 @@ export default function NotificationsPage({ isDark, dashboardType }: Notificatio
                         onClick={handleMarkAllAsRead}
                         disabled={markingAllRead}
                         className={cn(
-                            "px-4 py-2 text-sm font-medium rounded-lg transition-colors",
+                            "px-4 py-2 text-sm font-medium rounded-xl transition-all duration-200",
                             isDark
-                                ? "bg-teal-500/20 text-teal-400 hover:bg-teal-500/30"
-                                : "bg-teal-100 text-teal-700 hover:bg-teal-200",
+                                ? "bg-teal-500/20 text-teal-400 hover:bg-teal-500/30 border border-teal-500/30"
+                                : "bg-teal-50 text-teal-700 hover:bg-teal-100 border border-teal-200",
                             markingAllRead && "opacity-50 cursor-not-allowed"
                         )}
                     >
@@ -335,33 +322,31 @@ export default function NotificationsPage({ isDark, dashboardType }: Notificatio
             </div>
 
             {/* Filters */}
-            <div className={cn(
-                "flex flex-wrap gap-2 p-4 rounded-xl mb-6",
-                isDark ? "bg-white/5" : "bg-gray-100"
-            )}>
+            <GlowingCard className="p-4 mb-6" isDark={isDark}>
+                <div className="flex flex-wrap gap-2">
                 {filterOptions.map((option) => (
                     <button
                         key={option.value}
                         onClick={() => setFilter(option.value)}
                         className={cn(
-                            "px-4 py-2 text-sm font-medium rounded-lg transition-colors",
+                            "px-4 py-2 text-sm font-medium rounded-xl transition-all duration-200",
                             filter === option.value
-                                ? "bg-teal-500 text-white"
+                                ? isDark
+                                    ? "bg-teal-500 text-white shadow-lg shadow-teal-500/30"
+                                    : "bg-teal-500 text-white shadow-lg shadow-teal-500/20"
                                 : isDark
-                                    ? "bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white"
-                                    : "bg-white text-gray-600 hover:bg-gray-200 hover:text-gray-900"
+                                    ? "bg-slate-800/50 text-gray-400 hover:bg-slate-800 hover:text-white border border-white/5"
+                                    : "bg-white text-gray-600 hover:bg-gray-50 hover:text-gray-900 border border-gray-200"
                         )}
                     >
                         {option.label}
                     </button>
                 ))}
-            </div>
+                </div>
+            </GlowingCard>
 
             {/* Notifications List */}
-            <div className={cn(
-                "rounded-xl overflow-hidden border",
-                isDark ? "bg-white/5 border-white/10" : "bg-white border-gray-200"
-            )}>
+            <GlowingCard className="overflow-hidden" isDark={isDark}>
                 {loading && notifications.length === 0 ? (
                     <div className="p-12 text-center">
                         <div className={cn(
@@ -407,18 +392,18 @@ export default function NotificationsPage({ isDark, dashboardType }: Notificatio
                     <>
                         <AnimatePresence mode="popLayout">
                             {notifications.map((notification) => (
-                                <motion.div
+                                    <motion.div
                                     key={notification.id}
                                     layout
                                     initial={{ opacity: 0, y: -10 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     exit={{ opacity: 0, x: isRTL ? 50 : -50 }}
                                     className={cn(
-                                        "flex items-start gap-4 p-4 border-b transition-colors cursor-pointer",
+                                        "flex items-start gap-4 p-4 md:p-5 border-b transition-all duration-200 cursor-pointer",
                                         isDark
                                             ? "border-white/5 hover:bg-white/5"
-                                            : "border-gray-100 hover:bg-gray-50",
-                                        !notification.is_read && (isDark ? "bg-teal-500/5" : "bg-teal-50/50")
+                                            : "border-gray-100 hover:bg-gray-50/80",
+                                        !notification.is_read && (isDark ? "bg-teal-500/5 border-teal-500/10" : "bg-teal-50/50 border-teal-200/50")
                                     )}
                                     onClick={() => handleNotificationClick(notification)}
                                 >
@@ -466,10 +451,10 @@ export default function NotificationsPage({ isDark, dashboardType }: Notificatio
                                                 }}
                                                 disabled={deletingId === notification.id}
                                                 className={cn(
-                                                    "p-1.5 rounded-lg text-xs transition-colors",
+                                                    "p-1.5 rounded-xl text-xs transition-all duration-200",
                                                     isDark
-                                                        ? "text-gray-500 hover:text-red-400 hover:bg-red-500/10"
-                                                        : "text-gray-400 hover:text-red-600 hover:bg-red-50",
+                                                        ? "text-gray-500 hover:text-red-400 hover:bg-red-500/10 border border-transparent hover:border-red-500/20"
+                                                        : "text-gray-400 hover:text-red-600 hover:bg-red-50 border border-transparent hover:border-red-200",
                                                     deletingId === notification.id && "opacity-50 cursor-not-allowed"
                                                 )}
                                             >
@@ -490,10 +475,10 @@ export default function NotificationsPage({ isDark, dashboardType }: Notificatio
                                     onClick={() => setPage((p) => p + 1)}
                                     disabled={loading}
                                     className={cn(
-                                        "px-6 py-2 text-sm font-medium rounded-lg transition-colors",
+                                        "px-6 py-2.5 text-sm font-medium rounded-xl transition-all duration-200 border",
                                         isDark
-                                            ? "bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white"
-                                            : "bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-gray-900",
+                                            ? "bg-slate-800/50 text-gray-400 hover:bg-slate-800 hover:text-white border-white/10"
+                                            : "bg-white text-gray-600 hover:bg-gray-50 hover:text-gray-900 border-gray-200",
                                         loading && "opacity-50 cursor-not-allowed"
                                     )}
                                 >
@@ -503,7 +488,7 @@ export default function NotificationsPage({ isDark, dashboardType }: Notificatio
                         )}
                     </>
                 )}
-            </div>
+            </GlowingCard>
         </div>
     );
 }

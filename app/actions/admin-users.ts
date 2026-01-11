@@ -28,6 +28,25 @@ export interface AdminUserStats {
     admins: number;
 }
 
+export interface CreateUserInput {
+    email: string;
+    password: string;
+    full_name: string;
+    role: UserRole;
+    phone?: string;
+    // Doctor-specific fields
+    license_number?: string;
+    specializations?: string[];
+    years_of_experience?: number;
+    consultation_fee?: number;
+    // Patient-specific fields
+    date_of_birth?: string;
+    gender?: "male" | "female";
+    blood_type?: string;
+    // Admin-specific fields
+    admin_type?: "full_admin" | "support_agent";
+}
+
 // ============================================
 // Helper to check if caller is admin
 // ============================================
@@ -104,6 +123,8 @@ export async function getAdminUsers(options?: {
         return { users: [], total: 0, error: error.message };
     }
 
+    console.log("✅ Fetched profiles from database:", data?.length, "Total count:", count);
+
     // Get user emails from auth.users via admin API
     // For now, we'll fetch emails separately if needed
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -124,21 +145,23 @@ export async function getAdminUsers(options?: {
         };
     });
 
-    // Fetch emails for users (via auth.users if using service role)
-    // For now we'll use a workaround - get emails from auth.users table
+    // Fetch emails for users using admin API (requires service role)
     const userIds = users.map(u => u.user_id).filter(Boolean);
     if (userIds.length > 0) {
-        // Try to get emails - this requires service role
-        const { data: authUsers } = await supabase
-            .from("auth.users")
-            .select("id, email")
-            .in("id", userIds);
-
-        if (authUsers) {
-            const emailMap = new Map(authUsers.map((u: { id: string; email: string }) => [u.id, u.email]));
-            users.forEach(user => {
-                user.email = emailMap.get(user.user_id) || "";
-            });
+        try {
+            // Use auth.admin.listUsers() which requires service role
+            const { data: { users: authUsers } } = await supabase.auth.admin.listUsers();
+            
+            if (authUsers && authUsers.length > 0) {
+                console.log("✅ Fetched auth users:", authUsers.length);
+                const emailMap = new Map(authUsers.map(u => [u.id, u.email || ""]));
+                users.forEach(user => {
+                    user.email = emailMap.get(user.user_id) || "";
+                });
+            }
+        } catch (err) {
+            console.error("❌ Could not fetch user emails (requires service role):", err);
+            // Continue without emails - not critical
         }
     }
 
@@ -164,6 +187,8 @@ export async function getAdminUsers(options?: {
             });
         }
     }
+
+    console.log("✅ Final users to return:", users.length);
 
     return { users, total: count || 0 };
 }
@@ -310,6 +335,9 @@ export async function getAdminPatients(options?: {
     search?: string;
     limit?: number;
     offset?: number;
+    status?: string; // "all", "active", "inactive"
+    gender?: string; // "all", "male", "female"
+    bloodType?: string; // "all", "A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"
 }): Promise<{ patients: AdminPatient[]; total: number; error?: string }> {
     const supabase = await createClient();
 
@@ -335,12 +363,21 @@ export async function getAdminPatients(options?: {
             )
         `, { count: "exact" });
 
-    // Apply search on profiles.full_name if provided
-    // Note: search on joined table requires different approach
+    // Apply gender filter if provided
+    if (options?.gender && options.gender !== "all") {
+        query = query.eq("gender", options.gender);
+    }
+
+    // Apply blood type filter if provided
+    if (options?.bloodType && options.bloodType !== "all") {
+        query = query.eq("blood_type", options.bloodType);
+    }
 
     query = query.order("created_at", { ascending: false, foreignTable: "profiles" });
 
-    if (options?.limit) {
+    if (options?.offset) {
+        query = query.range(options.offset, options.offset + (options.limit || 10) - 1);
+    } else if (options?.limit) {
         query = query.limit(options.limit);
     }
 
@@ -351,19 +388,26 @@ export async function getAdminPatients(options?: {
         return { patients: [], total: 0, error: error.message };
     }
 
+    console.log("Raw patient data fetched:", data?.length, "Total count:", count);
+
     // Get appointment counts for each patient
     const patientIds = (data || []).map((p: { id: string }) => p.id);
     const appointmentCounts = new Map<string, number>();
 
     if (patientIds.length > 0) {
-        // Count appointments per patient
-        for (const patientId of patientIds) {
+        // Count appointments per patient in parallel
+        const appointmentPromises = patientIds.map(async (patientId) => {
             const { count: aptCount } = await supabase
                 .from("appointments")
                 .select("*", { count: "exact", head: true })
                 .eq("patient_profile_id", patientId);
-            appointmentCounts.set(patientId, aptCount || 0);
-        }
+            return { patientId, count: aptCount || 0 };
+        });
+        
+        const appointmentResults = await Promise.all(appointmentPromises);
+        appointmentResults.forEach(({ patientId, count: aptCount }) => {
+            appointmentCounts.set(patientId, aptCount);
+        });
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -380,13 +424,177 @@ export async function getAdminPatients(options?: {
         created_at: p.profiles?.created_at || p.created_at,
     }));
 
-    // Apply search filter client-side if provided
+    // Apply search filter if provided
     if (options?.search) {
         const searchLower = options.search.toLowerCase();
         patients = patients.filter(p =>
-            p.full_name.toLowerCase().includes(searchLower)
+            p.full_name.toLowerCase().includes(searchLower) ||
+            (p.email && p.email.toLowerCase().includes(searchLower)) ||
+            (p.blood_type && p.blood_type.toLowerCase().includes(searchLower))
         );
     }
 
+    // Apply status filter (active/inactive) based on appointments
+    if (options?.status && options.status !== "all") {
+        if (options.status === "active") {
+            patients = patients.filter(p => p.total_appointments > 0);
+        } else if (options.status === "inactive") {
+            patients = patients.filter(p => p.total_appointments === 0);
+        }
+    }
+
+    console.log("Final patients after filters:", patients.length);
+
+    // Return the original database count, not the filtered count
+    // This is important for correct pagination
     return { patients, total: count || 0 };
+}
+
+/**
+ * Create a new user (Admin only)
+ */
+export async function createUser(input: CreateUserInput): Promise<{ success: boolean; error?: string; userId?: string }> {
+    const supabase = await createClient();
+
+    const { isAdmin, error: authError } = await verifyAdmin(supabase);
+    if (!isAdmin) {
+        return { success: false, error: authError };
+    }
+
+    try {
+        // Step 1: Create auth user using admin API
+        const { data: authData, error: authCreateError } = await supabase.auth.admin.createUser({
+            email: input.email,
+            password: input.password,
+            email_confirm: true, // Auto-confirm email
+            user_metadata: {
+                full_name: input.full_name,
+                role: input.role,
+            }
+        });
+
+        if (authCreateError || !authData.user) {
+            console.error("Error creating auth user:", authCreateError);
+            return { success: false, error: authCreateError?.message || "Failed to create user" };
+        }
+
+        const userId = authData.user.id;
+        console.log("✅ Auth user created:", userId);
+
+        // Step 2: Create profile (admin can insert due to RLS policy)
+        const profileId = crypto.randomUUID();
+        const { error: profileError } = await supabase
+            .from("profiles")
+            .insert({
+                id: profileId,
+                user_id: userId,
+                role: input.role,
+                full_name: input.full_name,
+                phone: input.phone,
+                is_active: true,
+            });
+
+        if (profileError) {
+            console.error("❌ Error creating profile:", profileError);
+            // Cleanup: delete auth user
+            await supabase.auth.admin.deleteUser(userId);
+            return { success: false, error: `Failed to create user profile: ${profileError.message}` };
+        }
+
+        console.log("✅ Profile created:", profileId);
+
+        // Step 3: Create role-specific profile
+        if (input.role === "doctor") {
+            const doctorProfileId = crypto.randomUUID();
+            const { error: doctorError } = await supabase
+                .from("doctor_profiles")
+                .insert({
+                    id: doctorProfileId,
+                    profile_id: profileId,
+                    license_number: input.license_number,
+                    years_of_experience: input.years_of_experience || 0,
+                    consultation_fee: input.consultation_fee,
+                    verification_status: "pending",
+                    rating_average: 0,
+                    rating_count: 0,
+                });
+
+            if (doctorError) {
+                console.error("❌ Error creating doctor profile:", doctorError);
+                await supabase.auth.admin.deleteUser(userId);
+                return { success: false, error: `Failed to create doctor profile: ${doctorError.message}` };
+            }
+
+            console.log("✅ Doctor profile created:", doctorProfileId);
+
+            // Add specializations if provided
+            if (input.specializations && input.specializations.length > 0) {
+                // Get specialization IDs from names
+                const { data: specializations } = await supabase
+                    .from("specializations")
+                    .select("id, name_en")
+                    .in("name_en", input.specializations);
+
+                if (specializations && specializations.length > 0) {
+                    const doctorSpecializations = specializations.map(spec => ({
+                        id: crypto.randomUUID(),
+                        doctor_profile_id: doctorProfileId,
+                        specialization_id: spec.id,
+                    }));
+
+                    await supabase
+                        .from("doctor_specializations")
+                        .insert(doctorSpecializations);
+                    
+                    console.log("✅ Specializations added");
+                }
+            }
+
+        } else if (input.role === "patient") {
+            const patientProfileId = crypto.randomUUID();
+            const { error: patientError } = await supabase
+                .from("patient_profiles")
+                .insert({
+                    id: patientProfileId,
+                    profile_id: profileId,
+                    date_of_birth: input.date_of_birth,
+                    gender: input.gender,
+                    blood_type: input.blood_type,
+                    verification_level: "email_verified",
+                });
+
+            if (patientError) {
+                console.error("❌ Error creating patient profile:", patientError);
+                await supabase.auth.admin.deleteUser(userId);
+                return { success: false, error: `Failed to create patient profile: ${patientError.message}` };
+            }
+
+            console.log("✅ Patient profile created:", patientProfileId);
+
+        } else if (input.role === "admin") {
+            const adminProfileId = crypto.randomUUID();
+            const { error: adminError } = await supabase
+                .from("admin_profiles")
+                .insert({
+                    id: adminProfileId,
+                    profile_id: profileId,
+                    admin_type: input.admin_type || "support_agent",
+                });
+
+            if (adminError) {
+                console.error("❌ Error creating admin profile:", adminError);
+                await supabase.auth.admin.deleteUser(userId);
+                return { success: false, error: `Failed to create admin profile: ${adminError.message}` };
+            }
+
+            console.log("✅ Admin profile created:", adminProfileId);
+        }
+
+        console.log("✅ User created successfully:", userId);
+        return { success: true, userId };
+
+    } catch (error) {
+        console.error("❌ Unexpected error creating user:", error);
+        return { success: false, error: "An unexpected error occurred" };
+    }
 }

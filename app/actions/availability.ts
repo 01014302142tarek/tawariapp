@@ -266,7 +266,7 @@ export async function addBlockedTime(data: {
     start_datetime: string;
     end_datetime: string;
     reason?: string;
-}): Promise<{ success: boolean; blockedTimeId?: string; error?: string }> {
+}): Promise<{ success: boolean; blockedTime?: BlockedTime; error?: string }> {
     const supabase = await createClient();
 
     const { data: { user } } = await supabase.auth.getUser();
@@ -305,7 +305,7 @@ export async function addBlockedTime(data: {
             end_datetime: data.end_datetime,
             reason: data.reason || null,
         })
-        .select("id")
+        .select("id, start_datetime, end_datetime, reason, created_at")
         .single();
 
     if (error) {
@@ -313,7 +313,18 @@ export async function addBlockedTime(data: {
         return { success: false, error: error.message };
     }
 
-    return { success: true, blockedTimeId: insertedData?.id };
+    // Return the full blocked time object
+    return {
+        success: true,
+        blockedTime: {
+            id: insertedData.id,
+            doctor_profile_id: doctorProfile.id,
+            start_datetime: insertedData.start_datetime,
+            end_datetime: insertedData.end_datetime,
+            reason: insertedData.reason,
+            created_at: insertedData.created_at,
+        }
+    };
 }
 
 /**

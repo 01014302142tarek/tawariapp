@@ -907,7 +907,17 @@ export async function getAvailableDoctors(filters?: {
 
     // Transform the data
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let doctors: DoctorForBooking[] = (data || []).map((doc: any) => ({
+    let doctors: DoctorForBooking[] = (data || []).map((doc: any) => {
+        // Extract specializations and remove duplicates
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const specNames = (doc.doctor_specializations || [])
+            .map((ds: any) => ds.specializations?.name_en || "")
+            .filter(Boolean);
+        
+        // Remove duplicates using Set
+        const uniqueSpecializations = Array.from(new Set(specNames));
+        
+        return {
         id: doc.id,
         profile_id: doc.profile_id,
         full_name: doc.profiles.full_name,
@@ -918,11 +928,9 @@ export async function getAvailableDoctors(filters?: {
         rating_average: doc.rating_average,
         rating_count: doc.rating_count,
         is_available_now: doc.is_available_now,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        specializations: (doc.doctor_specializations || []).map((ds: any) =>
-            ds.specializations?.name_en || ""
-        ).filter(Boolean),
-    }));
+            specializations: uniqueSpecializations,
+        };
+    });
 
     // Filter by search if provided (client-side for now due to nested data)
     if (filters?.search) {
@@ -1246,11 +1254,14 @@ export async function getDoctorById(
         created_at: r.created_at,
     }));
 
-    // Build specializations array
+    // Build specializations array and remove duplicates
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const specializations = (doc.doctor_specializations || []).map((ds: any) =>
-        ds.specializations?.name_en || ""
-    ).filter(Boolean);
+    const specNames = (doc.doctor_specializations || [])
+        .map((ds: any) => ds.specializations?.name_en || "")
+        .filter(Boolean);
+    
+    // Remove duplicates using Set
+    const specializations = Array.from(new Set(specNames));
 
     return {
         doctor: {
@@ -1334,7 +1345,7 @@ export async function getDoctorPatientsWithDetails(): Promise<{
             id,
             scheduled_start,
             status,
-            patient_notes,
+            chief_complaint,
             patient_profiles!inner (
                 id,
                 profile_id,
@@ -1390,7 +1401,7 @@ export async function getDoctorPatientsWithDetails(): Promise<{
                 avatar_url: pp.profiles.avatar_url,
                 age,
                 last_visit: apt.scheduled_start,
-                last_condition: apt.patient_notes || undefined,
+                last_condition: apt.chief_complaint || undefined,
                 total_visits: 1,
                 status: isActive ? "active" : "inactive",
             });

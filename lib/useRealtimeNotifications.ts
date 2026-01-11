@@ -68,93 +68,17 @@ export function useRealtimeNotifications(
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const unread = (notificationsData as any[]).filter((n) => !n.is_read).length;
             setUnreadCount(unread);
+            setIsConnected(true); // Set connected after initial fetch
         }
-    }, []);
+    }, []); // Keep empty dependency array
 
-    // Subscribe to realtime updates
-    useEffect(() => {
-        if (!enabled || !profileId) return;
-
-        const supabase = supabaseRef.current;
-
-        // Create a unique channel name based on profile ID
-        const channelName = `notifications:${profileId}`;
-
-        // Subscribe to INSERT events on the notifications table
-        const channel = supabase
-            .channel(channelName)
-            .on(
-                "postgres_changes",
-                {
-                    event: "INSERT",
-                    schema: "public",
-                    table: "notifications",
-                    filter: `profile_id=eq.${profileId}`,
-                },
-                (payload) => {
-                    const newNotification = payload.new as Notification;
-
-                    // Add to the beginning of the list
-                    setNotifications((prev) => [newNotification, ...prev.slice(0, 19)]);
-
-                    // Increment unread count if not read
-                    if (!newNotification.is_read) {
-                        setUnreadCount((prev) => prev + 1);
-                    }
-
-                    // Call the callback if provided
-                    if (onNewNotification) {
-                        onNewNotification(newNotification);
-                    }
-                }
-            )
-            .on(
-                "postgres_changes",
-                {
-                    event: "UPDATE",
-                    schema: "public",
-                    table: "notifications",
-                    filter: `profile_id=eq.${profileId}`,
-                },
-                (payload) => {
-                    const updatedNotification = payload.new as Notification;
-
-                    // Update the notification in the list
-                    setNotifications((prev) =>
-                        prev.map((n) =>
-                            n.id === updatedNotification.id ? updatedNotification : n
-                        )
-                    );
-
-                    // Recalculate unread count
-                    setNotifications((prev) => {
-                        const unread = prev.filter((n) => !n.is_read).length;
-                        setUnreadCount(unread);
-                        return prev;
-                    });
-                }
-            )
-            .subscribe((status) => {
-                setIsConnected(status === "SUBSCRIBED");
-            });
-
-        channelRef.current = channel;
-
-        // Cleanup on unmount or when dependencies change
-        return () => {
-            if (channelRef.current) {
-                supabase.removeChannel(channelRef.current);
-                channelRef.current = null;
-            }
-        };
-    }, [enabled, profileId, onNewNotification]);
-
-    // Initial fetch on mount
+    // Initial fetch on mount - only run once
     useEffect(() => {
         if (enabled) {
             fetchNotifications();
         }
-    }, [enabled, fetchNotifications]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [enabled]); // Only depend on enabled, not fetchNotifications
 
     // Mark a single notification as read
     const markAsRead = useCallback(

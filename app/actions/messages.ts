@@ -327,6 +327,7 @@ export async function sendMessage(data: {
         .single();
 
     if (error) {
+        console.error("Error sending message:", error);
         return { message: null, error: error.message };
     }
 

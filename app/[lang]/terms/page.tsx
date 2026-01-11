@@ -1,9 +1,11 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useI18n } from "../../i18n";
 import { useGlobalTheme } from "@/app/context/GlobalThemeContext";
+import Footer from "@/components/landing/Footer";
+import { GlowingCard } from "@/components/ui/glowing-card";
 
 // Logo Component
 const LogoFull = ({ className = "", isDark = true }: { className?: string; isDark?: boolean }) => (
@@ -49,6 +51,14 @@ export default function TermsPage() {
     const { theme } = useGlobalTheme();
     const isDark = theme === "dark";
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+    // Scroll to top on mount with smooth animation
+    useEffect(() => {
+        // Small delay to ensure DOM is ready, then smooth scroll to top
+        setTimeout(() => {
+            window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+        }, 100);
+    }, []);
 
     const translations = {
         en: {
@@ -172,19 +182,16 @@ export default function TermsPage() {
 
                 <div className="space-y-8">
                     {text.sections.map((section, idx) => (
-                        <div key={idx} className={`rounded-2xl p-6 md:p-8 ${isDark ? 'bg-slate-800/30 border border-white/10' : 'bg-white border border-gray-200 shadow-lg'}`}>
+                        <GlowingCard key={idx} isDark={isDark} glowColor="teal" className="p-6 md:p-8">
                             <h2 className={`text-xl font-bold mb-4 ${isDark ? 'text-white' : 'text-slate-900'}`}>{section.title}</h2>
                             <p className={`leading-relaxed ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>{section.content}</p>
-                        </div>
+                        </GlowingCard>
                     ))}
                 </div>
             </main>
 
-            <footer className={`relative z-10 border-t py-8 ${isDark ? 'border-white/5' : 'border-gray-200'}`}>
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-                    <p className="text-gray-500 text-sm">{t.footer.copyright}</p>
-                </div>
-            </footer>
+            {/* Footer */}
+            <Footer isDark={isDark} />
         </div>
     );
 }

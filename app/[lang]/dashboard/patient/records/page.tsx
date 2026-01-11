@@ -466,7 +466,12 @@ export default function RecordsPage() {
                             <select
                                 value={formData.recordType}
                                 onChange={(e) => setFormData({ ...formData, recordType: e.target.value as RecordType })}
-                                className={cn("w-full px-4 py-3 rounded-xl border transition-colors", inputBg, inputFocus)}
+                                className={cn(
+                                    "w-full px-4 py-3 rounded-xl border transition-colors",
+                                    inputBg,
+                                    inputFocus,
+                                    isDark ? "[&>option]:bg-slate-900 [&>option]:text-white" : "[&>option]:bg-white [&>option]:text-gray-900"
+                                )}
                             >
                                 <option value="general">{isRTL ? "عام" : "General"}</option>
                                 <option value="chronic_condition">{isRTL ? "حالة مزمنة" : "Chronic Condition"}</option>
@@ -505,7 +510,12 @@ export default function RecordsPage() {
                                 type="date"
                                 value={formData.dateRecorded}
                                 onChange={(e) => setFormData({ ...formData, dateRecorded: e.target.value })}
-                                className={cn("w-full px-4 py-3 rounded-xl border transition-colors", inputBg, inputFocus)}
+                                className={cn(
+                                    "w-full px-4 py-3 rounded-xl border transition-colors",
+                                    inputBg,
+                                    inputFocus,
+                                    isDark && "color-scheme-dark [&::-webkit-calendar-picker-indicator]:filter [&::-webkit-calendar-picker-indicator]:invert"
+                                )}
                             />
                         </div>
                         {/* File Upload Section */}
@@ -591,7 +601,12 @@ export default function RecordsPage() {
                                 type="date"
                                 value={formData.testDate}
                                 onChange={(e) => setFormData({ ...formData, testDate: e.target.value })}
-                                className={cn("w-full px-4 py-3 rounded-xl border transition-colors", inputBg, inputFocus)}
+                                className={cn(
+                                    "w-full px-4 py-3 rounded-xl border transition-colors",
+                                    inputBg,
+                                    inputFocus,
+                                    isDark && "color-scheme-dark [&::-webkit-calendar-picker-indicator]:filter [&::-webkit-calendar-picker-indicator]:invert"
+                                )}
                             />
                         </div>
                         <div>
@@ -696,7 +711,12 @@ export default function RecordsPage() {
                             <select
                                 value={formData.severity}
                                 onChange={(e) => setFormData({ ...formData, severity: e.target.value as AllergySeverity })}
-                                className={cn("w-full px-4 py-3 rounded-xl border transition-colors", inputBg, inputFocus)}
+                                className={cn(
+                                    "w-full px-4 py-3 rounded-xl border transition-colors",
+                                    inputBg,
+                                    inputFocus,
+                                    isDark ? "[&>option]:bg-slate-900 [&>option]:text-white" : "[&>option]:bg-white [&>option]:text-gray-900"
+                                )}
                             >
                                 <option value="mild">{isRTL ? "خفيفة" : "Mild"}</option>
                                 <option value="moderate">{isRTL ? "متوسطة" : "Moderate"}</option>
@@ -739,7 +759,12 @@ export default function RecordsPage() {
                             <select
                                 value={formData.status}
                                 onChange={(e) => setFormData({ ...formData, status: e.target.value as ConditionStatus })}
-                                className={cn("w-full px-4 py-3 rounded-xl border transition-colors", inputBg, inputFocus)}
+                                className={cn(
+                                    "w-full px-4 py-3 rounded-xl border transition-colors",
+                                    inputBg,
+                                    inputFocus,
+                                    isDark ? "[&>option]:bg-slate-900 [&>option]:text-white" : "[&>option]:bg-white [&>option]:text-gray-900"
+                                )}
                             >
                                 <option value="active">{isRTL ? "نشطة" : "Active"}</option>
                                 <option value="managed">{isRTL ? "مُدارة" : "Managed"}</option>
@@ -754,7 +779,12 @@ export default function RecordsPage() {
                                 type="date"
                                 value={formData.diagnosedDate}
                                 onChange={(e) => setFormData({ ...formData, diagnosedDate: e.target.value })}
-                                className={cn("w-full px-4 py-3 rounded-xl border transition-colors", inputBg, inputFocus)}
+                                className={cn(
+                                    "w-full px-4 py-3 rounded-xl border transition-colors",
+                                    inputBg,
+                                    inputFocus,
+                                    isDark && "color-scheme-dark [&::-webkit-calendar-picker-indicator]:filter [&::-webkit-calendar-picker-indicator]:invert"
+                                )}
                             />
                         </div>
                         <div>
@@ -1135,7 +1165,9 @@ export default function RecordsPage() {
                                                     onChange={(e) => handleUpdateConditionStatus(condition.id, e.target.value as ConditionStatus)}
                                                     className={cn(
                                                         "text-xs px-2 py-1 rounded-lg border",
-                                                        inputBg, inputFocus
+                                                        inputBg,
+                                                        inputFocus,
+                                                        isDark ? "[&>option]:bg-slate-900 [&>option]:text-white" : "[&>option]:bg-white [&>option]:text-gray-900"
                                                     )}
                                                 >
                                                     <option value="active">{isRTL ? "نشطة" : "Active"}</option>

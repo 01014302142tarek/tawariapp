@@ -6,6 +6,7 @@ import Header from "./components/Header";
 import { useGlobalTheme } from "@/app/context/GlobalThemeContext";
 import { useI18n } from "@/app/i18n";
 import { cn } from "@/lib/utils";
+import { AdminSidebarProvider } from "./context/SidebarContext";
 
 function LayoutContent({ children }: { children: React.ReactNode }) {
     const { isDark } = useGlobalTheme();
@@ -44,5 +45,9 @@ export default function AdminDashboardLayout({
 }: {
     children: React.ReactNode;
 }) {
-    return <LayoutContent>{children}</LayoutContent>;
+    return (
+        <AdminSidebarProvider>
+            <LayoutContent>{children}</LayoutContent>
+        </AdminSidebarProvider>
+    );
 }

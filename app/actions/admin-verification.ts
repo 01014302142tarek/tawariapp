@@ -55,9 +55,10 @@ export async function getPendingDoctorCount(): Promise<number> {
 }
 
 /**
- * Get list of doctors pending verification
+ * Get list of doctors (optionally filtered by verification status)
+ * Defaults to "pending" if no status is provided
  */
-export async function getPendingDoctors(): Promise<{ doctors: PendingDoctor[]; error?: string }> {
+export async function getPendingDoctors(status: string = "pending"): Promise<{ doctors: PendingDoctor[]; error?: string }> {
     const supabase = await createClient();
 
     // First verify the caller is an admin
@@ -96,8 +97,8 @@ export async function getPendingDoctors(): Promise<{ doctors: PendingDoctor[]; e
         user_id: string;
     };
 
-    // Get pending doctors with their profile info
-    const { data: doctorProfilesData, error } = await supabase
+    // Get doctors with their profile info (filtered by status if provided)
+    let query = supabase
         .from("doctor_profiles")
         .select(`
             id,
@@ -108,9 +109,14 @@ export async function getPendingDoctors(): Promise<{ doctors: PendingDoctor[]; e
             consultation_fee,
             verification_status,
             created_at
-        `)
-        .eq("verification_status", "pending")
-        .order("created_at", { ascending: false });
+        `);
+
+    // Apply status filter if provided and not "all"
+    if (status && status !== "all") {
+        query = query.eq("verification_status", status);
+    }
+
+    const { data: doctorProfilesData, error } = await query.order("created_at", { ascending: false });
 
     if (error) {
         console.error("Error fetching pending doctors:", error);

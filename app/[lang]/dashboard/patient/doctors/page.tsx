@@ -225,6 +225,7 @@ export default function DoctorsPage() {
             // Redirect to checkout page for payment
             router.push(`/${language}/checkout?appointment=${result.appointmentId}`);
         } else {
+            console.error("Booking failed:", result.error);
             setBookingStatus("error");
             if (bookingTimerRef.current) clearTimeout(bookingTimerRef.current);
             bookingTimerRef.current = setTimeout(() => setBookingStatus("idle"), 3000);

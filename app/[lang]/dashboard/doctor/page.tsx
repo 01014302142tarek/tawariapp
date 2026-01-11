@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -10,6 +10,7 @@ import { useI18n } from "@/app/i18n";
 import { useAuth, isDoctorProfile } from "@/app/context/AuthContext";
 import { ReviewsList } from "@/components/reviews";
 import { useDoctorAvailabilitySync } from "@/lib/useDoctorAvailabilitySync";
+import { getDoctorDashboardData, type DoctorDashboardData } from "@/app/actions/doctor-dashboard";
 
 // Import Aceternity components
 import { GlowingCard } from "@/components/ui/glowing-card";
@@ -164,20 +165,38 @@ const ProgressBar = ({ value, max, isDark = true }: { value: number; max: number
 };
 
 // ============================================
-// MOCK DATA
+// MAIN COMPONENT
 // ============================================
 
 export default function Doctor2Dashboard() {
     const { theme } = useTheme();
-    const { t, language, isRTL, formatNumber } = useI18n();
+    const { t, language, isRTL, formatNumber, formatDate } = useI18n();
     const { profile } = useAuth();
     const isDark = theme === "dark";
     const [mounted, setMounted] = useState(false);
+    
+    // State for dashboard data
+    const [dashboardData, setDashboardData] = useState<DoctorDashboardData | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
 
     // Handle hydration - only compute time-based values after mount
     useEffect(() => {
         setMounted(true);
     }, []);
+    
+    // Fetch dashboard data on mount
+    const fetchDashboardData = useCallback(async () => {
+        setIsLoading(true);
+        const result = await getDoctorDashboardData();
+        if (result.data) {
+            setDashboardData(result.data);
+        }
+        setIsLoading(false);
+    }, []);
+
+    useEffect(() => {
+        fetchDashboardData();
+    }, [fetchDashboardData]);
 
     // Auto-sync doctor availability status based on schedule
     const { isOnline, nextAvailableSlot, isSyncing } = useDoctorAvailabilitySync({
@@ -195,13 +214,46 @@ export default function Doctor2Dashboard() {
         ? (isRTL ? `د. ${profile.profile.full_name.split(' ')[0]}` : `Dr. ${profile.profile.full_name.split(' ')[0]}`)
         : t.common.demoNames.drHassan;
 
-    const appointments = [
-        { id: 1, time: isRTL ? "09:00 ص" : "09:00 AM", patient: t.common.demoNames.sarahJohnson, type: t.doctorDashboard.appointmentsPage.types.followUp, status: "completed", image: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&crop=face" },
-        { id: 2, time: isRTL ? "10:30 ص" : "10:30 AM", patient: t.common.demoNames.mohamedAli, type: t.doctorDashboard.appointmentsPage.types.initialConsultation, status: "in-progress", image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face" },
-        { id: 3, time: isRTL ? "11:45 ص" : "11:45 AM", patient: t.common.demoNames.fatimaKhaled, type: t.doctorDashboard.appointmentsPage.types.heartCheckup, status: "upcoming", image: "https://images.unsplash.com/photo-1489424731084-a5d8b219a5bb?w=100&h=100&fit=crop&crop=face" },
-        { id: 4, time: isRTL ? "02:00 م" : "02:00 PM", patient: t.common.demoNames.omarNasser, type: t.doctorDashboard.appointmentsPage.types.ecgReview, status: "upcoming", image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face" },
-    ];
+    // Format appointment time for display
+    const formatTime = (dateString: string) => {
+        const date = new Date(dateString);
+        return date.toLocaleTimeString(isRTL ? 'ar-EG' : 'en-US', {
+            hour: 'numeric',
+            minute: '2-digit',
+            hour12: true
+        });
+    };
 
+    // Get today's appointments from real data
+    const appointments = dashboardData?.todayAppointments.map(apt => ({
+        id: apt.id,
+        time: formatTime(apt.scheduledStart),
+        patient: apt.patientName,
+        type: apt.chiefComplaint || apt.appointmentType,
+        status: apt.status,
+        image: apt.patientAvatar || "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&crop=face"
+    })) || [];
+
+    // Get pending tasks from real data
+    const pendingTasks = dashboardData?.pendingTasks.map(task => ({
+        id: task.id,
+        title: task.title,
+        patient: task.patientName,
+        priority: t.common.priority[task.priority],
+        dueTime: task.dueDate ? formatDate(task.dueDate) : t.doctorDashboard.tasks.today
+    })) || [];
+
+    // Get recent messages from real data
+    const recentMessages = dashboardData?.recentMessages.map(msg => ({
+        id: msg.id,
+        patient: msg.patientName,
+        message: msg.lastMessage,
+        time: mounted ? formatRelativeTime(msg.timestamp) : t.common.time.hourAgo,
+        unread: msg.isUnread,
+        image: msg.patientAvatar || "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&crop=face"
+    })) || [];
+
+    // Keep quick actions and health tips static
     const quickActions = [
         { title: t.doctorDashboard.actions.startVideoCall, description: t.doctorDashboard.actions.connectWithPatient, icon: Icons.video, href: `/${language}/dashboard/doctor/appointments` },
         { title: t.doctorDashboard.actions.viewSchedule, description: t.doctorDashboard.actions.manageAppointments, icon: Icons.calendarDays, href: `/${language}/dashboard/doctor/schedule` },
@@ -209,24 +261,30 @@ export default function Doctor2Dashboard() {
         { title: t.doctorDashboard.actions.messagesAction, description: t.doctorDashboard.actions.chatWithPatients, icon: Icons.chat, href: `/${language}/dashboard/doctor/messages` },
     ];
 
-    const pendingTasks = [
-        { id: 1, title: t.doctorDashboard.tasks.reviewLabResults, patient: t.common.demoNames.sarahJohnson, priority: t.common.priority.high, dueTime: t.doctorDashboard.tasks.today },
-        { id: 2, title: t.doctorDashboard.tasks.prescriptionRenewal, patient: t.common.demoNames.mohamedAli, priority: t.common.priority.medium, dueTime: t.doctorDashboard.tasks.tomorrow },
-        { id: 3, title: t.doctorDashboard.tasks.followUpReport, patient: t.common.demoNames.fatimaKhaled, priority: t.common.priority.low, dueTime: t.doctorDashboard.tasks.inDays },
-        { id: 4, title: t.doctorDashboard.tasks.ecgAnalysis, patient: t.common.demoNames.omarNasser, priority: t.common.priority.high, dueTime: t.doctorDashboard.tasks.today },
-    ];
-
-    const recentMessages = [
-        { id: 1, patient: t.common.demoNames.laylaAhmed, message: t.doctorDashboard.messagesPage.demoMessages.m3, time: isRTL ? `منذ ${formatNumber(5)} دقائق` : `5 ${t.common.time.minsAgo}`, unread: true, image: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&h=100&fit=crop&crop=face" },
-        { id: 2, patient: t.common.demoNames.omarNasser, message: t.doctorDashboard.messagesPage.demoMessages.m1, time: t.common.time.hourAgo, unread: true, image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face" },
-        { id: 3, patient: t.common.demoNames.sarahJohnson, message: t.doctorDashboard.messagesPage.demoMessages.m7, time: isRTL ? `منذ ${formatNumber(3)} ساعات` : `3 ${t.common.time.hoursAgo}`, unread: false, image: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&crop=face" },
-    ];
-
     const healthTips = [
         { id: 1, title: t.doctorDashboard.tips.heartHealth, tip: t.doctorDashboard.tips.heartHealthTip, category: t.doctorDashboard.tips.cardiology },
         { id: 2, title: t.doctorDashboard.tips.sleepQuality, tip: t.doctorDashboard.tips.sleepQualityTip, category: t.doctorDashboard.tips.wellness },
         { id: 3, title: t.doctorDashboard.tips.hydration, tip: t.doctorDashboard.tips.hydrationTip, category: t.doctorDashboard.tips.general },
     ];
+
+    // Helper function to format relative time
+    const formatRelativeTime = (timestamp: string): string => {
+        const now = Date.now();
+        const then = new Date(timestamp).getTime();
+        const diffMinutes = Math.floor((now - then) / (1000 * 60));
+
+        if (diffMinutes < 1) {
+            return isRTL ? "الآن" : "Just now";
+        } else if (diffMinutes < 60) {
+            return isRTL ? `منذ ${formatNumber(diffMinutes)} دقيقة` : `${diffMinutes} ${t.common.time.minsAgo}`;
+        } else if (diffMinutes < 1440) {
+            const hours = Math.floor(diffMinutes / 60);
+            return isRTL ? `منذ ${formatNumber(hours)} ساعة` : `${hours} ${t.common.time.hoursAgo}`;
+        } else {
+            const days = Math.floor(diffMinutes / 1440);
+            return isRTL ? `منذ ${formatNumber(days)} يوم` : `${days} days ago`;
+        }
+    };
 
     return (
         <div className="relative overflow-hidden">
@@ -268,10 +326,10 @@ export default function Doctor2Dashboard() {
                 <section className="mb-6 md:mb-8">
                     <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
                         {[
-                            { label: t.doctorDashboard.stats.todayAppointments, value: 5, icon: Icons.calendar },
-                            { label: t.doctorDashboard.stats.completed, value: 2, icon: Icons.check },
-                            { label: t.doctorDashboard.stats.revenueToday, value: 2400, suffix: isRTL ? " ج.م" : " EGP", icon: Icons.money },
-                            { label: t.doctorDashboard.stats.rating, value: 4.9, suffix: isRTL ? "/٥" : "/5", icon: Icons.star },
+                            { label: t.doctorDashboard.stats.todayAppointments, value: dashboardData?.stats.todayAppointments || 0, icon: Icons.calendar },
+                            { label: t.doctorDashboard.stats.completed, value: dashboardData?.stats.completedToday || 0, icon: Icons.check },
+                            { label: t.doctorDashboard.stats.revenueToday, value: dashboardData?.stats.revenueToday || 0, suffix: isRTL ? " ج.م" : " EGP", icon: Icons.money },
+                            { label: t.doctorDashboard.stats.rating, value: dashboardData?.stats.avgRating || 0, suffix: isRTL ? "/٥" : "/5", icon: Icons.star },
                         ].map((stat, idx) => (
                             <GlowingCard key={idx} isDark={isDark} glowColor="teal" className="p-3 md:p-5">
                                 <div className="flex items-start justify-between mb-2 md:mb-3">

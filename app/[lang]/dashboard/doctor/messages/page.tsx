@@ -126,6 +126,10 @@ export default function MessagesPage() {
             content: newMessage.trim(),
         });
 
+        if (result.error) {
+            console.error("Failed to send message:", result.error);
+        }
+
         if (result.message) {
             setMessages(prev => [...prev, { ...result.message!, sender: undefined }]);
             setNewMessage("");

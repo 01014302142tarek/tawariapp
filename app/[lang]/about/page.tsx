@@ -1,9 +1,11 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useI18n } from "../../i18n";
 import { useGlobalTheme } from "@/app/context/GlobalThemeContext";
+import Footer from "@/components/landing/Footer";
+import { GlowingCard } from "@/components/ui/glowing-card";
 
 // Logo Component
 const LogoFull = ({ className = "", isDark = true }: { className?: string; isDark?: boolean }) => (
@@ -53,6 +55,14 @@ export default function AboutPage() {
     const { theme } = useGlobalTheme();
     const isDark = theme === "dark";
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+    // Scroll to top on mount with smooth animation
+    useEffect(() => {
+        // Small delay to ensure DOM is ready, then smooth scroll to top
+        setTimeout(() => {
+            window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+        }, 100);
+    }, []);
 
     const translations = {
         en: {
@@ -144,27 +154,27 @@ export default function AboutPage() {
                 </div>
 
                 <div className="space-y-12">
-                    <div className={`rounded-2xl p-6 md:p-8 ${isDark ? 'bg-slate-800/30 border border-white/10' : 'bg-white border border-gray-200 shadow-lg'}`}>
+                    <GlowingCard isDark={isDark} glowColor="teal" className="p-6 md:p-8">
                         <h2 className="text-2xl font-bold text-teal-400 mb-4">{text.mission}</h2>
                         <p className={`leading-relaxed ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>{text.missionText}</p>
-                    </div>
+                    </GlowingCard>
 
-                    <div className={`rounded-2xl p-6 md:p-8 ${isDark ? 'bg-slate-800/30 border border-white/10' : 'bg-white border border-gray-200 shadow-lg'}`}>
+                    <GlowingCard isDark={isDark} glowColor="amber" className="p-6 md:p-8">
                         <h2 className="text-2xl font-bold text-amber-400 mb-4">{text.vision}</h2>
                         <p className={`leading-relaxed ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>{text.visionText}</p>
-                    </div>
+                    </GlowingCard>
 
                     <div>
                         <h2 className={`text-2xl font-bold mb-6 text-center ${isDark ? 'text-white' : 'text-slate-900'}`}>{text.values}</h2>
                         <div className="grid sm:grid-cols-2 gap-4">
                             {values.map((value, idx) => (
-                                <div key={idx} className={`rounded-xl p-5 transition-colors ${isDark ? 'bg-slate-800/30 border border-white/10 hover:bg-slate-800/50' : 'bg-white border border-gray-200 hover:bg-slate-50 shadow-sm'}`}>
+                                <GlowingCard key={idx} isDark={isDark} glowColor={value.color as any} className="p-5 transition-all hover:scale-[1.02]">
                                     <div className={`w-10 h-10 rounded-lg bg-${value.color}-500/20 flex items-center justify-center text-${value.color}-400 mb-3`}>
                                         {value.icon}
                                     </div>
                                     <h3 className={`font-bold mb-2 ${isDark ? 'text-white' : 'text-slate-900'}`}>{value.title}</h3>
                                     <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>{value.desc}</p>
-                                </div>
+                                </GlowingCard>
                             ))}
                         </div>
                     </div>
@@ -176,11 +186,8 @@ export default function AboutPage() {
                 </div>
             </main>
 
-            <footer className={`relative z-10 border-t py-8 ${isDark ? 'border-white/5' : 'border-gray-200'}`}>
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-                    <p className="text-gray-500 text-sm">{t.footer.copyright}</p>
-                </div>
-            </footer>
+            {/* Footer */}
+            <Footer isDark={isDark} />
         </div>
     );
 }

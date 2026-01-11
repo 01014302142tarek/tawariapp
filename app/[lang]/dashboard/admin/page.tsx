@@ -9,6 +9,8 @@ import { useTheme } from "./context/ThemeContext";
 import { useI18n } from "@/app/i18n";
 import { useAuth } from "@/app/context/AuthContext";
 import { getPendingDoctors, getVerificationStats, approveDoctor, rejectDoctor, getRecentActivity, type AdminActivityItem } from "@/app/actions/admin-verification";
+import { getAdminUserStats } from "@/app/actions/admin-users";
+import { getAdminAnalytics, getSystemOverview, type SystemOverviewMetrics } from "@/app/actions/admin-analytics";
 
 // Import Aceternity components
 import { GlowingCard } from "@/components/ui/glowing-card";
@@ -106,10 +108,6 @@ const ProgressBar = ({ value, max, isDark = true }: { value: number; max: number
 };
 
 // ============================================
-// MOCK DATA
-// ============================================
-
-// ============================================
 // MAIN COMPONENT
 // ============================================
 
@@ -145,15 +143,32 @@ export default function AdminDashboard() {
     const [recentActivity, setRecentActivity] = useState<AdminActivityItem[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
+    // State for real dashboard stats
+    const [dashboardStats, setDashboardStats] = useState({
+        totalUsers: 0,
+        totalDoctors: 0,
+        totalPatients: 0,
+        totalRevenue: 0,
+    });
+    const [systemMetrics, setSystemMetrics] = useState<SystemOverviewMetrics>({
+        uptime_percentage: 0,
+        satisfaction_percentage: 0,
+        active_sessions: 0,
+        total_sessions_capacity: 200,
+    });
+
     // Fetch pending doctors on mount
     useEffect(() => {
         async function fetchData() {
             setIsLoading(true);
             try {
-                const [doctorsResult, statsResult, activityResult] = await Promise.all([
-                    getPendingDoctors(),
+                const [doctorsResult, statsResult, activityResult, userStatsResult, analyticsResult, systemOverviewResult] = await Promise.all([
+                    getPendingDoctors(), // Defaults to "pending"
                     getVerificationStats(),
                     getRecentActivity(),
+                    getAdminUserStats(),
+                    getAdminAnalytics(),
+                    getSystemOverview(),
                 ]);
 
                 if (doctorsResult.doctors) {
@@ -168,6 +183,21 @@ export default function AdminDashboard() {
                 }
                 setStats(statsResult);
                 setRecentActivity(activityResult);
+
+                // Set real dashboard stats
+                if (userStatsResult.stats && analyticsResult.analytics) {
+                    setDashboardStats({
+                        totalUsers: userStatsResult.stats.total_users,
+                        totalDoctors: userStatsResult.stats.doctors,
+                        totalPatients: userStatsResult.stats.patients,
+                        totalRevenue: analyticsResult.analytics.total_revenue,
+                    });
+                }
+
+                // Set real system metrics
+                if (systemOverviewResult.metrics) {
+                    setSystemMetrics(systemOverviewResult.metrics);
+                }
             } catch {
                 // Error fetching admin data - will show empty state
             }
@@ -264,10 +294,10 @@ export default function AdminDashboard() {
                 <section className="mb-6 md:mb-8">
                     <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
                         {[
-                            { label: t.adminDashboard.stats.totalUsers, value: 1247, change: "+12%", icon: Icons.users, color: "teal" },
-                            { label: t.adminDashboard.stats.totalDoctors, value: 89, change: "+5%", icon: Icons.doctor, color: "emerald" },
-                            { label: t.adminDashboard.stats.totalPatients, value: 1158, change: "+18%", icon: Icons.patient, color: "blue" },
-                            { label: t.adminDashboard.stats.totalRevenue, value: 45600, suffix: isRTL ? " ج.م" : " EGP", change: "+23%", icon: Icons.money, color: "amber" },
+                            { label: t.adminDashboard.stats.totalUsers, value: dashboardStats.totalUsers, change: "+12%", icon: Icons.users, color: "teal" },
+                            { label: t.adminDashboard.stats.totalDoctors, value: dashboardStats.totalDoctors, change: "+5%", icon: Icons.doctor, color: "emerald" },
+                            { label: t.adminDashboard.stats.totalPatients, value: dashboardStats.totalPatients, change: "+18%", icon: Icons.patient, color: "blue" },
+                            { label: t.adminDashboard.stats.totalRevenue, value: dashboardStats.totalRevenue, suffix: isRTL ? " ج.م" : " EGP", change: "+23%", icon: Icons.money, color: "amber" },
                         ].map((stat, idx) => (
                             <GlowingCard key={idx} glowColor="teal" className="p-3 md:p-5" isDark={isDark}>
                                 <div className="flex items-start justify-between mb-2 md:mb-4">
@@ -283,7 +313,11 @@ export default function AdminDashboard() {
                                 </div>
                                 <div className="flex items-baseline gap-0.5 md:gap-1">
                                     <span className={cn("text-xl md:text-3xl font-bold", isDark ? "text-white" : "text-slate-900")}>
-                                        <AnimatedNumber value={stat.value} format={(v) => formatNumber(v)} />
+                                        {isLoading ? (
+                                            <span className="animate-pulse">--</span>
+                                        ) : (
+                                            <AnimatedNumber value={stat.value} format={(v) => formatNumber(v)} />
+                                        )}
                                     </span>
                                     {stat.suffix && <span className={cn("text-xs md:text-lg", isDark ? "text-gray-400" : "text-gray-500")}>{stat.suffix}</span>}
                                 </div>
@@ -390,9 +424,9 @@ export default function AdminDashboard() {
                             {/* Metrics */}
                             <div className="space-y-4">
                                 {[
-                                    { label: t.adminDashboard.system.uptime, current: 99.9, max: 100, color: "emerald" },
-                                    { label: t.adminDashboard.system.satisfaction, current: 94, max: 100, color: "teal" },
-                                    { label: t.adminDashboard.system.sessions, current: 156, max: 200, color: "blue" },
+                                    { label: t.adminDashboard.system.uptime, current: systemMetrics.uptime_percentage, max: 100, color: "emerald" },
+                                    { label: t.adminDashboard.system.satisfaction, current: systemMetrics.satisfaction_percentage, max: 100, color: "teal" },
+                                    { label: t.adminDashboard.system.sessions, current: systemMetrics.active_sessions, max: systemMetrics.total_sessions_capacity, color: "blue" },
                                 ].map((metric, idx) => {
                                     const percentage = Math.round((metric.current / metric.max) * 100);
                                     return (

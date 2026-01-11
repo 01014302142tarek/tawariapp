@@ -155,13 +155,13 @@ export default function DoctorsPage() {
     const [actionLoading, setActionLoading] = useState<string | null>(null);
     const [viewingCredential, setViewingCredential] = useState<string | null>(null);
 
-    // Fetch data on mount
+    // Fetch data on mount and when filter changes
     useEffect(() => {
         async function fetchData() {
             setIsLoading(true);
             try {
                 const [doctorsResult, statsResult] = await Promise.all([
-                    getPendingDoctors(),
+                    getPendingDoctors(filter),
                     getVerificationStats(),
                 ]);
 
@@ -175,7 +175,7 @@ export default function DoctorsPage() {
             setIsLoading(false);
         }
         fetchData();
-    }, []);
+    }, [filter]);
 
     // View doctor details
     const handleViewDetails = async (doctorId: string) => {
@@ -197,7 +197,12 @@ export default function DoctorsPage() {
         try {
             const result = await approveDoctor(doctorId);
             if (result.success) {
-                setDoctors(prev => prev.filter(d => d.id !== doctorId));
+                // Refetch the list to update UI
+                const doctorsResult = await getPendingDoctors(filter);
+                if (doctorsResult.doctors) {
+                    setDoctors(doctorsResult.doctors);
+                }
+                // Update stats
                 setStats(prev => ({ ...prev, pending: prev.pending - 1, verified: prev.verified + 1 }));
                 setSelectedDoctor(null);
             }
@@ -215,7 +220,12 @@ export default function DoctorsPage() {
         try {
             const result = await rejectDoctor(doctorId, rejectReason);
             if (result.success) {
-                setDoctors(prev => prev.filter(d => d.id !== doctorId));
+                // Refetch the list to update UI
+                const doctorsResult = await getPendingDoctors(filter);
+                if (doctorsResult.doctors) {
+                    setDoctors(doctorsResult.doctors);
+                }
+                // Update stats
                 setStats(prev => ({ ...prev, pending: prev.pending - 1, rejected: prev.rejected + 1 }));
                 setSelectedDoctor(null);
                 setShowRejectModal(false);
@@ -244,10 +254,9 @@ export default function DoctorsPage() {
     };
 
     const filteredDoctors = doctors.filter(doc => {
-        const matchesFilter = filter === "all" || doc.verificationStatus === filter;
         const matchesSearch = doc.fullName.toLowerCase().includes(search.toLowerCase()) ||
             (doc.specialty?.toLowerCase() || "").includes(search.toLowerCase());
-        return matchesFilter && matchesSearch;
+        return matchesSearch;
     });
 
     const statsConfig = [

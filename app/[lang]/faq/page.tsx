@@ -1,10 +1,12 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useI18n } from "../../i18n";
 import { motion, AnimatePresence } from "framer-motion";
 import { useGlobalTheme } from "@/app/context/GlobalThemeContext";
+import Footer from "@/components/landing/Footer";
+import { GlowingCard } from "@/components/ui/glowing-card";
 
 // Logo Component
 const LogoFull = ({ className = "", isDark = true }: { className?: string; isDark?: boolean }) => (
@@ -102,14 +104,13 @@ function FAQItem({ question, answer, isOpen, onClick, isDark = true }: {
     isDark?: boolean;
 }) {
     return (
-        <div className={`border rounded-xl overflow-hidden transition-colors ${isDark
-                ? "bg-slate-800/30 border-white/10 hover:bg-slate-800/50"
-                : "bg-white border-gray-200 hover:shadow-lg shadow-sm"
-            }`}>
-            <button
-                onClick={onClick}
-                className="w-full flex items-center justify-between p-5 text-left"
-            >
+        <GlowingCard 
+            isDark={isDark} 
+            glowColor="teal" 
+            className="overflow-hidden cursor-pointer transition-all hover:scale-[1.01]"
+            onClick={onClick}
+        >
+            <div className="flex items-center justify-between p-5">
                 <span className={`font-medium pr-4 ${isDark ? "text-white" : "text-slate-900"}`}>{question}</span>
                 <motion.span
                     animate={{ rotate: isOpen ? 180 : 0 }}
@@ -118,7 +119,7 @@ function FAQItem({ question, answer, isOpen, onClick, isDark = true }: {
                 >
                     {Icons.chevron}
                 </motion.span>
-            </button>
+            </div>
             <AnimatePresence>
                 {isOpen && (
                     <motion.div
@@ -133,7 +134,7 @@ function FAQItem({ question, answer, isOpen, onClick, isDark = true }: {
                     </motion.div>
                 )}
             </AnimatePresence>
-        </div>
+        </GlowingCard>
     );
 }
 
@@ -144,6 +145,14 @@ export default function FAQPage() {
     const [openPatient, setOpenPatient] = useState<number | null>(0);
     const [openDoctor, setOpenDoctor] = useState<number | null>(null);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+    // Scroll to top on mount with smooth animation
+    useEffect(() => {
+        // Small delay to ensure DOM is ready, then smooth scroll to top
+        setTimeout(() => {
+            window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+        }, 100);
+    }, []);
 
     const translations = {
         en: {
@@ -397,7 +406,7 @@ export default function FAQPage() {
                 </div>
 
                 {/* Contact CTA */}
-                <div className={`text-center rounded-2xl p-8 transition-colors ${isDark ? 'bg-slate-800/30 border border-white/10' : 'bg-white border border-gray-200 shadow-lg'}`}>
+                <GlowingCard isDark={isDark} glowColor="teal" className="text-center p-8">
                     <p className={`mb-4 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>{text.stillHaveQuestions}</p>
                     <Link
                         href={`/${language}/contact`}
@@ -405,15 +414,11 @@ export default function FAQPage() {
                     >
                         {text.contactUs}
                     </Link>
-                </div>
+                </GlowingCard>
             </main>
 
             {/* Footer */}
-            <footer className={`relative z-10 border-t py-8 ${isDark ? 'border-white/5' : 'border-gray-200'}`}>
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-                    <p className="text-gray-500 text-sm">{t.footer.copyright}</p>
-                </div>
-            </footer>
+            <Footer isDark={isDark} />
         </div>
     );
 }

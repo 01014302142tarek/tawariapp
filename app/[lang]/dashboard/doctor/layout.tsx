@@ -6,6 +6,7 @@ import Header from "./components/Header";
 import { useGlobalTheme } from "@/app/context/GlobalThemeContext";
 import { useI18n } from "@/app/i18n";
 import { cn } from "@/lib/utils";
+import { DoctorSidebarProvider } from "./context/SidebarContext";
 
 function LayoutContent({ children }: { children: React.ReactNode }) {
     const { isDark } = useGlobalTheme();
@@ -44,5 +45,9 @@ export default function Doctor2DashboardLayout({
 }: {
     children: React.ReactNode;
 }) {
-    return <LayoutContent>{children}</LayoutContent>;
+    return (
+        <DoctorSidebarProvider>
+            <LayoutContent>{children}</LayoutContent>
+        </DoctorSidebarProvider>
+    );
 }

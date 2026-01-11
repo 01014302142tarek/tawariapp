@@ -153,6 +153,10 @@ export default function MessagesPage() {
             content: newMessage.trim(),
         });
 
+        if (error) {
+            console.error("Failed to send message:", error);
+        }
+
         if (message && !error) {
             // Add message with sender info
             const newMsg: MessageWithSender = {

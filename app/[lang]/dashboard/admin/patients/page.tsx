@@ -81,7 +81,11 @@ export default function PatientsPage() {
     const isDark = theme === "dark";
     const [search, setSearch] = useState("");
     const [debouncedSearch, setDebouncedSearch] = useState("");
-    const [loading, setLoading] = useState(true);
+    const [statusFilter, setStatusFilter] = useState("all");
+    const [genderFilter, setGenderFilter] = useState("all");
+    const [bloodTypeFilter, setBloodTypeFilter] = useState("all");
+    const [isFirstLoad, setIsFirstLoad] = useState(true);
+    const [loading, setLoading] = useState(false);
     const [patients, setPatients] = useState<AdminPatient[]>([]);
     const [totalPatients, setTotalPatients] = useState(0);
     const [currentPage, setCurrentPage] = useState(1);
@@ -96,24 +100,32 @@ export default function PatientsPage() {
     }, [search]);
 
     // Load patients from database
-    const loadPatients = useCallback(async (page: number, searchTerm: string) => {
+    const loadPatients = useCallback(async (page: number, searchTerm: string, status: string, gender: string, bloodType: string) => {
         setLoading(true);
+        
         const offset = (page - 1) * ITEMS_PER_PAGE;
         const result = await getAdminPatients({
             limit: ITEMS_PER_PAGE,
             offset,
-            search: searchTerm || undefined
+            search: searchTerm || undefined,
+            status: status !== "all" ? status : undefined,
+            gender: gender !== "all" ? gender : undefined,
+            bloodType: bloodType !== "all" ? bloodType : undefined,
         });
         if (!result.error) {
             setPatients(result.patients);
             setTotalPatients(result.total);
         }
+        
         setLoading(false);
-    }, []);
+        if (isFirstLoad) {
+            setIsFirstLoad(false);
+        }
+    }, [isFirstLoad]);
 
     useEffect(() => {
-        loadPatients(currentPage, debouncedSearch);
-    }, [currentPage, debouncedSearch, loadPatients]);
+        loadPatients(currentPage, debouncedSearch, statusFilter, genderFilter, bloodTypeFilter);
+    }, [currentPage, debouncedSearch, statusFilter, genderFilter, bloodTypeFilter, loadPatients]);
 
     const totalPages = Math.ceil(totalPatients / ITEMS_PER_PAGE);
 
@@ -170,7 +182,7 @@ export default function PatientsPage() {
         return labels[key] || key;
     };
 
-    if (loading) {
+    if (isFirstLoad) {
         return (
             <div className="min-h-screen flex items-center justify-center">
                 <div className="text-center">
@@ -233,29 +245,131 @@ export default function PatientsPage() {
                     ))}
                 </div>
 
-                {/* Search */}
+                {/* Search and Filters */}
                 <GlowingCard glowColor="teal" className="p-3 md:p-4 mb-4 md:mb-6" isDark={isDark}>
-                    <div className="flex-1 relative">
-                        <div className={cn("absolute top-1/2 -translate-y-1/2 text-gray-500", isRTL ? "right-3" : "left-3")}>{Icons.search}</div>
-                        <input
-                            type="text"
-                            placeholder={t.adminDashboard.patientsPage.searchPlaceholder}
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
-                            aria-label={language === "ar" ? "البحث عن المرضى" : "Search patients"}
-                            className={cn(
-                                "w-full py-2.5 rounded-xl border outline-none transition-colors",
-                                isRTL ? "pr-10 pl-4" : "pl-10 pr-4",
-                                isDark
-                                    ? "bg-slate-800/50 border-white/10 text-white placeholder-gray-500 focus:border-teal-500/50"
-                                    : "bg-gray-50 border-gray-200 text-slate-900 placeholder-gray-400 focus:border-teal-500"
-                            )}
-                        />
+                    <div className="flex flex-col gap-4">
+                        {/* Search Bar */}
+                        <div className="flex-1 relative">
+                            <div className={cn("absolute top-1/2 -translate-y-1/2 text-gray-500", isRTL ? "right-3" : "left-3")}>{Icons.search}</div>
+                            <input
+                                type="text"
+                                placeholder={t.adminDashboard.patientsPage.searchPlaceholder}
+                                value={search}
+                                onChange={(e) => setSearch(e.target.value)}
+                                aria-label={language === "ar" ? "البحث عن المرضى" : "Search patients"}
+                                className={cn(
+                                    "w-full py-2.5 rounded-xl border outline-none transition-colors",
+                                    isRTL ? "pr-10 pl-4" : "pl-10 pr-4",
+                                    isDark
+                                        ? "bg-slate-800/50 border-white/10 text-white placeholder-gray-500 focus:border-teal-500/50"
+                                        : "bg-gray-50 border-gray-200 text-slate-900 placeholder-gray-400 focus:border-teal-500"
+                                )}
+                            />
+                        </div>
+
+                        {/* Filter Buttons */}
+                        <div className="flex flex-col md:flex-row gap-3">
+                            {/* Status Filter */}
+                            <div className="flex gap-2 flex-wrap">
+                                <span className={cn("text-xs font-medium flex items-center", isDark ? "text-gray-400" : "text-gray-600")}>
+                                    {language === "ar" ? "الحالة:" : "Status:"}
+                                </span>
+                                {["all", "active", "inactive"].map((status) => (
+                                    <button
+                                        key={status}
+                                        type="button"
+                                        onClick={() => {
+                                            setStatusFilter(status);
+                                            setCurrentPage(1);
+                                        }}
+                                        className={cn(
+                                            "px-3 py-1.5 rounded-lg text-xs font-medium transition-colors capitalize",
+                                            statusFilter === status
+                                                ? "bg-teal-500 text-white"
+                                                : isDark
+                                                    ? "bg-white/5 text-gray-400 hover:bg-white/10"
+                                                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                                        )}
+                                    >
+                                        {getFilterLabel(status)}
+                                    </button>
+                                ))}
+                            </div>
+
+                            {/* Gender Filter */}
+                            <div className="flex gap-2 flex-wrap">
+                                <span className={cn("text-xs font-medium flex items-center", isDark ? "text-gray-400" : "text-gray-600")}>
+                                    {language === "ar" ? "الجنس:" : "Gender:"}
+                                </span>
+                                {["all", "male", "female"].map((gender) => (
+                                    <button
+                                        key={gender}
+                                        type="button"
+                                        onClick={() => {
+                                            setGenderFilter(gender);
+                                            setCurrentPage(1);
+                                        }}
+                                        className={cn(
+                                            "px-3 py-1.5 rounded-lg text-xs font-medium transition-colors capitalize",
+                                            genderFilter === gender
+                                                ? "bg-teal-500 text-white"
+                                                : isDark
+                                                    ? "bg-white/5 text-gray-400 hover:bg-white/10"
+                                                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                                        )}
+                                    >
+                                        {gender === "all" 
+                                            ? (language === "ar" ? "الكل" : "All")
+                                            : gender === "male"
+                                                ? (language === "ar" ? "ذكر" : "Male")
+                                                : (language === "ar" ? "أنثى" : "Female")
+                                        }
+                                    </button>
+                                ))}
+                            </div>
+
+                            {/* Blood Type Filter */}
+                            <div className="flex gap-2 flex-wrap">
+                                <span className={cn("text-xs font-medium flex items-center", isDark ? "text-gray-400" : "text-gray-600")}>
+                                    {language === "ar" ? "فصيلة الدم:" : "Blood:"}
+                                </span>
+                                <select
+                                    value={bloodTypeFilter}
+                                    onChange={(e) => {
+                                        setBloodTypeFilter(e.target.value);
+                                        setCurrentPage(1);
+                                    }}
+                                    className={cn(
+                                        "px-3 py-1.5 rounded-lg text-xs font-medium transition-colors outline-none",
+                                        isDark
+                                            ? "bg-white/5 text-gray-300 border border-white/10 hover:bg-white/10 [&>option]:bg-slate-900 [&>option]:text-white"
+                                            : "bg-gray-100 text-gray-600 border border-gray-200 hover:bg-gray-200"
+                                    )}
+                                >
+                                    <option value="all">{language === "ar" ? "الكل" : "All"}</option>
+                                    <option value="A+">A+</option>
+                                    <option value="A-">A-</option>
+                                    <option value="B+">B+</option>
+                                    <option value="B-">B-</option>
+                                    <option value="AB+">AB+</option>
+                                    <option value="AB-">AB-</option>
+                                    <option value="O+">O+</option>
+                                    <option value="O-">O-</option>
+                                </select>
+                            </div>
+                        </div>
                     </div>
                 </GlowingCard>
 
                 {/* Patients - Horizontal List Layout */}
-                {patients.length > 0 ? (
+                {loading ? (
+                    <div className="flex items-center justify-center py-20">
+                        <div className="text-center">
+                            <div className="text-teal-500 mb-4 flex justify-center">{Icons.spinner}</div>
+                            <p className={isDark ? "text-gray-400" : "text-gray-600"}>{t.common.loading || "Loading..."}</p>
+                        </div>
+                    </div>
+                ) : patients.length > 0 ? (
                     <div className="space-y-4">
                         {patients.map((patient, idx) => {
                             const age = calculateAge(patient.date_of_birth);
@@ -332,6 +446,7 @@ export default function PatientsPage() {
 
                                             {/* Action */}
                                             <button
+                                                type="button"
                                                 aria-label={`${t.adminDashboard.patientsPage.card.viewRecords} - ${patient.full_name}`}
                                                 className={cn(
                                                     "px-3 md:px-4 py-1.5 md:py-2 rounded-lg md:rounded-xl text-xs md:text-sm font-medium transition-colors flex items-center gap-1.5 md:gap-2",
@@ -351,6 +466,7 @@ export default function PatientsPage() {
                         {totalPages > 1 && (
                             <div className="flex items-center justify-center gap-2 mt-6">
                                 <button
+                                    type="button"
                                     onClick={() => goToPage(currentPage - 1)}
                                     disabled={currentPage === 1}
                                     aria-label={language === "ar" ? "الصفحة السابقة" : "Previous page"}
@@ -383,6 +499,7 @@ export default function PatientsPage() {
                                         return (
                                             <button
                                                 key={pageNum}
+                                                type="button"
                                                 onClick={() => goToPage(pageNum)}
                                                 aria-label={`${language === "ar" ? "صفحة" : "Page"} ${pageNum}`}
                                                 aria-current={currentPage === pageNum ? "page" : undefined}
@@ -402,6 +519,7 @@ export default function PatientsPage() {
                                 </div>
 
                                 <button
+                                    type="button"
                                     onClick={() => goToPage(currentPage + 1)}
                                     disabled={currentPage === totalPages}
                                     aria-label={language === "ar" ? "الصفحة التالية" : "Next page"}

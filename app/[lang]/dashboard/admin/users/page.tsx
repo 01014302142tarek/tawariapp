@@ -9,7 +9,7 @@ import { GlowingCard } from "@/components/ui/glowing-card";
 import { SparklesCore } from "@/components/ui/sparkles";
 import { AnimatedNumber } from "@/components/ui/animated-number";
 import { useI18n } from "@/app/i18n";
-import { getAdminUsers, getAdminUserStats, updateUserStatus, AdminUser, AdminUserStats, UserRole, UserStatus } from "@/app/actions/admin-users";
+import { getAdminUsers, getAdminUserStats, updateUserStatus, createUser, CreateUserInput, AdminUser, AdminUserStats, UserRole, UserStatus } from "@/app/actions/admin-users";
 import { useToast } from "@/components/ui/toast";
 
 // Icons
@@ -91,6 +91,12 @@ export default function UsersPage() {
     const [stats, setStats] = useState<AdminUserStats>({ total_users: 0, doctors: 0, patients: 0, admins: 0 });
     const [actionLoading, setActionLoading] = useState<string | null>(null);
     const [showStatusModal, setShowStatusModal] = useState<AdminUser | null>(null);
+    const [showAddUserModal, setShowAddUserModal] = useState(false);
+    const [newUser, setNewUser] = useState<Partial<CreateUserInput>>({
+        role: "patient",
+        gender: "male",
+        admin_type: "support_agent",
+    });
 
     // Load data from database
     useEffect(() => {
@@ -134,6 +140,43 @@ export default function UsersPage() {
             setShowStatusModal(null);
         } else {
             alert(result.error || (language === "ar" ? "حدث خطأ" : "An error occurred"));
+        }
+
+        setActionLoading(null);
+    };
+
+    // Handle add user
+    const handleAddUser = async () => {
+        if (!newUser.email || !newUser.password || !newUser.full_name || !newUser.role) {
+            showToast(language === "ar" ? "يرجى ملء جميع الحقول المطلوبة" : "Please fill all required fields", "error");
+            return;
+        }
+
+        setActionLoading("add_user");
+
+        const result = await createUser(newUser as CreateUserInput);
+
+        if (result.success) {
+            showToast(
+                language === "ar" ? "تم إنشاء المستخدم بنجاح" : "User created successfully",
+                "success"
+            );
+            setShowAddUserModal(false);
+            setNewUser({ role: "patient", gender: "male", admin_type: "support_agent" });
+            
+            // Reload users list
+            const usersResult = await getAdminUsers({ limit: 50 });
+            if (!usersResult.error) {
+                setUsers(usersResult.users);
+            }
+            
+            // Reload stats
+            const statsResult = await getAdminUserStats();
+            if (!statsResult.error) {
+                setStats(statsResult.stats);
+            }
+        } else {
+            showToast(result.error || (language === "ar" ? "حدث خطأ" : "An error occurred"), "error");
         }
 
         setActionLoading(null);
@@ -211,7 +254,8 @@ export default function UsersPage() {
                         </p>
                     </div>
                     <button
-                        onClick={() => showToast(isRTL ? "هذه الميزة قيد التطوير" : "This feature is coming soon", "info")}
+                        type="button"
+                        onClick={() => setShowAddUserModal(true)}
                         className="px-4 md:px-5 py-2 md:py-2.5 bg-teal-500 hover:bg-teal-600 text-white font-medium rounded-xl transition-colors flex items-center gap-2 self-start text-sm md:text-base"
                     >
                         {Icons.plus}
@@ -464,6 +508,316 @@ export default function UsersPage() {
                         >
                             {language === "ar" ? "إلغاء" : "Cancel"}
                         </button>
+                    </motion.div>
+                </div>
+            )}
+
+            {/* Add User Modal */}
+            {showAddUserModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto">
+                    <div
+                        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+                        onClick={() => setShowAddUserModal(false)}
+                    />
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className={cn(
+                            "relative w-full max-w-2xl rounded-2xl p-6 my-8 max-h-[90vh] overflow-y-auto",
+                            isDark ? "bg-slate-900 border border-white/10" : "bg-white shadow-xl"
+                        )}
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <h3 className={cn("text-xl font-semibold mb-6", isDark ? "text-white" : "text-slate-900")}>
+                            {language === "ar" ? "إضافة مستخدم جديد" : "Add New User"}
+                        </h3>
+
+                        <div className="space-y-4">
+                            {/* Role Selection */}
+                            <div>
+                                <label className={cn("block text-sm font-medium mb-2", isDark ? "text-gray-300" : "text-gray-700")}>
+                                    {language === "ar" ? "الدور *" : "Role *"}
+                                </label>
+                                <select
+                                    value={newUser.role}
+                                    onChange={(e) => setNewUser({ ...newUser, role: e.target.value as UserRole })}
+                                    className={cn(
+                                        "w-full px-4 py-2.5 rounded-xl border outline-none transition-colors",
+                                        isDark
+                                            ? "bg-slate-800 border-white/10 text-white [&>option]:bg-slate-900"
+                                            : "bg-gray-50 border-gray-200 text-slate-900"
+                                    )}
+                                >
+                                    <option value="patient">{language === "ar" ? "مريض" : "Patient"}</option>
+                                    <option value="doctor">{language === "ar" ? "طبيب" : "Doctor"}</option>
+                                    <option value="admin">{language === "ar" ? "مدير" : "Admin"}</option>
+                                </select>
+                            </div>
+
+                            {/* Basic Info */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label className={cn("block text-sm font-medium mb-2", isDark ? "text-gray-300" : "text-gray-700")}>
+                                        {language === "ar" ? "الاسم الكامل *" : "Full Name *"}
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={newUser.full_name || ""}
+                                        onChange={(e) => setNewUser({ ...newUser, full_name: e.target.value })}
+                                        className={cn(
+                                            "w-full px-4 py-2.5 rounded-xl border outline-none transition-colors",
+                                            isDark
+                                                ? "bg-slate-800 border-white/10 text-white placeholder-gray-500"
+                                                : "bg-gray-50 border-gray-200 text-slate-900 placeholder-gray-400"
+                                        )}
+                                        placeholder={language === "ar" ? "أدخل الاسم الكامل" : "Enter full name"}
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className={cn("block text-sm font-medium mb-2", isDark ? "text-gray-300" : "text-gray-700")}>
+                                        {language === "ar" ? "البريد الإلكتروني *" : "Email *"}
+                                    </label>
+                                    <input
+                                        type="email"
+                                        value={newUser.email || ""}
+                                        onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
+                                        className={cn(
+                                            "w-full px-4 py-2.5 rounded-xl border outline-none transition-colors",
+                                            isDark
+                                                ? "bg-slate-800 border-white/10 text-white placeholder-gray-500"
+                                                : "bg-gray-50 border-gray-200 text-slate-900 placeholder-gray-400"
+                                        )}
+                                        placeholder={language === "ar" ? "email@example.com" : "email@example.com"}
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className={cn("block text-sm font-medium mb-2", isDark ? "text-gray-300" : "text-gray-700")}>
+                                        {language === "ar" ? "كلمة المرور *" : "Password *"}
+                                    </label>
+                                    <input
+                                        type="password"
+                                        value={newUser.password || ""}
+                                        onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
+                                        className={cn(
+                                            "w-full px-4 py-2.5 rounded-xl border outline-none transition-colors",
+                                            isDark
+                                                ? "bg-slate-800 border-white/10 text-white placeholder-gray-500"
+                                                : "bg-gray-50 border-gray-200 text-slate-900 placeholder-gray-400"
+                                        )}
+                                        placeholder={language === "ar" ? "أدخل كلمة المرور" : "Enter password"}
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className={cn("block text-sm font-medium mb-2", isDark ? "text-gray-300" : "text-gray-700")}>
+                                        {language === "ar" ? "الهاتف" : "Phone"}
+                                    </label>
+                                    <input
+                                        type="tel"
+                                        value={newUser.phone || ""}
+                                        onChange={(e) => setNewUser({ ...newUser, phone: e.target.value })}
+                                        className={cn(
+                                            "w-full px-4 py-2.5 rounded-xl border outline-none transition-colors",
+                                            isDark
+                                                ? "bg-slate-800 border-white/10 text-white placeholder-gray-500"
+                                                : "bg-gray-50 border-gray-200 text-slate-900 placeholder-gray-400"
+                                        )}
+                                        placeholder="+20 123 456 7890"
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Patient-specific fields */}
+                            {newUser.role === "patient" && (
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t" style={{ borderColor: isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)" }}>
+                                    <div>
+                                        <label className={cn("block text-sm font-medium mb-2", isDark ? "text-gray-300" : "text-gray-700")}>
+                                            {language === "ar" ? "تاريخ الميلاد" : "Date of Birth"}
+                                        </label>
+                                        <input
+                                            type="date"
+                                            value={newUser.date_of_birth || ""}
+                                            onChange={(e) => setNewUser({ ...newUser, date_of_birth: e.target.value })}
+                                            className={cn(
+                                                "w-full px-4 py-2.5 rounded-xl border outline-none transition-colors color-scheme-dark",
+                                                isDark
+                                                    ? "bg-slate-800 border-white/10 text-white [&::-webkit-calendar-picker-indicator]:filter [&::-webkit-calendar-picker-indicator]:invert"
+                                                    : "bg-gray-50 border-gray-200 text-slate-900"
+                                            )}
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className={cn("block text-sm font-medium mb-2", isDark ? "text-gray-300" : "text-gray-700")}>
+                                            {language === "ar" ? "الجنس" : "Gender"}
+                                        </label>
+                                        <select
+                                            value={newUser.gender || "male"}
+                                            onChange={(e) => setNewUser({ ...newUser, gender: e.target.value as "male" | "female" })}
+                                            className={cn(
+                                                "w-full px-4 py-2.5 rounded-xl border outline-none transition-colors",
+                                                isDark
+                                                    ? "bg-slate-800 border-white/10 text-white [&>option]:bg-slate-900"
+                                                    : "bg-gray-50 border-gray-200 text-slate-900"
+                                            )}
+                                        >
+                                            <option value="male">{language === "ar" ? "ذكر" : "Male"}</option>
+                                            <option value="female">{language === "ar" ? "أنثى" : "Female"}</option>
+                                        </select>
+                                    </div>
+
+                                    <div>
+                                        <label className={cn("block text-sm font-medium mb-2", isDark ? "text-gray-300" : "text-gray-700")}>
+                                            {language === "ar" ? "فصيلة الدم" : "Blood Type"}
+                                        </label>
+                                        <select
+                                            value={newUser.blood_type || ""}
+                                            onChange={(e) => setNewUser({ ...newUser, blood_type: e.target.value })}
+                                            className={cn(
+                                                "w-full px-4 py-2.5 rounded-xl border outline-none transition-colors",
+                                                isDark
+                                                    ? "bg-slate-800 border-white/10 text-white [&>option]:bg-slate-900"
+                                                    : "bg-gray-50 border-gray-200 text-slate-900"
+                                            )}
+                                        >
+                                            <option value="">{language === "ar" ? "اختر" : "Select"}</option>
+                                            <option value="A+">A+</option>
+                                            <option value="A-">A-</option>
+                                            <option value="B+">B+</option>
+                                            <option value="B-">B-</option>
+                                            <option value="AB+">AB+</option>
+                                            <option value="AB-">AB-</option>
+                                            <option value="O+">O+</option>
+                                            <option value="O-">O-</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Doctor-specific fields */}
+                            {newUser.role === "doctor" && (
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t" style={{ borderColor: isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)" }}>
+                                    <div>
+                                        <label className={cn("block text-sm font-medium mb-2", isDark ? "text-gray-300" : "text-gray-700")}>
+                                            {language === "ar" ? "رقم الترخيص" : "License Number"}
+                                        </label>
+                                        <input
+                                            type="text"
+                                            value={newUser.license_number || ""}
+                                            onChange={(e) => setNewUser({ ...newUser, license_number: e.target.value })}
+                                            className={cn(
+                                                "w-full px-4 py-2.5 rounded-xl border outline-none transition-colors",
+                                                isDark
+                                                    ? "bg-slate-800 border-white/10 text-white placeholder-gray-500"
+                                                    : "bg-gray-50 border-gray-200 text-slate-900 placeholder-gray-400"
+                                            )}
+                                            placeholder="123456"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className={cn("block text-sm font-medium mb-2", isDark ? "text-gray-300" : "text-gray-700")}>
+                                            {language === "ar" ? "سنوات الخبرة" : "Years of Experience"}
+                                        </label>
+                                        <input
+                                            type="number"
+                                            value={newUser.years_of_experience || ""}
+                                            onChange={(e) => setNewUser({ ...newUser, years_of_experience: parseInt(e.target.value) || 0 })}
+                                            className={cn(
+                                                "w-full px-4 py-2.5 rounded-xl border outline-none transition-colors",
+                                                isDark
+                                                    ? "bg-slate-800 border-white/10 text-white placeholder-gray-500"
+                                                    : "bg-gray-50 border-gray-200 text-slate-900 placeholder-gray-400"
+                                            )}
+                                            placeholder="0"
+                                            min="0"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className={cn("block text-sm font-medium mb-2", isDark ? "text-gray-300" : "text-gray-700")}>
+                                            {language === "ar" ? "رسوم الاستشارة (ج.م)" : "Consultation Fee (EGP)"}
+                                        </label>
+                                        <input
+                                            type="number"
+                                            value={newUser.consultation_fee || ""}
+                                            onChange={(e) => setNewUser({ ...newUser, consultation_fee: parseFloat(e.target.value) || 0 })}
+                                            className={cn(
+                                                "w-full px-4 py-2.5 rounded-xl border outline-none transition-colors",
+                                                isDark
+                                                    ? "bg-slate-800 border-white/10 text-white placeholder-gray-500"
+                                                    : "bg-gray-50 border-gray-200 text-slate-900 placeholder-gray-400"
+                                            )}
+                                            placeholder="200"
+                                            min="0"
+                                            step="50"
+                                        />
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Admin-specific fields */}
+                            {newUser.role === "admin" && (
+                                <div className="pt-4 border-t" style={{ borderColor: isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)" }}>
+                                    <label className={cn("block text-sm font-medium mb-2", isDark ? "text-gray-300" : "text-gray-700")}>
+                                        {language === "ar" ? "نوع المدير" : "Admin Type"}
+                                    </label>
+                                    <select
+                                        value={newUser.admin_type || "support_agent"}
+                                        onChange={(e) => setNewUser({ ...newUser, admin_type: e.target.value as "full_admin" | "support_agent" })}
+                                        className={cn(
+                                            "w-full px-4 py-2.5 rounded-xl border outline-none transition-colors",
+                                            isDark
+                                                ? "bg-slate-800 border-white/10 text-white [&>option]:bg-slate-900"
+                                                : "bg-gray-50 border-gray-200 text-slate-900"
+                                        )}
+                                    >
+                                        <option value="support_agent">{language === "ar" ? "وكيل دعم" : "Support Agent"}</option>
+                                        <option value="full_admin">{language === "ar" ? "مدير كامل" : "Full Admin"}</option>
+                                    </select>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Actions */}
+                        <div className="flex gap-3 mt-6 pt-6 border-t" style={{ borderColor: isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)" }}>
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setShowAddUserModal(false);
+                                    setNewUser({ role: "patient", gender: "male", admin_type: "support_agent" });
+                                }}
+                                disabled={actionLoading === "add_user"}
+                                className={cn(
+                                    "flex-1 py-2.5 rounded-xl font-medium transition-colors",
+                                    isDark
+                                        ? "bg-white/5 hover:bg-white/10 text-gray-400"
+                                        : "bg-gray-100 hover:bg-gray-200 text-gray-600"
+                                )}
+                            >
+                                {language === "ar" ? "إلغاء" : "Cancel"}
+                            </button>
+                            <button
+                                type="button"
+                                onClick={handleAddUser}
+                                disabled={actionLoading === "add_user"}
+                                className="flex-1 py-2.5 rounded-xl font-medium bg-teal-500 hover:bg-teal-600 text-white transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                            >
+                                {actionLoading === "add_user" ? (
+                                    <>
+                                        <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                                        </svg>
+                                        {language === "ar" ? "جارِ الإنشاء..." : "Creating..."}
+                                    </>
+                                ) : (
+                                    language === "ar" ? "إضافة مستخدم" : "Add User"
+                                )}
+                            </button>
+                        </div>
                     </motion.div>
                 </div>
             )}

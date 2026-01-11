@@ -532,8 +532,10 @@ export default function PrescriptionsPage() {
                                         value={selectedPatient}
                                         onChange={(e) => setSelectedPatient(e.target.value)}
                                         className={cn(
-                                            "w-full py-3 px-4 rounded-xl border transition-colors outline-none",
-                                            inputBg, inputFocus
+                                            "w-full py-3 rounded-xl border transition-colors outline-none",
+                                            inputBg, inputFocus,
+                                            // Add proper spacing for the dropdown arrow with more padding on the right
+                                            isRTL ? "pl-4 pr-12" : "pr-12 pl-4"
                                         )}
                                     >
                                         <option value="">{isRTL ? "اختر مريض..." : "Select patient..."}</option>
@@ -556,7 +558,9 @@ export default function PrescriptionsPage() {
                                         onChange={(e) => setValidUntil(e.target.value)}
                                         className={cn(
                                             "w-full py-3 px-4 rounded-xl border transition-colors outline-none",
-                                            inputBg, inputFocus
+                                            inputBg, inputFocus,
+                                            // Dark mode calendar icon styling
+                                            isDark && "[color-scheme:dark]"
                                         )}
                                     />
                                 </div>

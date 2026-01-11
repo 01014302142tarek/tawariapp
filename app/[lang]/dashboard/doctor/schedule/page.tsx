@@ -224,10 +224,11 @@ export default function SchedulePage() {
             reason: blockedForm.reason || undefined,
         });
 
-        if (result.success) {
+        if (result.success && result.blockedTime) {
+            // Add the new blocked time to state directly instead of reloading
+            setBlockedTimes(prev => [...prev, result.blockedTime!]);
             setBlockedForm({ start_datetime: "", end_datetime: "", reason: "" });
             setShowBlockedForm(false);
-            loadData();
         }
     };
 
