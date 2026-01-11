@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -10,6 +10,8 @@ import { SparklesCore } from "@/components/ui/sparkles";
 import { AnimatedNumber } from "@/components/ui/animated-number";
 import { useI18n } from "@/app/i18n";
 import { getAdminPatients, AdminPatient } from "@/app/actions/admin-users";
+
+const ITEMS_PER_PAGE = 10;
 
 // Icons
 const Icons = {
@@ -49,6 +51,16 @@ const Icons = {
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
         </svg>
     ),
+    chevronLeft: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+        </svg>
+    ),
+    chevronRight: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+        </svg>
+    ),
 };
 
 const Badge = ({ variant, children }: { variant: string; children: React.ReactNode }) => {
@@ -68,23 +80,48 @@ export default function PatientsPage() {
     const { theme } = useTheme();
     const isDark = theme === "dark";
     const [search, setSearch] = useState("");
+    const [debouncedSearch, setDebouncedSearch] = useState("");
     const [loading, setLoading] = useState(true);
     const [patients, setPatients] = useState<AdminPatient[]>([]);
     const [totalPatients, setTotalPatients] = useState(0);
+    const [currentPage, setCurrentPage] = useState(1);
+
+    // Debounce search input
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setDebouncedSearch(search);
+            setCurrentPage(1); // Reset to first page on search
+        }, 300);
+        return () => clearTimeout(timer);
+    }, [search]);
 
     // Load patients from database
-    useEffect(() => {
-        async function loadPatients() {
-            setLoading(true);
-            const result = await getAdminPatients({ limit: 50 });
-            if (!result.error) {
-                setPatients(result.patients);
-                setTotalPatients(result.total);
-            }
-            setLoading(false);
+    const loadPatients = useCallback(async (page: number, searchTerm: string) => {
+        setLoading(true);
+        const offset = (page - 1) * ITEMS_PER_PAGE;
+        const result = await getAdminPatients({
+            limit: ITEMS_PER_PAGE,
+            offset,
+            search: searchTerm || undefined
+        });
+        if (!result.error) {
+            setPatients(result.patients);
+            setTotalPatients(result.total);
         }
-        loadPatients();
+        setLoading(false);
     }, []);
+
+    useEffect(() => {
+        loadPatients(currentPage, debouncedSearch);
+    }, [currentPage, debouncedSearch, loadPatients]);
+
+    const totalPages = Math.ceil(totalPatients / ITEMS_PER_PAGE);
+
+    const goToPage = (page: number) => {
+        if (page >= 1 && page <= totalPages) {
+            setCurrentPage(page);
+        }
+    };
 
     // Store current date in state to avoid hydration mismatch
     const [currentDate, setCurrentDate] = useState<Date | null>(null);
@@ -104,13 +141,6 @@ export default function PatientsPage() {
         }
         return age;
     };
-
-    // Filter patients by search
-    const filteredPatients = patients.filter(patient => {
-        if (search === "") return true;
-        return patient.full_name.toLowerCase().includes(search.toLowerCase()) ||
-            patient.email.toLowerCase().includes(search.toLowerCase());
-    });
 
     // Calculate stats from real data
     const activePatients = patients.filter(p => p.total_appointments > 0).length;
@@ -212,6 +242,7 @@ export default function PatientsPage() {
                             placeholder={t.adminDashboard.patientsPage.searchPlaceholder}
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
+                            aria-label={language === "ar" ? "البحث عن المرضى" : "Search patients"}
                             className={cn(
                                 "w-full py-2.5 rounded-xl border outline-none transition-colors",
                                 isRTL ? "pr-10 pl-4" : "pl-10 pr-4",
@@ -224,9 +255,9 @@ export default function PatientsPage() {
                 </GlowingCard>
 
                 {/* Patients - Horizontal List Layout */}
-                {filteredPatients.length > 0 ? (
+                {patients.length > 0 ? (
                     <div className="space-y-4">
-                        {filteredPatients.map((patient, idx) => {
+                        {patients.map((patient, idx) => {
                             const age = calculateAge(patient.date_of_birth);
                             const isActive = patient.total_appointments > 0;
 
@@ -300,10 +331,13 @@ export default function PatientsPage() {
                                             </div>
 
                                             {/* Action */}
-                                            <button className={cn(
-                                                "px-3 md:px-4 py-1.5 md:py-2 rounded-lg md:rounded-xl text-xs md:text-sm font-medium transition-colors flex items-center gap-1.5 md:gap-2",
-                                                isDark ? "bg-white/5 hover:bg-white/10 text-white" : "bg-gray-100 hover:bg-gray-200 text-gray-700"
-                                            )}>
+                                            <button
+                                                aria-label={`${t.adminDashboard.patientsPage.card.viewRecords} - ${patient.full_name}`}
+                                                className={cn(
+                                                    "px-3 md:px-4 py-1.5 md:py-2 rounded-lg md:rounded-xl text-xs md:text-sm font-medium transition-colors flex items-center gap-1.5 md:gap-2",
+                                                    isDark ? "bg-white/5 hover:bg-white/10 text-white" : "bg-gray-100 hover:bg-gray-200 text-gray-700"
+                                                )}
+                                            >
                                                 {Icons.folder}
                                                 {t.adminDashboard.patientsPage.card.viewRecords}
                                             </button>
@@ -312,6 +346,85 @@ export default function PatientsPage() {
                                 </motion.div>
                             );
                         })}
+
+                        {/* Pagination Controls */}
+                        {totalPages > 1 && (
+                            <div className="flex items-center justify-center gap-2 mt-6">
+                                <button
+                                    onClick={() => goToPage(currentPage - 1)}
+                                    disabled={currentPage === 1}
+                                    aria-label={language === "ar" ? "الصفحة السابقة" : "Previous page"}
+                                    className={cn(
+                                        "p-2 rounded-lg transition-colors",
+                                        currentPage === 1
+                                            ? "opacity-50 cursor-not-allowed"
+                                            : isDark
+                                                ? "hover:bg-white/10"
+                                                : "hover:bg-gray-100",
+                                        isDark ? "text-gray-400" : "text-gray-600"
+                                    )}
+                                >
+                                    {isRTL ? Icons.chevronRight : Icons.chevronLeft}
+                                </button>
+
+                                <div className="flex items-center gap-1">
+                                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                                        let pageNum: number;
+                                        if (totalPages <= 5) {
+                                            pageNum = i + 1;
+                                        } else if (currentPage <= 3) {
+                                            pageNum = i + 1;
+                                        } else if (currentPage >= totalPages - 2) {
+                                            pageNum = totalPages - 4 + i;
+                                        } else {
+                                            pageNum = currentPage - 2 + i;
+                                        }
+
+                                        return (
+                                            <button
+                                                key={pageNum}
+                                                onClick={() => goToPage(pageNum)}
+                                                aria-label={`${language === "ar" ? "صفحة" : "Page"} ${pageNum}`}
+                                                aria-current={currentPage === pageNum ? "page" : undefined}
+                                                className={cn(
+                                                    "w-8 h-8 rounded-lg text-sm font-medium transition-colors",
+                                                    currentPage === pageNum
+                                                        ? "bg-teal-500 text-white"
+                                                        : isDark
+                                                            ? "hover:bg-white/10 text-gray-400"
+                                                            : "hover:bg-gray-100 text-gray-600"
+                                                )}
+                                            >
+                                                {formatNumber(pageNum)}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+
+                                <button
+                                    onClick={() => goToPage(currentPage + 1)}
+                                    disabled={currentPage === totalPages}
+                                    aria-label={language === "ar" ? "الصفحة التالية" : "Next page"}
+                                    className={cn(
+                                        "p-2 rounded-lg transition-colors",
+                                        currentPage === totalPages
+                                            ? "opacity-50 cursor-not-allowed"
+                                            : isDark
+                                                ? "hover:bg-white/10"
+                                                : "hover:bg-gray-100",
+                                        isDark ? "text-gray-400" : "text-gray-600"
+                                    )}
+                                >
+                                    {isRTL ? Icons.chevronLeft : Icons.chevronRight}
+                                </button>
+
+                                <span className={cn("text-sm ml-4", isDark ? "text-gray-500" : "text-gray-600")}>
+                                    {language === "ar"
+                                        ? `${formatNumber(currentPage)} من ${formatNumber(totalPages)}`
+                                        : `${formatNumber(currentPage)} of ${formatNumber(totalPages)}`}
+                                </span>
+                            </div>
+                        )}
                     </div>
                 ) : (
                     <div className="text-center py-16">

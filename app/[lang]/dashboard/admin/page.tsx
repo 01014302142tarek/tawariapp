@@ -168,8 +168,8 @@ export default function AdminDashboard() {
                 }
                 setStats(statsResult);
                 setRecentActivity(activityResult);
-            } catch (error) {
-                console.error("Error fetching admin data:", error);
+            } catch {
+                // Error fetching admin data - will show empty state
             }
             setIsLoading(false);
         }
@@ -317,7 +317,7 @@ export default function AdminDashboard() {
                                 {isLoading ? (
                                     <div className={cn("p-8 text-center rounded-xl border", isDark ? "border-white/5" : "border-gray-200")}>
                                         <div className="animate-spin w-6 h-6 border-2 border-teal-500 border-t-transparent rounded-full mx-auto mb-2" />
-                                        <p className={cn("text-sm", isDark ? "text-gray-500" : "text-gray-600")}>Loading...</p>
+                                        <p className={cn("text-sm", isDark ? "text-gray-500" : "text-gray-600")}>{t.common.loading || (isRTL ? "جاري التحميل..." : "Loading...")}</p>
                                     </div>
                                 ) : pendingApprovals.length === 0 ? (
                                     <div className={cn("p-8 text-center rounded-xl border", isDark ? "border-white/5" : "border-gray-200")}>

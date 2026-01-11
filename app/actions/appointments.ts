@@ -105,7 +105,7 @@ export async function bookAppointment(data: {
 
     // Check rate limit after auth but before DB operations
     const rateLimitKey = `appointments:${profile.id}`;
-    const rateLimit = appointmentLimiter.check(rateLimitKey);
+    const rateLimit = await appointmentLimiter.check(rateLimitKey);
     if (!rateLimit.allowed) {
         return {
             success: false,
@@ -838,7 +838,7 @@ export async function getAvailableDoctors(filters?: {
 }): Promise<{ doctors: DoctorForBooking[]; total: number; error?: string }> {
     const supabase = await createClient();
 
-    // Build query
+    // Build query - use explicit FK reference (profile_id) to avoid ambiguity with verified_by
     let query = supabase
         .from("doctor_profiles")
         .select(`
@@ -850,7 +850,7 @@ export async function getAvailableDoctors(filters?: {
             rating_average,
             rating_count,
             is_available_now,
-            profiles!inner (
+            profiles!doctor_profiles_profile_id_fkey (
                 id,
                 full_name,
                 avatar_url
@@ -902,7 +902,6 @@ export async function getAvailableDoctors(filters?: {
     const { data, count, error } = await query;
 
     if (error) {
-        console.error("Error fetching doctors:", error);
         return { doctors: [], total: 0, error: error.message };
     }
 
@@ -1181,7 +1180,7 @@ export async function getDoctorById(
 ): Promise<{ doctor: DoctorProfileDetail | null; error?: string }> {
     const supabase = await createClient();
 
-    // Get doctor profile with all details
+    // Get doctor profile with all details - use explicit FK to avoid ambiguity
     const { data, error } = await supabase
         .from("doctor_profiles")
         .select(`
@@ -1196,7 +1195,7 @@ export async function getDoctorById(
             languages,
             education,
             hospital,
-            profiles!inner (
+            profiles!doctor_profiles_profile_id_fkey (
                 id,
                 full_name,
                 avatar_url

@@ -94,17 +94,11 @@ export function GlowingCard({ children, className, glowColor = "teal", isDark }:
             // Initial detection
             setAutoDetectedDark(resolveThemeFromStorage());
 
-            // Listen for storage changes
+            // Listen for storage changes (cross-tab)
             const handleStorage = () => {
                 setAutoDetectedDark(resolveThemeFromStorage());
             };
-
             window.addEventListener("storage", handleStorage);
-
-            // Also check periodically for local changes (theme switches within same window)
-            const interval = setInterval(() => {
-                setAutoDetectedDark(resolveThemeFromStorage());
-            }, 100);
 
             // Listen for system theme changes when in system mode
             const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
@@ -113,9 +107,15 @@ export function GlowingCard({ children, className, glowColor = "teal", isDark }:
             };
             mediaQuery.addEventListener("change", handleMediaChange);
 
+            // Listen for custom theme change events (same-tab theme switches)
+            const handleThemeChange = () => {
+                setAutoDetectedDark(resolveThemeFromStorage());
+            };
+            window.addEventListener("themeChange", handleThemeChange);
+
             return () => {
                 window.removeEventListener("storage", handleStorage);
-                clearInterval(interval);
+                window.removeEventListener("themeChange", handleThemeChange);
                 mediaQuery.removeEventListener("change", handleMediaChange);
             };
         }

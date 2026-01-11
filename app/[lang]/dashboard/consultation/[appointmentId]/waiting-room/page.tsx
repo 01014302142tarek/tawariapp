@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useI18n } from "@/app/i18n";
 import { getAppointmentById } from "@/app/actions/appointments";
+import { useToast } from "@/components/ui/toast";
 
 // Animated dots for waiting
 const WaitingDots = () => (
@@ -45,6 +46,7 @@ export default function WaitingRoomPage() {
     const params = useParams();
     const router = useRouter();
     const { isRTL, language } = useI18n();
+    const { showConfirm } = useToast();
     const appointmentId = params.appointmentId as string;
 
     const [loading, setLoading] = useState(true);
@@ -52,6 +54,14 @@ export default function WaitingRoomPage() {
     const [doctorName, setDoctorName] = useState<string>("");
     const [appointmentTime, setAppointmentTime] = useState<string>("");
     const [waitingTime, setWaitingTime] = useState(0);
+
+    // Handle cancel with confirmation
+    const handleCancel = () => {
+        showConfirm(
+            isRTL ? "هل أنت متأكد من إلغاء هذا الموعد؟" : "Are you sure you want to cancel this appointment?",
+            () => router.push(`/${language}/dashboard/patient/appointments`),
+        );
+    };
 
     // Check appointment status and redirect when doctor starts consultation
     const checkStatus = useCallback(async () => {
@@ -89,8 +99,7 @@ export default function WaitingRoomPage() {
             }
 
             setLoading(false);
-        } catch (err) {
-            console.error("Error checking status:", err);
+        } catch {
             setError(isRTL ? "فشل في التحقق من الحالة" : "Failed to check status");
             setLoading(false);
         }
@@ -276,7 +285,7 @@ export default function WaitingRoomPage() {
                         </span>
                     </button>
                     <button
-                        onClick={() => router.push(`/${language}/dashboard/patient/appointments`)}
+                        onClick={handleCancel}
                         className={cn(
                             "px-6 py-3 rounded-xl font-medium transition-colors",
                             "bg-red-500/10 text-red-400 hover:bg-red-500/20 border border-red-500/20"

@@ -169,8 +169,8 @@ export default function DoctorsPage() {
                     setDoctors(doctorsResult.doctors);
                 }
                 setStats(statsResult);
-            } catch (error) {
-                console.error("Error fetching data:", error);
+            } catch {
+                // Error fetching data - will show empty state
             }
             setIsLoading(false);
         }
@@ -185,8 +185,8 @@ export default function DoctorsPage() {
             if (result.doctor) {
                 setSelectedDoctor(result.doctor);
             }
-        } catch (error) {
-            console.error("Error fetching doctor details:", error);
+        } catch {
+            // Error fetching details - modal won't open
         }
         setIsDetailLoading(false);
     };
@@ -201,8 +201,8 @@ export default function DoctorsPage() {
                 setStats(prev => ({ ...prev, pending: prev.pending - 1, verified: prev.verified + 1 }));
                 setSelectedDoctor(null);
             }
-        } catch (error) {
-            console.error("Error approving doctor:", error);
+        } catch {
+            // Error approving doctor - action state will reset
         }
         setActionLoading(null);
     };
@@ -221,8 +221,8 @@ export default function DoctorsPage() {
                 setShowRejectModal(false);
                 setRejectReason("");
             }
-        } catch (error) {
-            console.error("Error rejecting doctor:", error);
+        } catch {
+            // Error rejecting doctor - action state will reset
         }
         setActionLoading(null);
     };
@@ -235,11 +235,10 @@ export default function DoctorsPage() {
             if (result.url) {
                 // Open in new tab
                 window.open(result.url, "_blank", "noopener,noreferrer");
-            } else {
-                console.error("Failed to get credential URL:", result.error);
             }
-        } catch (error) {
-            console.error("Error viewing credential:", error);
+            // If no URL returned, credential view will silently fail
+        } catch {
+            // Error viewing credential - viewing state will reset
         }
         setViewingCredential(null);
     };

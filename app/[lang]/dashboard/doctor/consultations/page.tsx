@@ -52,16 +52,24 @@ export default function ConsultationsPage() {
 
     // Load consultations from database
     useEffect(() => {
+        let mounted = true;
+
         async function loadConsultations() {
             setLoading(true);
             const result = await getDoctorConsultations({ limit: 20 });
-            if (!result.error) {
+            if (mounted && !result.error) {
                 setActiveConsultations(result.active);
                 setHistoryConsultations(result.history);
             }
-            setLoading(false);
+            if (mounted) {
+                setLoading(false);
+            }
         }
         loadConsultations();
+
+        return () => {
+            mounted = false;
+        };
     }, []);
 
     // Format time from ISO string

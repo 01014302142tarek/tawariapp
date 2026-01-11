@@ -70,8 +70,7 @@ export default function ConsultationPage() {
                 }
 
                 setJitsiRoomId(session.jitsi_room_id);
-            } catch (err) {
-                console.error("Error loading session:", err);
+            } catch {
                 setError("Failed to load consultation session");
             } finally {
                 setLoading(false);
@@ -173,8 +172,7 @@ export default function ConsultationPage() {
             } else {
                 setError(result.error || "Failed to end consultation");
             }
-        } catch (err) {
-            console.error("Error ending consultation:", err);
+        } catch {
             setError("Failed to end consultation");
         } finally {
             setIsEnding(false);

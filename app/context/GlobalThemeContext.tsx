@@ -77,6 +77,8 @@ export function GlobalThemeProvider({ children }: { children: React.ReactNode })
         } else {
             setTheme(mode);
         }
+        // Dispatch custom event for components that need to react to theme changes
+        window.dispatchEvent(new CustomEvent("themeChange"));
     };
 
     const toggleTheme = () => {

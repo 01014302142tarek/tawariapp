@@ -664,7 +664,7 @@ export async function getRecentActivity(): Promise<AdminActivityItem[]> {
         .select(`
             id,
             verified_at,
-            profiles!inner (
+            profiles!doctor_profiles_profile_id_fkey (
                 full_name
             )
         `)

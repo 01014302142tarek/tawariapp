@@ -111,8 +111,8 @@ export default function AdminReviewsPage() {
                     setReviews(filteredReviews);
                     setTotal(filteredReviews.length);
                 }
-            } catch (error) {
-                console.error("Error fetching reviews:", error);
+            } catch {
+                // Error handled silently - reviews will show empty state
             }
             setIsLoading(false);
         }
@@ -134,8 +134,8 @@ export default function AdminReviewsPage() {
                 setSelectedReview(null);
                 setHideReason("");
             }
-        } catch (error) {
-            console.error("Error hiding review:", error);
+        } catch {
+            // Error hiding review - action state will reset
         }
         setActionLoading(null);
     };
@@ -150,8 +150,8 @@ export default function AdminReviewsPage() {
                     r.id === reviewId ? { ...r, is_visible: true, hidden_reason: undefined } : r
                 ));
             }
-        } catch (error) {
-            console.error("Error unhiding review:", error);
+        } catch {
+            // Error unhiding review - action state will reset
         }
         setActionLoading(null);
     };

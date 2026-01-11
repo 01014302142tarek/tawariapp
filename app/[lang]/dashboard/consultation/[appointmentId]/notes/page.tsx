@@ -67,10 +67,7 @@ export default function ConsultationNotesPage() {
         async function loadNotes() {
             setLoading(true);
             try {
-                const { note, error: noteError } = await getConsultationNotes(appointmentId);
-                if (noteError) {
-                    console.error("Error loading notes:", noteError);
-                }
+                const { note } = await getConsultationNotes(appointmentId);
                 if (note) {
                     setForm({
                         subjective: note.subjective || "",
@@ -82,8 +79,8 @@ export default function ConsultationNotesPage() {
                         followUpTimeframe: note.follow_up_timeframe || "",
                     });
                 }
-            } catch (err) {
-                console.error("Error loading notes:", err);
+            } catch {
+                // Error loading notes - form will show empty state
             } finally {
                 setLoading(false);
             }
@@ -111,8 +108,7 @@ export default function ConsultationNotesPage() {
             } else {
                 setError(result.error || "Failed to save notes");
             }
-        } catch (err) {
-            console.error("Error saving notes:", err);
+        } catch {
             setError("Failed to save notes");
         } finally {
             setSaving(false);

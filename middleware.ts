@@ -112,7 +112,9 @@ export async function middleware(request: NextRequest) {
         }
 
         const pathWithoutLocale = pathname.replace(/^\/(en|ar)/, '')
-        const role = user.user_metadata?.role || 'patient'
+        // Use database role (secure) - the role is now fetched from profiles table
+        // in updateSession() instead of trusting user_metadata
+        const role = user.role
 
         // Redirect /dashboard to role-specific dashboard
         if (pathWithoutLocale === '/dashboard' || pathWithoutLocale === '/dashboard/') {
@@ -134,7 +136,8 @@ export async function middleware(request: NextRequest) {
 
     // Redirect authenticated users away from auth pages to dashboard
     if (isAuthRoute(pathname) && user) {
-        const role = user.user_metadata?.role || 'patient'
+        // Use database role (secure)
+        const role = user.role
         const dashboardUrl = new URL(`/${currentLocale}/dashboard/${role}`, request.url)
         return NextResponse.redirect(dashboardUrl)
     }
@@ -148,6 +151,13 @@ export async function middleware(request: NextRequest) {
             sameSite: 'lax',
         })
     }
+
+    // Add security headers
+    supabaseResponse.headers.set('X-Content-Type-Options', 'nosniff')
+    supabaseResponse.headers.set('X-Frame-Options', 'DENY')
+    supabaseResponse.headers.set('X-XSS-Protection', '1; mode=block')
+    supabaseResponse.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
+    supabaseResponse.headers.set('Permissions-Policy', 'camera=(self), microphone=(self), geolocation=()')
 
     return supabaseResponse
 }

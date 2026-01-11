@@ -78,8 +78,8 @@ export default function DoctorReviewsPage() {
                 if (statsResult.stats) {
                     setStats(statsResult.stats);
                 }
-            } catch (error) {
-                console.error("Error fetching reviews:", error);
+            } catch {
+                // Error handled silently - reviews will show empty state
             }
             setIsLoading(false);
         }

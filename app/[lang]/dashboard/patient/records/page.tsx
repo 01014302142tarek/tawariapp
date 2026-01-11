@@ -265,9 +265,8 @@ export default function RecordsPage() {
                             const result = await uploadMedicalDocument(patientProfileId, docType, base64, file.name);
                             if (result.path) {
                                 attachmentPaths.push(result.path);
-                            } else if (result.error) {
-                                console.error('Upload error:', result.error);
                             }
+                            // Upload errors are handled gracefully - record saves without failed attachments
                         }
                     }
 
@@ -364,8 +363,8 @@ export default function RecordsPage() {
             setSelectedFiles([]);
             setUploadProgress(null);
             setShowAddModal(false);
-        } catch (error) {
-            console.error("Error adding item:", error);
+        } catch {
+            // Error adding record - reset state
             setUploadProgress(null);
         }
 

@@ -10,6 +10,7 @@ import { SparklesCore } from "@/components/ui/sparkles";
 import { AnimatedNumber } from "@/components/ui/animated-number";
 import { useI18n } from "@/app/i18n";
 import { getAdminUsers, getAdminUserStats, updateUserStatus, AdminUser, AdminUserStats, UserRole, UserStatus } from "@/app/actions/admin-users";
+import { useToast } from "@/components/ui/toast";
 
 // Icons
 const Icons = {
@@ -81,6 +82,7 @@ const Badge = ({ variant, children }: { variant: string; children: React.ReactNo
 export default function UsersPage() {
     const { t, isRTL, formatNumber, formatDate, language } = useI18n();
     const { theme } = useTheme();
+    const { showToast } = useToast();
     const isDark = theme === "dark";
     const [filter, setFilter] = useState<string>("all");
     const [search, setSearch] = useState("");
@@ -92,6 +94,8 @@ export default function UsersPage() {
 
     // Load data from database
     useEffect(() => {
+        let mounted = true;
+
         async function loadData() {
             setLoading(true);
 
@@ -100,16 +104,21 @@ export default function UsersPage() {
                 getAdminUserStats()
             ]);
 
-            if (!usersResult.error) {
-                setUsers(usersResult.users);
+            if (mounted) {
+                if (!usersResult.error) {
+                    setUsers(usersResult.users);
+                }
+                if (!statsResult.error) {
+                    setStats(statsResult.stats);
+                }
+                setLoading(false);
             }
-            if (!statsResult.error) {
-                setStats(statsResult.stats);
-            }
-
-            setLoading(false);
         }
         loadData();
+
+        return () => {
+            mounted = false;
+        };
     }, []);
 
     // Handle status change
@@ -201,7 +210,10 @@ export default function UsersPage() {
                             {t.adminDashboard.usersPage.subtitle}
                         </p>
                     </div>
-                    <button className="px-4 md:px-5 py-2 md:py-2.5 bg-teal-500 hover:bg-teal-600 text-white font-medium rounded-xl transition-colors flex items-center gap-2 self-start text-sm md:text-base">
+                    <button
+                        onClick={() => showToast(isRTL ? "هذه الميزة قيد التطوير" : "This feature is coming soon", "info")}
+                        className="px-4 md:px-5 py-2 md:py-2.5 bg-teal-500 hover:bg-teal-600 text-white font-medium rounded-xl transition-colors flex items-center gap-2 self-start text-sm md:text-base"
+                    >
                         {Icons.plus}
                         {t.adminDashboard.usersPage.addUser}
                     </button>

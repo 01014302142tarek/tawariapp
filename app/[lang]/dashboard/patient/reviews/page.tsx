@@ -58,8 +58,8 @@ export default function PatientReviewsPage() {
                 if (result.reviews) {
                     setReviews(result.reviews);
                 }
-            } catch (error) {
-                console.error("Error fetching reviews:", error);
+            } catch {
+                // Error handled silently - reviews will show empty state
             }
             setIsLoading(false);
         }

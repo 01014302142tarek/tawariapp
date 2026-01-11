@@ -291,7 +291,7 @@ export async function sendMessage(data: {
 
     // Check rate limit
     const rateLimitKey = `messages:${profile.id}`;
-    const rateLimit = messageLimiter.check(rateLimitKey);
+    const rateLimit = await messageLimiter.check(rateLimitKey);
     if (!rateLimit.allowed) {
         return {
             message: null,

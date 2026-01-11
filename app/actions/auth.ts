@@ -35,7 +35,7 @@ export async function signInWithPassword(
     const rateLimitKey = `login:${normalizedEmail}`;
 
     // Check rate limit
-    const rateLimit = loginLimiter.check(rateLimitKey);
+    const rateLimit = await loginLimiter.check(rateLimitKey);
     if (!rateLimit.allowed) {
         return {
             success: false,
@@ -58,7 +58,7 @@ export async function signInWithPassword(
     }
 
     // Reset rate limit on successful login
-    loginLimiter.reset(rateLimitKey);
+    await loginLimiter.reset(rateLimitKey);
 
     return { success: true };
 }
@@ -76,7 +76,7 @@ export async function signUpWithPassword(
     const rateLimitKey = `signup:${clientIP}`;
 
     // Check rate limit
-    const rateLimit = loginLimiter.check(rateLimitKey);
+    const rateLimit = await loginLimiter.check(rateLimitKey);
     if (!rateLimit.allowed) {
         return {
             success: false,
@@ -121,7 +121,7 @@ export async function requestPasswordReset(
     const rateLimitKey = `reset:${normalizedEmail}`;
 
     // Check rate limit
-    const rateLimit = passwordResetLimiter.check(rateLimitKey);
+    const rateLimit = await passwordResetLimiter.check(rateLimitKey);
     if (!rateLimit.allowed) {
         return {
             success: false,

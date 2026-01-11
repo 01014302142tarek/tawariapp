@@ -119,8 +119,8 @@ export default function SchedulePage() {
             if (blockedResult.blockedTimes) {
                 setBlockedTimes(blockedResult.blockedTimes);
             }
-        } catch (error) {
-            console.error("Error loading schedule data:", error);
+        } catch {
+            // Error loading schedule - will show empty state
         }
         setLoading(false);
     }, []);

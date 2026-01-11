@@ -68,17 +68,25 @@ export default function PatientsPage() {
 
     // Load patients from database
     useEffect(() => {
+        let mounted = true;
+
         async function loadPatients() {
             setLoading(true);
             const result = await getDoctorPatientsWithDetails();
-            if (result.error) {
-                setError(result.error);
-            } else {
-                setPatients(result.patients);
+            if (mounted) {
+                if (result.error) {
+                    setError(result.error);
+                } else {
+                    setPatients(result.patients);
+                }
+                setLoading(false);
             }
-            setLoading(false);
         }
         loadPatients();
+
+        return () => {
+            mounted = false;
+        };
     }, []);
 
     const filteredPatients = patients.filter((patient) =>

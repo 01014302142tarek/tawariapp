@@ -2,6 +2,15 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import type { Database } from "@/lib/supabase/types";
 
+export type UserRole = "patient" | "doctor" | "admin";
+
+export interface SessionUser {
+    id: string;
+    email?: string;
+    role: UserRole;
+    user_metadata?: Record<string, unknown>;
+}
+
 export async function updateSession(request: NextRequest) {
     let supabaseResponse = NextResponse.next({
         request,
@@ -35,5 +44,26 @@ export async function updateSession(request: NextRequest) {
         data: { user },
     } = await supabase.auth.getUser();
 
-    return { supabaseResponse, user };
+    // If user exists, fetch their role from the database for security
+    // This prevents role manipulation via user_metadata
+    let sessionUser: SessionUser | null = null;
+
+    if (user) {
+        const { data: profileData } = await supabase
+            .from("profiles")
+            .select("role")
+            .eq("user_id", user.id)
+            .single();
+
+        const profile = profileData as { role: UserRole } | null;
+
+        sessionUser = {
+            id: user.id,
+            email: user.email,
+            role: profile?.role || "patient", // Fallback to patient if no profile
+            user_metadata: user.user_metadata,
+        };
+    }
+
+    return { supabaseResponse, user: sessionUser };
 }

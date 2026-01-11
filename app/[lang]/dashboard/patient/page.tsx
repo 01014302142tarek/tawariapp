@@ -105,6 +105,12 @@ export default function PatientDashboard() {
     // State for dashboard data
     const [dashboardData, setDashboardData] = useState<PatientDashboardData | null>(null);
     const [isLoading, setIsLoading] = useState(true);
+    const [mounted, setMounted] = useState(false);
+
+    // Handle hydration - only compute time-based values after mount
+    useEffect(() => {
+        setMounted(true);
+    }, []);
 
     // Fetch dashboard data on mount
     const fetchDashboardData = useCallback(async () => {
@@ -123,7 +129,11 @@ export default function PatientDashboard() {
     // Get user's first name from profile
     const userName = profile?.profile.full_name?.split(' ')[0] || (isRTL ? "سارة" : "Sarah");
 
-    const greeting = new Date().getHours() < 12 ? t.doctorDashboard.greeting.morning : new Date().getHours() < 17 ? t.doctorDashboard.greeting.afternoon : t.doctorDashboard.greeting.evening;
+    // Compute greeting only after mount to avoid hydration mismatch
+    // Use doctorDashboard greeting which has morning/afternoon/evening
+    const greeting = mounted
+        ? (new Date().getHours() < 12 ? t.doctorDashboard.greeting.morning : new Date().getHours() < 17 ? t.doctorDashboard.greeting.afternoon : t.doctorDashboard.greeting.evening)
+        : t.doctorDashboard.greeting.morning; // Default for SSR
 
     // Format time for display
     const formatTime = (dateString: string) => {

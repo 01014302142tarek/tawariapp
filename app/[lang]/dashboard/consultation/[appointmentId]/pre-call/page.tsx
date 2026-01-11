@@ -109,7 +109,6 @@ export default function PreCallPage() {
             };
             updateAudioLevel();
         } catch (error) {
-            console.error("Error accessing media devices:", error);
             const err = error as Error;
 
             if (err.name === "NotAllowedError") {
