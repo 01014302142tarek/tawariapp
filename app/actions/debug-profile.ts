@@ -20,7 +20,7 @@ export async function debugUserProfile() {
     }
 
     // Get profile
-    const { data: profile, error: profileError } = await supabase
+    const { data: profile, error: profileError } = await (supabase as any)
         .from("profiles")
         .select("*")
         .eq("user_id", user.id)
@@ -29,7 +29,7 @@ export async function debugUserProfile() {
     // Get patient profile if profile exists
     let patientProfile = null;
     if (profile) {
-        const { data, error: ppError } = await supabase
+        const { data, error: ppError } = await (supabase as any)
             .from("patient_profiles")
             .select("*")
             .eq("profile_id", profile.id)
