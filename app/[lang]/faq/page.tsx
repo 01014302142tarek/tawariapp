@@ -107,19 +107,23 @@ function FAQItem({ question, answer, isOpen, onClick, isDark = true }: {
         <GlowingCard 
             isDark={isDark} 
             glowColor="teal" 
-            className="overflow-hidden cursor-pointer transition-all hover:scale-[1.01]"
-            onClick={onClick}
+            className="overflow-hidden transition-all hover:scale-[1.01]"
         >
-            <div className="flex items-center justify-between p-5">
-                <span className={`font-medium pr-4 ${isDark ? "text-white" : "text-slate-900"}`}>{question}</span>
-                <motion.span
-                    animate={{ rotate: isOpen ? 180 : 0 }}
-                    transition={{ duration: 0.2 }}
-                    className="text-teal-400 flex-shrink-0"
-                >
-                    {Icons.chevron}
-                </motion.span>
-            </div>
+            <button
+                onClick={onClick}
+                className="w-full text-left -m-5 p-5"
+            >
+                <div className="flex items-center justify-between">
+                    <span className={`font-medium pr-4 ${isDark ? "text-white" : "text-slate-900"}`}>{question}</span>
+                    <motion.span
+                        animate={{ rotate: isOpen ? 180 : 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="text-teal-400 flex-shrink-0"
+                    >
+                        {Icons.chevron}
+                    </motion.span>
+                </div>
+            </button>
             <AnimatePresence>
                 {isOpen && (
                     <motion.div
@@ -128,7 +132,7 @@ function FAQItem({ question, answer, isOpen, onClick, isDark = true }: {
                         exit={{ height: 0, opacity: 0 }}
                         transition={{ duration: 0.2 }}
                     >
-                        <div className={`px-5 pb-5 leading-relaxed ${isDark ? "text-gray-400" : "text-gray-600"}`}>
+                        <div className={`pt-2 leading-relaxed ${isDark ? "text-gray-400" : "text-gray-600"}`}>
                             {answer}
                         </div>
                     </motion.div>
