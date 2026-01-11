@@ -899,7 +899,7 @@ export async function hideReview(data: {
 
     const profile = profileData as { role: string } | null;
     if (!profile || profile.role !== "admin") {
-        return { success: false, error: "Admin access required" };
+        return { success: false, error: "Unauthorized - Admin access required" };
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -940,7 +940,7 @@ export async function unhideReview(
 
     const profile = profileData as { role: string } | null;
     if (!profile || profile.role !== "admin") {
-        return { success: false, error: "Admin access required" };
+        return { success: false, error: "Unauthorized - Admin access required" };
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -983,7 +983,7 @@ export async function getReviewsForModeration(options?: {
 
     const profile = profileData as { role: string } | null;
     if (!profile || profile.role !== "admin") {
-        return { reviews: [], total: 0, error: "Admin access required" };
+        return { reviews: [], total: 0, error: "Unauthorized - Admin access required" };
     }
 
     const limit = options?.limit || 20;

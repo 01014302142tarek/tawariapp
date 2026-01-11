@@ -124,26 +124,28 @@ export async function getAdminAnalytics(): Promise<{ analytics: AdminAnalytics; 
         avgSessionMinutes = Math.round((totalMinutes / sessionData.length) * 10) / 10;
     }
 
-    // Get monthly appointment counts for the current year
+    // Get monthly appointment counts for the current year - single query instead of 12
     const currentYear = new Date().getFullYear();
-    const monthlyAppointments: MonthlyData[] = [];
     const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
-    for (let i = 0; i < 12; i++) {
-        const startOfMonth = new Date(currentYear, i, 1);
-        const endOfMonth = new Date(currentYear, i + 1, 0, 23, 59, 59);
+    const startOfYear = new Date(currentYear, 0, 1);
+    const endOfYear = new Date(currentYear, 11, 31, 23, 59, 59);
 
-        const { count } = await supabase
-            .from("appointments")
-            .select("*", { count: "exact", head: true })
-            .gte("scheduled_start", startOfMonth.toISOString())
-            .lte("scheduled_start", endOfMonth.toISOString());
+    const { data: yearAppointments } = await supabase
+        .from("appointments")
+        .select("scheduled_start")
+        .gte("scheduled_start", startOfYear.toISOString())
+        .lte("scheduled_start", endOfYear.toISOString());
 
-        monthlyAppointments.push({
-            month: monthNames[i],
-            value: count || 0,
-        });
-    }
+    // Group by month client-side instead of N queries
+    const monthlyAppointments: MonthlyData[] = monthNames.map((month, i) => ({
+        month,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        value: (yearAppointments || []).filter((apt: any) => {
+            const aptMonth = new Date(apt.scheduled_start).getMonth();
+            return aptMonth === i;
+        }).length,
+    }));
 
     // Get top doctors by earnings
     const { data: earningsData } = await supabase
@@ -188,19 +190,29 @@ export async function getAdminAnalytics(): Promise<{ analytics: AdminAnalytics; 
         }
     });
 
-    // Get patient counts for each doctor
+    // Get patient counts for all doctors in a single query instead of N queries
     const doctorIds = Array.from(doctorEarningsMap.keys());
-    for (const doctorId of doctorIds) {
-        const { count } = await supabase
-            .from("appointments")
-            .select("patient_profile_id", { count: "exact", head: true })
-            .eq("doctor_profile_id", doctorId)
-            .in("status", ["completed", "in_progress"]);
 
-        const entry = doctorEarningsMap.get(doctorId);
-        if (entry && count) {
-            entry.patients = new Set([...Array(count).keys()].map(String));
-        }
+    const { data: allDoctorAppointments } = doctorIds.length > 0
+        ? await supabase
+            .from("appointments")
+            .select("doctor_profile_id, patient_profile_id")
+            .in("doctor_profile_id", doctorIds)
+            .in("status", ["completed", "in_progress"])
+        : { data: [] };
+
+    // Count unique patients per doctor client-side
+    const patientCountsByDoctor = new Map<string, Set<string>>();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (allDoctorAppointments || []).forEach((apt: any) => {
+        const set = patientCountsByDoctor.get(apt.doctor_profile_id) || new Set();
+        set.add(apt.patient_profile_id);
+        patientCountsByDoctor.set(apt.doctor_profile_id, set);
+    });
+
+    // Update earnings map with patient counts
+    for (const [doctorId, entry] of doctorEarningsMap.entries()) {
+        entry.patients = patientCountsByDoctor.get(doctorId) || new Set();
     }
 
     // Sort and rank doctors

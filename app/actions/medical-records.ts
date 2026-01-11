@@ -1254,17 +1254,22 @@ export async function getPatientHealthSummaryForDoctor(
         return { summary: null, error: "Doctor profile not found" };
     }
 
-    // Verify doctor has an active or completed appointment with this patient
+    // Verify doctor has a recent appointment with this patient (within last year)
+    // This prevents indefinite access to patient records
+    const oneYearAgo = new Date();
+    oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+
     const { data: appointmentData } = await supabase
         .from("appointments")
         .select("id")
         .eq("doctor_profile_id", doctorProfile.id)
         .eq("patient_profile_id", patientProfileId)
         .in("status", ["scheduled", "in_waiting_room", "in_progress", "completed"])
+        .gte("scheduled_start", oneYearAgo.toISOString())
         .limit(1);
 
     if (!appointmentData || appointmentData.length === 0) {
-        return { summary: null, error: "Unauthorized - no appointment relationship" };
+        return { summary: null, error: "Unauthorized - no recent appointment relationship" };
     }
 
     // Get patient profile info
@@ -1372,17 +1377,21 @@ export async function getPatientMedicalRecordsForDoctor(
         return { records: [], error: "Doctor profile not found" };
     }
 
-    // Verify doctor has an active or completed appointment with this patient
+    // Verify doctor has a recent appointment with this patient (within last year)
+    const oneYearAgo = new Date();
+    oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+
     const { data: appointmentData } = await supabase
         .from("appointments")
         .select("id")
         .eq("doctor_profile_id", doctorProfile.id)
         .eq("patient_profile_id", patientProfileId)
         .in("status", ["scheduled", "in_waiting_room", "in_progress", "completed"])
+        .gte("scheduled_start", oneYearAgo.toISOString())
         .limit(1);
 
     if (!appointmentData || appointmentData.length === 0) {
-        return { records: [], error: "Unauthorized - no appointment relationship" };
+        return { records: [], error: "Unauthorized - no recent appointment relationship" };
     }
 
     // Build query
@@ -1443,17 +1452,22 @@ export async function getPatientLabResultsForDoctor(
         return { results: [], error: "Doctor profile not found" };
     }
 
-    // Verify doctor has an active or completed appointment with this patient
+    // Verify doctor has an active or recent (within 1 year) appointment with this patient
+    // Time-bound access prevents indefinite record access from old appointments
+    const oneYearAgo = new Date();
+    oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+
     const { data: appointmentData } = await supabase
         .from("appointments")
         .select("id")
         .eq("doctor_profile_id", doctorProfile.id)
         .eq("patient_profile_id", patientProfileId)
         .in("status", ["scheduled", "in_waiting_room", "in_progress", "completed"])
+        .gte("scheduled_start", oneYearAgo.toISOString())
         .limit(1);
 
     if (!appointmentData || appointmentData.length === 0) {
-        return { results: [], error: "Unauthorized - no appointment relationship" };
+        return { results: [], error: "Unauthorized - no recent appointment relationship" };
     }
 
     const { data, error } = await supabase

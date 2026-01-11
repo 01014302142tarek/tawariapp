@@ -110,7 +110,7 @@ export async function initiateAppointmentPayment(
     }
 
     if (appointment.patient_profile_id !== patientProfile.id) {
-        return { success: false, error: "Unauthorized" };
+        return { success: false, error: "Unauthorized - Not your appointment" };
     }
 
     if (appointment.status !== "scheduled") {
@@ -288,7 +288,7 @@ export async function getPaymentStatus(
             .single();
 
         if (!profile || (profile as { user_id: string }).user_id !== user.id) {
-            return { success: false, error: "Unauthorized" };
+            return { success: false, error: "Unauthorized - Not your transaction" };
         }
     }
 

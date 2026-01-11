@@ -244,18 +244,27 @@ export async function getDoctorDashboardData(): Promise<{
         .lt("scheduled_start", new Date().toISOString())
         .limit(10);
 
-    // Check which appointments don't have consultation notes
-    const appointmentsNeedingNotes = await Promise.all(
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (appointmentsWithoutNotes || []).map(async (apt: any) => {
-            const { count } = await supabase
-                .from("consultation_notes")
-                .select("id", { count: "exact", head: true })
-                .eq("appointment_id", apt.id);
+    // Check which appointments don't have consultation notes - single batch query instead of N queries
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const appointmentIds = (appointmentsWithoutNotes || []).map((apt: any) => apt.id);
 
-            return count === 0 ? apt : null;
-        })
-    );
+    // Single query to get all existing notes for these appointments
+    let appointmentsWithNotes = new Set<string>();
+    if (appointmentIds.length > 0) {
+        const { data: existingNotes } = await supabase
+            .from("consultation_notes")
+            .select("appointment_id")
+            .in("appointment_id", appointmentIds);
+
+        // Create a Set of appointment IDs that already have notes
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        appointmentsWithNotes = new Set((existingNotes || []).map((n: any) => n.appointment_id));
+    }
+
+    // Filter appointments that don't have notes (no additional network calls)
+    const appointmentsNeedingNotes = (appointmentsWithoutNotes || [])
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .filter((apt: any) => !appointmentsWithNotes.has(apt.id));
 
     const pendingTasks: PendingTask[] = appointmentsNeedingNotes
         .filter(apt => apt !== null)

@@ -123,8 +123,6 @@ export async function getAdminUsers(options?: {
         return { users: [], total: 0, error: error.message };
     }
 
-    console.log("✅ Fetched profiles from database:", data?.length, "Total count:", count);
-
     // Get user emails from auth.users via admin API
     // For now, we'll fetch emails separately if needed
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -153,15 +151,13 @@ export async function getAdminUsers(options?: {
             const { data: { users: authUsers } } = await supabase.auth.admin.listUsers();
             
             if (authUsers && authUsers.length > 0) {
-                console.log("✅ Fetched auth users:", authUsers.length);
                 const emailMap = new Map(authUsers.map(u => [u.id, u.email || ""]));
                 users.forEach(user => {
                     user.email = emailMap.get(user.user_id) || "";
                 });
             }
-        } catch (err) {
-            console.error("❌ Could not fetch user emails (requires service role):", err);
-            // Continue without emails - not critical
+        } catch {
+            // Continue without emails - not critical for display
         }
     }
 
@@ -187,8 +183,6 @@ export async function getAdminUsers(options?: {
             });
         }
     }
-
-    console.log("✅ Final users to return:", users.length);
 
     return { users, total: count || 0 };
 }
@@ -388,25 +382,22 @@ export async function getAdminPatients(options?: {
         return { patients: [], total: 0, error: error.message };
     }
 
-    console.log("Raw patient data fetched:", data?.length, "Total count:", count);
-
-    // Get appointment counts for each patient
+    // Get appointment counts for all patients in a single query instead of N queries
     const patientIds = (data || []).map((p: { id: string }) => p.id);
     const appointmentCounts = new Map<string, number>();
 
     if (patientIds.length > 0) {
-        // Count appointments per patient in parallel
-        const appointmentPromises = patientIds.map(async (patientId) => {
-            const { count: aptCount } = await supabase
-                .from("appointments")
-                .select("*", { count: "exact", head: true })
-                .eq("patient_profile_id", patientId);
-            return { patientId, count: aptCount || 0 };
-        });
-        
-        const appointmentResults = await Promise.all(appointmentPromises);
-        appointmentResults.forEach(({ patientId, count: aptCount }) => {
-            appointmentCounts.set(patientId, aptCount);
+        // Single batch query for all patient appointment counts
+        const { data: allAppointments } = await supabase
+            .from("appointments")
+            .select("patient_profile_id")
+            .in("patient_profile_id", patientIds);
+
+        // Count appointments per patient client-side
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (allAppointments || []).forEach((apt: any) => {
+            const current = appointmentCounts.get(apt.patient_profile_id) || 0;
+            appointmentCounts.set(apt.patient_profile_id, current + 1);
         });
     }
 
@@ -442,8 +433,6 @@ export async function getAdminPatients(options?: {
             patients = patients.filter(p => p.total_appointments === 0);
         }
     }
-
-    console.log("Final patients after filters:", patients.length);
 
     // Return the original database count, not the filtered count
     // This is important for correct pagination

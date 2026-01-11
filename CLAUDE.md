@@ -79,24 +79,35 @@ When adding UI elements, ensure they work for both LTR (English) and RTL (Arabic
 
 ## Test Users
 
-Pre-seeded test accounts for development and testing:
+Pre-seeded test accounts (16 total). All passwords follow the pattern `Tawari[Role][Number]!2024`.
 
 | Email | Password | Role | Name |
 |-------|----------|------|------|
 | patient1@tawari.test | TawariPatient1!2024 | Patient | Ahmed Hassan |
 | patient2@tawari.test | TawariPatient2!2024 | Patient | Fatima Ali |
-| doctor1@tawari.test | TawariDoctor1!2024 | Doctor | Dr. Mohamed Ibrahim (Cardiologist) |
-| doctor2@tawari.test | TawariDoctor2!2024 | Doctor | Dr. Nour El-Din (Dermatologist) |
+| patient3@tawari.test | TawariPatient3!2024 | Patient | Omar Khalil |
+| patient4@tawari.test | TawariPatient4!2024 | Patient | Mariam Saeed (elderly) |
+| patient5@tawari.test | TawariPatient5!2024 | Patient | Youssef Nasser (child) |
+| patient6@tawari.test | TawariPatient6!2024 | Patient | Nadia Mostafa (pregnant) |
+| doctor1@tawari.test | TawariDoctor1!2024 | Doctor | Dr. Mohamed Ibrahim (Cardiology, verified) |
+| doctor2@tawari.test | TawariDoctor2!2024 | Doctor | Dr. Nour El-Din (Dermatology, verified) |
+| doctor3@tawari.test | TawariDoctor3!2024 | Doctor | Dr. Sara Ahmed (GP, verified) |
+| doctor4@tawari.test | TawariDoctor4!2024 | Doctor | Dr. Hassan Mahmoud (Pediatrics, pending) |
+| doctor5@tawari.test | TawariDoctor5!2024 | Doctor | Dr. Layla Farouk (Internal Med, under_review) |
+| doctor6@tawari.test | TawariDoctor6!2024 | Doctor | Dr. Karim Youssef (Psychiatry, suspended) |
 | admin1@tawari.test | TawariAdmin1!2024 | Admin | Sarah Admin (full_admin) |
 | admin2@tawari.test | TawariAdmin2!2024 | Admin | Omar Admin (support_agent) |
+| admin3@tawari.test | TawariAdmin3!2024 | Admin | Khaled Support (verification team) |
+| assistant1@tawari.test | TawariAssistant1!2024 | Assistant | Heba (assigned to Dr. Mohamed) |
 
-**Re-seeding test data:**
+**Seeding Commands:**
 ```bash
-# Create/reset test users and basic profiles
+# Basic seeding (6 core users + profiles)
 npx tsx scripts/seed-test-users.ts
 
-# Add additional data (appointments, prescriptions, messages, etc.)
-# Run scripts/seed-additional-data.sql in Supabase SQL Editor
+# Comprehensive demo seeding (16 users + full demo data)
+npx tsx scripts/seed-comprehensive-demo.ts
+# Then run: psql "$POSTGRES_URL_NON_POOLING" -f scripts/seed-comprehensive-demo.sql
 ```
 
 ## Documentation

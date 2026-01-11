@@ -79,40 +79,53 @@ export async function saveProfessionalDetails(data: {
     // Save specialty to doctor_specializations if provided
     if (data.specialty) {
         // First find the specialization ID
-        const { data: specDataRaw } = await supabase
+        const { data: specDataRaw, error: specError } = await supabase
             .from("specializations")
             .select("id")
             .or(`name_en.eq.${data.specialty},name_ar.eq.${data.specialty}`)
             .single();
 
+        if (specError) {
+            // Specialization not found - continue without failing the whole operation
+            // This allows the doctor to proceed even if specialty lookup fails
+        }
+
         const specData = specDataRaw as { id: string } | null;
         if (specData) {
             // Get doctor_profile id
-            const { data: doctorProfileRaw } = await supabase
+            const { data: doctorProfileRaw, error: profileError } = await supabase
                 .from("doctor_profiles")
                 .select("id")
                 .eq("profile_id", profile.id)
                 .single();
 
+            if (profileError) {
+                return { success: false, error: "Doctor profile not found" };
+            }
+
             const doctorProfile = doctorProfileRaw as { id: string } | null;
             if (doctorProfile) {
-                // Check if already exists
+                // Check if already exists (use maybeSingle to avoid error on no match)
                 const { data: existing } = await supabase
                     .from("doctor_specializations")
                     .select("id")
                     .eq("doctor_profile_id", doctorProfile.id)
                     .eq("specialization_id", specData.id)
-                    .single();
+                    .maybeSingle();
 
                 if (!existing) {
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    await (supabase as any)
+                    const { error: insertError } = await (supabase as any)
                         .from("doctor_specializations")
                         .insert({
                             doctor_profile_id: doctorProfile.id,
                             specialization_id: specData.id,
                             is_primary: true,
                         });
+
+                    if (insertError) {
+                        // Log but don't fail - specialty is supplementary
+                    }
                 }
             }
         }

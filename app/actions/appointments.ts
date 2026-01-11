@@ -137,6 +137,8 @@ export async function bookAppointment(data: {
     const consultationFee = doctor?.consultation_fee || 0;
 
     // Check if slot is still available (no overlapping appointments)
+    // Note: This is an optimistic check - the database has an exclusion constraint
+    // (no_overlapping_appointments) that prevents race conditions at insert time.
     const { data: existingAppointments } = await supabase
         .from("appointments")
         .select("id")
@@ -150,6 +152,8 @@ export async function bookAppointment(data: {
     }
 
     // Create appointment
+    // The database exclusion constraint prevents double-booking even if two
+    // concurrent requests pass the availability check above.
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: insertedData, error } = await (supabase as any)
         .from("appointments")
@@ -166,7 +170,10 @@ export async function bookAppointment(data: {
         .single();
 
     if (error) {
-        console.error("Error booking appointment:", error);
+        // Handle exclusion constraint violation (concurrent booking race condition)
+        if (error.code === "23P01" || error.message?.includes("exclusion")) {
+            return { success: false, error: "This time slot was just booked. Please select another time." };
+        }
         return { success: false, error: error.message };
     }
 

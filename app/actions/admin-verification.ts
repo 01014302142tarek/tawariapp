@@ -211,7 +211,7 @@ export async function getDoctorApplicationDetails(doctorProfileId: string): Prom
 
     const callerProfile = callerProfileData as { role: string } | null;
     if (!callerProfile || callerProfile.role !== "admin") {
-        return { doctor: null, error: "Unauthorized" };
+        return { doctor: null, error: "Unauthorized - Admin access required" };
     }
 
     // Type definitions
@@ -340,7 +340,7 @@ export async function approveDoctor(doctorProfileId: string): Promise<{ success:
 
     const callerProfile = callerProfileData as { id: string; role: string } | null;
     if (!callerProfile || callerProfile.role !== "admin") {
-        return { success: false, error: "Unauthorized" };
+        return { success: false, error: "Unauthorized - Admin access required" };
     }
 
     // Get doctor info before updating
@@ -427,7 +427,7 @@ export async function rejectDoctor(
 
     const callerProfile = callerProfileData as { id: string; role: string } | null;
     if (!callerProfile || callerProfile.role !== "admin") {
-        return { success: false, error: "Unauthorized" };
+        return { success: false, error: "Unauthorized - Admin access required" };
     }
 
     // Get doctor info before updating
