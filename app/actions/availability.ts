@@ -21,6 +21,7 @@ export interface BlockedTime {
     start_datetime: string;
     end_datetime: string;
     reason?: string;
+    created_at?: string;
 }
 
 export interface AvailableSlot {
