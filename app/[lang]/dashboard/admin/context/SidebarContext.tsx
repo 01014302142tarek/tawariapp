@@ -39,12 +39,17 @@ export function AdminSidebarProvider({ children }: { children: React.ReactNode }
     // Store admin profile ID in ref to avoid recreating fetchData
     const adminProfileIdRef = useRef<string | null>(null);
 
+    // Get admin profile ID safely
+    const adminProfileId = profile && isAdminProfile(profile) ? profile.adminProfile?.id : null;
+
     // Update ref when profile changes (only when ID changes, not entire profile object)
     useEffect(() => {
-        if (profile && isAdminProfile(profile) && profile.adminProfile?.id) {
-            adminProfileIdRef.current = profile.adminProfile.id;
+        if (adminProfileId) {
+            adminProfileIdRef.current = adminProfileId;
+        } else {
+            adminProfileIdRef.current = null;
         }
-    }, [profile?.adminProfile?.id]);
+    }, [adminProfileId]);
 
     // Fetch sidebar data with stable reference
     const fetchData = useCallback(async () => {
@@ -74,11 +79,11 @@ export function AdminSidebarProvider({ children }: { children: React.ReactNode }
 
     // Initial fetch - only when admin profile is available
     useEffect(() => {
-        if (profile && isAdminProfile(profile)) {
+        if (adminProfileId) {
             fetchData();
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [profile?.adminProfile?.id]);
+    }, [adminProfileId]);
 
     // Set up real-time subscriptions for live updates
     useEffect(() => {
@@ -134,7 +139,7 @@ export function AdminSidebarProvider({ children }: { children: React.ReactNode }
         return () => {
             supabase.removeChannel(doctorsChannel);
         };
-    }, [profile?.adminProfile?.id]);
+    }, [adminProfileId]);
 
     return (
         <AdminSidebarContext.Provider value={{ data, loading: isLoading, refresh: fetchData }}>
