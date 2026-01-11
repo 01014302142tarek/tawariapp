@@ -48,15 +48,23 @@ export function SidebarProvider({ children }: { children: React.ReactNode }) {
     const profileIdRef = useRef<string | null>(null);
     const patientProfileIdRef = useRef<string | null>(null);
 
+    // Get IDs safely using type guards
+    const profileId = profile?.profile.id || null;
+    const patientProfileId = profile && isPatientProfile(profile) ? profile.patientProfile?.id : null;
+
     // Update refs when profile changes (only when IDs change, not entire profile object)
     useEffect(() => {
-        if (profile?.profile.id) {
-            profileIdRef.current = profile.profile.id;
+        if (profileId) {
+            profileIdRef.current = profileId;
+        } else {
+            profileIdRef.current = null;
         }
-        if (profile && isPatientProfile(profile) && profile.patientProfile?.id) {
-            patientProfileIdRef.current = profile.patientProfile.id;
+        if (patientProfileId) {
+            patientProfileIdRef.current = patientProfileId;
+        } else {
+            patientProfileIdRef.current = null;
         }
-    }, [profile?.profile.id, profile?.patientProfile?.id]);
+    }, [profileId, patientProfileId]);
 
     // Fetch sidebar data with stable reference
     const fetchData = useCallback(async () => {
@@ -87,28 +95,28 @@ export function SidebarProvider({ children }: { children: React.ReactNode }) {
 
     // Initial fetch - only when profile ID changes
     useEffect(() => {
-        if (profile?.profile.id && isPatientProfile(profile)) {
+        if (profileId && profile && isPatientProfile(profile)) {
             fetchData();
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [profile?.profile.id]);
+    }, [profileId]);
 
     // Set up real-time subscriptions for live updates
     useEffect(() => {
-        if (!profile?.profile.id) return;
+        if (!profileId) return;
 
         const supabase = createClient();
 
         // Subscribe to messages table changes with unique channel name
         const messagesChannel = supabase
-            .channel(`patient_messages_sidebar_${profile.profile.id}`)
+            .channel(`patient_messages_sidebar_${profileId}`)
             .on(
                 "postgres_changes",
                 {
                     event: "INSERT",
                     schema: "public",
                     table: "messages",
-                    filter: `recipient_profile_id=eq.${profile.profile.id}`,
+                    filter: `recipient_profile_id=eq.${profileId}`,
                 },
                 (payload) => {
                     // Directly update count for new unread messages
@@ -124,7 +132,7 @@ export function SidebarProvider({ children }: { children: React.ReactNode }) {
                     event: "UPDATE",
                     schema: "public",
                     table: "messages",
-                    filter: `recipient_profile_id=eq.${profile.profile.id}`,
+                    filter: `recipient_profile_id=eq.${profileId}`,
                 },
                 (payload) => {
                     // Decrease count when message is marked as read
@@ -143,7 +151,7 @@ export function SidebarProvider({ children }: { children: React.ReactNode }) {
         return () => {
             supabase.removeChannel(messagesChannel);
         };
-    }, [profile?.profile.id]);
+    }, [profileId]);
 
     const value: SidebarContextType = {
         data,
