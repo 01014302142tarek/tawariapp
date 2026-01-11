@@ -483,7 +483,7 @@ export async function createUser(input: CreateUserInput): Promise<{ success: boo
 
         // Step 2: Create profile (admin can insert due to RLS policy)
         const profileId = crypto.randomUUID();
-        const { error: profileError } = await supabase
+        const { error: profileError } = await (supabase as any)
             .from("profiles")
             .insert({
                 id: profileId,
@@ -506,7 +506,7 @@ export async function createUser(input: CreateUserInput): Promise<{ success: boo
         // Step 3: Create role-specific profile
         if (input.role === "doctor") {
             const doctorProfileId = crypto.randomUUID();
-            const { error: doctorError } = await supabase
+            const { error: doctorError } = await (supabase as any)
                 .from("doctor_profiles")
                 .insert({
                     id: doctorProfileId,
@@ -542,7 +542,7 @@ export async function createUser(input: CreateUserInput): Promise<{ success: boo
                         specialization_id: spec.id,
                     }));
 
-                    await supabase
+                    await (supabase as any)
                         .from("doctor_specializations")
                         .insert(doctorSpecializations);
                     
@@ -552,7 +552,7 @@ export async function createUser(input: CreateUserInput): Promise<{ success: boo
 
         } else if (input.role === "patient") {
             const patientProfileId = crypto.randomUUID();
-            const { error: patientError } = await supabase
+            const { error: patientError } = await (supabase as any)
                 .from("patient_profiles")
                 .insert({
                     id: patientProfileId,
@@ -573,7 +573,7 @@ export async function createUser(input: CreateUserInput): Promise<{ success: boo
 
         } else if (input.role === "admin") {
             const adminProfileId = crypto.randomUUID();
-            const { error: adminError } = await supabase
+            const { error: adminError } = await (supabase as any)
                 .from("admin_profiles")
                 .insert({
                     id: adminProfileId,
