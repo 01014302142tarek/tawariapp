@@ -530,13 +530,13 @@ export async function createUser(input: CreateUserInput): Promise<{ success: boo
             // Add specializations if provided
             if (input.specializations && input.specializations.length > 0) {
                 // Get specialization IDs from names
-                const { data: specializations } = await supabase
+                const { data: specializations } = await (supabase as any)
                     .from("specializations")
                     .select("id, name_en")
                     .in("name_en", input.specializations);
 
                 if (specializations && specializations.length > 0) {
-                    const doctorSpecializations = specializations.map(spec => ({
+                    const doctorSpecializations = specializations.map((spec: any) => ({
                         id: crypto.randomUUID(),
                         doctor_profile_id: doctorProfileId,
                         specialization_id: spec.id,
