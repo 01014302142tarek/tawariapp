@@ -1260,8 +1260,8 @@ export async function getDoctorById(
         .map((ds: any) => ds.specializations?.name_en || "")
         .filter(Boolean);
     
-    // Remove duplicates using Set
-    const specializations = Array.from(new Set(specNames));
+    // Remove duplicates using Set - explicitly typed as string[]
+    const specializations: string[] = Array.from(new Set(specNames));
 
     return {
         doctor: {
