@@ -42,8 +42,8 @@ const nextConfig: NextConfig = {
                             "font-src 'self' https://fonts.gstatic.com",
                             // Images - allow data: for base64, blob: for uploads, and specific sources
                             "img-src 'self' data: blob: https://*.supabase.co https://lh3.googleusercontent.com https://images.unsplash.com https://*.daily.co https://*.pluot.blue",
-                            // Connect - API calls + Daily.co for video calls
-                            "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://www.google-analytics.com https://vitals.vercel-insights.com https://*.daily.co https://*.pluot.blue wss://*.daily.co wss://*.pluot.blue https://api.daily.co",
+                            // Connect - API calls + Daily.co for video calls + Sentry for Daily's error reporting
+                            "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://www.google-analytics.com https://vitals.vercel-insights.com https://*.daily.co https://*.pluot.blue wss://*.daily.co wss://*.pluot.blue https://api.daily.co https://*.ingest.sentry.io",
                             // Frames - for video calls (Daily.co)
                             "frame-src 'self' https://*.daily.co https://*.pluot.blue",
                             // Workers for Daily
@@ -85,11 +85,12 @@ const nextConfig: NextConfig = {
                         value: "strict-origin-when-cross-origin",
                     },
                     // Permissions Policy - restrict browser features
+                    // Note: camera/microphone need to allow Daily.co iframe domains
                     {
                         key: "Permissions-Policy",
                         value: [
-                            "camera=(self)",         // Allow camera for video calls
-                            "microphone=(self)",     // Allow microphone for video calls
+                            'camera=(self "https://*.daily.co" "https://*.pluot.blue")',  // Allow camera for video calls
+                            'microphone=(self "https://*.daily.co" "https://*.pluot.blue")', // Allow microphone for video calls
                             "display-capture=(self)", // Allow screen sharing
                             "geolocation=()",        // Disable geolocation
                             "payment=()",            // Disable Payment Request API (using Paymob redirect)

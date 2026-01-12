@@ -71,11 +71,20 @@ export default function ConsultationPage() {
 
     // Initialize Daily call
     useEffect(() => {
+        // Prevent duplicate initialization
         if (!roomUrl || !containerRef.current || callFrameRef.current) return;
 
         const dailyDomain = process.env.NEXT_PUBLIC_DAILY_DOMAIN;
         if (!dailyDomain) {
             setError("Video service not configured");
+            return;
+        }
+
+        // Check if there's an existing Daily instance (React Strict Mode protection)
+        const existingInstance = DailyIframe.getCallInstance();
+        if (existingInstance) {
+            console.log("Daily: Using existing call instance");
+            callFrameRef.current = existingInstance;
             return;
         }
 
@@ -99,6 +108,12 @@ export default function ConsultationPage() {
             showFullscreenButton: true,
         });
 
+        // Set the allow attribute on the iframe for camera/microphone permissions
+        const iframe = containerRef.current.querySelector("iframe");
+        if (iframe) {
+            iframe.setAttribute("allow", "camera; microphone; autoplay; display-capture; screen-wake-lock");
+        }
+
         callFrameRef.current = callFrame;
 
         // Set up event listeners
@@ -114,7 +129,13 @@ export default function ConsultationPage() {
 
         callFrame.on("error", (event) => {
             console.error("Daily error:", event);
-            setError("Video call error. Please try again.");
+            // Check if the error is about room not existing (expired)
+            const errorMsg = (event as { errorMsg?: string })?.errorMsg || "";
+            if (errorMsg.includes("does not exist")) {
+                setError("This consultation room has expired. Please start a new consultation from the appointments page.");
+            } else {
+                setError("Video call error. Please try again.");
+            }
         });
 
         // Join the call
@@ -123,7 +144,12 @@ export default function ConsultationPage() {
             userName: userInfo?.displayName || "Participant",
         }).catch((err) => {
             console.error("Failed to join Daily call:", err);
-            setError("Failed to join video call. Please check your connection.");
+            const errorMsg = (err as { errorMsg?: string })?.errorMsg || "";
+            if (errorMsg.includes("does not exist")) {
+                setError("This consultation room has expired. Please start a new consultation from the appointments page.");
+            } else {
+                setError("Failed to join video call. Please check your connection.");
+            }
         });
 
         return () => {

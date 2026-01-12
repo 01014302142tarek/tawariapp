@@ -157,8 +157,8 @@ export async function middleware(request: NextRequest) {
     supabaseResponse.headers.set('X-Frame-Options', 'SAMEORIGIN')
     supabaseResponse.headers.set('X-XSS-Protection', '1; mode=block')
     supabaseResponse.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
-    // Allow camera/microphone for video calls (Daily.co handles permissions within its iframe)
-    supabaseResponse.headers.set('Permissions-Policy', 'camera=(self), microphone=(self), display-capture=(self), geolocation=()')
+    // Allow camera/microphone for video calls - include Daily.co domains
+    supabaseResponse.headers.set('Permissions-Policy', 'camera=(self "https://*.daily.co" "https://*.pluot.blue"), microphone=(self "https://*.daily.co" "https://*.pluot.blue"), display-capture=(self), geolocation=()')
 
     return supabaseResponse
 }
