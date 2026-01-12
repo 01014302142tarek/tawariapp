@@ -77,11 +77,29 @@ export default function DoctorEarningsPage() {
     const [withdrawing, setWithdrawing] = useState(false);
     const [withdrawError, setWithdrawError] = useState<string | null>(null);
     const [withdrawSuccess, setWithdrawSuccess] = useState(false);
+    const [isDark, setIsDark] = useState(false);
     const [bankDetails, setBankDetails] = useState({
         bankName: "",
         accountNumber: "",
         accountHolderName: "",
     });
+
+    // Detect dark mode
+    useEffect(() => {
+        const checkDarkMode = () => {
+            setIsDark(document.documentElement.classList.contains("dark"));
+        };
+        
+        checkDarkMode();
+        
+        const observer = new MutationObserver(checkDarkMode);
+        observer.observe(document.documentElement, {
+            attributes: true,
+            attributeFilter: ["class"],
+        });
+        
+        return () => observer.disconnect();
+    }, []);
 
     // Load earnings
     useEffect(() => {
@@ -390,17 +408,20 @@ export default function DoctorEarningsPage() {
                     <motion.div
                         initial={{ opacity: 0, scale: 0.95 }}
                         animate={{ opacity: 1, scale: 1 }}
-                        className="w-full max-w-md bg-slate-900 rounded-2xl border border-white/10 p-6"
+                        className={cn(
+                            "w-full max-w-md rounded-2xl border p-6",
+                            isDark ? "bg-slate-900 border-white/10" : "bg-white border-gray-200"
+                        )}
                     >
                         {withdrawSuccess ? (
                             <div className="text-center py-8">
                                 <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
                                     <span className="text-green-400">{Icons.check}</span>
                                 </div>
-                                <h3 className="text-xl font-bold text-white mb-2">
+                                <h3 className={cn("text-xl font-bold mb-2", isDark ? "text-white" : "text-slate-900")}>
                                     {isRTL ? "تم تقديم الطلب بنجاح!" : "Request Submitted!"}
                                 </h3>
-                                <p className="text-gray-400">
+                                <p className={cn(isDark ? "text-gray-400" : "text-gray-600")}>
                                     {isRTL
                                         ? "سيتم معالجة طلب السحب خلال 3-5 أيام عمل"
                                         : "Your withdrawal will be processed within 3-5 business days"}
@@ -409,12 +430,12 @@ export default function DoctorEarningsPage() {
                         ) : (
                             <>
                                 <div className="flex items-center justify-between mb-6">
-                                    <h3 className="text-xl font-bold text-white">
+                                    <h3 className={cn("text-xl font-bold", isDark ? "text-white" : "text-slate-900")}>
                                         {isRTL ? "طلب سحب الأرباح" : "Request Withdrawal"}
                                     </h3>
                                     <button
                                         onClick={() => setShowWithdrawModal(false)}
-                                        className="text-gray-400 hover:text-white"
+                                        className={cn(isDark ? "text-gray-400 hover:text-white" : "text-gray-600 hover:text-gray-900")}
                                     >
                                         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -438,7 +459,7 @@ export default function DoctorEarningsPage() {
 
                                 <div className="space-y-4">
                                     <div>
-                                        <label className="block text-gray-400 text-sm mb-1">
+                                        <label className={cn("block text-sm mb-1", isDark ? "text-gray-400" : "text-gray-600")}>
                                             {isRTL ? "اسم البنك" : "Bank Name"}
                                         </label>
                                         <input
@@ -446,11 +467,16 @@ export default function DoctorEarningsPage() {
                                             value={bankDetails.bankName}
                                             onChange={(e) => setBankDetails({ ...bankDetails, bankName: e.target.value })}
                                             placeholder={isRTL ? "مثال: البنك الأهلي المصري" : "e.g., National Bank of Egypt"}
-                                            className="w-full px-4 py-3 bg-slate-800 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:border-teal-500 focus:outline-none"
+                                            className={cn(
+                                                "w-full px-4 py-3 border rounded-lg focus:outline-none",
+                                                isDark
+                                                    ? "bg-slate-800 border-white/10 text-white placeholder-gray-500 focus:border-teal-500"
+                                                    : "bg-gray-50 border-gray-200 text-slate-900 placeholder-gray-400 focus:border-teal-500"
+                                            )}
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-gray-400 text-sm mb-1">
+                                        <label className={cn("block text-sm mb-1", isDark ? "text-gray-400" : "text-gray-600")}>
                                             {isRTL ? "رقم الحساب" : "Account Number"}
                                         </label>
                                         <input
@@ -458,11 +484,16 @@ export default function DoctorEarningsPage() {
                                             value={bankDetails.accountNumber}
                                             onChange={(e) => setBankDetails({ ...bankDetails, accountNumber: e.target.value })}
                                             placeholder={isRTL ? "رقم الحساب البنكي" : "Bank account number"}
-                                            className="w-full px-4 py-3 bg-slate-800 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:border-teal-500 focus:outline-none"
+                                            className={cn(
+                                                "w-full px-4 py-3 border rounded-lg focus:outline-none",
+                                                isDark
+                                                    ? "bg-slate-800 border-white/10 text-white placeholder-gray-500 focus:border-teal-500"
+                                                    : "bg-gray-50 border-gray-200 text-slate-900 placeholder-gray-400 focus:border-teal-500"
+                                            )}
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-gray-400 text-sm mb-1">
+                                        <label className={cn("block text-sm mb-1", isDark ? "text-gray-400" : "text-gray-600")}>
                                             {isRTL ? "اسم صاحب الحساب" : "Account Holder Name"}
                                         </label>
                                         <input
@@ -470,7 +501,12 @@ export default function DoctorEarningsPage() {
                                             value={bankDetails.accountHolderName}
                                             onChange={(e) => setBankDetails({ ...bankDetails, accountHolderName: e.target.value })}
                                             placeholder={isRTL ? "الاسم كما يظهر في الحساب" : "Name as it appears on account"}
-                                            className="w-full px-4 py-3 bg-slate-800 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:border-teal-500 focus:outline-none"
+                                            className={cn(
+                                                "w-full px-4 py-3 border rounded-lg focus:outline-none",
+                                                isDark
+                                                    ? "bg-slate-800 border-white/10 text-white placeholder-gray-500 focus:border-teal-500"
+                                                    : "bg-gray-50 border-gray-200 text-slate-900 placeholder-gray-400 focus:border-teal-500"
+                                            )}
                                         />
                                     </div>
                                 </div>
@@ -478,7 +514,12 @@ export default function DoctorEarningsPage() {
                                 <div className="mt-6 flex gap-3">
                                     <button
                                         onClick={() => setShowWithdrawModal(false)}
-                                        className="flex-1 px-4 py-3 border border-white/10 text-white rounded-lg hover:bg-white/5 transition-colors"
+                                        className={cn(
+                                            "flex-1 px-4 py-3 border rounded-lg transition-colors",
+                                            isDark
+                                                ? "border-white/10 text-white hover:bg-white/5"
+                                                : "border-gray-300 text-gray-700 hover:bg-gray-50"
+                                        )}
                                     >
                                         {isRTL ? "إلغاء" : "Cancel"}
                                     </button>
@@ -498,7 +539,7 @@ export default function DoctorEarningsPage() {
                                     </button>
                                 </div>
 
-                                <p className="mt-4 text-gray-500 text-xs text-center">
+                                <p className={cn("mt-4 text-xs text-center", isDark ? "text-gray-500" : "text-gray-600")}>
                                     {isRTL
                                         ? "سيتم معالجة طلب السحب خلال 3-5 أيام عمل"
                                         : "Withdrawal requests are processed within 3-5 business days"}

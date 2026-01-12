@@ -113,7 +113,7 @@ export async function getPatientDashboardData(): Promise<{
                 chief_complaint,
                 doctor_profiles!inner (
                     id,
-                    profiles (
+                    profiles!doctor_profiles_profile_id_fkey (
                         id,
                         full_name,
                         avatar_url
@@ -143,7 +143,7 @@ export async function getPatientDashboardData(): Promise<{
                 valid_until,
                 status,
                 doctor_profiles (
-                    profiles (
+                    profiles!doctor_profiles_profile_id_fkey (
                         full_name
                     )
                 )
@@ -169,7 +169,7 @@ export async function getPatientDashboardData(): Promise<{
                 status,
                 actual_end,
                 doctor_profiles!inner (
-                    profiles (
+                    profiles!doctor_profiles_profile_id_fkey (
                         full_name
                     )
                 )
@@ -187,7 +187,7 @@ export async function getPatientDashboardData(): Promise<{
                 medication_name,
                 prescribed_at,
                 doctor_profiles (
-                    profiles (
+                    profiles!doctor_profiles_profile_id_fkey (
                         full_name
                     )
                 )

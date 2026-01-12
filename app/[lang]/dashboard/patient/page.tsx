@@ -309,11 +309,6 @@ export default function PatientDashboard() {
                     </p>
                 </section>
 
-                {/* Pending Reviews - prompts patient to review completed appointments */}
-                <section className="mb-6 md:mb-8">
-                    <PendingReviews isDark={isDark} isRTL={isRTL} />
-                </section>
-
                 {/* Stats Row */}
                 <section className="mb-6 md:mb-8">
                     <div className="grid grid-cols-3 gap-3 md:gap-4">
@@ -507,6 +502,11 @@ export default function PatientDashboard() {
                                 )}
                             </div>
                         </GlowingCard>
+
+                        {/* Pending Reviews - prompts patient to review completed appointments */}
+                        <div className="mt-4 md:mt-6">
+                            <PendingReviews isDark={isDark} isRTL={isRTL} />
+                        </div>
                     </div>
 
                     {/* Recent Activity */}

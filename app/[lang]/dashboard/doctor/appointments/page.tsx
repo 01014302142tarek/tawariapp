@@ -69,7 +69,7 @@ const Badge = ({ children, variant = "default", isDark = true, className }: { ch
         error: "bg-red-500/10 text-red-500 border border-red-500/20",
     };
     return (
-        <span className={cn("px-2.5 py-1 rounded-full text-xs font-medium", variants[variant], className)}>
+        <span className={cn("px-2.5 py-1 rounded-full text-xs font-medium whitespace-nowrap", variants[variant], className)}>
             {children}
         </span>
     );

@@ -622,7 +622,7 @@ export default function RecordsPage() {
                                 onClick={() => fileInputRef.current?.click()}
                                 className={cn(
                                     "border-2 border-dashed rounded-xl p-4 text-center cursor-pointer transition-colors",
-                                    isDark ? "border-gray-600 hover:border-blue-500" : "border-gray-300 hover:border-blue-500"
+                                    isDark ? "border-gray-600 hover:border-teal-500" : "border-gray-300 hover:border-teal-500"
                                 )}
                             >
                                 <input
@@ -633,7 +633,7 @@ export default function RecordsPage() {
                                     className="hidden"
                                 />
                                 <div className="flex flex-col items-center gap-2">
-                                    <span className="text-blue-500">{Icons.upload}</span>
+                                    <span className="text-teal-500">{Icons.upload}</span>
                                     <span className={cn("text-sm", textMuted)}>
                                         {isRTL ? "اضغط لرفع ملف النتيجة" : "Click to upload lab report"}
                                     </span>
@@ -645,12 +645,12 @@ export default function RecordsPage() {
                             {/* Selected File */}
                             {selectedFiles.length > 0 && (
                                 <div className="mt-3">
-                                    <div className={cn(
+                                        <div className={cn(
                                         "flex items-center justify-between px-3 py-2 rounded-lg",
                                         isDark ? "bg-white/5" : "bg-gray-100"
                                     )}>
                                         <div className="flex items-center gap-2 min-w-0">
-                                            <span className="text-blue-500">{Icons.paperclip}</span>
+                                            <span className="text-teal-500">{Icons.paperclip}</span>
                                             <span className={cn("text-sm truncate", textPrimary)}>{selectedFiles[0].name}</span>
                                             <span className={cn("text-xs flex-shrink-0", textMuted)}>
                                                 ({(selectedFiles[0].size / 1024 / 1024).toFixed(1)}MB)
@@ -852,7 +852,7 @@ export default function RecordsPage() {
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id)}
                         className={cn(
-                            "px-3 md:px-4 py-1.5 md:py-2 rounded-lg text-xs md:text-sm font-medium transition-all flex items-center gap-1.5 md:gap-2 whitespace-nowrap flex-shrink-0",
+                            "px-3 md:px-4 py-1.5 md:py-2 rounded-lg text-xs md:text-sm font-medium transition-all whitespace-nowrap flex-shrink-0",
                             activeTab === tab.id
                                 ? "bg-teal-500 text-white"
                                 : isDark
@@ -861,14 +861,6 @@ export default function RecordsPage() {
                         )}
                     >
                         {tab.label}
-                        <span className={cn(
-                            "w-4 h-4 md:w-5 md:h-5 rounded-full text-[10px] md:text-xs flex items-center justify-center",
-                            activeTab === tab.id
-                                ? "bg-white/20"
-                                : isDark ? "bg-white/10" : "bg-gray-200"
-                        )}>
-                            {tab.count}
-                        </span>
                     </button>
                 ))}
             </div>
@@ -904,28 +896,28 @@ export default function RecordsPage() {
                                     transition={{ delay: idx * 0.05 }}
                                 >
                                     <GlowingCard glowColor="teal" className="p-3 md:p-4" isDark={isDark}>
-                                        <div className="flex items-center gap-3 md:gap-4">
+                                        <div className="flex items-start gap-3 md:gap-4">
                                             <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg md:rounded-xl flex items-center justify-center bg-teal-500/10 text-teal-500 flex-shrink-0">
                                                 <span className="[&>svg]:w-5 [&>svg]:h-5 md:[&>svg]:w-6 md:[&>svg]:h-6">
                                                     {Icons.document}
                                                 </span>
                                             </div>
                                             <div className="flex-1 min-w-0">
-                                                <div className="flex items-center gap-2 mb-0.5 md:mb-1">
-                                                    <h3 className={cn("font-medium text-sm md:text-base truncate", textPrimary)}>{record.title}</h3>
+                                                <div className="flex flex-wrap items-center gap-1.5 md:gap-2 mb-1">
+                                                    <h3 className={cn("font-medium text-sm md:text-base", textPrimary)}>{record.title}</h3>
                                                     <Badge>{getRecordTypeLabel(record.record_type)}</Badge>
                                                     {record.attachments && record.attachments.length > 0 && (
-                                                        <span className="flex items-center gap-1 text-xs text-teal-500">
+                                                        <span className="flex items-center gap-0.5 text-xs text-teal-500">
                                                             {Icons.paperclip}
-                                                            {record.attachments.length}
+                                                            <span>{record.attachments.length}</span>
                                                         </span>
                                                     )}
                                                 </div>
-                                                <p className={cn("text-xs md:text-sm truncate", textMuted)}>
+                                                <p className={cn("text-xs md:text-sm line-clamp-2", textMuted)}>
                                                     {record.description || (isRTL ? "لا يوجد وصف" : "No description")}
                                                 </p>
                                                 {record.date_recorded && (
-                                                    <p className={cn("text-xs mt-1", textMuted)}>
+                                                    <p className={cn("text-xs mt-1.5", textMuted)}>
                                                         {formatDate(record.date_recorded)}
                                                     </p>
                                                 )}
@@ -970,31 +962,31 @@ export default function RecordsPage() {
                                     transition={{ delay: idx * 0.05 }}
                                 >
                                     <GlowingCard glowColor="teal" className="p-3 md:p-4" isDark={isDark}>
-                                        <div className="flex items-center gap-3 md:gap-4">
-                                            <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg md:rounded-xl flex items-center justify-center bg-blue-500/10 text-blue-500 flex-shrink-0">
+                                        <div className="flex items-start gap-3 md:gap-4">
+                                            <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg md:rounded-xl flex items-center justify-center bg-teal-500/10 text-teal-500 flex-shrink-0">
                                                 <span className="[&>svg]:w-5 [&>svg]:h-5 md:[&>svg]:w-6 md:[&>svg]:h-6">
                                                     {Icons.lab}
                                                 </span>
                                             </div>
                                             <div className="flex-1 min-w-0">
-                                                <div className="flex items-center gap-2">
-                                                    <h3 className={cn("font-medium text-sm md:text-base truncate", textPrimary)}>{result.test_name}</h3>
+                                                <div className="flex flex-wrap items-center gap-1.5 md:gap-2 mb-1">
+                                                    <h3 className={cn("font-medium text-sm md:text-base", textPrimary)}>{result.test_name}</h3>
                                                     {result.document_url && (
-                                                        <span className="flex items-center text-xs text-blue-500">
+                                                        <span className="flex items-center text-xs text-teal-500">
                                                             {Icons.paperclip}
                                                         </span>
                                                     )}
                                                 </div>
                                                 {result.lab_name && (
-                                                    <p className={cn("text-xs md:text-sm truncate", textMuted)}>
+                                                    <p className={cn("text-xs md:text-sm line-clamp-1", textMuted)}>
                                                         {result.lab_name}
                                                     </p>
                                                 )}
-                                                <p className={cn("text-xs mt-1", textMuted)}>
+                                                <p className={cn("text-xs mt-1.5", textMuted)}>
                                                     {formatDate(result.test_date)}
                                                 </p>
                                             </div>
-                                            <div className="flex items-center gap-1">
+                                            <div className="flex items-center gap-1 flex-shrink-0">
                                                 {result.document_url && (
                                                     <button
                                                         onClick={async () => {
@@ -1002,8 +994,8 @@ export default function RecordsPage() {
                                                             if (url) window.open(url, '_blank');
                                                         }}
                                                         className={cn(
-                                                            "p-1.5 md:p-2 rounded-lg transition-colors flex-shrink-0",
-                                                            isDark ? "hover:bg-white/10 text-blue-400" : "hover:bg-gray-100 text-blue-500"
+                                                            "p-1.5 md:p-2 rounded-lg transition-colors",
+                                                            isDark ? "hover:bg-white/10 text-teal-400" : "hover:bg-gray-100 text-teal-500"
                                                         )}
                                                         title={isRTL ? "عرض الملف" : "View document"}
                                                     >
@@ -1013,7 +1005,7 @@ export default function RecordsPage() {
                                                 <button
                                                     onClick={() => handleDeleteLabResult(result.id)}
                                                     className={cn(
-                                                        "p-1.5 md:p-2 rounded-lg transition-colors flex-shrink-0",
+                                                        "p-1.5 md:p-2 rounded-lg transition-colors",
                                                         isDark ? "hover:bg-white/10 text-gray-400 hover:text-red-400" : "hover:bg-gray-100 text-gray-600 hover:text-red-500"
                                                     )}
                                                 >
@@ -1051,15 +1043,15 @@ export default function RecordsPage() {
                                     transition={{ delay: idx * 0.05 }}
                                 >
                                     <GlowingCard glowColor="teal" className="p-3 md:p-4" isDark={isDark}>
-                                        <div className="flex items-center gap-3 md:gap-4">
-                                            <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg md:rounded-xl flex items-center justify-center bg-amber-500/10 text-amber-500 flex-shrink-0">
+                                        <div className="flex items-start gap-3 md:gap-4">
+                                            <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg md:rounded-xl flex items-center justify-center bg-teal-500/10 text-teal-500 flex-shrink-0">
                                                 <span className="[&>svg]:w-5 [&>svg]:h-5 md:[&>svg]:w-6 md:[&>svg]:h-6">
                                                     {Icons.allergy}
                                                 </span>
                                             </div>
                                             <div className="flex-1 min-w-0">
-                                                <div className="flex items-center gap-2 mb-0.5 md:mb-1">
-                                                    <h3 className={cn("font-medium text-sm md:text-base truncate", textPrimary)}>{allergy.allergen}</h3>
+                                                <div className="flex flex-wrap items-center gap-1.5 md:gap-2 mb-1">
+                                                    <h3 className={cn("font-medium text-sm md:text-base", textPrimary)}>{allergy.allergen}</h3>
                                                     {allergy.severity && (
                                                         <Badge variant={getSeverityVariant(allergy.severity)}>
                                                             {allergy.severity === "mild" ? (isRTL ? "خفيفة" : "Mild") :
@@ -1069,12 +1061,11 @@ export default function RecordsPage() {
                                                     )}
                                                 </div>
                                                 {allergy.reaction && (
-                                                    <p className={cn("text-xs md:text-sm truncate", textMuted)}>
+                                                    <p className={cn("text-xs md:text-sm line-clamp-2", textMuted)}>
                                                         {allergy.reaction}
                                                     </p>
                                                 )}
                                             </div>
-{/* Delete removed for patient safety - allergies are critical medical info */}
                                         </div>
                                     </GlowingCard>
                                 </motion.div>
@@ -1106,15 +1097,15 @@ export default function RecordsPage() {
                                     transition={{ delay: idx * 0.05 }}
                                 >
                                     <GlowingCard glowColor="teal" className="p-3 md:p-4" isDark={isDark}>
-                                        <div className="flex items-center gap-3 md:gap-4">
-                                            <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg md:rounded-xl flex items-center justify-center bg-purple-500/10 text-purple-500 flex-shrink-0">
+                                        <div className="flex items-start gap-3 md:gap-4">
+                                            <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg md:rounded-xl flex items-center justify-center bg-teal-500/10 text-teal-500 flex-shrink-0">
                                                 <span className="[&>svg]:w-5 [&>svg]:h-5 md:[&>svg]:w-6 md:[&>svg]:h-6">
                                                     {Icons.condition}
                                                 </span>
                                             </div>
                                             <div className="flex-1 min-w-0">
-                                                <div className="flex items-center gap-2 mb-0.5 md:mb-1">
-                                                    <h3 className={cn("font-medium text-sm md:text-base truncate", textPrimary)}>{condition.condition_name}</h3>
+                                                <div className="flex flex-wrap items-center gap-1.5 md:gap-2 mb-1">
+                                                    <h3 className={cn("font-medium text-sm md:text-base", textPrimary)}>{condition.condition_name}</h3>
                                                     <Badge variant={getStatusVariant(condition.status)}>
                                                         {condition.status === "active" ? (isRTL ? "نشطة" : "Active") :
                                                             condition.status === "managed" ? (isRTL ? "مُدارة" : "Managed") :
@@ -1122,22 +1113,22 @@ export default function RecordsPage() {
                                                     </Badge>
                                                 </div>
                                                 {condition.notes && (
-                                                    <p className={cn("text-xs md:text-sm truncate", textMuted)}>
+                                                    <p className={cn("text-xs md:text-sm line-clamp-2 mb-1.5", textMuted)}>
                                                         {condition.notes}
                                                     </p>
                                                 )}
                                                 {condition.diagnosed_date && (
-                                                    <p className={cn("text-xs mt-1", textMuted)}>
+                                                    <p className={cn("text-xs", textMuted)}>
                                                         {isRTL ? "تم التشخيص:" : "Diagnosed:"} {formatDate(condition.diagnosed_date)}
                                                     </p>
                                                 )}
                                             </div>
-                                            <div className="flex gap-1">
+                                            <div className="flex-shrink-0">
                                                 <select
                                                     value={condition.status}
                                                     onChange={(e) => handleUpdateConditionStatus(condition.id, e.target.value as ConditionStatus)}
                                                     className={cn(
-                                                        "text-xs px-2 py-1 rounded-lg border",
+                                                        "text-xs px-2 py-1.5 rounded-lg border",
                                                         inputBg,
                                                         inputFocus,
                                                         isDark ? "[&>option]:bg-slate-900 [&>option]:text-white" : "[&>option]:bg-white [&>option]:text-gray-900"
@@ -1147,7 +1138,6 @@ export default function RecordsPage() {
                                                     <option value="managed">{isRTL ? "مُدارة" : "Managed"}</option>
                                                     <option value="resolved">{isRTL ? "تم علاجها" : "Resolved"}</option>
                                                 </select>
-{/* Delete removed for patient safety - use status dropdown instead */}
                                             </div>
                                         </div>
                                     </GlowingCard>

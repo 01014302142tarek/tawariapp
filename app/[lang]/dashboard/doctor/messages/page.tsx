@@ -56,6 +56,7 @@ export default function MessagesPage() {
     const [messages, setMessages] = useState<MessageWithSender[]>([]);
     const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
     const [loading, setLoading] = useState(true);
+    const [loadingMessages, setLoadingMessages] = useState(false);
     const [sending, setSending] = useState(false);
     const [currentProfileId, setCurrentProfileId] = useState<string>("");
 
@@ -64,6 +65,7 @@ export default function MessagesPage() {
     }, []);
 
     const loadMessages = useCallback(async (conversationId: string, participantId?: string) => {
+        setLoadingMessages(true);
         const result = await getMessages(conversationId);
         if (result.messages) {
             setMessages(result.messages);
@@ -83,6 +85,11 @@ export default function MessagesPage() {
                 c.id === conversationId ? { ...c, unread_count: 0 } : c
             ));
         }
+        setLoadingMessages(false);
+        // Scroll to bottom after messages are loaded and rendered
+        setTimeout(() => {
+            messagesEndRef.current?.scrollIntoView({ behavior: "instant" });
+        }, 100);
     }, []);
 
     useEffect(() => {
@@ -112,10 +119,6 @@ export default function MessagesPage() {
         }
     }, [selectedConversation, loadMessages]);
 
-    useEffect(() => {
-        scrollToBottom();
-    }, [messages, scrollToBottom]);
-
     const handleSendMessage = async () => {
         if (!newMessage.trim() || !selectedConversation || sending) return;
 
@@ -139,6 +142,10 @@ export default function MessagesPage() {
                     ? { ...c, last_message: newMessage.trim(), last_message_at: new Date().toISOString() }
                     : c
             ));
+            // Scroll to bottom after new message
+            setTimeout(() => {
+                messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+            }, 50);
         }
         setSending(false);
     };
@@ -375,7 +382,16 @@ export default function MessagesPage() {
 
                         {/* Messages */}
                         <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-3 md:space-y-4">
-                            {messages.length === 0 ? (
+                            {loadingMessages ? (
+                                <div className="flex items-center justify-center h-full">
+                                    <div className="text-center space-y-3">
+                                        <div className="animate-spin w-8 h-8 md:w-10 md:h-10 border-2 border-teal-500 border-t-transparent rounded-full mx-auto" />
+                                        <p className={cn("text-xs md:text-sm", textMuted)}>
+                                            {isRTL ? "جاري تحميل الرسائل..." : "Loading messages..."}
+                                        </p>
+                                    </div>
+                                </div>
+                            ) : messages.length === 0 ? (
                                 <div className="flex items-center justify-center h-full">
                                     <p className={textMuted}>{isRTL ? "ابدأ المحادثة" : "Start the conversation"}</p>
                                 </div>

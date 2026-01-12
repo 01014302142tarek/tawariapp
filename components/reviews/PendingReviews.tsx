@@ -33,6 +33,7 @@ export default function PendingReviews({
     const [selectedAppointment, setSelectedAppointment] =
         useState<PendingAppointment | null>(null);
     const [dismissedIds, setDismissedIds] = useState<Set<string>>(new Set());
+    const [showAll, setShowAll] = useState(false);
 
     const fetchPendingReviews = async () => {
         setLoading(true);
@@ -70,6 +71,13 @@ export default function PendingReviews({
         (a) => !dismissedIds.has(a.id)
     );
 
+    // Show only first 1 item unless "View More" is clicked
+    const displayedAppointments = showAll 
+        ? visibleAppointments 
+        : visibleAppointments.slice(0, 1);
+    
+    const hasMore = visibleAppointments.length > 1;
+
     if (loading) {
         return null; // Don't show loading state to avoid UI flicker
     }
@@ -79,9 +87,42 @@ export default function PendingReviews({
     }
 
     return (
-        <div className="space-y-4">
+        <div className="space-y-3 md:space-y-4">
+            {/* Header with View More button */}
+            {hasMore && (
+                <div className="flex items-center justify-end">
+                    <button
+                        onClick={() => setShowAll(!showAll)}
+                        className={cn(
+                            "text-xs font-medium px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5",
+                            isDark
+                                ? "text-teal-400 hover:bg-teal-900/30"
+                                : "text-teal-600 hover:bg-teal-50"
+                        )}
+                    >
+                        {showAll ? (
+                            <>
+                                {isRTL ? "عرض أقل" : "View Less"}
+                                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                                </svg>
+                            </>
+                        ) : (
+                            <>
+                                {isRTL 
+                                    ? `+${visibleAppointments.length - 1} المزيد` 
+                                    : `+${visibleAppointments.length - 1} More`}
+                                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </>
+                        )}
+                    </button>
+                </div>
+            )}
+            
             <AnimatePresence mode="popLayout">
-                {visibleAppointments.map((appointment) => (
+                {displayedAppointments.map((appointment) => (
                     <motion.div
                         key={appointment.id}
                         layout

@@ -11,7 +11,6 @@ import { useAuth } from "@/app/context/AuthContext";
 import { useRouter } from "next/navigation";
 import { MovingBorder } from "@/components/ui/moving-border";
 import { NotificationDropdown } from "@/components/notifications";
-import { LanguageToggle } from "@/components/ui/language-toggle";
 
 // Icons
 const Icons = {
@@ -421,9 +420,6 @@ export default function Header({ onMenuClick }: { onMenuClick?: () => void }) {
                             </div>
                         </MovingBorder>
                     </button>
-
-                    {/* Language Toggle */}
-                    <LanguageToggle isDark={isDark} />
 
                     {/* Notifications - visible on all screens */}
                     <NotificationDropdown isDark={isDark} dashboardType="patient" />

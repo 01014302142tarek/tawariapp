@@ -343,7 +343,7 @@ export async function getPendingReviewAppointments(): Promise<{
             scheduled_start,
             doctor_profile:doctor_profiles (
                 id,
-                profile:profiles (
+                profile:profiles!doctor_profiles_profile_id_fkey (
                     full_name,
                     avatar_url
                 ),

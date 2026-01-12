@@ -670,28 +670,33 @@ export default function Doctor2Dashboard() {
                     <SectionHeader title={t.doctorDashboard.sections.quickActions} subtitle={t.doctorDashboard.sections.manageYourPractice} isDark={isDark} />
                     <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
                         {quickActions.map((action, idx) => (
-                            <Link key={idx} href={action.href}>
-                                <GlowingCard
-                                    isDark={isDark}
-                                    glowColor="teal"
-                                    className="cursor-pointer group h-full"
-                                >
-                                    <div className="flex flex-col items-start h-full">
-                                        <div className={cn(
-                                            "w-10 h-10 md:w-12 md:h-12 rounded-lg md:rounded-xl flex items-center justify-center mb-2 md:mb-4 transition-all duration-300",
-                                            isDark
-                                                ? "bg-white/5 text-teal-400 group-hover:bg-teal-500/20 group-hover:text-teal-300"
-                                                : "bg-teal-50 text-teal-600 group-hover:bg-teal-100 group-hover:text-teal-700"
-                                        )}>
-                                            <span className="[&>svg]:w-5 [&>svg]:h-5 md:[&>svg]:w-6 md:[&>svg]:h-6">
+                            <motion.div
+                                key={idx}
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: idx * 0.1 }}
+                                whileHover={{ y: -4 }}
+                            >
+                                <Link href={action.href}>
+                                    <GlowingCard
+                                        isDark={isDark}
+                                        glowColor="teal"
+                                        className="p-3 md:p-5 cursor-pointer group h-full"
+                                    >
+                                        <div className="w-9 h-9 md:w-12 md:h-12 rounded-lg md:rounded-xl bg-teal-500/10 flex items-center justify-center text-teal-500 mb-2 md:mb-4 group-hover:bg-teal-500 group-hover:text-white transition-all">
+                                            <span className="[&>svg]:w-4 [&>svg]:h-4 md:[&>svg]:w-5 md:[&>svg]:h-5">
                                                 {action.icon}
                                             </span>
                                         </div>
-                                        <h3 className={cn("font-semibold text-sm md:text-base mb-0.5 md:mb-1 transition-colors", isDark ? "text-white group-hover:text-teal-400" : "text-slate-900 group-hover:text-teal-700")}>{action.title}</h3>
-                                        <p className={cn("text-xs md:text-sm line-clamp-2", isDark ? "text-gray-400" : "text-gray-600")}>{action.description}</p>
-                                    </div>
-                                </GlowingCard>
-                            </Link>
+                                        <h3 className={cn("font-semibold text-xs md:text-base mb-0.5 md:mb-1 group-hover:text-teal-500 transition-colors leading-tight", isDark ? "text-white" : "text-slate-900")}>
+                                            {action.title}
+                                        </h3>
+                                        <p className={cn("text-[10px] md:text-sm leading-tight line-clamp-2 hidden sm:block", isDark ? "text-gray-500" : "text-gray-600")}>
+                                            {action.description}
+                                        </p>
+                                    </GlowingCard>
+                                </Link>
+                            </motion.div>
                         ))}
                     </div>
                 </section>

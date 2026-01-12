@@ -246,7 +246,7 @@ export async function getPatientAppointments(filters?: {
             doctor_profiles!inner (
                 id,
                 consultation_fee,
-                profiles (
+                profiles!doctor_profiles_profile_id_fkey (
                     id,
                     full_name,
                     avatar_url
@@ -998,7 +998,7 @@ export async function getAvailableDoctors(filters?: {
             rating_average,
             rating_count,
             is_available_now,
-            profiles (
+            profiles!doctor_profiles_profile_id_fkey (
                 id,
                 full_name,
                 avatar_url
@@ -1354,7 +1354,7 @@ export async function getDoctorById(
             languages,
             education,
             hospital,
-            profiles (
+            profiles!doctor_profiles_profile_id_fkey (
                 id,
                 full_name,
                 avatar_url

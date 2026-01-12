@@ -8,9 +8,9 @@ import { cn } from "@/lib/utils";
 import { useTheme } from "../context/ThemeContext";
 import { useI18n } from "@/app/i18n";
 import { useAuth } from "@/app/context/AuthContext";
+import { useRouter } from "next/navigation";
 import { MovingBorder } from "@/components/ui/moving-border";
 import { NotificationDropdown } from "@/components/notifications";
-import { LanguageToggle } from "@/components/ui/language-toggle";
 
 // Icons
 const Icons = {
@@ -345,6 +345,7 @@ export default function Header({ onMenuClick }: { onMenuClick?: () => void }) {
     const { theme, themeMode, setThemeMode } = useTheme();
     const { t, isRTL, language } = useI18n();
     const { profile, signOut, isLoading } = useAuth();
+    const router = useRouter();
     const isDark = theme === "dark";
 
     // Get user's name and avatar from profile
@@ -400,19 +401,21 @@ export default function Header({ onMenuClick }: { onMenuClick?: () => void }) {
                 {/* Right: Actions */}
                 <div className="flex items-center gap-2 md:gap-3">
                     {/* Video Call Button - visible on all screens */}
-                    <MovingBorder
-                        duration={3000}
-                        className="px-3 md:px-5 py-2 md:py-2.5 font-medium cursor-pointer"
-                        bgClassName={isDark ? "bg-slate-900/[0.8]" : "bg-white"}
+                    <button
+                        onClick={() => router.push(`/${language}/dashboard/doctor/appointments`)}
+                        className="focus:outline-none"
                     >
-                        <div className={cn("flex items-center gap-1.5 md:gap-2 text-sm", isDark ? "text-white" : "text-teal-600")}>
-                            {Icons.video}
-                            <span>{t.doctorDashboard?.actions?.startVideoCall || "Start Call"}</span>
-                        </div>
-                    </MovingBorder>
-
-                    {/* Language Toggle */}
-                    <LanguageToggle isDark={isDark} />
+                        <MovingBorder
+                            duration={3000}
+                            className="px-3 md:px-5 py-2 md:py-2.5 font-medium cursor-pointer"
+                            bgClassName={isDark ? "bg-slate-900/[0.8]" : "bg-white"}
+                        >
+                            <div className={cn("flex items-center gap-1.5 md:gap-2 text-sm", isDark ? "text-white" : "text-teal-600")}>
+                                {Icons.video}
+                                <span>{t.doctorDashboard?.actions?.startVideoCall || "Start Call"}</span>
+                            </div>
+                        </MovingBorder>
+                    </button>
 
                     {/* Notifications - visible on all screens */}
                     <NotificationDropdown isDark={isDark} dashboardType="doctor" />

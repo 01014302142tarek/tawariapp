@@ -9,7 +9,6 @@ import { useTheme } from "../context/ThemeContext";
 import { useI18n } from "@/app/i18n";
 import { useAuth } from "@/app/context/AuthContext";
 import { NotificationDropdown } from "@/components/notifications";
-import { LanguageToggle } from "@/components/ui/language-toggle";
 
 // Icons
 const Icons = {
@@ -383,9 +382,6 @@ export default function Header({ onMenuClick }: { onMenuClick?: () => void }) {
                 </div>
 
                 <div className="flex items-center gap-2 md:gap-3">
-                    {/* Language Toggle */}
-                    <LanguageToggle isDark={isDark} />
-
                     {/* Notifications - visible on all screens */}
                     <NotificationDropdown isDark={isDark} dashboardType="admin" />
 

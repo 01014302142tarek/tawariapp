@@ -21,9 +21,27 @@ export default function ConsultationPage() {
     const [showEndModal, setShowEndModal] = useState(false);
     const [userInfo, setUserInfo] = useState<{ displayName: string; email?: string; role: "doctor" | "patient" } | null>(null);
     const [callJoined, setCallJoined] = useState(false);
+    const [isDark, setIsDark] = useState(false);
 
     const callFrameRef = useRef<DailyCall | null>(null);
     const containerRef = useRef<HTMLDivElement>(null);
+
+    // Detect dark mode
+    useEffect(() => {
+        const checkDarkMode = () => {
+            setIsDark(document.documentElement.classList.contains("dark"));
+        };
+        
+        checkDarkMode();
+        
+        const observer = new MutationObserver(checkDarkMode);
+        observer.observe(document.documentElement, {
+            attributes: true,
+            attributeFilter: ["class"],
+        });
+        
+        return () => observer.disconnect();
+    }, []);
 
     // Load consultation session and user info
     useEffect(() => {
@@ -281,7 +299,10 @@ export default function ConsultationPage() {
                             initial={{ scale: 0.9, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
                             exit={{ scale: 0.9, opacity: 0 }}
-                            className="bg-slate-900 rounded-2xl p-6 max-w-md w-full border border-white/10"
+                            className={cn(
+                                "rounded-2xl p-6 max-w-md w-full border",
+                                isDark ? "bg-slate-900 border-white/10" : "bg-white border-gray-200"
+                            )}
                         >
                             <div className="text-center">
                                 <div className="w-16 h-16 rounded-full bg-red-500/20 flex items-center justify-center mx-auto mb-4">
@@ -289,16 +310,21 @@ export default function ConsultationPage() {
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 8l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2M5 3a2 2 0 00-2 2v1c0 8.284 6.716 15 15 15h1a2 2 0 002-2v-3.28a1 1 0 00-.684-.948l-4.493-1.498a1 1 0 00-1.21.502l-1.13 2.257a11.042 11.042 0 01-5.516-5.517l2.257-1.128a1 1 0 00.502-1.21L9.228 3.683A1 1 0 008.279 3H5z" />
                                     </svg>
                                 </div>
-                                <h3 className="text-xl font-semibold text-white mb-2">
+                                <h3 className={cn("text-xl font-semibold mb-2", isDark ? "text-white" : "text-slate-900")}>
                                     {t.consultation?.endTitle || "End Consultation?"}
                                 </h3>
-                                <p className="text-gray-400 mb-6">
+                                <p className={cn("mb-6", isDark ? "text-gray-400" : "text-gray-600")}>
                                     {t.consultation?.endMessage || "Are you sure you want to end this consultation? This action cannot be undone."}
                                 </p>
                                 <div className="flex gap-3">
                                     <button
                                         onClick={handleLeave}
-                                        className="flex-1 px-4 py-2.5 bg-slate-800 text-white rounded-xl hover:bg-slate-700 transition-colors"
+                                        className={cn(
+                                            "flex-1 px-4 py-2.5 rounded-xl transition-colors",
+                                            isDark 
+                                                ? "bg-slate-800 text-white hover:bg-slate-700" 
+                                                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                                        )}
                                     >
                                         {t.consultation?.justLeave || "Just Leave"}
                                     </button>

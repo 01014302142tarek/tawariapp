@@ -489,7 +489,7 @@ export async function getPatientPrescriptions(filters?: {
             *,
             doctor_profiles (
                 id,
-                profiles (
+                profiles!doctor_profiles_profile_id_fkey (
                     id,
                     full_name,
                     avatar_url
@@ -562,7 +562,7 @@ export async function getPrescriptionById(
             doctor_profiles (
                 id,
                 license_number,
-                profiles (
+                profiles!doctor_profiles_profile_id_fkey (
                     id,
                     full_name,
                     avatar_url,

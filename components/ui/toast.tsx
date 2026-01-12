@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useCallback } from "react";
+import React, { createContext, useContext, useState, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 
@@ -94,6 +94,25 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
         message: "",
         onConfirm: () => {},
     });
+    const [isDark, setIsDark] = useState(false);
+
+    // Detect dark mode
+    useEffect(() => {
+        const checkDarkMode = () => {
+            setIsDark(document.documentElement.classList.contains("dark"));
+        };
+        
+        checkDarkMode();
+        
+        // Watch for dark mode changes
+        const observer = new MutationObserver(checkDarkMode);
+        observer.observe(document.documentElement, {
+            attributes: true,
+            attributeFilter: ["class"],
+        });
+        
+        return () => observer.disconnect();
+    }, []);
 
     const removeToast = useCallback((id: string) => {
         setToasts((prev) => prev.filter((t) => t.id !== id));
@@ -206,20 +225,32 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
                             initial={{ opacity: 0, scale: 0.95, y: 20 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                            className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[102] w-full max-w-sm"
+                            className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[102] w-full max-w-sm mx-4"
                         >
-                            <div className="bg-slate-900 border border-white/10 rounded-2xl p-6 shadow-2xl">
+                            <div className={cn(
+                                "rounded-2xl p-6 shadow-2xl border",
+                                isDark ? "bg-slate-900 border-white/10" : "bg-white border-gray-200"
+                            )}>
                                 <div className="flex items-center gap-3 mb-4">
                                     <div className="w-10 h-10 rounded-full bg-amber-500/10 flex items-center justify-center text-amber-500">
                                         {Icons.warning}
                                     </div>
-                                    <h3 className="text-lg font-semibold text-white">Confirm Action</h3>
+                                    <h3 className={cn("text-lg font-semibold", isDark ? "text-white" : "text-slate-900")}>
+                                        Confirm Action
+                                    </h3>
                                 </div>
-                                <p className="text-gray-300 mb-6">{confirmState.message}</p>
+                                <p className={cn("mb-6", isDark ? "text-gray-300" : "text-gray-700")}>
+                                    {confirmState.message}
+                                </p>
                                 <div className="flex gap-3 justify-end">
                                     <button
                                         onClick={handleCancel}
-                                        className="px-4 py-2 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-white/5 transition-colors"
+                                        className={cn(
+                                            "px-4 py-2 rounded-lg text-sm font-medium transition-colors",
+                                            isDark 
+                                                ? "text-gray-400 hover:text-white hover:bg-white/5" 
+                                                : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+                                        )}
                                     >
                                         Cancel
                                     </button>
