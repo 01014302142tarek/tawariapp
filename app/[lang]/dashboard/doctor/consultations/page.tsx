@@ -8,7 +8,8 @@ import { cn } from "@/lib/utils";
 import { GlowingCard } from "@/components/ui/glowing-card";
 import { useThemeStyles } from "../context/useThemeStyles";
 import { useI18n } from "@/app/i18n";
-import { getDoctorConsultations, ConsultationHistoryItem } from "@/app/actions/appointments";
+import { getDoctorConsultations, ConsultationHistoryItem, startConsultation } from "@/app/actions/appointments";
+import { useToast } from "@/components/ui/toast";
 
 // Icons
 const Icons = {
@@ -44,8 +45,10 @@ export default function ConsultationsPage() {
     const { t, formatNumber, formatDate, language } = useI18n();
     const router = useRouter();
     const params = useParams();
+    const { showError } = useToast();
     const [roomCode, setRoomCode] = useState("");
     const [loading, setLoading] = useState(true);
+    const [startingId, setStartingId] = useState<string | null>(null);
     const [activeConsultations, setActiveConsultations] = useState<ConsultationHistoryItem[]>([]);
     const [historyConsultations, setHistoryConsultations] = useState<ConsultationHistoryItem[]>([]);
     const { isDark, textPrimary, textSecondary, textMuted, inputBg, inputFocus, divider, cardHover, emptyStateBg } = useThemeStyles();
@@ -55,7 +58,6 @@ export default function ConsultationsPage() {
         let mounted = true;
 
         async function loadConsultations() {
-            setLoading(true);
             const result = await getDoctorConsultations({ limit: 20 });
             if (mounted && !result.error) {
                 setActiveConsultations(result.active);
@@ -67,8 +69,12 @@ export default function ConsultationsPage() {
         }
         loadConsultations();
 
+        // Poll every 5 seconds to catch patients joining waiting room
+        const interval = setInterval(loadConsultations, 5000);
+
         return () => {
             mounted = false;
+            clearInterval(interval);
         };
     }, []);
 
@@ -90,9 +96,28 @@ export default function ConsultationsPage() {
         return `${formatNumber(diffMinutes)} ${t.doctorDashboard.consultationsPage.timeLabels.min}`;
     };
 
-    // Handle rejoin consultation
-    const handleRejoin = (appointmentId: string) => {
-        router.push(`/${params.lang}/dashboard/consultation/${appointmentId}`);
+    // Handle start or rejoin consultation
+    const handleStartOrRejoin = async (appointmentId: string, status: string) => {
+        // If already in progress, just rejoin
+        if (status === "in_progress") {
+            router.push(`/${params.lang}/dashboard/consultation/${appointmentId}`);
+            return;
+        }
+
+        // Otherwise, start the consultation first
+        setStartingId(appointmentId);
+        try {
+            const result = await startConsultation(appointmentId);
+            if (result.success) {
+                router.push(`/${params.lang}/dashboard/consultation/${appointmentId}`);
+            } else {
+                showError(result.error || (language === "ar" ? "فشل في بدء الاستشارة" : "Failed to start consultation"));
+            }
+        } catch {
+            showError(language === "ar" ? "حدث خطأ غير متوقع" : "An unexpected error occurred");
+        } finally {
+            setStartingId(null);
+        }
     };
 
     if (loading) {
@@ -217,13 +242,23 @@ export default function ConsultationsPage() {
                                 </div>
                                 <div className="flex gap-2 md:gap-3 w-full sm:w-auto">
                                     <button
-                                        onClick={() => handleRejoin(consultation.appointment_id)}
-                                        className="flex-1 sm:flex-none px-4 md:px-6 py-2.5 md:py-3 bg-teal-500 text-white font-semibold rounded-xl hover:bg-teal-400 transition-all text-sm md:text-base"
+                                        onClick={() => handleStartOrRejoin(consultation.appointment_id, consultation.status)}
+                                        disabled={startingId === consultation.appointment_id}
+                                        className={cn(
+                                            "flex-1 sm:flex-none px-4 md:px-6 py-2.5 md:py-3 bg-teal-500 text-white font-semibold rounded-xl hover:bg-teal-400 transition-all text-sm md:text-base flex items-center justify-center gap-2",
+                                            startingId === consultation.appointment_id && "opacity-70 cursor-not-allowed"
+                                        )}
                                     >
-                                        {consultation.status === "in_waiting_room"
-                                            ? (language === "ar" ? "بدء الاستشارة" : "Start")
-                                            : t.doctorDashboard.consultationsPage.active.rejoin
-                                        }
+                                        {startingId === consultation.appointment_id ? (
+                                            <>
+                                                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                                {language === "ar" ? "جارٍ البدء..." : "Starting..."}
+                                            </>
+                                        ) : consultation.status === "in_waiting_room" ? (
+                                            language === "ar" ? "بدء الاستشارة" : "Start"
+                                        ) : (
+                                            t.doctorDashboard.consultationsPage.active.rejoin
+                                        )}
                                     </button>
                                 </div>
                             </div>

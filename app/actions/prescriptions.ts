@@ -220,9 +220,9 @@ export async function getDoctorPrescriptions(filters?: {
         .from("prescriptions")
         .select(`
             *,
-            patient_profiles!inner (
+            patient_profiles (
                 id,
-                profiles!inner (
+                profiles (
                     id,
                     full_name,
                     avatar_url
@@ -487,9 +487,9 @@ export async function getPatientPrescriptions(filters?: {
         .from("prescriptions")
         .select(`
             *,
-            doctor_profiles!inner (
+            doctor_profiles (
                 id,
-                profiles!inner (
+                profiles (
                     id,
                     full_name,
                     avatar_url
@@ -559,20 +559,20 @@ export async function getPrescriptionById(
         .from("prescriptions")
         .select(`
             *,
-            doctor_profiles!inner (
+            doctor_profiles (
                 id,
                 license_number,
-                profiles!inner (
+                profiles (
                     id,
                     full_name,
                     avatar_url,
                     phone
                 )
             ),
-            patient_profiles!inner (
+            patient_profiles (
                 id,
                 date_of_birth,
-                profiles!inner (
+                profiles (
                     id,
                     full_name,
                     avatar_url
@@ -737,15 +737,15 @@ export async function getPendingRenewalRequests(): Promise<{
         .from("prescription_renewal_requests")
         .select(`
             *,
-            prescriptions!inner (
+            prescriptions!prescription_renewal_requests_original_prescription_id_fkey (
                 id,
                 medication_name,
                 dosage,
                 frequency
             ),
-            patient_profiles!inner (
+            patient_profiles (
                 id,
-                profiles!inner (
+                profiles (
                     id,
                     full_name
                 )
@@ -807,7 +807,7 @@ export async function respondToRenewalRequest(
         .from("prescription_renewal_requests")
         .select(`
             *,
-            prescriptions!inner (*)
+            prescriptions!prescription_renewal_requests_original_prescription_id_fkey (*)
         `)
         .eq("id", requestId)
         .eq("doctor_profile_id", doctorProfile.id)
@@ -965,13 +965,13 @@ export async function getPatientRenewalRequests(): Promise<{
             responded_at,
             new_prescription_id,
             created_at,
-            prescriptions!inner (
+            prescriptions!prescription_renewal_requests_original_prescription_id_fkey (
                 medication_name,
                 dosage,
                 frequency
             ),
-            doctor_profiles!inner (
-                profiles!inner (
+            doctor_profiles (
+                profiles (
                     full_name
                 )
             )
@@ -1064,11 +1064,11 @@ export async function getDoctorPatients(): Promise<{
     const { data, error } = await supabase
         .from("appointments")
         .select(`
-            patient_profiles!inner (
+            patient_profiles (
                 id,
                 profile_id,
                 date_of_birth,
-                profiles!inner (
+                profiles (
                     id,
                     full_name,
                     avatar_url

@@ -104,14 +104,14 @@ function FAQItem({ question, answer, isOpen, onClick, isDark = true }: {
     isDark?: boolean;
 }) {
     return (
-        <GlowingCard 
-            isDark={isDark} 
-            glowColor="teal" 
-            className="overflow-hidden transition-all hover:scale-[1.01]"
+        <GlowingCard
+            isDark={isDark}
+            glowColor="teal"
+            className="overflow-hidden transition-all hover:scale-[1.01] p-5"
         >
             <button
                 onClick={onClick}
-                className="w-full text-left -m-5 p-5"
+                className="w-full text-left"
             >
                 <div className="flex items-center justify-between">
                     <span className={`font-medium pr-4 ${isDark ? "text-white" : "text-slate-900"}`}>{question}</span>

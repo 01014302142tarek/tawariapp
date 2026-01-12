@@ -349,7 +349,7 @@ export async function getAdminPatients(options?: {
             date_of_birth,
             gender,
             blood_type,
-            profiles!inner (
+            profiles (
                 id,
                 full_name,
                 avatar_url,

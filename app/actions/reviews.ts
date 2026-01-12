@@ -73,14 +73,14 @@ export async function getReviewsForDoctor(
         .from("reviews")
         .select(`
             *,
-            patient:patient_profiles!patient_profile_id (
+            patient:patient_profiles!reviews_patient_profile_id_fkey (
                 id,
-                profile:profiles!profile_id (
+                profile:profiles (
                     full_name,
                     avatar_url
                 )
             ),
-            appointment:appointments!appointment_id (
+            appointment:appointments!reviews_appointment_id_fkey (
                 scheduled_start
             )
         `, { count: "exact" })
@@ -159,14 +159,14 @@ export async function getMyReviews(): Promise<{ reviews: ReviewWithDetails[]; er
         .from("reviews")
         .select(`
             *,
-            doctor:doctor_profiles!doctor_profile_id (
+            doctor:doctor_profiles!reviews_doctor_profile_id_fkey (
                 id,
-                profile:profiles!profile_id (
+                profile:profiles (
                     full_name,
                     avatar_url
                 )
             ),
-            appointment:appointments!appointment_id (
+            appointment:appointments!reviews_appointment_id_fkey (
                 scheduled_start
             )
         `)
@@ -193,21 +193,21 @@ export async function getReviewById(
         .from("reviews")
         .select(`
             *,
-            patient:patient_profiles!patient_profile_id (
+            patient:patient_profiles!reviews_patient_profile_id_fkey (
                 id,
-                profile:profiles!profile_id (
+                profile:profiles (
                     full_name,
                     avatar_url
                 )
             ),
-            doctor:doctor_profiles!doctor_profile_id (
+            doctor:doctor_profiles!reviews_doctor_profile_id_fkey (
                 id,
-                profile:profiles!profile_id (
+                profile:profiles (
                     full_name,
                     avatar_url
                 )
             ),
-            appointment:appointments!appointment_id (
+            appointment:appointments!reviews_appointment_id_fkey (
                 scheduled_start
             )
         `)
@@ -341,15 +341,15 @@ export async function getPendingReviewAppointments(): Promise<{
         .select(`
             id,
             scheduled_start,
-            doctor_profile:doctor_profiles!doctor_profile_id (
+            doctor_profile:doctor_profiles (
                 id,
-                profile:profiles!profile_id (
+                profile:profiles (
                     full_name,
                     avatar_url
                 ),
-                doctor_specializations (
-                    specialization:specializations!specialization_id (
-                        name
+                doctor_specializations!doctor_specializations_doctor_profile_id_fkey (
+                    specialization:specializations!doctor_specializations_specialization_id_fkey (
+                        name_en
                     )
                 )
             )
@@ -374,7 +374,7 @@ export async function getPendingReviewAppointments(): Promise<{
             };
             doctor_specializations?: Array<{
                 specialization: {
-                    name: string;
+                    name_en: string;
                 };
             }>;
         };
@@ -406,7 +406,7 @@ export async function getPendingReviewAppointments(): Promise<{
                 id: a.doctor_profile?.id || "",
                 full_name: a.doctor_profile?.profile?.full_name || "Unknown",
                 avatar_url: a.doctor_profile?.profile?.avatar_url,
-                specialization: a.doctor_profile?.doctor_specializations?.[0]?.specialization?.name,
+                specialization: a.doctor_profile?.doctor_specializations?.[0]?.specialization?.name_en,
             },
         }));
 
@@ -696,14 +696,14 @@ export async function getDoctorReviews(options?: {
         .from("reviews")
         .select(`
             *,
-            patient:patient_profiles!patient_profile_id (
+            patient:patient_profiles!reviews_patient_profile_id_fkey (
                 id,
-                profile:profiles!profile_id (
+                profile:profiles (
                     full_name,
                     avatar_url
                 )
             ),
-            appointment:appointments!appointment_id (
+            appointment:appointments!reviews_appointment_id_fkey (
                 scheduled_start
             )
         `, { count: "exact" })
@@ -993,16 +993,16 @@ export async function getReviewsForModeration(options?: {
         .from("reviews")
         .select(`
             *,
-            patient:patient_profiles!patient_profile_id (
+            patient:patient_profiles!reviews_patient_profile_id_fkey (
                 id,
-                profile:profiles!profile_id (
+                profile:profiles (
                     full_name,
                     avatar_url
                 )
             ),
-            doctor:doctor_profiles!doctor_profile_id (
+            doctor:doctor_profiles!reviews_doctor_profile_id_fkey (
                 id,
-                profile:profiles!profile_id (
+                profile:profiles (
                     full_name
                 )
             )

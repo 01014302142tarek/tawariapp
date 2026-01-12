@@ -160,13 +160,15 @@ export default function PreCallPage() {
         }
     };
 
-    // Join call
+    // Join call - go back to waiting room which will redirect to consultation when doctor starts
     const handleJoinCall = () => {
         // Stop preview stream before joining
         if (stream) {
             stream.getTracks().forEach((track) => track.stop());
         }
-        router.push(`/${language}/dashboard/consultation/${appointmentId}`);
+        // Go back to waiting room - it has polling that will redirect to consultation
+        // when the doctor starts the call and the status changes to "in_progress"
+        router.push(`/${language}/dashboard/consultation/${appointmentId}/waiting-room`);
     };
 
     // Go back

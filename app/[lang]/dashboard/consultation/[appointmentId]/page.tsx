@@ -1,38 +1,12 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useI18n } from "@/app/i18n";
-import { getConsultationSession, endConsultation } from "@/app/actions/appointments";
-
-// Jitsi Meet types
-declare global {
-    interface Window {
-        JitsiMeetExternalAPI: new (domain: string, options: JitsiOptions) => JitsiAPI;
-    }
-}
-
-interface JitsiOptions {
-    roomName: string;
-    parentNode: HTMLElement;
-    width: string;
-    height: string;
-    configOverwrite?: Record<string, unknown>;
-    interfaceConfigOverwrite?: Record<string, unknown>;
-    userInfo?: {
-        displayName: string;
-        email?: string;
-    };
-}
-
-interface JitsiAPI {
-    dispose: () => void;
-    executeCommand: (command: string, ...args: unknown[]) => void;
-    addListener: (event: string, callback: () => void) => void;
-    removeListener: (event: string, callback: () => void) => void;
-}
+import { getConsultationSession, endConsultation, getConsultationUserInfo } from "@/app/actions/appointments";
+import DailyIframe, { DailyCall } from "@daily-co/daily-js";
 
 export default function ConsultationPage() {
     const params = useParams();
@@ -42,17 +16,27 @@ export default function ConsultationPage() {
     const appointmentId = params.appointmentId as string;
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [jitsiRoomId, setJitsiRoomId] = useState<string | null>(null);
-    const [jitsiApi, setJitsiApi] = useState<JitsiAPI | null>(null);
+    const [roomUrl, setRoomUrl] = useState<string | null>(null);
     const [isEnding, setIsEnding] = useState(false);
     const [showEndModal, setShowEndModal] = useState(false);
+    const [userInfo, setUserInfo] = useState<{ displayName: string; email?: string; role: "doctor" | "patient" } | null>(null);
+    const [callJoined, setCallJoined] = useState(false);
 
-    // Load consultation session
+    const callFrameRef = useRef<DailyCall | null>(null);
+    const containerRef = useRef<HTMLDivElement>(null);
+
+    // Load consultation session and user info
     useEffect(() => {
         async function loadSession() {
             setLoading(true);
             try {
-                const { session, error: sessionError } = await getConsultationSession(appointmentId);
+                // Fetch session and user info in parallel
+                const [sessionResult, userInfoResult] = await Promise.all([
+                    getConsultationSession(appointmentId),
+                    getConsultationUserInfo(),
+                ]);
+
+                const { session, error: sessionError } = sessionResult;
 
                 if (sessionError) {
                     setError(sessionError);
@@ -69,7 +53,10 @@ export default function ConsultationPage() {
                     return;
                 }
 
-                setJitsiRoomId(session.jitsi_room_id);
+                // The room URL is stored in jitsi_room_id field (we'll rename this later)
+                // For Daily, we store the full URL
+                setRoomUrl(session.jitsi_room_id);
+                setUserInfo(userInfoResult);
             } catch {
                 setError("Failed to load consultation session");
             } finally {
@@ -82,91 +69,85 @@ export default function ConsultationPage() {
         }
     }, [appointmentId]);
 
-    // Initialize Jitsi Meet
+    // Initialize Daily call
     useEffect(() => {
-        if (!jitsiRoomId || jitsiApi) return;
+        if (!roomUrl || !containerRef.current || callFrameRef.current) return;
 
-        // Load Jitsi script
-        const script = document.createElement("script");
-        script.src = "https://meet.jit.si/external_api.js";
-        script.async = true;
+        const dailyDomain = process.env.NEXT_PUBLIC_DAILY_DOMAIN;
+        if (!dailyDomain) {
+            setError("Video service not configured");
+            return;
+        }
 
-        script.onload = () => {
-            const container = document.getElementById("jitsi-container");
-            if (!container || !window.JitsiMeetExternalAPI) return;
+        // Construct full room URL if not already full
+        const fullRoomUrl = roomUrl.startsWith("https://")
+            ? roomUrl
+            : `https://${dailyDomain}/${roomUrl}`;
 
-            const api = new window.JitsiMeetExternalAPI("meet.jit.si", {
-                roomName: jitsiRoomId,
-                parentNode: container,
+        // Create the Daily call frame
+        const callFrame = DailyIframe.createFrame(containerRef.current, {
+            iframeStyle: {
+                position: "absolute",
+                top: "0",
+                left: "0",
                 width: "100%",
                 height: "100%",
-                configOverwrite: {
-                    startWithAudioMuted: false,
-                    startWithVideoMuted: false,
-                    prejoinPageEnabled: false,
-                    disableDeepLinking: true,
-                    enableWelcomePage: false,
-                    enableClosePage: false,
-                    defaultLanguage: language,
-                },
-                interfaceConfigOverwrite: {
-                    SHOW_JITSI_WATERMARK: false,
-                    SHOW_WATERMARK_FOR_GUESTS: false,
-                    SHOW_BRAND_WATERMARK: false,
-                    SHOW_CHROME_EXTENSION_BANNER: false,
-                    TOOLBAR_BUTTONS: [
-                        "microphone",
-                        "camera",
-                        "closedcaptions",
-                        "desktop",
-                        "fullscreen",
-                        "chat",
-                        "recording",
-                        "settings",
-                        "raisehand",
-                        "videoquality",
-                        "tileview",
-                    ],
-                    DISABLE_JOIN_LEAVE_NOTIFICATIONS: true,
-                },
-            });
+                border: "0",
+                borderRadius: "0",
+            },
+            showLeaveButton: false, // We have our own end button
+            showFullscreenButton: true,
+        });
 
-            // Handle when participant leaves
-            api.addListener("readyToClose", () => {
-                setShowEndModal(true);
-            });
+        callFrameRef.current = callFrame;
 
-            setJitsiApi(api);
-        };
+        // Set up event listeners
+        callFrame.on("joined-meeting", () => {
+            console.log("Daily: Joined meeting");
+            setCallJoined(true);
+        });
 
-        document.body.appendChild(script);
+        callFrame.on("left-meeting", () => {
+            console.log("Daily: Left meeting");
+            setShowEndModal(true);
+        });
+
+        callFrame.on("error", (event) => {
+            console.error("Daily error:", event);
+            setError("Video call error. Please try again.");
+        });
+
+        // Join the call
+        callFrame.join({
+            url: fullRoomUrl,
+            userName: userInfo?.displayName || "Participant",
+        }).catch((err) => {
+            console.error("Failed to join Daily call:", err);
+            setError("Failed to join video call. Please check your connection.");
+        });
 
         return () => {
-            // Clean up
-            if (script.parentNode) {
-                script.parentNode.removeChild(script);
+            // Cleanup on unmount
+            if (callFrameRef.current) {
+                callFrameRef.current.destroy();
+                callFrameRef.current = null;
             }
         };
-    }, [jitsiRoomId, jitsiApi, language]);
-
-    // Clean up Jitsi on unmount
-    useEffect(() => {
-        return () => {
-            if (jitsiApi) {
-                jitsiApi.dispose();
-            }
-        };
-    }, [jitsiApi]);
+    }, [roomUrl, userInfo]);
 
     // Handle end consultation
     const handleEndConsultation = useCallback(async () => {
         setIsEnding(true);
         try {
+            // Leave the Daily call first
+            if (callFrameRef.current) {
+                await callFrameRef.current.leave();
+                callFrameRef.current.destroy();
+                callFrameRef.current = null;
+            }
+
             const result = await endConsultation(appointmentId);
             if (result.success) {
-                if (jitsiApi) {
-                    jitsiApi.dispose();
-                }
                 // Redirect to notes page so doctor can write consultation notes
                 router.push(`/${language}/dashboard/consultation/${appointmentId}/notes`);
             } else {
@@ -178,15 +159,17 @@ export default function ConsultationPage() {
             setIsEnding(false);
             setShowEndModal(false);
         }
-    }, [appointmentId, jitsiApi, router, language]);
+    }, [appointmentId, router, language]);
 
     // Handle leave without ending (for patients)
-    const handleLeave = useCallback(() => {
-        if (jitsiApi) {
-            jitsiApi.dispose();
+    const handleLeave = useCallback(async () => {
+        if (callFrameRef.current) {
+            await callFrameRef.current.leave();
+            callFrameRef.current.destroy();
+            callFrameRef.current = null;
         }
         router.push(`/${language}/dashboard/patient/appointments`);
-    }, [jitsiApi, router, language]);
+    }, [router, language]);
 
     // Loading state
     if (loading) {
@@ -226,13 +209,19 @@ export default function ConsultationPage() {
     }
 
     return (
-        <div className={cn("min-h-screen bg-slate-950 flex flex-col", isRTL && "rtl")}>
+        <div className={cn("h-screen bg-slate-950 flex flex-col overflow-hidden", isRTL && "rtl")}>
             {/* Header */}
-            <header className="h-14 bg-slate-900/80 backdrop-blur border-b border-white/10 flex items-center justify-between px-4">
+            <header className="h-14 flex-shrink-0 bg-slate-900/80 backdrop-blur border-b border-white/10 flex items-center justify-between px-4 z-10">
                 <div className="flex items-center gap-3">
-                    <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse" />
+                    <div className={cn(
+                        "w-3 h-3 rounded-full",
+                        callJoined ? "bg-green-500 animate-pulse" : "bg-amber-500 animate-pulse"
+                    )} />
                     <span className="text-white font-medium">
-                        {t.consultation?.inProgress || "Consultation in Progress"}
+                        {callJoined
+                            ? (t.consultation?.inProgress || "Consultation in Progress")
+                            : (isRTL ? "جاري الاتصال..." : "Connecting...")
+                        }
                     </span>
                 </div>
                 <div className="flex items-center gap-2">
@@ -245,8 +234,13 @@ export default function ConsultationPage() {
                 </div>
             </header>
 
-            {/* Jitsi Container */}
-            <div id="jitsi-container" className="flex-1 bg-black" />
+            {/* Daily Container */}
+            <div className="flex-1 relative bg-black">
+                <div
+                    ref={containerRef}
+                    className="absolute inset-0"
+                />
+            </div>
 
             {/* End Consultation Modal */}
             <AnimatePresence>

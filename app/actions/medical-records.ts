@@ -400,9 +400,11 @@ export async function addAllergy(data: {
 }
 
 /**
- * Delete an allergy
+ * Deactivate an allergy (mark as inactive instead of deleting)
+ * For patient safety, allergies cannot be deleted - only deactivated
+ * This ensures doctors always see the full allergy history
  */
-export async function deleteAllergy(
+export async function deactivateAllergy(
     allergyId: string
 ): Promise<{ success: boolean; error?: string }> {
     const supabase = await createClient();
@@ -437,16 +439,29 @@ export async function deleteAllergy(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { error } = await (supabase as any)
         .from("allergies")
-        .delete()
+        .update({ is_active: false })
         .eq("id", allergyId)
         .eq("patient_profile_id", patientProfile.id);
 
     if (error) {
-        console.error("Error deleting allergy:", error);
+        console.error("Error deactivating allergy:", error);
         return { success: false, error: error.message };
     }
 
     return { success: true };
+}
+
+/**
+ * @deprecated Use deactivateAllergy instead. Deleting allergies is disabled for patient safety.
+ */
+export async function deleteAllergy(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    _allergyId: string
+): Promise<{ success: boolean; error?: string }> {
+    return {
+        success: false,
+        error: "Deleting allergies is not allowed for patient safety. Use deactivateAllergy instead."
+    };
 }
 
 // ============================================
@@ -613,53 +628,18 @@ export async function updateConditionStatus(
 }
 
 /**
- * Delete a condition
+ * @deprecated Deleting conditions is disabled for patient safety.
+ * Use updateConditionStatus to mark as "resolved" instead.
+ * This ensures doctors always see the full medical history.
  */
 export async function deleteCondition(
-    conditionId: string
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    _conditionId: string
 ): Promise<{ success: boolean; error?: string }> {
-    const supabase = await createClient();
-
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-        return { success: false, error: "Not authenticated" };
-    }
-
-    const { data: profileData } = await supabase
-        .from("profiles")
-        .select("id")
-        .eq("user_id", user.id)
-        .single();
-
-    const profile = profileData as { id: string } | null;
-    if (!profile) {
-        return { success: false, error: "Profile not found" };
-    }
-
-    const { data: patientProfileData } = await supabase
-        .from("patient_profiles")
-        .select("id")
-        .eq("profile_id", profile.id)
-        .single();
-
-    const patientProfile = patientProfileData as { id: string } | null;
-    if (!patientProfile) {
-        return { success: false, error: "Patient profile not found" };
-    }
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { error } = await (supabase as any)
-        .from("conditions")
-        .delete()
-        .eq("id", conditionId)
-        .eq("patient_profile_id", patientProfile.id);
-
-    if (error) {
-        console.error("Error deleting condition:", error);
-        return { success: false, error: error.message };
-    }
-
-    return { success: true };
+    return {
+        success: false,
+        error: "Deleting conditions is not allowed for patient safety. Use updateConditionStatus to mark as 'resolved' instead."
+    };
 }
 
 // ============================================
@@ -1277,7 +1257,7 @@ export async function getPatientHealthSummaryForDoctor(
         .from("patient_profiles")
         .select(`
             id,
-            profiles!inner (
+            profiles (
                 id,
                 full_name,
                 avatar_url,

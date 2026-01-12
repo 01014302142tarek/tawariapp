@@ -9,16 +9,21 @@ export function AnimatedNumber({
     className,
     duration = 2,
     format,
+    decimals = 0,
 }: {
     value: number;
     className?: string;
     duration?: number;
     format?: (value: number) => string;
+    decimals?: number;
 }) {
     const count = useMotionValue(0);
-    const rounded = useTransform(count, (latest) => Math.round(latest));
+    const rounded = useTransform(count, (latest) =>
+        decimals > 0 ? Number(latest.toFixed(decimals)) : Math.round(latest)
+    );
     const displayValue = useTransform(rounded, (latest) => {
         if (format) return format(latest);
+        if (decimals > 0) return latest.toFixed(decimals);
         return latest >= 1000 ? `${(latest / 1000).toFixed(1)}k` : latest.toString();
     });
     const ref = useRef<HTMLSpanElement>(null);

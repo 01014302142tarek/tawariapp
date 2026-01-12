@@ -153,9 +153,9 @@ export async function getAdminAnalytics(): Promise<{ analytics: AdminAnalytics; 
         .select(`
             doctor_profile_id,
             gross_amount,
-            doctor_profiles!inner (
+            doctor_profiles (
                 id,
-                profiles!inner (
+                profiles (
                     full_name
                 ),
                 doctor_specializations (

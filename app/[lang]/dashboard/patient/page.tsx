@@ -3,12 +3,15 @@
 import React, { useEffect, useState, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useTheme } from "./context/ThemeContext";
 import { useI18n } from "@/app/i18n";
 import { useAuth } from "@/app/context/AuthContext";
+import { useToast } from "@/components/ui/toast";
 import { getPatientDashboardData, PatientDashboardData } from "@/app/actions/patient-dashboard";
+import { joinWaitingRoom } from "@/app/actions/appointments";
 import { PendingReviews } from "@/components/reviews";
 
 // Import Aceternity components
@@ -63,6 +66,19 @@ const Icons = {
 };
 
 // ============================================
+// HELPERS
+// ============================================
+
+// Helper to get initials from name
+const getInitials = (name: string): string => {
+    if (!name) return "?";
+    const parts = name.trim().split(" ").filter(Boolean);
+    if (parts.length === 0) return "?";
+    if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
+    return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
+};
+
+// ============================================
 // COMPONENTS
 // ============================================
 
@@ -100,12 +116,15 @@ export default function PatientDashboard() {
     const { theme } = useTheme();
     const { t, language, isRTL, formatNumber, formatDate } = useI18n();
     const { profile } = useAuth();
+    const { showError } = useToast();
+    const router = useRouter();
     const isDark = theme === "dark";
 
     // State for dashboard data
     const [dashboardData, setDashboardData] = useState<PatientDashboardData | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [mounted, setMounted] = useState(false);
+    const [joiningCall, setJoiningCall] = useState(false);
 
     // Handle hydration - only compute time-based values after mount
     useEffect(() => {
@@ -187,10 +206,43 @@ export default function PatientDashboard() {
         specialty: dashboardData.nextAppointment.specialty || t.specialties.general,
         date: formatAppointmentDate(dashboardData.nextAppointment.scheduledStart),
         time: formatTime(dashboardData.nextAppointment.scheduledStart),
-        image: dashboardData.nextAppointment.doctorAvatar || "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=100&h=100&fit=crop&crop=face",
+        avatarUrl: dashboardData.nextAppointment.doctorAvatar || null,
         location: isRTL ? "استشارة عبر الفيديو" : "Video Consultation",
         id: dashboardData.nextAppointment.id,
+        status: dashboardData.nextAppointment.status,
     } : null;
+
+    // Handle start call button
+    const handleStartCall = async () => {
+        if (!nextAppointment) return;
+
+        setJoiningCall(true);
+        try {
+            // If already in progress, go directly to consultation
+            if (nextAppointment.status === "in_progress") {
+                router.push(`/${language}/dashboard/consultation/${nextAppointment.id}`);
+                return;
+            }
+
+            // If already in waiting room, go to waiting room
+            if (nextAppointment.status === "in_waiting_room") {
+                router.push(`/${language}/dashboard/consultation/${nextAppointment.id}/waiting-room`);
+                return;
+            }
+
+            // Otherwise, join waiting room first
+            const result = await joinWaitingRoom(nextAppointment.id);
+            if (result.success) {
+                router.push(`/${language}/dashboard/consultation/${nextAppointment.id}/waiting-room`);
+            } else {
+                showError(result.error || (isRTL ? "فشل الانضمام لغرفة الانتظار" : "Failed to join waiting room"));
+            }
+        } catch {
+            showError(isRTL ? "حدث خطأ غير متوقع" : "An unexpected error occurred");
+        } finally {
+            setJoiningCall(false);
+        }
+    };
 
     // Get prescriptions from real data
     const activePrescriptions = dashboardData?.activePrescriptions.map(rx => ({
@@ -309,8 +361,12 @@ export default function PatientDashboard() {
                                     <div className="flex flex-col gap-3 sm:gap-4">
                                         {/* Doctor info row */}
                                         <div className="flex items-start gap-3">
-                                            <div className="relative w-12 h-12 sm:w-16 sm:h-16 rounded-lg sm:rounded-xl overflow-hidden border-2 border-teal-500/30 flex-shrink-0">
-                                                <Image src={nextAppointment.image} alt={nextAppointment.doctor} fill className="object-cover" unoptimized />
+                                            <div className="relative w-12 h-12 sm:w-16 sm:h-16 rounded-lg sm:rounded-xl overflow-hidden border-2 border-teal-500/30 flex-shrink-0 flex items-center justify-center bg-teal-500/10">
+                                                {nextAppointment.avatarUrl ? (
+                                                    <Image src={nextAppointment.avatarUrl} alt={nextAppointment.doctor} fill className="object-cover" unoptimized />
+                                                ) : (
+                                                    <span className="text-lg sm:text-xl font-semibold text-teal-500">{getInitials(nextAppointment.doctor)}</span>
+                                                )}
                                             </div>
                                             <div className="flex-1 min-w-0">
                                                 <h3 className={cn("text-base sm:text-lg font-semibold truncate", isDark ? "text-white" : "text-slate-900")}>
@@ -367,8 +423,26 @@ export default function PatientDashboard() {
 
                                         {/* Action buttons - full width on mobile */}
                                         <div className="flex flex-col sm:flex-row gap-2">
-                                            <button className="flex-1 sm:flex-initial px-3 md:px-4 py-2 bg-teal-500 hover:bg-teal-600 text-white text-xs md:text-sm font-medium rounded-lg transition-colors text-center">
-                                                {t.doctorDashboard.actions.startVideoCall}
+                                            <button
+                                                onClick={handleStartCall}
+                                                disabled={joiningCall}
+                                                className={cn(
+                                                    "flex-1 sm:flex-initial px-3 md:px-4 py-2 bg-teal-500 hover:bg-teal-600 text-white text-xs md:text-sm font-medium rounded-lg transition-colors text-center flex items-center justify-center gap-2",
+                                                    joiningCall && "opacity-70 cursor-not-allowed"
+                                                )}
+                                            >
+                                                {joiningCall ? (
+                                                    <>
+                                                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                                        {isRTL ? "جارٍ الانضمام..." : "Joining..."}
+                                                    </>
+                                                ) : nextAppointment.status === "in_progress" ? (
+                                                    isRTL ? "انضم للمكالمة" : "Join Call"
+                                                ) : nextAppointment.status === "in_waiting_room" ? (
+                                                    isRTL ? "العودة لغرفة الانتظار" : "Back to Waiting Room"
+                                                ) : (
+                                                    t.doctorDashboard.actions.startVideoCall
+                                                )}
                                             </button>
                                             <button className={cn(
                                                 "flex-1 sm:flex-initial px-3 md:px-4 py-2 text-xs md:text-sm font-medium rounded-lg transition-colors text-center",

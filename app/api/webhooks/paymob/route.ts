@@ -105,11 +105,8 @@ export async function POST(request: NextRequest) {
 
         // If payment successful, update appointment and create doctor earnings
         if (success && transaction.appointment_id) {
-            // Update appointment status to confirmed
-            await supabase
-                .from("appointments")
-                .update({ status: "confirmed" })
-                .eq("id", transaction.appointment_id);
+            // Payment confirmed - appointment remains "scheduled" until patient joins waiting room
+            // No status update needed here as "scheduled" is already the correct status
 
             // Get doctor profile ID from appointment
             const { data: appointment } = await supabase

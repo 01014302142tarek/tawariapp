@@ -636,8 +636,8 @@ export async function getRecentActivity(): Promise<AdminActivityItem[]> {
         .select(`
             id,
             scheduled_start,
-            patient_profiles!inner (
-                profiles!inner (
+            patient_profiles (
+                profiles (
                     full_name
                 )
             )
@@ -670,7 +670,7 @@ export async function getRecentActivity(): Promise<AdminActivityItem[]> {
         .select(`
             id,
             verified_at,
-            profiles!doctor_profiles_profile_id_fkey (
+            profiles (
                 full_name
             )
         `)

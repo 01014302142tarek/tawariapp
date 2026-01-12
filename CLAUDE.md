@@ -19,7 +19,21 @@ Backend services (planned/documented):
 - Supabase PostgreSQL for database
 - Firebase for phone authentication
 - Paymob for Egypt payment processing
-- Jitsi Meet for video calls
+- Daily.co for video calls
+
+## Video Calls (Daily.co)
+
+Video consultations use Daily.co. To set up:
+
+1. Create account at https://www.daily.co
+2. Get your API key from the dashboard
+3. Add to `.env.local`:
+   ```
+   DAILY_API_KEY=your_api_key_here
+   NEXT_PUBLIC_DAILY_DOMAIN=your-domain.daily.co
+   ```
+
+Free tier includes 2,000 participant minutes/month.
 
 ## Development Commands
 

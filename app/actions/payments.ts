@@ -467,14 +467,8 @@ export async function processPaymentCallback(
         return { success: false, error: "Failed to update transaction" };
     }
 
-    // If payment successful, update appointment and create doctor earnings
+    // If payment successful, create doctor earnings (appointment stays "scheduled" until patient joins)
     if (success && transaction.appointment_id) {
-        // Update appointment status
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        await (supabase as any)
-            .from("appointments")
-            .update({ status: "confirmed" })
-            .eq("id", transaction.appointment_id);
 
         // Get doctor profile ID from appointment
         const { data: appointment } = await supabase

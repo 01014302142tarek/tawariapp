@@ -154,10 +154,11 @@ export async function middleware(request: NextRequest) {
 
     // Add security headers
     supabaseResponse.headers.set('X-Content-Type-Options', 'nosniff')
-    supabaseResponse.headers.set('X-Frame-Options', 'DENY')
+    supabaseResponse.headers.set('X-Frame-Options', 'SAMEORIGIN')
     supabaseResponse.headers.set('X-XSS-Protection', '1; mode=block')
     supabaseResponse.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
-    supabaseResponse.headers.set('Permissions-Policy', 'camera=(self), microphone=(self), geolocation=()')
+    // Allow camera/microphone for video calls (Daily.co handles permissions within its iframe)
+    supabaseResponse.headers.set('Permissions-Policy', 'camera=(self), microphone=(self), display-capture=(self), geolocation=()')
 
     return supabaseResponse
 }

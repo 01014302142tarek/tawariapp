@@ -2,11 +2,13 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import { cn } from "@/lib/utils";
-import { useTheme } from "../context/ThemeContext";
+import { useGlobalTheme } from "@/app/context/GlobalThemeContext";
 import { GlowingCard } from "@/components/ui/glowing-card";
 import { SparklesCore } from "@/components/ui/sparkles";
 import { useI18n } from "@/app/i18n";
 import { useAuth } from "@/app/context/AuthContext";
+import { updateProfile } from "@/app/actions/profile";
+import { updatePassword } from "@/app/actions/auth";
 
 // Icons
 const Icons = {
@@ -46,6 +48,22 @@ const Icons = {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
         </svg>
     ),
+    close: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+        </svg>
+    ),
+    eye: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+        </svg>
+    ),
+    eyeOff: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />
+        </svg>
+    ),
 };
 
 // Toggle Switch Component
@@ -70,9 +88,14 @@ const Toggle = ({ enabled, onChange, isDark }: { enabled: boolean; onChange: () 
 
 export default function SettingsPage() {
     const { isRTL, language, setLanguage } = useI18n();
-    const { theme } = useTheme();
-    const { profile, user } = useAuth();
-    const isDark = theme === "dark";
+    const { isDark } = useGlobalTheme();
+    const { profile, user, isLoading, refreshProfile } = useAuth();
+
+    // Form state
+    const [fullName, setFullName] = useState("");
+    const [isSaving, setIsSaving] = useState(false);
+    const [saveStatus, setSaveStatus] = useState<"idle" | "success" | "error">("idle");
+    const [errorMessage, setErrorMessage] = useState("");
 
     const [notifications, setNotifications] = useState({
         email: true,
@@ -81,8 +104,30 @@ export default function SettingsPage() {
         prescriptions: true,
     });
 
-    const [saved, setSaved] = useState(false);
+    // Password change state
+    const [showPasswordModal, setShowPasswordModal] = useState(false);
+    const [newPassword, setNewPassword] = useState("");
+    const [confirmPassword, setConfirmPassword] = useState("");
+    const [showNewPassword, setShowNewPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    const [passwordSaving, setPasswordSaving] = useState(false);
+    const [passwordError, setPasswordError] = useState("");
+    const [passwordSuccess, setPasswordSuccess] = useState(false);
+
     const savedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    // Initialize form with profile data (including notification preferences)
+    useEffect(() => {
+        if (profile?.profile) {
+            setFullName(profile.profile.full_name || "");
+            setNotifications({
+                email: profile.profile.notify_email ?? true,
+                sms: profile.profile.notify_sms ?? true,
+                appointments: profile.profile.notify_appointments ?? true,
+                prescriptions: profile.profile.notify_prescriptions ?? true,
+            });
+        }
+    }, [profile]);
 
     // Cleanup timer on unmount
     useEffect(() => {
@@ -91,15 +136,108 @@ export default function SettingsPage() {
         };
     }, []);
 
-    const handleSave = () => {
-        setSaved(true);
-        if (savedTimerRef.current) clearTimeout(savedTimerRef.current);
-        savedTimerRef.current = setTimeout(() => setSaved(false), 3000);
+    const handleSave = async () => {
+        setIsSaving(true);
+        setSaveStatus("idle");
+        setErrorMessage("");
+
+        try {
+            const result = await updateProfile({
+                full_name: fullName,
+                notify_email: notifications.email,
+                notify_sms: notifications.sms,
+                notify_appointments: notifications.appointments,
+                notify_prescriptions: notifications.prescriptions,
+            });
+
+            if (result.success) {
+                setSaveStatus("success");
+                // Refresh the profile in context
+                await refreshProfile();
+                // Reset status after 3 seconds
+                if (savedTimerRef.current) clearTimeout(savedTimerRef.current);
+                savedTimerRef.current = setTimeout(() => setSaveStatus("idle"), 3000);
+            } else {
+                setSaveStatus("error");
+                setErrorMessage(result.error || (isRTL ? "حدث خطأ أثناء الحفظ" : "Failed to save"));
+            }
+        } catch {
+            setSaveStatus("error");
+            setErrorMessage(isRTL ? "حدث خطأ غير متوقع" : "An unexpected error occurred");
+        } finally {
+            setIsSaving(false);
+        }
     };
 
     const toggleNotification = (key: keyof typeof notifications) => {
         setNotifications(prev => ({ ...prev, [key]: !prev[key] }));
     };
+
+    const handlePasswordChange = async () => {
+        setPasswordError("");
+        setPasswordSuccess(false);
+
+        // Validation
+        if (newPassword.length < 8) {
+            setPasswordError(isRTL ? "كلمة المرور يجب أن تكون 8 أحرف على الأقل" : "Password must be at least 8 characters");
+            return;
+        }
+
+        if (newPassword !== confirmPassword) {
+            setPasswordError(isRTL ? "كلمات المرور غير متطابقة" : "Passwords do not match");
+            return;
+        }
+
+        setPasswordSaving(true);
+
+        try {
+            const result = await updatePassword(newPassword);
+
+            if (result.success) {
+                setPasswordSuccess(true);
+                setNewPassword("");
+                setConfirmPassword("");
+                // Close modal after 2 seconds
+                setTimeout(() => {
+                    setShowPasswordModal(false);
+                    setPasswordSuccess(false);
+                }, 2000);
+            } else {
+                setPasswordError(result.error || (isRTL ? "فشل تحديث كلمة المرور" : "Failed to update password"));
+            }
+        } catch {
+            setPasswordError(isRTL ? "حدث خطأ غير متوقع" : "An unexpected error occurred");
+        } finally {
+            setPasswordSaving(false);
+        }
+    };
+
+    const closePasswordModal = () => {
+        setShowPasswordModal(false);
+        setNewPassword("");
+        setConfirmPassword("");
+        setPasswordError("");
+        setPasswordSuccess(false);
+        setShowNewPassword(false);
+        setShowConfirmPassword(false);
+    };
+
+    // Show loading state
+    if (isLoading) {
+        return (
+            <div className={cn(
+                "min-h-screen flex items-center justify-center",
+                isDark ? "bg-slate-950" : "bg-gray-50"
+            )}>
+                <div className="flex flex-col items-center gap-4">
+                    <div className="w-8 h-8 border-2 border-teal-500 border-t-transparent rounded-full animate-spin" />
+                    <p className={cn("text-sm", isDark ? "text-gray-400" : "text-gray-600")}>
+                        {isRTL ? "جارٍ التحميل..." : "Loading..."}
+                    </p>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="relative overflow-hidden min-h-screen">
@@ -135,18 +273,39 @@ export default function SettingsPage() {
                             {isRTL ? "إدارة حسابك وتفضيلاتك" : "Manage your account and preferences"}
                         </p>
                     </div>
-                    <button
-                        onClick={handleSave}
-                        className={cn(
-                            "px-4 md:px-5 py-2 md:py-2.5 font-medium rounded-xl transition-all flex items-center gap-2 self-start text-sm md:text-base",
-                            saved
-                                ? "bg-emerald-500 text-white"
-                                : "bg-teal-500 hover:bg-teal-600 text-white"
+                    <div className="flex flex-col items-end gap-2">
+                        <button
+                            onClick={handleSave}
+                            disabled={isSaving}
+                            className={cn(
+                                "px-4 md:px-5 py-2 md:py-2.5 font-medium rounded-xl transition-all flex items-center gap-2 self-start text-sm md:text-base",
+                                saveStatus === "success"
+                                    ? "bg-emerald-500 text-white"
+                                    : saveStatus === "error"
+                                        ? "bg-red-500 text-white"
+                                        : "bg-teal-500 hover:bg-teal-600 text-white",
+                                isSaving && "opacity-70 cursor-not-allowed"
+                            )}
+                        >
+                            {isSaving ? (
+                                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                            ) : saveStatus === "success" ? (
+                                Icons.check
+                            ) : (
+                                Icons.save
+                            )}
+                            {isSaving
+                                ? (isRTL ? "جارٍ الحفظ..." : "Saving...")
+                                : saveStatus === "success"
+                                    ? (isRTL ? "تم الحفظ" : "Saved")
+                                    : saveStatus === "error"
+                                        ? (isRTL ? "فشل الحفظ" : "Failed")
+                                        : (isRTL ? "حفظ" : "Save")}
+                        </button>
+                        {saveStatus === "error" && errorMessage && (
+                            <p className="text-sm text-red-500">{errorMessage}</p>
                         )}
-                    >
-                        {saved ? Icons.check : Icons.save}
-                        {saved ? (isRTL ? "تم الحفظ" : "Saved") : (isRTL ? "حفظ" : "Save")}
-                    </button>
+                    </div>
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
@@ -167,9 +326,10 @@ export default function SettingsPage() {
                                 </label>
                                 <input
                                     type="text"
-                                    defaultValue={profile?.profile?.full_name || ""}
+                                    value={fullName}
+                                    onChange={(e) => setFullName(e.target.value)}
                                     className={cn(
-                                        "w-full px-4 py-3 rounded-xl border transition-colors",
+                                        "w-full px-4 py-3 rounded-xl border transition-colors focus:outline-none focus:ring-2 focus:ring-teal-500/20",
                                         isDark
                                             ? "bg-white/5 border-white/10 text-white focus:border-teal-500"
                                             : "bg-gray-50 border-gray-200 text-gray-900 focus:border-teal-500"
@@ -182,14 +342,18 @@ export default function SettingsPage() {
                                 </label>
                                 <input
                                     type="email"
-                                    defaultValue={user?.email || ""}
+                                    value={user?.email || ""}
+                                    readOnly
                                     className={cn(
-                                        "w-full px-4 py-3 rounded-xl border transition-colors",
+                                        "w-full px-4 py-3 rounded-xl border transition-colors cursor-not-allowed opacity-70",
                                         isDark
-                                            ? "bg-white/5 border-white/10 text-white focus:border-teal-500"
-                                            : "bg-gray-50 border-gray-200 text-gray-900 focus:border-teal-500"
+                                            ? "bg-white/5 border-white/10 text-white"
+                                            : "bg-gray-100 border-gray-200 text-gray-900"
                                     )}
                                 />
+                                <p className={cn("text-xs mt-1", isDark ? "text-gray-500" : "text-gray-500")}>
+                                    {isRTL ? "لا يمكن تغيير البريد الإلكتروني" : "Email cannot be changed"}
+                                </p>
                             </div>
                         </div>
                     </GlowingCard>
@@ -281,6 +445,7 @@ export default function SettingsPage() {
                         </div>
                         <div className="space-y-4">
                             <button
+                                onClick={() => setShowPasswordModal(true)}
                                 className={cn(
                                     "w-full p-4 rounded-xl border text-start transition-colors",
                                     isDark
@@ -295,13 +460,18 @@ export default function SettingsPage() {
                             </button>
                             <button
                                 className={cn(
-                                    "w-full p-4 rounded-xl border text-start transition-colors",
+                                    "w-full p-4 rounded-xl border text-start transition-colors opacity-60 cursor-not-allowed",
                                     isDark
-                                        ? "border-white/10 hover:border-white/20 text-white"
+                                        ? "border-white/10 text-white"
                                         : "border-gray-200 hover:border-gray-300 text-gray-900"
                                 )}
                             >
-                                <p className="font-medium">{isRTL ? "المصادقة الثنائية" : "Two-Factor Authentication"}</p>
+                                <div className="flex items-center gap-2">
+                                    <p className="font-medium">{isRTL ? "المصادقة الثنائية" : "Two-Factor Authentication"}</p>
+                                    <span className="text-xs px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-500">
+                                        {isRTL ? "قريباً" : "Coming Soon"}
+                                    </span>
+                                </div>
                                 <p className={cn("text-sm mt-1", isDark ? "text-gray-500" : "text-gray-600")}>
                                     {isRTL ? "تفعيل طبقة أمان إضافية" : "Enable an extra layer of security"}
                                 </p>
@@ -310,6 +480,163 @@ export default function SettingsPage() {
                     </GlowingCard>
                 </div>
             </main>
+
+            {/* Password Change Modal */}
+            {showPasswordModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                    {/* Backdrop */}
+                    <div
+                        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+                        onClick={closePasswordModal}
+                    />
+
+                    {/* Modal */}
+                    <div className={cn(
+                        "relative w-full max-w-md rounded-2xl border p-6 shadow-xl",
+                        isDark
+                            ? "bg-slate-900 border-white/10"
+                            : "bg-white border-gray-200"
+                    )}>
+                        {/* Header */}
+                        <div className="flex items-center justify-between mb-6">
+                            <h3 className={cn("text-lg font-semibold", isDark ? "text-white" : "text-slate-900")}>
+                                {isRTL ? "تغيير كلمة المرور" : "Change Password"}
+                            </h3>
+                            <button
+                                onClick={closePasswordModal}
+                                className={cn(
+                                    "p-2 rounded-lg transition-colors",
+                                    isDark ? "hover:bg-white/10 text-gray-400" : "hover:bg-gray-100 text-gray-500"
+                                )}
+                            >
+                                {Icons.close}
+                            </button>
+                        </div>
+
+                        {/* Success Message */}
+                        {passwordSuccess ? (
+                            <div className="text-center py-8">
+                                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-emerald-500/20 flex items-center justify-center">
+                                    <svg className="w-8 h-8 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                    </svg>
+                                </div>
+                                <p className={cn("font-medium", isDark ? "text-white" : "text-slate-900")}>
+                                    {isRTL ? "تم تغيير كلمة المرور بنجاح!" : "Password changed successfully!"}
+                                </p>
+                            </div>
+                        ) : (
+                            <>
+                                {/* Form */}
+                                <div className="space-y-4">
+                                    {/* New Password */}
+                                    <div>
+                                        <label className={cn("block text-sm font-medium mb-2", isDark ? "text-gray-300" : "text-gray-700")}>
+                                            {isRTL ? "كلمة المرور الجديدة" : "New Password"}
+                                        </label>
+                                        <div className="relative">
+                                            <input
+                                                type={showNewPassword ? "text" : "password"}
+                                                value={newPassword}
+                                                onChange={(e) => setNewPassword(e.target.value)}
+                                                placeholder={isRTL ? "أدخل كلمة المرور الجديدة" : "Enter new password"}
+                                                className={cn(
+                                                    "w-full px-4 py-3 rounded-xl border transition-colors focus:outline-none focus:ring-2 focus:ring-teal-500/20 pr-12",
+                                                    isDark
+                                                        ? "bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-teal-500"
+                                                        : "bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-400 focus:border-teal-500"
+                                                )}
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowNewPassword(!showNewPassword)}
+                                                className={cn(
+                                                    "absolute right-3 top-1/2 -translate-y-1/2 p-1",
+                                                    isDark ? "text-gray-400 hover:text-gray-300" : "text-gray-500 hover:text-gray-700"
+                                                )}
+                                            >
+                                                {showNewPassword ? Icons.eyeOff : Icons.eye}
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    {/* Confirm Password */}
+                                    <div>
+                                        <label className={cn("block text-sm font-medium mb-2", isDark ? "text-gray-300" : "text-gray-700")}>
+                                            {isRTL ? "تأكيد كلمة المرور" : "Confirm Password"}
+                                        </label>
+                                        <div className="relative">
+                                            <input
+                                                type={showConfirmPassword ? "text" : "password"}
+                                                value={confirmPassword}
+                                                onChange={(e) => setConfirmPassword(e.target.value)}
+                                                placeholder={isRTL ? "أعد إدخال كلمة المرور" : "Re-enter password"}
+                                                className={cn(
+                                                    "w-full px-4 py-3 rounded-xl border transition-colors focus:outline-none focus:ring-2 focus:ring-teal-500/20 pr-12",
+                                                    isDark
+                                                        ? "bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-teal-500"
+                                                        : "bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-400 focus:border-teal-500"
+                                                )}
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                                className={cn(
+                                                    "absolute right-3 top-1/2 -translate-y-1/2 p-1",
+                                                    isDark ? "text-gray-400 hover:text-gray-300" : "text-gray-500 hover:text-gray-700"
+                                                )}
+                                            >
+                                                {showConfirmPassword ? Icons.eyeOff : Icons.eye}
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    {/* Error Message */}
+                                    {passwordError && (
+                                        <p className="text-sm text-red-500">{passwordError}</p>
+                                    )}
+
+                                    {/* Password Requirements */}
+                                    <p className={cn("text-xs", isDark ? "text-gray-500" : "text-gray-500")}>
+                                        {isRTL ? "يجب أن تكون كلمة المرور 8 أحرف على الأقل" : "Password must be at least 8 characters"}
+                                    </p>
+                                </div>
+
+                                {/* Actions */}
+                                <div className="flex gap-3 mt-6">
+                                    <button
+                                        onClick={closePasswordModal}
+                                        className={cn(
+                                            "flex-1 px-4 py-2.5 rounded-xl font-medium transition-colors",
+                                            isDark
+                                                ? "bg-white/10 hover:bg-white/20 text-white"
+                                                : "bg-gray-100 hover:bg-gray-200 text-gray-900"
+                                        )}
+                                    >
+                                        {isRTL ? "إلغاء" : "Cancel"}
+                                    </button>
+                                    <button
+                                        onClick={handlePasswordChange}
+                                        disabled={passwordSaving || !newPassword || !confirmPassword}
+                                        className={cn(
+                                            "flex-1 px-4 py-2.5 rounded-xl font-medium transition-colors flex items-center justify-center gap-2",
+                                            "bg-teal-500 hover:bg-teal-600 text-white",
+                                            (passwordSaving || !newPassword || !confirmPassword) && "opacity-60 cursor-not-allowed"
+                                        )}
+                                    >
+                                        {passwordSaving && (
+                                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                        )}
+                                        {passwordSaving
+                                            ? (isRTL ? "جارٍ التحديث..." : "Updating...")
+                                            : (isRTL ? "تحديث" : "Update")}
+                                    </button>
+                                </div>
+                            </>
+                        )}
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

@@ -27,6 +27,8 @@ export type {
 /**
  * Get the current authenticated user's complete profile
  * Includes role-specific data (patient_profiles, doctor_profiles, etc.)
+ * Uses two-step approach: get base profile first, then fetch role-specific data
+ * This avoids RLS recursion issues with assistant_profiles
  */
 export async function getCurrentUserProfile(): Promise<FullProfile | null> {
     const supabase = await createClient();
@@ -37,7 +39,7 @@ export async function getCurrentUserProfile(): Promise<FullProfile | null> {
         return null;
     }
 
-    // Get base profile
+    // Step 1: Get base profile to determine role
     const { data: profileData, error: profileError } = await supabase
         .from("profiles")
         .select("*")
@@ -49,78 +51,64 @@ export async function getCurrentUserProfile(): Promise<FullProfile | null> {
         return null;
     }
 
-    // Type assertion for profile
     const profile = profileData as unknown as Profile;
 
-    // Get role-specific profile based on role
+    // Step 2: Fetch role-specific data based on role
     switch (profile.role) {
         case "patient": {
-            const { data: patientProfileData } = await supabase
+            const { data: patientData } = await supabase
                 .from("patient_profiles")
                 .select("*")
                 .eq("profile_id", profile.id)
                 .single();
-
-            if (patientProfileData) {
-                const patientProfile = patientProfileData as unknown as PatientProfile;
-                return { profile, patientProfile };
-            }
-            break;
+            const patientProfile = patientData as unknown as PatientProfile | null;
+            return { profile, patientProfile: patientProfile || undefined } as FullProfile;
         }
         case "doctor": {
-            const { data: doctorProfileData } = await supabase
+            const { data: doctorData } = await supabase
                 .from("doctor_profiles")
                 .select("*")
                 .eq("profile_id", profile.id)
                 .single();
-
-            if (doctorProfileData) {
-                const doctorProfile = doctorProfileData as unknown as DoctorProfile;
-                return { profile, doctorProfile };
-            }
-            break;
+            const doctorProfile = doctorData as unknown as DoctorProfile | null;
+            return { profile, doctorProfile: doctorProfile || undefined } as FullProfile;
         }
         case "admin": {
-            const { data: adminProfileData } = await supabase
+            const { data: adminData } = await supabase
                 .from("admin_profiles")
                 .select("*")
                 .eq("profile_id", profile.id)
                 .single();
-
-            if (adminProfileData) {
-                const adminProfile = adminProfileData as unknown as AdminProfile;
-                return { profile, adminProfile };
-            }
-            break;
+            const adminProfile = adminData as unknown as AdminProfile | null;
+            return { profile, adminProfile: adminProfile || undefined } as FullProfile;
         }
         case "doctor_assistant":
         case "admin_assistant": {
-            const { data: assistantProfileData } = await supabase
+            const { data: assistantData } = await supabase
                 .from("assistant_profiles")
                 .select("*")
                 .eq("profile_id", profile.id)
                 .single();
-
-            if (assistantProfileData) {
-                const assistantProfile = assistantProfileData as unknown as AssistantProfile;
-                return { profile, assistantProfile };
-            }
-            break;
+            const assistantProfile = assistantData as unknown as AssistantProfile | null;
+            return { profile, assistantProfile: assistantProfile || undefined } as FullProfile;
         }
     }
 
-    // Fallback: return just the base profile wrapped appropriately
-    // This shouldn't happen if triggers are working correctly
-    return null;
+    // Fallback: return just the base profile (unknown role)
+    return { profile } as FullProfile;
 }
 
 /**
- * Update base profile fields (name, language, timezone)
+ * Update base profile fields (name, language, timezone, notification preferences)
  */
 export async function updateProfile(data: {
     full_name?: string;
     preferred_language?: string;
     timezone?: string;
+    notify_email?: boolean;
+    notify_sms?: boolean;
+    notify_appointments?: boolean;
+    notify_prescriptions?: boolean;
 }): Promise<{ success: boolean; error?: string }> {
     const supabase = await createClient();
 

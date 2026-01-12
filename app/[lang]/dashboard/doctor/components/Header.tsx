@@ -10,6 +10,7 @@ import { useI18n } from "@/app/i18n";
 import { useAuth } from "@/app/context/AuthContext";
 import { MovingBorder } from "@/components/ui/moving-border";
 import { NotificationDropdown } from "@/components/notifications";
+import { LanguageToggle } from "@/components/ui/language-toggle";
 
 // Icons
 const Icons = {
@@ -86,13 +87,19 @@ const Icons = {
     ),
 };
 
-// Default avatar for doctors without profile photo
-const DEFAULT_AVATAR = "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=100&h=100&fit=crop&crop=face";
+// Helper to get initials from name
+const getInitials = (name: string): string => {
+    if (!name) return "?";
+    const parts = name.trim().split(" ").filter(Boolean);
+    if (parts.length === 0) return "?";
+    if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
+    return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
+};
 
 // User Dropdown with Theme Appearance and Language submenu
 const UserDropdown = ({
     name,
-    image,
+    avatarUrl,
     isDark,
     themeMode,
     onSetThemeMode,
@@ -100,7 +107,7 @@ const UserDropdown = ({
     settingsHref
 }: {
     name: string;
-    image: string;
+    avatarUrl: string | null;
     isDark: boolean;
     themeMode: "system" | "light" | "dark";
     onSetThemeMode: (mode: "system" | "light" | "dark") => void;
@@ -152,10 +159,12 @@ const UserDropdown = ({
                     isDark ? "hover:bg-white/5" : "hover:bg-gray-100"
                 )}
             >
-                <div className="relative">
-                    <div className="w-9 h-9 md:w-10 md:h-10 rounded-full overflow-hidden border-2 border-teal-500/30">
-                        <Image src={image} alt={name} fill className="object-cover" unoptimized />
-                    </div>
+                <div className="relative w-9 h-9 md:w-10 md:h-10 rounded-full overflow-hidden border-2 border-teal-500/30 flex items-center justify-center bg-teal-500/10">
+                    {avatarUrl ? (
+                        <Image src={avatarUrl} alt={name} fill className="object-cover" unoptimized />
+                    ) : (
+                        <span className="text-sm font-semibold text-teal-500">{getInitials(name)}</span>
+                    )}
                 </div>
                 <div className="text-left hidden sm:block">
                     <p className={cn("text-sm font-medium", isDark ? "text-white" : "text-slate-900")}>{name}</p>
@@ -341,7 +350,7 @@ export default function Header({ onMenuClick }: { onMenuClick?: () => void }) {
     // Get user's name and avatar from profile
     // Show "..." during loading, then actual name
     const userName = profile?.profile.full_name || (isLoading ? "..." : "");
-    const userAvatar = profile?.profile.avatar_url || DEFAULT_AVATAR;
+    const userAvatar = profile?.profile.avatar_url || null;
 
     const handleLogout = async () => {
         await signOut();
@@ -402,13 +411,16 @@ export default function Header({ onMenuClick }: { onMenuClick?: () => void }) {
                         </div>
                     </MovingBorder>
 
+                    {/* Language Toggle */}
+                    <LanguageToggle isDark={isDark} />
+
                     {/* Notifications - visible on all screens */}
                     <NotificationDropdown isDark={isDark} dashboardType="doctor" />
 
                     {/* User Dropdown */}
                     <UserDropdown
                         name={userName}
-                        image={userAvatar}
+                        avatarUrl={userAvatar}
                         isDark={isDark}
                         themeMode={themeMode}
                         onSetThemeMode={setThemeMode}

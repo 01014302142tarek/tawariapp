@@ -37,10 +37,17 @@ export function useDoctorAvailabilitySync(
 
     const previousOnlineRef = useRef<boolean | null>(null);
     const intervalRef = useRef<NodeJS.Timeout | null>(null);
+    const isSyncingRef = useRef(false);
+    const onStatusChangeRef = useRef(onStatusChange);
+
+    // Keep the callback ref updated
+    onStatusChangeRef.current = onStatusChange;
 
     const sync = useCallback(async () => {
-        if (isSyncing) return;
+        // Use ref to check syncing state to avoid dependency issues
+        if (isSyncingRef.current) return;
 
+        isSyncingRef.current = true;
         setIsSyncing(true);
         try {
             // Sync the availability based on schedule
@@ -51,7 +58,7 @@ export function useDoctorAvailabilitySync(
 
                 // Check if status changed
                 if (previousOnlineRef.current !== null && previousOnlineRef.current !== newIsOnline) {
-                    onStatusChange?.(newIsOnline);
+                    onStatusChangeRef.current?.(newIsOnline);
                 }
 
                 previousOnlineRef.current = newIsOnline;
@@ -68,9 +75,10 @@ export function useDoctorAvailabilitySync(
         } catch (error) {
             console.error("Error syncing availability:", error);
         } finally {
+            isSyncingRef.current = false;
             setIsSyncing(false);
         }
-    }, [isSyncing, onStatusChange]);
+    }, []); // No dependencies - uses refs for mutable values
 
     // Initial sync and setup interval
     useEffect(() => {

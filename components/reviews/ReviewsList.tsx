@@ -47,6 +47,7 @@ export default function ReviewsList({
     const [stats, setStats] = useState({
         average: 0,
         count: 0,
+        totalCount: 0, // Total reviews in DB (not limited)
         distribution: [0, 0, 0, 0, 0],
     });
 
@@ -75,6 +76,7 @@ export default function ReviewsList({
                 setStats({
                     average: reviewList.length > 0 ? total / reviewList.length : 0,
                     count: reviewList.length,
+                    totalCount: result.total || reviewList.length,
                     distribution,
                 });
             }
@@ -190,12 +192,12 @@ export default function ReviewsList({
                                     isDark ? "text-gray-400" : "text-gray-500"
                                 )}
                             >
-                                {stats.count}{" "}
+                                {stats.totalCount}{" "}
                                 {isRTL
-                                    ? stats.count === 1
+                                    ? stats.totalCount === 1
                                         ? "تقييم"
                                         : "تقييمات"
-                                    : stats.count === 1
+                                    : stats.totalCount === 1
                                     ? "review"
                                     : "reviews"}
                             </p>

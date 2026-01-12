@@ -64,7 +64,7 @@ const Badge = ({ children, variant = "default", isDark = true }: { children: Rea
 export default function AppointmentsPage() {
     const { t, isRTL, language } = useI18n();
     const router = useRouter();
-    const { showConfirm } = useToast();
+    const { showConfirm, showError } = useToast();
     const [activeFilter, setActiveFilter] = useState("All");
     const { isDark, textPrimary, textMuted } = useThemeStyles();
 
@@ -143,15 +143,21 @@ export default function AppointmentsPage() {
 
     const handleJoinWaitingRoom = async (appointmentId: string) => {
         setActionLoading(appointmentId);
-        const result = await joinWaitingRoom(appointmentId);
-        if (result.success) {
-            // Navigate to the waiting room page
-            router.push(`/${language}/dashboard/consultation/${appointmentId}/waiting-room`);
+        try {
+            const result = await joinWaitingRoom(appointmentId);
+            if (result.success) {
+                // Navigate to the waiting room page
+                router.push(`/${language}/dashboard/consultation/${appointmentId}/waiting-room`);
+            } else {
+                showError(result.error || (isRTL ? "فشل الانضمام لغرفة الانتظار" : "Failed to join waiting room"));
+            }
+        } catch {
+            showError(isRTL ? "حدث خطأ غير متوقع" : "An unexpected error occurred");
         }
         setActionLoading(null);
     };
 
-    const handleJoinConsultation = async (appointmentId: string) => {
+    const handleJoinConsultation = (appointmentId: string) => {
         // Navigate to the embedded consultation page
         router.push(`/${language}/dashboard/consultation/${appointmentId}`);
     };

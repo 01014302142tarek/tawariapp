@@ -31,6 +31,10 @@ export interface Database {
                     timezone: string;
                     is_active: boolean;
                     is_deleted: boolean;
+                    notify_email: boolean;
+                    notify_sms: boolean;
+                    notify_appointments: boolean;
+                    notify_prescriptions: boolean;
                     created_at: string;
                     updated_at: string;
                 };
@@ -44,6 +48,10 @@ export interface Database {
                     timezone?: string;
                     is_active?: boolean;
                     is_deleted?: boolean;
+                    notify_email?: boolean;
+                    notify_sms?: boolean;
+                    notify_appointments?: boolean;
+                    notify_prescriptions?: boolean;
                     created_at?: string;
                     updated_at?: string;
                 };
@@ -57,6 +65,10 @@ export interface Database {
                     timezone?: string;
                     is_active?: boolean;
                     is_deleted?: boolean;
+                    notify_email?: boolean;
+                    notify_sms?: boolean;
+                    notify_appointments?: boolean;
+                    notify_prescriptions?: boolean;
                     created_at?: string;
                     updated_at?: string;
                 };
@@ -350,7 +362,7 @@ export interface Database {
                     appointment_type: string;
                     is_urgent: boolean;
                     reason: string | null;
-                    patient_notes: string | null;
+                    chief_complaint: string | null;
                     doctor_notes: string | null;
                     consultation_fee: number;
                     platform_fee: number;
@@ -370,7 +382,7 @@ export interface Database {
                     appointment_type?: string;
                     is_urgent?: boolean;
                     reason?: string | null;
-                    patient_notes?: string | null;
+                    chief_complaint?: string | null;
                     doctor_notes?: string | null;
                     consultation_fee: number;
                     platform_fee?: number;
@@ -390,7 +402,7 @@ export interface Database {
                     appointment_type?: string;
                     is_urgent?: boolean;
                     reason?: string | null;
-                    patient_notes?: string | null;
+                    chief_complaint?: string | null;
                     doctor_notes?: string | null;
                     consultation_fee?: number;
                     platform_fee?: number;

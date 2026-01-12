@@ -18,8 +18,6 @@ import {
     addCondition,
     deleteMedicalRecord,
     deleteLabResult,
-    deleteAllergy,
-    deleteCondition,
     updateConditionStatus,
     uploadMedicalDocument,
     getMedicalDocumentSignedUrl,
@@ -387,26 +385,9 @@ export default function RecordsPage() {
         }
     };
 
-    const handleDeleteAllergy = async (id: string) => {
-        const { success } = await deleteAllergy(id);
-        if (success) {
-            setAllergies(prev => prev.filter(a => a.id !== id));
-            setSummary(prev => prev ? { ...prev, allergiesCount: prev.allergiesCount - 1 } : null);
-        }
-    };
-
-    const handleDeleteCondition = async (id: string) => {
-        const condition = conditions.find(c => c.id === id);
-        const { success } = await deleteCondition(id);
-        if (success) {
-            setConditions(prev => prev.filter(c => c.id !== id));
-            setSummary(prev => prev ? {
-                ...prev,
-                conditionsCount: prev.conditionsCount - 1,
-                activeConditions: condition?.status === "active" ? prev.activeConditions - 1 : prev.activeConditions
-            } : null);
-        }
-    };
+    // Note: Delete functions removed for allergies and conditions for patient safety
+    // Patients can mark conditions as "resolved" but cannot delete them
+    // This ensures doctors always have access to full medical history
 
     const handleUpdateConditionStatus = async (id: string, status: ConditionStatus) => {
         const condition = conditions.find(c => c.id === id);
@@ -1093,15 +1074,7 @@ export default function RecordsPage() {
                                                     </p>
                                                 )}
                                             </div>
-                                            <button
-                                                onClick={() => handleDeleteAllergy(allergy.id)}
-                                                className={cn(
-                                                    "p-1.5 md:p-2 rounded-lg transition-colors flex-shrink-0",
-                                                    isDark ? "hover:bg-white/10 text-gray-400 hover:text-red-400" : "hover:bg-gray-100 text-gray-600 hover:text-red-500"
-                                                )}
-                                            >
-                                                {Icons.trash}
-                                            </button>
+{/* Delete removed for patient safety - allergies are critical medical info */}
                                         </div>
                                     </GlowingCard>
                                 </motion.div>
@@ -1174,15 +1147,7 @@ export default function RecordsPage() {
                                                     <option value="managed">{isRTL ? "مُدارة" : "Managed"}</option>
                                                     <option value="resolved">{isRTL ? "تم علاجها" : "Resolved"}</option>
                                                 </select>
-                                                <button
-                                                    onClick={() => handleDeleteCondition(condition.id)}
-                                                    className={cn(
-                                                        "p-1.5 md:p-2 rounded-lg transition-colors flex-shrink-0",
-                                                        isDark ? "hover:bg-white/10 text-gray-400 hover:text-red-400" : "hover:bg-gray-100 text-gray-600 hover:text-red-500"
-                                                    )}
-                                                >
-                                                    {Icons.trash}
-                                                </button>
+{/* Delete removed for patient safety - use status dropdown instead */}
                                             </div>
                                         </div>
                                     </GlowingCard>

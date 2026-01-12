@@ -15,6 +15,7 @@ import {
     endConsultation,
     cancelAppointmentAsDoctor,
     markNoShow,
+    resetAppointmentToScheduled,
     type AppointmentWithDetails,
     type AppointmentStatus,
 } from "@/app/actions/appointments";
@@ -51,6 +52,11 @@ const Icons = {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.5 12.75l6 6 9-13.5" />
         </svg>
     ),
+    undo: (
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3" />
+        </svg>
+    ),
 };
 
 // Badge Component
@@ -72,7 +78,7 @@ const Badge = ({ children, variant = "default", isDark = true, className }: { ch
 export default function AppointmentsPage() {
     const router = useRouter();
     const { t, isRTL, language } = useI18n();
-    const { showConfirm } = useToast();
+    const { showConfirm, showError } = useToast();
     const [activeFilter, setActiveFilter] = useState("all");
     const [searchQuery, setSearchQuery] = useState("");
     const { isDark, textPrimary, textSecondary, textMuted, inputBg, inputFocus, buttonSecondary, divider, cardHover, emptyStateBg } = useThemeStyles();
@@ -148,21 +154,63 @@ export default function AppointmentsPage() {
         return date.toDateString() === today.toDateString();
     };
 
-    const handleStartConsultation = async (appointmentId: string) => {
-        setActionLoading(appointmentId);
-        const result = await startConsultation(appointmentId);
-        if (result.success) {
-            // Navigate to the embedded consultation page
-            router.push(`/${language}/dashboard/consultation/${appointmentId}`);
-        }
-        setActionLoading(null);
+    const handleStartConsultation = (appointmentId: string, patientName: string) => {
+        showConfirm(
+            isRTL
+                ? `هل تريد بدء الاستشارة مع ${patientName}؟ سيتم تغيير حالة الموعد إلى "قيد التقدم".`
+                : `Start consultation with ${patientName}? This will change the appointment status to "In Progress".`,
+            async () => {
+                setActionLoading(appointmentId);
+                try {
+                    const result = await startConsultation(appointmentId);
+                    if (result.success) {
+                        // Navigate to the embedded consultation page
+                        router.push(`/${language}/dashboard/consultation/${appointmentId}`);
+                    } else {
+                        showError(result.error || (isRTL ? "فشل في بدء الاستشارة" : "Failed to start consultation"));
+                    }
+                } catch {
+                    showError(isRTL ? "حدث خطأ غير متوقع" : "An unexpected error occurred");
+                }
+                setActionLoading(null);
+            }
+        );
     };
 
-    const handleEndConsultation = async (appointmentId: string) => {
-        setActionLoading(appointmentId);
-        await endConsultation(appointmentId);
-        await loadAppointments();
-        setActionLoading(null);
+    const handleEndConsultation = (appointmentId: string) => {
+        showConfirm(
+            isRTL
+                ? "هل أنت متأكد من إنهاء هذه الاستشارة؟ سيتم تغيير حالة الموعد إلى \"مكتمل\"."
+                : "Are you sure you want to end this consultation? This will mark the appointment as \"Completed\".",
+            async () => {
+                setActionLoading(appointmentId);
+                await endConsultation(appointmentId);
+                await loadAppointments();
+                setActionLoading(null);
+            }
+        );
+    };
+
+    const handleResetToScheduled = (appointmentId: string, patientName: string) => {
+        showConfirm(
+            isRTL
+                ? `هل تريد إعادة تعيين الموعد مع ${patientName} إلى حالة "مجدول"؟ سيتم حذف جلسة الاستشارة الحالية.`
+                : `Reset appointment with ${patientName} back to "Scheduled"? This will delete the current consultation session.`,
+            async () => {
+                setActionLoading(appointmentId);
+                try {
+                    const result = await resetAppointmentToScheduled(appointmentId);
+                    if (result.success) {
+                        await loadAppointments();
+                    } else {
+                        showError(result.error || (isRTL ? "فشل في إعادة تعيين الموعد" : "Failed to reset appointment"));
+                    }
+                } catch {
+                    showError(isRTL ? "حدث خطأ غير متوقع" : "An unexpected error occurred");
+                }
+                setActionLoading(null);
+            }
+        );
     };
 
     const handleCancel = (appointmentId: string) => {
@@ -323,14 +371,14 @@ export default function AppointmentsPage() {
                                                 {apt.patient?.full_name || "Unknown Patient"}
                                             </p>
                                             <p className={cn("text-xs md:hidden truncate", textMuted)}>
-                                                {apt.patient_notes || t.doctorDashboard.appointmentsPage.types.consultation}
+                                                {apt.chief_complaint || t.doctorDashboard.appointmentsPage.types.consultation}
                                             </p>
                                         </div>
                                     </div>
 
                                     {/* Purpose (Desktop Only) */}
                                     <div className={cn("hidden md:block md:col-span-3 text-sm truncate px-1", textSecondary)}>
-                                        {apt.patient_notes || t.doctorDashboard.appointmentsPage.types.consultation}
+                                        {apt.chief_complaint || t.doctorDashboard.appointmentsPage.types.consultation}
                                     </div>
 
                                     {/* Actions & Status (Desktop) */}
@@ -349,7 +397,7 @@ export default function AppointmentsPage() {
                                                     {apt.status === "scheduled" && (
                                                         <>
                                                             <button
-                                                                onClick={() => handleStartConsultation(apt.id)}
+                                                                onClick={() => handleStartConsultation(apt.id, apt.patient?.full_name || "Patient")}
                                                                 className="flex items-center gap-2 px-3 py-1.5 md:py-2 rounded-lg bg-teal-500 text-white hover:bg-teal-600 transition-all text-sm font-medium shadow-lg shadow-teal-500/20"
                                                             >
                                                                 {Icons.video}
@@ -367,7 +415,7 @@ export default function AppointmentsPage() {
                                                     {apt.status === "in_waiting_room" && (
                                                         <>
                                                             <button
-                                                                onClick={() => handleStartConsultation(apt.id)}
+                                                                onClick={() => handleStartConsultation(apt.id, apt.patient?.full_name || "Patient")}
                                                                 className="flex items-center gap-2 px-3 py-1.5 md:py-2 rounded-lg bg-teal-500 text-white hover:bg-teal-600 transition-all text-sm font-medium shadow-lg shadow-teal-500/20"
                                                             >
                                                                 {Icons.video}
@@ -382,13 +430,29 @@ export default function AppointmentsPage() {
                                                         </>
                                                     )}
                                                     {apt.status === "in_progress" && (
-                                                        <button
-                                                            onClick={() => handleEndConsultation(apt.id)}
-                                                            className="flex items-center gap-2 px-3 py-1.5 md:py-2 rounded-lg bg-green-500 text-white hover:bg-green-600 transition-all text-sm font-medium"
-                                                        >
-                                                            {Icons.check}
-                                                            <span>{isRTL ? "إنهاء" : "End"}</span>
-                                                        </button>
+                                                        <>
+                                                            <button
+                                                                onClick={() => router.push(`/${language}/dashboard/consultation/${apt.id}`)}
+                                                                className="flex items-center gap-2 px-3 py-1.5 md:py-2 rounded-lg bg-teal-500 text-white hover:bg-teal-600 transition-all text-sm font-medium shadow-lg shadow-teal-500/20"
+                                                            >
+                                                                {Icons.video}
+                                                                <span>{isRTL ? "متابعة" : "Resume"}</span>
+                                                            </button>
+                                                            <button
+                                                                onClick={() => handleEndConsultation(apt.id)}
+                                                                className="flex items-center gap-2 px-3 py-1.5 md:py-2 rounded-lg bg-green-500 text-white hover:bg-green-600 transition-all text-sm font-medium"
+                                                            >
+                                                                {Icons.check}
+                                                                <span>{isRTL ? "إنهاء" : "End"}</span>
+                                                            </button>
+                                                            <button
+                                                                onClick={() => handleResetToScheduled(apt.id, apt.patient?.full_name || "Patient")}
+                                                                className={cn("p-2 rounded-lg transition-colors", isDark ? "text-amber-400 hover:bg-amber-500/10" : "text-amber-600 hover:bg-amber-50")}
+                                                                title={isRTL ? "إعادة تعيين إلى مجدول" : "Reset to Scheduled"}
+                                                            >
+                                                                {Icons.undo}
+                                                            </button>
+                                                        </>
                                                     )}
                                                     {apt.status === "completed" && (
                                                         <button className={cn("px-3 py-1.5 text-sm font-medium rounded-lg border transition-colors", isDark ? "border-white/10 hover:bg-white/5 text-gray-400" : "border-gray-200 hover:bg-gray-50 text-gray-600")}>
@@ -462,14 +526,14 @@ export default function AppointmentsPage() {
                                                 {apt.patient?.full_name || "Unknown Patient"}
                                             </p>
                                             <p className={cn("text-xs md:hidden truncate", textMuted)}>
-                                                {apt.patient_notes || t.doctorDashboard.appointmentsPage.types.consultation}
+                                                {apt.chief_complaint || t.doctorDashboard.appointmentsPage.types.consultation}
                                             </p>
                                         </div>
                                     </div>
 
                                     {/* Purpose (Desktop) */}
                                     <div className={cn("hidden md:block md:col-span-3 text-sm truncate px-1", textSecondary)}>
-                                        {apt.patient_notes || t.doctorDashboard.appointmentsPage.types.consultation}
+                                        {apt.chief_complaint || t.doctorDashboard.appointmentsPage.types.consultation}
                                     </div>
 
                                     {/* Status */}

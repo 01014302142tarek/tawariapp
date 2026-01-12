@@ -516,7 +516,7 @@ export async function getPatientContacts(): Promise<{
             doctor_profiles!inner (
                 id,
                 profile_id,
-                profiles!inner (
+                profiles (
                     id,
                     full_name,
                     avatar_url,
@@ -594,7 +594,7 @@ export async function getDoctorContacts(): Promise<{
             patient_profiles!inner (
                 id,
                 profile_id,
-                profiles!inner (
+                profiles (
                     id,
                     full_name,
                     avatar_url,

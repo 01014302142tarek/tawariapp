@@ -117,7 +117,7 @@ export async function getDoctorAnalytics(): Promise<DoctorAnalyticsData> {
     // Get all completed appointments (for total revenue and consultations)
     const { data: allAppointments } = await supabase
         .from("appointments")
-        .select("id, patient_profile_id, scheduled_start, consultation_fee, status, patient_notes")
+        .select("id, patient_profile_id, scheduled_start, consultation_fee, status, chief_complaint")
         .eq("doctor_profile_id", doctorProfileId)
         .eq("status", "completed");
 

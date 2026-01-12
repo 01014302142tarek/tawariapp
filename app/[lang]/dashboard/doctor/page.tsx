@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -178,25 +178,29 @@ export default function Doctor2Dashboard() {
     // State for dashboard data
     const [dashboardData, setDashboardData] = useState<DoctorDashboardData | null>(null);
     const [isLoading, setIsLoading] = useState(true);
+    const [hasFetched, setHasFetched] = useState(false);
 
     // Handle hydration - only compute time-based values after mount
     useEffect(() => {
         setMounted(true);
     }, []);
-    
-    // Fetch dashboard data on mount
-    const fetchDashboardData = useCallback(async () => {
-        setIsLoading(true);
-        const result = await getDoctorDashboardData();
-        if (result.data) {
-            setDashboardData(result.data);
-        }
-        setIsLoading(false);
-    }, []);
 
+    // Fetch dashboard data on mount (only once)
     useEffect(() => {
+        if (hasFetched) return;
+
+        async function fetchDashboardData() {
+            setIsLoading(true);
+            const result = await getDoctorDashboardData();
+            if (result.data) {
+                setDashboardData(result.data);
+            }
+            setIsLoading(false);
+            setHasFetched(true);
+        }
+
         fetchDashboardData();
-    }, [fetchDashboardData]);
+    }, [hasFetched]);
 
     // Auto-sync doctor availability status based on schedule
     const { isOnline, nextAvailableSlot, isSyncing } = useDoctorAvailabilitySync({
@@ -209,10 +213,23 @@ export default function Doctor2Dashboard() {
         ? (new Date().getHours() < 12 ? t.doctorDashboard.greeting.morning : new Date().getHours() < 17 ? t.doctorDashboard.greeting.afternoon : t.doctorDashboard.greeting.evening)
         : t.doctorDashboard.greeting.morning; // Default for SSR
 
-    // Get doctor's name from profile (with "Dr." prefix)
-    const doctorName = profile?.profile.full_name
-        ? (isRTL ? `د. ${profile.profile.full_name.split(' ')[0]}` : `Dr. ${profile.profile.full_name.split(' ')[0]}`)
-        : "";
+    // Get doctor's name from profile (with "Dr." prefix if not already present)
+    const getDoctorDisplayName = () => {
+        if (!profile?.profile.full_name) return "";
+        const fullName = profile.profile.full_name;
+        const firstName = fullName.split(' ')[0];
+
+        // Check if name already starts with "Dr." or "د."
+        if (fullName.startsWith("Dr.") || fullName.startsWith("د.")) {
+            // Already has prefix, just use first part (e.g., "Dr. Nour" from "Dr. Nour El-Din")
+            const parts = fullName.split(' ');
+            return parts.length > 1 ? `${parts[0]} ${parts[1]}` : fullName;
+        }
+
+        // Add prefix
+        return isRTL ? `د. ${firstName}` : `Dr. ${firstName}`;
+    };
+    const doctorName = getDoctorDisplayName();
 
     // Format appointment time for display
     const formatTime = (dateString: string) => {
@@ -233,6 +250,25 @@ export default function Doctor2Dashboard() {
         status: apt.status,
         image: apt.patientAvatar || "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&crop=face"
     })) || [];
+
+    // Helper function to format relative time (defined before use)
+    const formatRelativeTime = (timestamp: string): string => {
+        const now = Date.now();
+        const then = new Date(timestamp).getTime();
+        const diffMinutes = Math.floor((now - then) / (1000 * 60));
+
+        if (diffMinutes < 1) {
+            return isRTL ? "الآن" : "Just now";
+        } else if (diffMinutes < 60) {
+            return isRTL ? `منذ ${formatNumber(diffMinutes)} دقيقة` : `${diffMinutes} ${t.common.time.minsAgo}`;
+        } else if (diffMinutes < 1440) {
+            const hours = Math.floor(diffMinutes / 60);
+            return isRTL ? `منذ ${formatNumber(hours)} ساعة` : `${hours} ${t.common.time.hoursAgo}`;
+        } else {
+            const days = Math.floor(diffMinutes / 1440);
+            return isRTL ? `منذ ${formatNumber(days)} يوم` : `${days} days ago`;
+        }
+    };
 
     // Get pending tasks from real data
     const pendingTasks = dashboardData?.pendingTasks.map(task => ({
@@ -266,25 +302,6 @@ export default function Doctor2Dashboard() {
         { id: 2, title: t.doctorDashboard.tips.sleepQuality, tip: t.doctorDashboard.tips.sleepQualityTip, category: t.doctorDashboard.tips.wellness },
         { id: 3, title: t.doctorDashboard.tips.hydration, tip: t.doctorDashboard.tips.hydrationTip, category: t.doctorDashboard.tips.general },
     ];
-
-    // Helper function to format relative time
-    const formatRelativeTime = (timestamp: string): string => {
-        const now = Date.now();
-        const then = new Date(timestamp).getTime();
-        const diffMinutes = Math.floor((now - then) / (1000 * 60));
-
-        if (diffMinutes < 1) {
-            return isRTL ? "الآن" : "Just now";
-        } else if (diffMinutes < 60) {
-            return isRTL ? `منذ ${formatNumber(diffMinutes)} دقيقة` : `${diffMinutes} ${t.common.time.minsAgo}`;
-        } else if (diffMinutes < 1440) {
-            const hours = Math.floor(diffMinutes / 60);
-            return isRTL ? `منذ ${formatNumber(hours)} ساعة` : `${hours} ${t.common.time.hoursAgo}`;
-        } else {
-            const days = Math.floor(diffMinutes / 1440);
-            return isRTL ? `منذ ${formatNumber(days)} يوم` : `${days} days ago`;
-        }
-    };
 
     return (
         <div className="relative overflow-hidden">
@@ -326,10 +343,10 @@ export default function Doctor2Dashboard() {
                 <section className="mb-6 md:mb-8">
                     <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
                         {[
-                            { label: t.doctorDashboard.stats.todayAppointments, value: dashboardData?.stats.todayAppointments || 0, icon: Icons.calendar },
-                            { label: t.doctorDashboard.stats.completed, value: dashboardData?.stats.completedToday || 0, icon: Icons.check },
-                            { label: t.doctorDashboard.stats.revenueToday, value: dashboardData?.stats.revenueToday || 0, suffix: isRTL ? " ج.م" : " EGP", icon: Icons.money },
-                            { label: t.doctorDashboard.stats.rating, value: dashboardData?.stats.avgRating || 0, suffix: isRTL ? "/٥" : "/5", icon: Icons.star },
+                            { label: t.doctorDashboard.stats.todayAppointments, value: dashboardData?.stats.todayAppointments || 0, icon: Icons.calendar, decimals: 0 },
+                            { label: t.doctorDashboard.stats.completed, value: dashboardData?.stats.completedToday || 0, icon: Icons.check, decimals: 0 },
+                            { label: t.doctorDashboard.stats.revenueToday, value: dashboardData?.stats.revenueToday || 0, suffix: isRTL ? " ج.م" : " EGP", icon: Icons.money, decimals: 0 },
+                            { label: t.doctorDashboard.stats.rating, value: dashboardData?.stats.avgRating || 0, suffix: isRTL ? "/٥" : "/5", icon: Icons.star, decimals: 1 },
                         ].map((stat, idx) => (
                             <GlowingCard key={idx} isDark={isDark} glowColor="teal" className="p-3 md:p-5">
                                 <div className="flex items-start justify-between mb-2 md:mb-3">
@@ -342,7 +359,7 @@ export default function Doctor2Dashboard() {
                                 </div>
                                 <div className="flex items-baseline gap-0.5 md:gap-1">
                                     <span className={cn("text-xl md:text-3xl font-bold", isDark ? "text-white" : "text-slate-900")}>
-                                        <AnimatedNumber value={stat.value} format={(v) => formatNumber(v)} />
+                                        <AnimatedNumber value={stat.value} decimals={stat.decimals} format={(v) => formatNumber(v)} />
                                     </span>
                                     {stat.suffix && <span className={cn("text-sm md:text-lg", isDark ? "text-gray-400" : "text-gray-500")}>{stat.suffix}</span>}
                                 </div>
@@ -360,7 +377,7 @@ export default function Doctor2Dashboard() {
                         <GlowingCard isDark={isDark} glowColor="teal" className="p-4 md:p-6">
                             <SectionHeader
                                 title={t.doctorDashboard.sections.todayAppointments}
-                                subtitle={`${formatNumber(appointments.length)} ${t.doctorDashboard.sections.scheduled}`}
+                                subtitle={`${formatNumber(appointments.filter(a => a.status === "scheduled" || a.status === "in_waiting_room").length)} ${t.doctorDashboard.sections.scheduled}`}
                                 isDark={isDark}
                                 action={
                                     <Link href={`/${language}/dashboard/doctor/appointments`} className="text-teal-500 hover:text-teal-400 text-sm font-medium transition-colors">
@@ -424,7 +441,7 @@ export default function Doctor2Dashboard() {
                                 action={
                                     <div className="flex items-center gap-2">
                                         <span className="w-2 h-2 bg-teal-500 rounded-full animate-pulse" />
-                                        <span className="text-teal-500 text-xs font-medium">{formatNumber(2)} {t.doctorDashboard.sections.unread}</span>
+                                        <span className="text-teal-500 text-xs font-medium">{formatNumber(recentMessages.filter(m => m.unread).length)} {t.doctorDashboard.sections.unread}</span>
                                     </div>
                                 }
                             />

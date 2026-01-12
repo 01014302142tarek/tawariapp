@@ -17,6 +17,10 @@ interface Toast {
 interface ToastContextType {
     toasts: Toast[];
     showToast: (message: string, type?: ToastType, duration?: number) => void;
+    showSuccess: (message: string, duration?: number) => void;
+    showError: (message: string, duration?: number) => void;
+    showWarning: (message: string, duration?: number) => void;
+    showInfo: (message: string, duration?: number) => void;
     showConfirm: (message: string, onConfirm: () => void, onCancel?: () => void) => void;
     removeToast: (id: string) => void;
 }
@@ -109,6 +113,27 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
         [removeToast]
     );
 
+    // Convenience helpers for common toast types
+    const showSuccess = useCallback(
+        (message: string, duration?: number) => showToast(message, "success", duration),
+        [showToast]
+    );
+
+    const showError = useCallback(
+        (message: string, duration?: number) => showToast(message, "error", duration),
+        [showToast]
+    );
+
+    const showWarning = useCallback(
+        (message: string, duration?: number) => showToast(message, "warning", duration),
+        [showToast]
+    );
+
+    const showInfo = useCallback(
+        (message: string, duration?: number) => showToast(message, "info", duration),
+        [showToast]
+    );
+
     const showConfirm = useCallback(
         (message: string, onConfirm: () => void, onCancel?: () => void) => {
             setConfirmState({
@@ -132,7 +157,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
     };
 
     return (
-        <ToastContext.Provider value={{ toasts, showToast, showConfirm, removeToast }}>
+        <ToastContext.Provider value={{ toasts, showToast, showSuccess, showError, showWarning, showInfo, showConfirm, removeToast }}>
             {children}
 
             {/* Toast Container */}

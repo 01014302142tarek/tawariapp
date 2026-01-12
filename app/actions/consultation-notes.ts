@@ -235,8 +235,8 @@ export async function getDoctorConsultationNotes(filters?: {
             *,
             appointments!inner (
                 scheduled_start,
-                patient_profiles!inner (
-                    profiles!inner (
+                patient_profiles (
+                    profiles (
                         full_name
                     )
                 )
@@ -317,8 +317,8 @@ export async function getPatientConsultationNotes(filters?: {
             appointments!inner (
                 scheduled_start,
                 patient_profile_id,
-                doctor_profiles!inner (
-                    profiles!inner (
+                doctor_profiles (
+                    profiles (
                         full_name
                     )
                 )

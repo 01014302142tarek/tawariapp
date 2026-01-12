@@ -127,9 +127,9 @@ export async function getDoctorDashboardData(): Promise<{
                 status,
                 appointment_type,
                 chief_complaint,
-                patient_profiles!inner (
+                patient_profiles (
                     id,
-                    profiles!inner (
+                    profiles (
                         id,
                         full_name,
                         avatar_url
@@ -233,8 +233,8 @@ export async function getDoctorDashboardData(): Promise<{
             id,
             scheduled_start,
             chief_complaint,
-            patient_profiles!inner (
-                profiles!inner (
+            patient_profiles (
+                profiles (
                     full_name
                 )
             )

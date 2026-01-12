@@ -8,8 +8,10 @@ import { cn } from "@/lib/utils";
 import { useTheme } from "../context/ThemeContext";
 import { useI18n } from "@/app/i18n";
 import { useAuth } from "@/app/context/AuthContext";
+import { useRouter } from "next/navigation";
 import { MovingBorder } from "@/components/ui/moving-border";
 import { NotificationDropdown } from "@/components/notifications";
+import { LanguageToggle } from "@/components/ui/language-toggle";
 
 // Icons
 const Icons = {
@@ -84,15 +86,26 @@ const Icons = {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
         </svg>
     ),
+    globe: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 017.843 4.582M12 3a8.997 8.997 0 00-7.843 4.582m15.686 0A11.953 11.953 0 0112 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0121 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0112 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 013 12c0-1.605.42-3.113 1.157-4.418" />
+        </svg>
+    ),
 };
 
-// Default avatar for users without profile photo
-const DEFAULT_AVATAR = "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop&crop=face";
+// Helper to get initials from name
+const getInitials = (name: string): string => {
+    if (!name) return "?";
+    const parts = name.trim().split(" ").filter(Boolean);
+    if (parts.length === 0) return "?";
+    if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
+    return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
+};
 
 // User Dropdown with Theme Appearance and Language submenu
 const UserDropdown = ({
     name,
-    image,
+    avatarUrl,
     isDark,
     themeMode,
     onSetThemeMode,
@@ -100,7 +113,7 @@ const UserDropdown = ({
     settingsHref
 }: {
     name: string;
-    image: string;
+    avatarUrl: string | null;
     isDark: boolean;
     themeMode: "system" | "light" | "dark";
     onSetThemeMode: (mode: "system" | "light" | "dark") => void;
@@ -151,10 +164,12 @@ const UserDropdown = ({
                     isDark ? "hover:bg-white/5" : "hover:bg-gray-100"
                 )}
             >
-                <div className="relative">
-                    <div className="w-9 h-9 md:w-10 md:h-10 rounded-full overflow-hidden border-2 border-teal-500/30">
-                        <Image src={image} alt={name} fill className="object-cover" unoptimized />
-                    </div>
+                <div className="relative w-9 h-9 md:w-10 md:h-10 rounded-full overflow-hidden border-2 border-teal-500/30 flex items-center justify-center bg-teal-500/10">
+                    {avatarUrl ? (
+                        <Image src={avatarUrl} alt={name} fill className="object-cover" unoptimized />
+                    ) : (
+                        <span className="text-sm font-semibold text-teal-500">{getInitials(name)}</span>
+                    )}
                 </div>
                 <div className="text-left hidden sm:block">
                     <p className={cn("text-sm font-medium", isDark ? "text-white" : "text-slate-900")}>{name}</p>
@@ -335,12 +350,13 @@ export default function Header({ onMenuClick }: { onMenuClick?: () => void }) {
     const { theme, themeMode, setThemeMode } = useTheme();
     const { t, isRTL, language } = useI18n();
     const { profile, signOut, isLoading } = useAuth();
+    const router = useRouter();
     const isDark = theme === "dark";
 
     // Get user's name and avatar from profile
     // Show "..." during loading, then actual name
     const userName = profile?.profile.full_name || (isLoading ? "..." : "");
-    const userAvatar = profile?.profile.avatar_url || DEFAULT_AVATAR;
+    const userAvatar = profile?.profile.avatar_url || null;
 
     const handleLogout = async () => {
         await signOut();
@@ -390,16 +406,24 @@ export default function Header({ onMenuClick }: { onMenuClick?: () => void }) {
                 {/* Right: Actions */}
                 <div className="flex items-center gap-2 md:gap-3">
                     {/* Video Call Button - visible on all screens */}
-                    <MovingBorder
-                        duration={3000}
-                        className="px-3 md:px-5 py-2 md:py-2.5 font-medium cursor-pointer"
-                        bgClassName={isDark ? "bg-slate-900/[0.8]" : "bg-white"}
+                    <button
+                        onClick={() => router.push(`/${language}/dashboard/patient/appointments`)}
+                        className="focus:outline-none"
                     >
-                        <div className={cn("flex items-center gap-1.5 md:gap-2 text-sm", isDark ? "text-white" : "text-teal-600")}>
-                            {Icons.video}
-                            <span>{t.doctorDashboard.actions.startVideoCall}</span>
-                        </div>
-                    </MovingBorder>
+                        <MovingBorder
+                            duration={3000}
+                            className="px-3 md:px-5 py-2 md:py-2.5 font-medium cursor-pointer"
+                            bgClassName={isDark ? "bg-slate-900/[0.8]" : "bg-white"}
+                        >
+                            <div className={cn("flex items-center gap-1.5 md:gap-2 text-sm", isDark ? "text-white" : "text-teal-600")}>
+                                {Icons.video}
+                                <span>{t.doctorDashboard.actions.startVideoCall}</span>
+                            </div>
+                        </MovingBorder>
+                    </button>
+
+                    {/* Language Toggle */}
+                    <LanguageToggle isDark={isDark} />
 
                     {/* Notifications - visible on all screens */}
                     <NotificationDropdown isDark={isDark} dashboardType="patient" />
@@ -407,7 +431,7 @@ export default function Header({ onMenuClick }: { onMenuClick?: () => void }) {
                     {/* User Dropdown */}
                     <UserDropdown
                         name={userName}
-                        image={userAvatar}
+                        avatarUrl={userAvatar}
                         isDark={isDark}
                         themeMode={themeMode}
                         onSetThemeMode={setThemeMode}

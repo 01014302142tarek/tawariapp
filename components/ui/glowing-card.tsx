@@ -153,7 +153,7 @@ export function GlowingCard({ children, className, glowColor = "teal", isDark }:
                 )}
             />
             {/* Content */}
-            <div className="relative z-10 p-5">{children}</div>
+            <div className="relative z-10">{children}</div>
         </motion.div>
     );
 }

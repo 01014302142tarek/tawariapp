@@ -69,37 +69,47 @@ export default function WaitingRoomPage() {
             const result = await getAppointmentById(appointmentId);
 
             if (result.error) {
+                console.error("Waiting room - getAppointmentById error:", result.error);
                 setError(result.error);
+                setLoading(false);
                 return;
             }
 
-            if (result.appointment) {
-                // If appointment is in_progress, redirect to call
-                if (result.appointment.status === "in_progress") {
-                    router.push(`/${language}/dashboard/consultation/${appointmentId}`);
-                    return;
-                }
+            if (!result.appointment) {
+                console.error("Waiting room - No appointment found");
+                setError(isRTL ? "لم يتم العثور على الموعد" : "Appointment not found");
+                setLoading(false);
+                return;
+            }
 
-                // If appointment was cancelled or completed, redirect back
-                if (result.appointment.status === "cancelled" || result.appointment.status === "completed") {
-                    router.push(`/${language}/dashboard/patient/appointments`);
-                    return;
-                }
+            const apt = result.appointment;
 
-                // Update doctor info
-                if (result.appointment.doctor?.full_name) {
-                    setDoctorName(result.appointment.doctor.full_name);
-                }
-                if (result.appointment.scheduled_start) {
-                    setAppointmentTime(new Date(result.appointment.scheduled_start).toLocaleTimeString(
-                        isRTL ? "ar-EG" : "en-US",
-                        { hour: "2-digit", minute: "2-digit" }
-                    ));
-                }
+            // If appointment is in_progress, redirect to call
+            if (apt.status === "in_progress") {
+                router.push(`/${language}/dashboard/consultation/${appointmentId}`);
+                return;
+            }
+
+            // If appointment was cancelled or completed, redirect back
+            if (apt.status === "cancelled" || apt.status === "completed") {
+                router.push(`/${language}/dashboard/patient/appointments`);
+                return;
+            }
+
+            // Update doctor info
+            if (apt.doctor?.full_name) {
+                setDoctorName(apt.doctor.full_name);
+            }
+            if (apt.scheduled_start) {
+                setAppointmentTime(new Date(apt.scheduled_start).toLocaleTimeString(
+                    isRTL ? "ar-EG" : "en-US",
+                    { hour: "2-digit", minute: "2-digit" }
+                ));
             }
 
             setLoading(false);
-        } catch {
+        } catch (err) {
+            console.error("Waiting room - Exception:", err);
             setError(isRTL ? "فشل في التحقق من الحالة" : "Failed to check status");
             setLoading(false);
         }

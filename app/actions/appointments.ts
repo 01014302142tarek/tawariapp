@@ -29,7 +29,7 @@ export interface Appointment {
     consultation_fee: number;
     cancellation_reason?: string;
     cancelled_by?: string;
-    patient_notes?: string;
+    chief_complaint?: string;
     created_at: string;
     updated_at: string;
 }
@@ -39,7 +39,6 @@ export interface AppointmentWithDetails extends Appointment {
         id: string;
         full_name: string;
         avatar_url?: string;
-        phone?: string;
     };
     doctor?: {
         id: string;
@@ -164,7 +163,7 @@ export async function bookAppointment(data: {
             scheduled_end: data.scheduledEnd,
             status: "scheduled",
             consultation_fee: consultationFee,
-            patient_notes: data.patientNotes || null,
+            chief_complaint: data.patientNotes || null,
         })
         .select("id")
         .single();
@@ -247,7 +246,7 @@ export async function getPatientAppointments(filters?: {
             doctor_profiles!inner (
                 id,
                 consultation_fee,
-                profiles!inner (
+                profiles (
                     id,
                     full_name,
                     avatar_url
@@ -428,11 +427,10 @@ export async function getDoctorAppointments(filters?: {
             *,
             patient_profiles!inner (
                 id,
-                profiles!inner (
+                profiles (
                     id,
                     full_name,
-                    avatar_url,
-                    phone
+                    avatar_url
                 )
             )
         `)
@@ -468,12 +466,11 @@ export async function getDoctorAppointments(filters?: {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const appointments: AppointmentWithDetails[] = (data || []).map((apt: any) => ({
         ...apt,
-        patient: {
+        patient: apt.patient_profiles ? {
             id: apt.patient_profiles.id,
-            full_name: apt.patient_profiles.profiles.full_name,
-            avatar_url: apt.patient_profiles.profiles.avatar_url,
-            phone: apt.patient_profiles.profiles.phone,
-        },
+            full_name: apt.patient_profiles.profiles?.full_name || "Unknown Patient",
+            avatar_url: apt.patient_profiles.profiles?.avatar_url,
+        } : undefined,
         patient_profiles: undefined,
     }));
 
@@ -597,7 +594,7 @@ export async function joinWaitingRoom(
  */
 export async function startConsultation(
     appointmentId: string
-): Promise<{ success: boolean; jitsiRoomId?: string; error?: string }> {
+): Promise<{ success: boolean; roomUrl?: string; error?: string }> {
     const supabase = await createClient();
 
     const { data: { user } } = await supabase.auth.getUser();
@@ -627,8 +624,53 @@ export async function startConsultation(
         return { success: false, error: "Doctor profile not found" };
     }
 
-    // Generate unique Jitsi room ID
-    const jitsiRoomId = `tawari-${appointmentId.slice(0, 8)}-${Date.now()}`;
+    // Create Daily.co room for video call
+    let roomUrl: string;
+    const dailyApiKey = process.env.DAILY_API_KEY;
+    const dailyDomain = process.env.NEXT_PUBLIC_DAILY_DOMAIN;
+
+    if (!dailyApiKey || !dailyDomain) {
+        console.error("Daily.co not configured - DAILY_API_KEY or NEXT_PUBLIC_DAILY_DOMAIN missing");
+        return { success: false, error: "Video service not configured" };
+    }
+
+    try {
+        const roomName = `tawari-${appointmentId.slice(0, 8)}-${Date.now()}`;
+
+        const response = await fetch("https://api.daily.co/v1/rooms", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${dailyApiKey}`,
+            },
+            body: JSON.stringify({
+                name: roomName,
+                privacy: "public",
+                properties: {
+                    exp: Math.floor(Date.now() / 1000) + 3600, // 1 hour expiry
+                    enable_screenshare: true,
+                    enable_chat: true,
+                    enable_knocking: false,
+                    start_video_off: false,
+                    start_audio_off: false,
+                    max_participants: 4,
+                    eject_at_room_exp: true,
+                },
+            }),
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            console.error("Daily API error:", error);
+            return { success: false, error: "Failed to create video room" };
+        }
+
+        const room = await response.json();
+        roomUrl = room.url;
+    } catch (err) {
+        console.error("Error creating Daily room:", err);
+        return { success: false, error: "Failed to create video room" };
+    }
 
     // Update appointment status
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -647,13 +689,13 @@ export async function startConsultation(
         return { success: false, error: updateError.message };
     }
 
-    // Create consultation session
+    // Create consultation session (storing Daily room URL in jitsi_room_id field for now)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { error: sessionError } = await (supabase as any)
         .from("consultation_sessions")
         .insert({
             appointment_id: appointmentId,
-            jitsi_room_id: jitsiRoomId,
+            jitsi_room_id: roomUrl, // Stores Daily room URL
             started_at: new Date().toISOString(),
             recording_consent: false,
         });
@@ -663,7 +705,71 @@ export async function startConsultation(
         // Don't fail the whole operation, just log
     }
 
-    return { success: true, jitsiRoomId };
+    return { success: true, roomUrl };
+}
+
+/**
+ * Reset an in-progress appointment back to scheduled status
+ * This is useful when a consultation was accidentally started
+ */
+export async function resetAppointmentToScheduled(
+    appointmentId: string
+): Promise<{ success: boolean; error?: string }> {
+    const supabase = await createClient();
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+        return { success: false, error: "Not authenticated" };
+    }
+
+    const { data: profileData } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("user_id", user.id)
+        .single();
+
+    const profile = profileData as { id: string } | null;
+    if (!profile) {
+        return { success: false, error: "Profile not found" };
+    }
+
+    const { data: doctorProfileData } = await supabase
+        .from("doctor_profiles")
+        .select("id")
+        .eq("profile_id", profile.id)
+        .single();
+
+    const doctorProfile = doctorProfileData as { id: string } | null;
+    if (!doctorProfile) {
+        return { success: false, error: "Doctor profile not found" };
+    }
+
+    // Reset appointment status back to scheduled
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error: updateError } = await (supabase as any)
+        .from("appointments")
+        .update({
+            status: "scheduled",
+            actual_start: null,
+            actual_end: null,
+        })
+        .eq("id", appointmentId)
+        .eq("doctor_profile_id", doctorProfile.id)
+        .eq("status", "in_progress");
+
+    if (updateError) {
+        console.error("Error resetting appointment:", updateError);
+        return { success: false, error: updateError.message };
+    }
+
+    // Delete the consultation session if it exists
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (supabase as any)
+        .from("consultation_sessions")
+        .delete()
+        .eq("appointment_id", appointmentId);
+
+    return { success: true };
 }
 
 /**
@@ -812,6 +918,41 @@ export async function getConsultationSession(
     return { session: data as ConsultationSession | null };
 }
 
+/**
+ * Get current user's info for Jitsi display name
+ */
+export async function getConsultationUserInfo(): Promise<{
+    displayName: string;
+    email?: string;
+    role: "doctor" | "patient";
+} | null> {
+    const supabase = await createClient();
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return null;
+
+    const { data: profileData } = await supabase
+        .from("profiles")
+        .select("full_name, role")
+        .eq("user_id", user.id)
+        .single();
+
+    const profile = profileData as { full_name: string; role: string } | null;
+    if (!profile) return null;
+
+    // Add "Dr." prefix for doctors only if not already present
+    let displayName = profile.full_name;
+    if (profile.role === "doctor" && !profile.full_name.toLowerCase().startsWith("dr.") && !profile.full_name.toLowerCase().startsWith("dr ")) {
+        displayName = `Dr. ${profile.full_name}`;
+    }
+
+    return {
+        displayName,
+        email: user.email,
+        role: profile.role as "doctor" | "patient",
+    };
+}
+
 // ============================================
 // Doctor Listing (for patients to book)
 // ============================================
@@ -857,7 +998,7 @@ export async function getAvailableDoctors(filters?: {
             rating_average,
             rating_count,
             is_available_now,
-            profiles!doctor_profiles_profile_id_fkey (
+            profiles (
                 id,
                 full_name,
                 avatar_url
@@ -1062,8 +1203,8 @@ export async function rescheduleAppointment(data: {
         return { success: false, error: "Not authorized to reschedule this appointment" };
     }
 
-    // Only scheduled or confirmed appointments can be rescheduled
-    if (!["scheduled", "confirmed"].includes(appointment.status)) {
+    // Only scheduled appointments can be rescheduled
+    if (!["scheduled"].includes(appointment.status)) {
         return { success: false, error: "Only scheduled appointments can be rescheduled" };
     }
 
@@ -1075,7 +1216,7 @@ export async function rescheduleAppointment(data: {
         .neq("id", data.appointmentId) // Exclude current appointment
         .lt("scheduled_start", data.newScheduledEnd)
         .gt("scheduled_end", data.newScheduledStart)
-        .in("status", ["scheduled", "confirmed", "in_waiting_room", "in_progress"]);
+        .in("status", ["scheduled", "in_waiting_room", "in_progress"]);
 
     if (existingAppointments && existingAppointments.length > 0) {
         return { success: false, error: "The new time slot is not available" };
@@ -1119,48 +1260,51 @@ export async function getAppointmentById(
         .from("appointments")
         .select(`
             *,
-            doctor_profiles!inner (
+            doctor_profiles (
                 id,
                 consultation_fee,
-                profiles!inner (
+                profiles (
                     id,
                     full_name,
                     avatar_url
                 )
             ),
-            patient_profiles!inner (
+            patient_profiles (
                 id,
-                profiles!inner (
+                profiles (
                     id,
                     full_name,
-                    avatar_url,
-                    phone
+                    avatar_url
                 )
             )
         `)
         .eq("id", appointmentId)
         .single();
 
-    if (error || !data) {
-        return { appointment: null, error: error?.message || "Appointment not found" };
+    if (error) {
+        console.error("getAppointmentById error:", error);
+        return { appointment: null, error: error.message };
+    }
+
+    if (!data) {
+        return { appointment: null, error: "Appointment not found" };
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const apt = data as any;
     const appointment: AppointmentWithDetails = {
         ...apt,
-        doctor: {
+        doctor: apt.doctor_profiles ? {
             id: apt.doctor_profiles.id,
-            full_name: apt.doctor_profiles.profiles.full_name,
-            avatar_url: apt.doctor_profiles.profiles.avatar_url,
+            full_name: apt.doctor_profiles.profiles?.full_name || "Unknown Doctor",
+            avatar_url: apt.doctor_profiles.profiles?.avatar_url,
             consultation_fee: apt.doctor_profiles.consultation_fee,
-        },
-        patient: {
+        } : undefined,
+        patient: apt.patient_profiles ? {
             id: apt.patient_profiles.id,
-            full_name: apt.patient_profiles.profiles.full_name,
-            avatar_url: apt.patient_profiles.profiles.avatar_url,
-            phone: apt.patient_profiles.profiles.phone,
-        },
+            full_name: apt.patient_profiles.profiles?.full_name || "Unknown Patient",
+            avatar_url: apt.patient_profiles.profiles?.avatar_url,
+        } : undefined,
         doctor_profiles: undefined,
         patient_profiles: undefined,
     };
@@ -1210,7 +1354,7 @@ export async function getDoctorById(
             languages,
             education,
             hospital,
-            profiles!doctor_profiles_profile_id_fkey (
+            profiles (
                 id,
                 full_name,
                 avatar_url
@@ -1241,8 +1385,8 @@ export async function getDoctorById(
             rating,
             comment,
             created_at,
-            patient_profiles!inner (
-                profiles!inner (
+            patient_profiles (
+                profiles (
                     full_name
                 )
             )
@@ -1357,7 +1501,7 @@ export async function getDoctorPatientsWithDetails(): Promise<{
                 id,
                 profile_id,
                 date_of_birth,
-                profiles!inner (
+                profiles (
                     id,
                     full_name,
                     avatar_url
@@ -1365,7 +1509,7 @@ export async function getDoctorPatientsWithDetails(): Promise<{
             )
         `)
         .eq("doctor_profile_id", doctorProfile.id)
-        .in("status", ["completed", "in_progress", "scheduled", "confirmed"])
+        .in("status", ["completed", "in_progress", "scheduled", "in_waiting_room"])
         .order("scheduled_start", { ascending: false });
 
     if (error) {
@@ -1489,10 +1633,10 @@ export async function getDoctorConsultations(options?: {
             actual_start,
             actual_end,
             status,
-            patient_notes,
+            chief_complaint,
             patient_profiles!inner (
                 id,
-                profiles!inner (
+                profiles (
                     full_name,
                     avatar_url
                 )
@@ -1530,7 +1674,7 @@ export async function getDoctorConsultations(options?: {
             appointment_id: apt.id,
             patient_name: apt.patient_profiles?.profiles?.full_name || "Unknown",
             patient_avatar: apt.patient_profiles?.profiles?.avatar_url,
-            consultation_type: apt.patient_notes || undefined,
+            consultation_type: apt.chief_complaint || undefined,
             duration_minutes: durationMinutes,
             scheduled_start: apt.scheduled_start,
             actual_start: apt.actual_start,
