@@ -10,7 +10,6 @@ export interface PatientDashboardStats {
     upcomingAppointments: number;
     activePrescriptions: number;
     unreadMessages: number;
-    healthScore: number; // Placeholder for future health score calculation
 }
 
 export interface UpcomingAppointment {
@@ -49,136 +48,6 @@ export interface PatientDashboardData {
     upcomingAppointments: UpcomingAppointment[];
     activePrescriptions: ActivePrescription[];
     recentActivity: RecentActivity[];
-}
-
-// ============================================
-// Health Score Calculation
-// ============================================
-
-/**
- * Calculate patient health score based on engagement metrics
- * Score ranges from 0-100:
- * - Appointment adherence: up to 35 points
- * - Recent checkups: up to 25 points
- * - Active prescriptions (following treatment): up to 20 points
- * - Medical record completeness: up to 20 points
- */
-async function calculateHealthScore(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    supabase: any,
-    patientProfileId: string
-): Promise<number> {
-    let score = 0;
-
-    // 1. Appointment adherence (35 points max)
-    // Completed appointments vs total scheduled (excluding future ones)
-    const { data: allAppointments } = await supabase
-        .from("appointments")
-        .select("status, scheduled_start")
-        .eq("patient_profile_id", patientProfileId)
-        .lt("scheduled_start", new Date().toISOString());
-
-    if (allAppointments && allAppointments.length > 0) {
-        const completed = allAppointments.filter(
-            (a: { status: string }) => a.status === "completed"
-        ).length;
-        const total = allAppointments.length;
-        const adherenceRate = completed / total;
-        score += Math.round(adherenceRate * 35);
-    } else {
-        // No appointment history - give base points for new patients
-        score += 20;
-    }
-
-    // 2. Recent checkups (25 points max)
-    // Full points if seen within 30 days, decreasing over time
-    const { data: recentAppointment } = await supabase
-        .from("appointments")
-        .select("scheduled_start")
-        .eq("patient_profile_id", patientProfileId)
-        .eq("status", "completed")
-        .order("scheduled_start", { ascending: false })
-        .limit(1)
-        .single();
-
-    if (recentAppointment) {
-        const daysSinceLastVisit = Math.floor(
-            (Date.now() - new Date(recentAppointment.scheduled_start).getTime()) /
-            (1000 * 60 * 60 * 24)
-        );
-
-        if (daysSinceLastVisit <= 30) {
-            score += 25;
-        } else if (daysSinceLastVisit <= 60) {
-            score += 20;
-        } else if (daysSinceLastVisit <= 90) {
-            score += 15;
-        } else if (daysSinceLastVisit <= 180) {
-            score += 10;
-        } else if (daysSinceLastVisit <= 365) {
-            score += 5;
-        }
-        // Over a year = 0 points for this category
-    } else {
-        // Never visited - give some base points for new patients
-        score += 10;
-    }
-
-    // 3. Active prescriptions - following treatment (20 points max)
-    // Having active prescriptions shows engagement with treatment
-    const { count: activePrescriptionCount } = await supabase
-        .from("prescriptions")
-        .select("id", { count: "exact", head: true })
-        .eq("patient_profile_id", patientProfileId)
-        .eq("status", "active");
-
-    if (activePrescriptionCount !== null) {
-        if (activePrescriptionCount === 0) {
-            // No active prescriptions could mean healthy or not following treatment
-            // Check if they had any prescriptions that are now completed
-            const { count: completedPrescriptions } = await supabase
-                .from("prescriptions")
-                .select("id", { count: "exact", head: true })
-                .eq("patient_profile_id", patientProfileId)
-                .eq("status", "completed");
-
-            if (completedPrescriptions && completedPrescriptions > 0) {
-                // Had prescriptions and completed them - good!
-                score += 20;
-            } else {
-                // Never had prescriptions - might be healthy, give base points
-                score += 15;
-            }
-        } else {
-            // Has active prescriptions - following treatment
-            score += 20;
-        }
-    } else {
-        score += 15; // Default for new patients
-    }
-
-    // 4. Medical record completeness (20 points max)
-    const { count: recordCount } = await supabase
-        .from("medical_records")
-        .select("id", { count: "exact", head: true })
-        .eq("patient_profile_id", patientProfileId);
-
-    if (recordCount !== null) {
-        if (recordCount >= 5) {
-            score += 20; // Comprehensive records
-        } else if (recordCount >= 3) {
-            score += 15;
-        } else if (recordCount >= 1) {
-            score += 10;
-        } else {
-            score += 5; // No records but that's okay for new patients
-        }
-    } else {
-        score += 5;
-    }
-
-    // Ensure score is between 0 and 100
-    return Math.min(100, Math.max(0, score));
 }
 
 // ============================================
@@ -222,13 +91,15 @@ export async function getPatientDashboardData(): Promise<{
         return { data: null, error: "Patient profile not found" };
     }
 
-    // Fetch all data in parallel
+    // Fetch all data in parallel (optimized - all queries run concurrently)
     const [
         appointmentsResult,
         prescriptionsResult,
         messagesResult,
-        activityResult,
-        healthScore,
+        recentAppointmentsResult,
+        recentPrescriptionsResult,
+        recentMessagesResult,
+        recentRecordsResult,
     ] = await Promise.all([
         // Get upcoming appointments
         supabase
@@ -289,12 +160,73 @@ export async function getPatientDashboardData(): Promise<{
             .eq("recipient_profile_id", profile.id)
             .eq("is_read", false),
 
-        // Get recent activity (last 10 items from various sources)
-        getRecentActivityForPatient(supabase, patientProfile.id, profile.id),
+        // Recent activity queries - all in parallel
+        // Recent completed appointments
+        supabase
+            .from("appointments")
+            .select(`
+                id,
+                status,
+                actual_end,
+                doctor_profiles!inner (
+                    profiles!inner (
+                        full_name
+                    )
+                )
+            `)
+            .eq("patient_profile_id", patientProfile.id)
+            .eq("status", "completed")
+            .order("actual_end", { ascending: false })
+            .limit(3),
 
-        // Calculate health score
-        calculateHealthScore(supabase, patientProfile.id),
+        // Recent prescriptions
+        supabase
+            .from("prescriptions")
+            .select(`
+                id,
+                medication_name,
+                prescribed_at,
+                doctor_profiles!inner (
+                    profiles!inner (
+                        full_name
+                    )
+                )
+            `)
+            .eq("patient_profile_id", patientProfile.id)
+            .order("prescribed_at", { ascending: false })
+            .limit(3),
+
+        // Recent messages received
+        supabase
+            .from("messages")
+            .select(`
+                id,
+                content,
+                created_at,
+                sender:profiles!messages_sender_profile_id_fkey (
+                    full_name
+                )
+            `)
+            .eq("recipient_profile_id", profile.id)
+            .order("created_at", { ascending: false })
+            .limit(3),
+
+        // Recent medical records
+        supabase
+            .from("medical_records")
+            .select("id, title, record_type, created_at")
+            .eq("patient_profile_id", patientProfile.id)
+            .order("created_at", { ascending: false })
+            .limit(2),
     ]);
+
+    // Build recent activity from parallel query results
+    const activityResult = buildRecentActivity(
+        recentAppointmentsResult.data,
+        recentPrescriptionsResult.data,
+        recentMessagesResult.data,
+        recentRecordsResult.data
+    );
 
     // Process appointments
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -326,7 +258,6 @@ export async function getPatientDashboardData(): Promise<{
         upcomingAppointments: upcomingAppointments.length,
         activePrescriptions: activePrescriptions.length,
         unreadMessages: messagesResult.count || 0,
-        healthScore,
     };
 
     return {
@@ -341,36 +272,22 @@ export async function getPatientDashboardData(): Promise<{
 }
 
 /**
- * Helper function to get recent activity for patient
+ * Build recent activity from pre-fetched query results (runs after parallel queries)
  */
-async function getRecentActivityForPatient(
+function buildRecentActivity(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    supabase: any,
-    patientProfileId: string,
-    profileId: string
-): Promise<RecentActivity[]> {
+    appointments: any[] | null,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    prescriptions: any[] | null,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    messages: any[] | null,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    records: any[] | null
+): RecentActivity[] {
     const activities: RecentActivity[] = [];
 
-    // Get recent completed appointments
-    const { data: appointments } = await supabase
-        .from("appointments")
-        .select(`
-            id,
-            status,
-            actual_end,
-            doctor_profiles!inner (
-                profiles!inner (
-                    full_name
-                )
-            )
-        `)
-        .eq("patient_profile_id", patientProfileId)
-        .eq("status", "completed")
-        .order("actual_end", { ascending: false })
-        .limit(3);
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (appointments || []).forEach((apt: any) => {
+    // Process appointments
+    (appointments || []).forEach((apt) => {
         activities.push({
             id: `apt-${apt.id}`,
             type: "appointment",
@@ -380,25 +297,8 @@ async function getRecentActivityForPatient(
         });
     });
 
-    // Get recent prescriptions
-    const { data: prescriptions } = await supabase
-        .from("prescriptions")
-        .select(`
-            id,
-            medication_name,
-            prescribed_at,
-            doctor_profiles!inner (
-                profiles!inner (
-                    full_name
-                )
-            )
-        `)
-        .eq("patient_profile_id", patientProfileId)
-        .order("prescribed_at", { ascending: false })
-        .limit(3);
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (prescriptions || []).forEach((rx: any) => {
+    // Process prescriptions
+    (prescriptions || []).forEach((rx) => {
         activities.push({
             id: `rx-${rx.id}`,
             type: "prescription",
@@ -409,23 +309,8 @@ async function getRecentActivityForPatient(
         });
     });
 
-    // Get recent messages received
-    const { data: messages } = await supabase
-        .from("messages")
-        .select(`
-            id,
-            content,
-            created_at,
-            sender:profiles!messages_sender_profile_id_fkey (
-                full_name
-            )
-        `)
-        .eq("recipient_profile_id", profileId)
-        .order("created_at", { ascending: false })
-        .limit(3);
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (messages || []).forEach((msg: any) => {
+    // Process messages
+    (messages || []).forEach((msg) => {
         activities.push({
             id: `msg-${msg.id}`,
             type: "message",
@@ -436,16 +321,8 @@ async function getRecentActivityForPatient(
         });
     });
 
-    // Get recent medical records
-    const { data: records } = await supabase
-        .from("medical_records")
-        .select("id, title, record_type, created_at")
-        .eq("patient_profile_id", patientProfileId)
-        .order("created_at", { ascending: false })
-        .limit(2);
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (records || []).forEach((rec: any) => {
+    // Process records
+    (records || []).forEach((rec) => {
         activities.push({
             id: `rec-${rec.id}`,
             type: "record",
@@ -499,7 +376,7 @@ export async function getPatientDashboardStats(): Promise<{
     }
 
     // Fetch counts in parallel
-    const [appointmentsCount, prescriptionsCount, messagesCount, healthScore] = await Promise.all([
+    const [appointmentsCount, prescriptionsCount, messagesCount] = await Promise.all([
         supabase
             .from("appointments")
             .select("id", { count: "exact", head: true })
@@ -518,8 +395,6 @@ export async function getPatientDashboardStats(): Promise<{
             .select("id", { count: "exact", head: true })
             .eq("recipient_profile_id", profile.id)
             .eq("is_read", false),
-
-        calculateHealthScore(supabase, patientProfile.id),
     ]);
 
     return {
@@ -527,7 +402,6 @@ export async function getPatientDashboardStats(): Promise<{
             upcomingAppointments: appointmentsCount.count || 0,
             activePrescriptions: prescriptionsCount.count || 0,
             unreadMessages: messagesCount.count || 0,
-            healthScore,
         },
     };
 }

@@ -215,7 +215,6 @@ export default function PatientDashboard() {
         upcomingAppointments: 0,
         activePrescriptions: 0,
         unreadMessages: 0,
-        healthScore: 0,
     };
 
     const quickActions = [
@@ -265,12 +264,11 @@ export default function PatientDashboard() {
 
                 {/* Stats Row */}
                 <section className="mb-6 md:mb-8">
-                    <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+                    <div className="grid grid-cols-3 gap-3 md:gap-4">
                         {[
                             { label: t.patientDashboard.stats.upcomingAppointments, value: stats.upcomingAppointments, icon: Icons.calendar },
                             { label: t.patientDashboard.stats.activePrescriptions, value: stats.activePrescriptions, icon: Icons.prescription },
                             { label: t.patientDashboard.stats.unreadMessages, value: stats.unreadMessages, icon: Icons.message },
-                            { label: t.patientDashboard.stats.healthScore, value: stats.healthScore, suffix: "%", icon: Icons.heart },
                         ].map((stat, idx) => (
                             <GlowingCard key={idx} glowColor="teal" className="p-3 md:p-5" isDark={isDark}>
                                 <div className="flex items-start justify-between mb-2 md:mb-3">
@@ -289,7 +287,6 @@ export default function PatientDashboard() {
                                             <AnimatedNumber value={stat.value} format={(v) => formatNumber(v)} />
                                         </span>
                                     )}
-                                    {stat.suffix && <span className={cn("text-base md:text-lg", isDark ? "text-gray-400" : "text-gray-500")}>{formatNumber(stat.suffix)}</span>}
                                 </div>
                                 <p className={cn("text-[11px] md:text-sm mt-1 leading-tight", isDark ? "text-gray-500" : "text-gray-600")}>{stat.label}</p>
                             </GlowingCard>
