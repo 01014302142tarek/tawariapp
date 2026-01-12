@@ -212,7 +212,7 @@ export default function Doctor2Dashboard() {
     // Get doctor's name from profile (with "Dr." prefix)
     const doctorName = profile?.profile.full_name
         ? (isRTL ? `د. ${profile.profile.full_name.split(' ')[0]}` : `Dr. ${profile.profile.full_name.split(' ')[0]}`)
-        : t.common.demoNames.drHassan;
+        : "";
 
     // Format appointment time for display
     const formatTime = (dateString: string) => {

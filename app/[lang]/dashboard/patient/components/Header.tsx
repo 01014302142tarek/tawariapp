@@ -334,11 +334,12 @@ const UserDropdown = ({
 export default function Header({ onMenuClick }: { onMenuClick?: () => void }) {
     const { theme, themeMode, setThemeMode } = useTheme();
     const { t, isRTL, language } = useI18n();
-    const { profile, signOut } = useAuth();
+    const { profile, signOut, isLoading } = useAuth();
     const isDark = theme === "dark";
 
     // Get user's name and avatar from profile
-    const userName = profile?.profile.full_name || t.common.demoNames.sarahJohnson;
+    // Show "..." during loading, then actual name
+    const userName = profile?.profile.full_name || (isLoading ? "..." : "");
     const userAvatar = profile?.profile.avatar_url || DEFAULT_AVATAR;
 
     const handleLogout = async () => {

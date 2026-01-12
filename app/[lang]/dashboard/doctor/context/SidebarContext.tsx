@@ -73,7 +73,7 @@ export function DoctorSidebarProvider({ children }: { children: React.ReactNode 
                 .from("messages")
                 .select("id", { count: "exact", head: true })
                 .eq("recipient_profile_id", profileIdRef.current)
-                .eq("read", false);
+                .eq("is_read", false);
 
             setData({
                 unreadMessages: messagesResult.count || 0,
@@ -113,7 +113,7 @@ export function DoctorSidebarProvider({ children }: { children: React.ReactNode 
                 (payload) => {
                     // Directly update count for new unread messages
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    if (!(payload.new as any).read) {
+                    if (!(payload.new as any).is_read) {
                         setData(prev => ({ ...prev, unreadMessages: prev.unreadMessages + 1 }));
                     }
                 }
@@ -132,7 +132,7 @@ export function DoctorSidebarProvider({ children }: { children: React.ReactNode 
                     const newMsg = payload.new as any;
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     const oldMsg = payload.old as any;
-                    if (newMsg.read && !oldMsg.read) {
+                    if (newMsg.is_read && !oldMsg.is_read) {
                         setData(prev => ({ ...prev, unreadMessages: Math.max(0, prev.unreadMessages - 1) }));
                     }
                 }

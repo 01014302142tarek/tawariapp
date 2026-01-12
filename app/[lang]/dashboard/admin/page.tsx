@@ -118,7 +118,7 @@ export default function AdminDashboard() {
     const isDark = theme === "dark";
 
     // Get admin's first name from profile
-    const adminName = profile?.profile.full_name?.split(' ')[0] || (isRTL ? "مدير" : "Admin");
+    const adminName = profile?.profile.full_name?.split(' ')[0] || "";
 
     // Use state for time-based greeting to avoid hydration mismatch
     const [greetingKey, setGreetingKey] = useState<"morning" | "afternoon" | "evening">("morning");

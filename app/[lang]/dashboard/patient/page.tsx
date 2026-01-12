@@ -127,7 +127,7 @@ export default function PatientDashboard() {
     }, [fetchDashboardData]);
 
     // Get user's first name from profile
-    const userName = profile?.profile.full_name?.split(' ')[0] || (isRTL ? "سارة" : "Sarah");
+    const userName = profile?.profile.full_name?.split(' ')[0] || "";
 
     // Compute greeting only after mount to avoid hydration mismatch
     // Use doctorDashboard greeting which has morning/afternoon/evening
