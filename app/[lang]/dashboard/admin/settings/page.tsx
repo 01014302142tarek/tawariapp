@@ -102,8 +102,8 @@ const SettingsSection = ({
     onToggle,
     isDark,
     t,
-    disabled,
-    language
+    isRTL,
+    disabled
 }: {
     title: string;
     icon: React.ReactNode;
@@ -112,8 +112,8 @@ const SettingsSection = ({
     onToggle: (section: string, id: string) => void;
     isDark: boolean;
     t: ReturnType<typeof useI18n>['t'];
+    isRTL: boolean;
     disabled?: boolean;
-    language?: string;
 }) => {
     return (
         <GlowingCard glowColor="teal" className="p-4 md:p-6" isDark={isDark}>
@@ -126,7 +126,7 @@ const SettingsSection = ({
                 </div>
                 {disabled && (
                     <span className="text-xs px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-500">
-                        {language === "ar" ? "للعرض فقط" : "View Only"}
+                        {isRTL ? "للعرض فقط" : "View Only"}
                     </span>
                 )}
             </div>
@@ -572,10 +572,10 @@ export default function SettingsPage() {
                         </span>
                     </div>
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
-                        <SettingsSection title={t.adminDashboard.settingsPage.sections.general} icon={Icons.cog} settings={general} section="general" onToggle={toggleSetting} isDark={isDark} t={t} disabled language={language} />
-                        <SettingsSection title={t.adminDashboard.settingsPage.sections.security} icon={Icons.shield} settings={security} section="security" onToggle={toggleSetting} isDark={isDark} t={t} disabled language={language} />
-                        <SettingsSection title={t.adminDashboard.settingsPage.sections.notifications} icon={Icons.bell} settings={platformNotifications} section="platformNotifications" onToggle={toggleSetting} isDark={isDark} t={t} disabled language={language} />
-                        <SettingsSection title={t.adminDashboard.settingsPage.sections.payment} icon={Icons.creditCard} settings={payment} section="payment" onToggle={toggleSetting} isDark={isDark} t={t} disabled language={language} />
+                        <SettingsSection title={t.adminDashboard.settingsPage.sections.general} icon={Icons.cog} settings={general} section="general" onToggle={toggleSetting} isDark={isDark} t={t} isRTL={isRTL} disabled />
+                        <SettingsSection title={t.adminDashboard.settingsPage.sections.security} icon={Icons.shield} settings={security} section="security" onToggle={toggleSetting} isDark={isDark} t={t} isRTL={isRTL} disabled />
+                        <SettingsSection title={t.adminDashboard.settingsPage.sections.notifications} icon={Icons.bell} settings={platformNotifications} section="platformNotifications" onToggle={toggleSetting} isDark={isDark} t={t} isRTL={isRTL} disabled />
+                        <SettingsSection title={t.adminDashboard.settingsPage.sections.payment} icon={Icons.creditCard} settings={payment} section="payment" onToggle={toggleSetting} isDark={isDark} t={t} isRTL={isRTL} disabled />
                     </div>
                 </div>
 

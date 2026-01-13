@@ -270,10 +270,10 @@ export default function PatientDashboard() {
     };
 
     const quickActions = [
+        { title: isRTL ? "استشارة عاجلة" : "Urgent Care", description: isRTL ? "تحدث مع طبيب الآن" : "Talk to a doctor now", icon: Icons.video, href: `/${language}/dashboard/patient/urgent-care`, highlight: true },
         { title: t.patientDashboard.actions.bookAppointment, description: t.patientDashboard.actionDesc.bookAppointment, icon: Icons.calendar, href: `/${language}/dashboard/patient/doctors` },
         { title: t.patientDashboard.actions.viewPrescriptions, description: t.patientDashboard.actionDesc.viewPrescriptions, icon: Icons.prescription, href: `/${language}/dashboard/patient/prescriptions` },
         { title: t.patientDashboard.actions.messageDoctor, description: t.patientDashboard.actionDesc.messageDoctor, icon: Icons.message, href: `/${language}/dashboard/patient/messages` },
-        { title: t.patientDashboard.actions.medicalRecords, description: t.patientDashboard.actionDesc.medicalRecords, icon: Icons.folder, href: `/${language}/dashboard/patient/records` },
     ];
 
     return (

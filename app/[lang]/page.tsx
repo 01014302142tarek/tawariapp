@@ -246,9 +246,12 @@ function LandingPageContent() {
                 <Link href="#specialties" className={`${textSecondary} hover:text-teal-500 py-2`}>{t.nav.specialties}</Link>
                 <Link href="#doctors" className={`${textSecondary} hover:text-teal-500 py-2`}>{t.nav.doctors}</Link>
                 <Link href="#for-doctors" className={`${textSecondary} hover:text-teal-500 py-2`}>{t.nav.forDoctors}</Link>
-                <div className={`flex items-center gap-3 pt-4 border-t ${borderColor}`}>
-                  <LanguageToggle />
-                  <Link href={`/${language}/get-started`} className="bg-teal-500 hover:bg-teal-400 text-white font-semibold px-5 py-2 rounded-full flex-1 text-center">{t.nav.getStarted}</Link>
+                <div className={`flex flex-col gap-3 pt-4 border-t ${borderColor}`}>
+                  <div className="flex items-center gap-3">
+                    <LanguageToggle />
+                    <Link href={`/${language}/login`} className={`${textSecondary} hover:${textPrimary} font-medium text-sm px-4 py-2 transition-colors`}>{t.nav.login}</Link>
+                  </div>
+                  <Link href={`/${language}/get-started`} className="bg-teal-500 hover:bg-teal-400 text-white font-semibold px-5 py-2 rounded-full text-center">{t.nav.getStarted}</Link>
                 </div>
               </div>
             </div>

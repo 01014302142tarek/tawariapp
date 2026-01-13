@@ -404,6 +404,24 @@ export default function Header({ onMenuClick }: { onMenuClick?: () => void }) {
 
                 {/* Right: Actions */}
                 <div className="flex items-center gap-2 md:gap-3">
+                    {/* Urgent Care Button - visible on all screens */}
+                    <button
+                        onClick={() => router.push(`/${language}/dashboard/patient/urgent-care`)}
+                        className="focus:outline-none"
+                    >
+                        <MovingBorder
+                            duration={2500}
+                            className="px-3 md:px-5 py-2 md:py-2.5 font-medium cursor-pointer"
+                            bgClassName={isDark ? "bg-emerald-950/[0.8]" : "bg-emerald-50"}
+                            containerClassName="bg-[linear-gradient(90deg,#10b981,#059669,#047857,#10b981)]"
+                        >
+                            <div className={cn("flex items-center gap-1.5 md:gap-2 text-sm", isDark ? "text-emerald-300" : "text-emerald-700")}>
+                                {Icons.video}
+                                <span>{isRTL ? "استشارة عاجلة" : "Urgent Care"}</span>
+                            </div>
+                        </MovingBorder>
+                    </button>
+
                     {/* Video Call Button - visible on all screens */}
                     <button
                         onClick={() => router.push(`/${language}/dashboard/patient/appointments`)}
@@ -415,8 +433,8 @@ export default function Header({ onMenuClick }: { onMenuClick?: () => void }) {
                             bgClassName={isDark ? "bg-slate-900/[0.8]" : "bg-white"}
                         >
                             <div className={cn("flex items-center gap-1.5 md:gap-2 text-sm", isDark ? "text-white" : "text-teal-600")}>
-                                {Icons.video}
-                                <span>{t.doctorDashboard.actions.startVideoCall}</span>
+                                {Icons.calendar}
+                                <span>{isRTL ? "الجلسات المحجوزة" : "Booked Sessions"}</span>
                             </div>
                         </MovingBorder>
                     </button>

@@ -69,6 +69,16 @@ export default function Sidebar({ isMobileOpen, onClose }: { isMobileOpen?: bool
             ),
         },
         {
+            name: isRTL ? "استشارة عاجلة" : "Urgent Care",
+            href: `/${language}/dashboard/patient/urgent-care`,
+            icon: (
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15.75 10.5l4.72-4.72a.75.75 0 011.28.53v11.38a.75.75 0 01-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 002.25-2.25v-9a2.25 2.25 0 00-2.25-2.25h-9A2.25 2.25 0 002.25 7.5v9a2.25 2.25 0 002.25 2.25z" />
+                </svg>
+            ),
+            highlight: true,
+        },
+        {
             name: t.patientDashboard.sidebar.appointments,
             href: `/${language}/dashboard/patient/appointments`,
             icon: (
@@ -200,7 +210,8 @@ export default function Sidebar({ isMobileOpen, onClose }: { isMobileOpen?: bool
                 <nav className="flex-1 py-4 overflow-y-auto overflow-x-hidden flex flex-col justify-center">
                     <div className="space-y-1">
                         {navItems.map((item) => {
-                            const isActive = pathname === item.href;
+                            const isActive = pathname === item.href || pathname?.startsWith(item.href + "/");
+                            const isHighlighted = "highlight" in item && item.highlight;
 
                             // Handle navigation click - close sidebar after delay on mobile
                             const handleNavClick = () => {
@@ -223,9 +234,13 @@ export default function Sidebar({ isMobileOpen, onClose }: { isMobileOpen?: bool
                                                     ? isDark
                                                         ? "bg-gradient-to-r from-teal-500/20 to-teal-500/5 text-teal-400"
                                                         : "bg-gradient-to-r from-teal-500/15 to-teal-500/5 text-teal-600"
-                                                    : isDark
-                                                        ? "text-gray-400 hover:text-white hover:bg-white/5"
-                                                        : "text-gray-600 hover:text-slate-900 hover:bg-gray-100/80"
+                                                    : isHighlighted && !isActive
+                                                        ? isDark
+                                                            ? "text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10"
+                                                            : "text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50"
+                                                        : isDark
+                                                            ? "text-gray-400 hover:text-white hover:bg-white/5"
+                                                            : "text-gray-600 hover:text-slate-900 hover:bg-gray-100/80"
                                             )}
                                         >
                                             {/* Active indicator */}
