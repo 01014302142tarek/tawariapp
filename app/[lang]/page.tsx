@@ -409,7 +409,7 @@ function LandingPageContent() {
                   </div>
                   <div className={`pt-4 border-t ${borderColor}`}>
                     <p className={`${textPrimary} font-bold mb-3`}>{doctor.fee} {isRTL ? 'جنيه' : 'EGP'} <span className={`text-xs font-normal ${textMuted}`}>{t.doctorsSection.session}</span></p>
-                    <button className="w-full bg-teal-500/10 hover:bg-teal-500 text-teal-500 hover:text-white font-semibold text-sm py-2.5 rounded-xl transition-all">{t.doctorsSection.bookNow}</button>
+                    <Link href={`/${language}/doctors`} className="block w-full bg-teal-500/10 hover:bg-teal-500 text-teal-500 hover:text-white font-semibold text-sm py-2.5 rounded-xl transition-all text-center">{t.doctorsSection.bookNow}</Link>
                   </div>
                 </div>
               </div>

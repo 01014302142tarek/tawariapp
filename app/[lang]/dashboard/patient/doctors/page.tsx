@@ -149,15 +149,21 @@ export default function DoctorsPage() {
 
     const loadDoctors = useCallback(async () => {
         setLoading(true);
-        const result = await getAvailableDoctors({
-            search: filters.search || undefined,
-            specialization: filters.specialization !== "all" ? filters.specialization : undefined,
-            sortBy: filters.sortBy,
-            availableNow: filters.availableNow || undefined,
-            limit: 50,
-        });
-        if (result.doctors) {
-            setDoctors(result.doctors);
+        try {
+            const result = await getAvailableDoctors({
+                search: filters.search || undefined,
+                specialization: filters.specialization !== "all" ? filters.specialization : undefined,
+                sortBy: filters.sortBy,
+                availableNow: filters.availableNow || undefined,
+                limit: 50,
+            });
+            if (result.error) {
+                console.error("Error loading doctors:", result.error);
+            }
+            setDoctors(result.doctors || []);
+        } catch (error) {
+            console.error("Failed to load doctors:", error);
+            setDoctors([]);
         }
         setLoading(false);
     }, [filters.search, filters.specialization, filters.sortBy, filters.availableNow]);
