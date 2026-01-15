@@ -124,7 +124,7 @@ export default async function RootLayout({
         </AuthProvider>
         <Analytics />
         <SpeedInsights />
-        {process.env.NODE_ENV === 'development' && <VercelToolbar />}
+        <VercelToolbar />
       </body>
     </html>
   );
