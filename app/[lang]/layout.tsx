@@ -3,7 +3,6 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { Cairo } from "next/font/google";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
-import { VercelToolbar } from "@vercel/toolbar/next";
 import { I18nProvider, Language } from "../i18n";
 import { ThemeProviderWrapper } from "../context/ThemeProviderWrapper";
 import { AuthProvider } from "../context/AuthContext";
@@ -124,7 +123,6 @@ export default async function RootLayout({
         </AuthProvider>
         <Analytics />
         <SpeedInsights />
-        <VercelToolbar />
       </body>
     </html>
   );

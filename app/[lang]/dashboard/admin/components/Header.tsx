@@ -332,9 +332,11 @@ export default function Header({ onMenuClick }: { onMenuClick?: () => void }) {
     const isDark = theme === "dark";
 
     // Get user's name and avatar from profile
-    // Show "..." during loading, then actual name
-    const userName = profile?.profile.full_name || (isLoading ? "..." : "");
-    const userAvatar = profile?.profile.avatar_url || DEFAULT_AVATAR;
+    // Show "..." during loading, then fallback to "Admin" if no name
+    const userName = profile?.profile.full_name || (isLoading ? "..." : "Admin");
+    // Ensure avatar is a valid non-empty string, otherwise use default
+    const avatarUrl = profile?.profile.avatar_url;
+    const userAvatar = avatarUrl && avatarUrl.trim() !== "" ? avatarUrl : DEFAULT_AVATAR;
 
     const handleLogout = async () => {
         await signOut();

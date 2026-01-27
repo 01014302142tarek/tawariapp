@@ -285,6 +285,7 @@ interface TranslationStrings {
         // Quick Actions
         actions: {
             startVideoCall: string;
+            urgentCare: string;
             connectWithPatient: string;
             viewSchedule: string;
             manageAppointments: string;
@@ -1174,6 +1175,7 @@ const translations: Record<Language, TranslationStrings> = {
             },
             actions: {
                 startVideoCall: "Start Video Call",
+                urgentCare: "Urgent Care",
                 connectWithPatient: "Connect with your next patient via HD video",
                 viewSchedule: "View Schedule",
                 manageAppointments: "Manage appointments and availability",
@@ -2069,6 +2071,7 @@ const translations: Record<Language, TranslationStrings> = {
             },
             actions: {
                 startVideoCall: "بدء مكالمة فيديو",
+                urgentCare: "الرعاية العاجلة",
                 connectWithPatient: "تواصل مع مريضك التالي عبر فيديو عالي الدقة",
                 viewSchedule: "عرض الجدول",
                 manageAppointments: "إدارة المواعيد والتوافر",

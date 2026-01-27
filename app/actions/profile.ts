@@ -27,8 +27,8 @@ export type {
 /**
  * Get the current authenticated user's complete profile
  * Includes role-specific data (patient_profiles, doctor_profiles, etc.)
- * Uses two-step approach: get base profile first, then fetch role-specific data
- * This avoids RLS recursion issues with assistant_profiles
+ * Optimized: Uses single query with embedded selects for most roles
+ * Exception: assistant_profiles uses two-step approach to avoid RLS recursion
  */
 export async function getCurrentUserProfile(): Promise<FullProfile | null> {
     const supabase = await createClient();
@@ -39,7 +39,73 @@ export async function getCurrentUserProfile(): Promise<FullProfile | null> {
         return null;
     }
 
-    // Step 1: Get base profile to determine role
+    // Get user's role from metadata to determine which embedded select to use
+    const userRole = user.user_metadata?.role as string | undefined;
+
+    // Optimized: Single query with embedded select based on role
+    // This reduces 2 sequential queries to 1 combined query
+    if (userRole === "patient") {
+        const { data, error } = await supabase
+            .from("profiles")
+            .select(`*, patient_profiles(*)`)
+            .eq("user_id", user.id)
+            .single();
+
+        if (error || !data) {
+            console.error("Error fetching patient profile:", error);
+            return null;
+        }
+
+        const { patient_profiles, ...profileData } = data as Record<string, unknown>;
+        const profile = profileData as unknown as Profile;
+        const patientProfile = Array.isArray(patient_profiles)
+            ? patient_profiles[0] as PatientProfile | undefined
+            : patient_profiles as PatientProfile | undefined;
+        return { profile, patientProfile } as FullProfile;
+    }
+
+    if (userRole === "doctor") {
+        // Note: Must specify FK because doctor_profiles has two FKs to profiles (profile_id and verified_by)
+        const { data, error } = await supabase
+            .from("profiles")
+            .select(`*, doctor_profiles!doctor_profiles_profile_id_fkey(*)`)
+            .eq("user_id", user.id)
+            .single();
+
+        if (error || !data) {
+            console.error("Error fetching doctor profile:", error);
+            return null;
+        }
+
+        const { doctor_profiles, ...profileData } = data as Record<string, unknown>;
+        const profile = profileData as unknown as Profile;
+        const doctorProfile = Array.isArray(doctor_profiles)
+            ? doctor_profiles[0] as DoctorProfile | undefined
+            : doctor_profiles as DoctorProfile | undefined;
+        return { profile, doctorProfile } as FullProfile;
+    }
+
+    if (userRole === "admin") {
+        const { data, error } = await supabase
+            .from("profiles")
+            .select(`*, admin_profiles(*)`)
+            .eq("user_id", user.id)
+            .single();
+
+        if (error || !data) {
+            console.error("Error fetching admin profile:", error);
+            return null;
+        }
+
+        const { admin_profiles, ...profileData } = data as Record<string, unknown>;
+        const profile = profileData as unknown as Profile;
+        const adminProfile = Array.isArray(admin_profiles)
+            ? admin_profiles[0] as AdminProfile | undefined
+            : admin_profiles as AdminProfile | undefined;
+        return { profile, adminProfile } as FullProfile;
+    }
+
+    // For unknown roles or missing metadata, fetch base profile first then role-specific data
     const { data: profileData, error: profileError } = await supabase
         .from("profiles")
         .select("*")
@@ -53,48 +119,49 @@ export async function getCurrentUserProfile(): Promise<FullProfile | null> {
 
     const profile = profileData as unknown as Profile;
 
-    // Step 2: Fetch role-specific data based on role
-    switch (profile.role) {
-        case "patient": {
-            const { data: patientData } = await supabase
-                .from("patient_profiles")
-                .select("*")
-                .eq("profile_id", profile.id)
-                .single();
-            const patientProfile = patientData as unknown as PatientProfile | null;
-            return { profile, patientProfile: patientProfile || undefined } as FullProfile;
-        }
-        case "doctor": {
-            const { data: doctorData } = await supabase
-                .from("doctor_profiles")
-                .select("*")
-                .eq("profile_id", profile.id)
-                .single();
-            const doctorProfile = doctorData as unknown as DoctorProfile | null;
-            return { profile, doctorProfile: doctorProfile || undefined } as FullProfile;
-        }
-        case "admin": {
-            const { data: adminData } = await supabase
-                .from("admin_profiles")
-                .select("*")
-                .eq("profile_id", profile.id)
-                .single();
-            const adminProfile = adminData as unknown as AdminProfile | null;
-            return { profile, adminProfile: adminProfile || undefined } as FullProfile;
-        }
-        case "doctor_assistant":
-        case "admin_assistant": {
-            const { data: assistantData } = await supabase
-                .from("assistant_profiles")
-                .select("*")
-                .eq("profile_id", profile.id)
-                .single();
-            const assistantProfile = assistantData as unknown as AssistantProfile | null;
-            return { profile, assistantProfile: assistantProfile || undefined } as FullProfile;
-        }
+    // Fetch role-specific profile based on database role (fallback when user_metadata.role is missing)
+    if (profile.role === "doctor") {
+        const { data: doctorData } = await supabase
+            .from("doctor_profiles")
+            .select("*")
+            .eq("profile_id", profile.id)
+            .single();
+        const doctorProfile = doctorData as unknown as DoctorProfile | null;
+        return { profile, doctorProfile: doctorProfile || undefined } as FullProfile;
     }
 
-    // Fallback: return just the base profile (unknown role)
+    if (profile.role === "patient") {
+        const { data: patientData } = await supabase
+            .from("patient_profiles")
+            .select("*")
+            .eq("profile_id", profile.id)
+            .single();
+        const patientProfile = patientData as unknown as PatientProfile | null;
+        return { profile, patientProfile: patientProfile || undefined } as FullProfile;
+    }
+
+    if (profile.role === "admin") {
+        const { data: adminData } = await supabase
+            .from("admin_profiles")
+            .select("*")
+            .eq("profile_id", profile.id)
+            .single();
+        const adminProfile = adminData as unknown as AdminProfile | null;
+        return { profile, adminProfile: adminProfile || undefined } as FullProfile;
+    }
+
+    // Fetch assistant profile if applicable
+    if (profile.role === "doctor_assistant" || profile.role === "admin_assistant") {
+        const { data: assistantData } = await supabase
+            .from("assistant_profiles")
+            .select("*")
+            .eq("profile_id", profile.id)
+            .single();
+        const assistantProfile = assistantData as unknown as AssistantProfile | null;
+        return { profile, assistantProfile: assistantProfile || undefined } as FullProfile;
+    }
+
+    // Fallback: return just the base profile
     return { profile } as FullProfile;
 }
 

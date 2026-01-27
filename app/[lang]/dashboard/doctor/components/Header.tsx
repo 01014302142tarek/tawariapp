@@ -75,6 +75,12 @@ const Icons = {
             <path d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
         </svg>
     ),
+    urgentCare: (
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 0v4m0-4h4m-4 0H8" />
+        </svg>
+    ),
     calendar: (
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
@@ -349,9 +355,11 @@ export default function Header({ onMenuClick }: { onMenuClick?: () => void }) {
     const isDark = theme === "dark";
 
     // Get user's name and avatar from profile
-    // Show "..." during loading, then actual name
-    const userName = profile?.profile.full_name || (isLoading ? "..." : "");
-    const userAvatar = profile?.profile.avatar_url || null;
+    // Show "..." during loading, then fallback to "Doctor" if no name
+    const userName = profile?.profile.full_name || (isLoading ? "..." : "Doctor");
+    // Ensure avatar is a valid non-empty string, otherwise null
+    const avatarUrl = profile?.profile.avatar_url;
+    const userAvatar = avatarUrl && avatarUrl.trim() !== "" ? avatarUrl : null;
 
     const handleLogout = async () => {
         await signOut();
@@ -413,6 +421,23 @@ export default function Header({ onMenuClick }: { onMenuClick?: () => void }) {
                             <div className={cn("flex items-center gap-1.5 md:gap-2 text-sm", isDark ? "text-white" : "text-teal-600")}>
                                 {Icons.video}
                                 <span>{t.doctorDashboard?.actions?.startVideoCall || "Start Call"}</span>
+                            </div>
+                        </MovingBorder>
+                    </button>
+
+                    {/* Urgent Care Button - visible on all screens */}
+                    <button
+                        onClick={() => router.push(`/${language}/dashboard/doctor/urgent-care`)}
+                        className="focus:outline-none"
+                    >
+                        <MovingBorder
+                            duration={2500}
+                            className="px-3 md:px-5 py-2 md:py-2.5 font-medium cursor-pointer"
+                            bgClassName={isDark ? "bg-slate-900/[0.8]" : "bg-white"}
+                        >
+                            <div className={cn("flex items-center gap-1.5 md:gap-2 text-sm", isDark ? "text-orange-400" : "text-orange-600")}>
+                                {Icons.urgentCare}
+                                <span>{t.doctorDashboard?.actions?.urgentCare || "Urgent Care"}</span>
                             </div>
                         </MovingBorder>
                     </button>

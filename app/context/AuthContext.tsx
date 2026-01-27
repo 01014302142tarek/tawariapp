@@ -1,9 +1,11 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState, useCallback } from "react";
+import { createContext, useContext, useEffect, useState, useCallback, useRef } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
 import { getCurrentUserProfile } from "@/app/actions/profile";
+
+const PROFILE_CACHE_KEY = "tawari_profile_cache";
 import {
     signInWithPassword as serverSignIn,
     signUpWithPassword as serverSignUp,
@@ -56,12 +58,42 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [profile, setProfile] = useState<FullProfile | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const supabase = createClient();
+    const hasMounted = useRef(false);
 
-    // Fetch profile from database
+    // Load cached profile from localStorage (client-side only)
+    const loadCachedProfile = useCallback(() => {
+        if (typeof window === "undefined") return null;
+        try {
+            const cached = localStorage.getItem(PROFILE_CACHE_KEY);
+            if (cached) {
+                return JSON.parse(cached) as FullProfile;
+            }
+        } catch {
+            // Ignore parse errors
+        }
+        return null;
+    }, []);
+
+    // Save profile to localStorage cache
+    const cacheProfile = useCallback((profileData: FullProfile | null) => {
+        if (typeof window === "undefined") return;
+        try {
+            if (profileData) {
+                localStorage.setItem(PROFILE_CACHE_KEY, JSON.stringify(profileData));
+            } else {
+                localStorage.removeItem(PROFILE_CACHE_KEY);
+            }
+        } catch {
+            // Ignore storage errors
+        }
+    }, []);
+
+    // Fetch profile from database and update cache
     const fetchProfile = useCallback(async () => {
         const profileData = await getCurrentUserProfile();
         setProfile(profileData);
-    }, []);
+        cacheProfile(profileData);
+    }, [cacheProfile]);
 
     // Refresh profile (call after profile updates)
     const refreshProfile = useCallback(async () => {
@@ -69,15 +101,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }, [fetchProfile]);
 
     useEffect(() => {
+        // Load cached profile immediately for instant display
+        if (!hasMounted.current) {
+            hasMounted.current = true;
+            const cached = loadCachedProfile();
+            if (cached) {
+                setProfile(cached);
+            }
+        }
+
         // Get initial session and profile
         const getSession = async () => {
             const { data: { session } } = await supabase.auth.getSession();
             setSession(session);
             setUser(session?.user ?? null);
 
-            // Fetch profile if user is logged in
+            // Fetch fresh profile if user is logged in (will update cache)
             if (session?.user) {
                 await fetchProfile();
+            } else {
+                // Clear cache if not logged in
+                cacheProfile(null);
+                setProfile(null);
             }
 
             setIsLoading(false);
@@ -95,6 +140,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 if (session?.user) {
                     await fetchProfile();
                 } else {
+                    cacheProfile(null);
                     setProfile(null);
                 }
 
@@ -103,7 +149,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         );
 
         return () => subscription.unsubscribe();
-    }, [supabase.auth, fetchProfile]);
+    }, [supabase.auth, fetchProfile, loadCachedProfile, cacheProfile]);
 
     const signUp = async (
         email: string,
@@ -152,6 +198,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
 
     const signOut = async () => {
+        // Clear profile cache before signing out
+        cacheProfile(null);
         await supabase.auth.signOut();
     };
 

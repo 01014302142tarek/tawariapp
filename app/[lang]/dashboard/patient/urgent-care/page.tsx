@@ -98,13 +98,14 @@ const DoctorCard: React.FC<DoctorCardProps> = ({ doctor, onSelect, isRTL }) => {
             <div className="flex items-start gap-4 mb-4">
                 {/* Avatar */}
                 <div className="relative">
-                    {doctor.avatar_url ? (
+                    {doctor.avatar_url && doctor.avatar_url.trim() !== "" ? (
                         <Image
                             src={doctor.avatar_url}
                             alt={doctor.full_name}
                             width={56}
                             height={56}
                             className="w-14 h-14 rounded-full object-cover"
+                            unoptimized
                         />
                     ) : (
                         <div className="w-14 h-14 rounded-full bg-gradient-to-br from-teal-500 to-cyan-500 flex items-center justify-center text-white font-semibold text-lg">
@@ -130,11 +131,17 @@ const DoctorCard: React.FC<DoctorCardProps> = ({ doctor, onSelect, isRTL }) => {
             {/* Stats Row */}
             <div className="flex items-center gap-4 mb-4 text-sm">
                 {/* Rating */}
-                <div className="flex items-center gap-1 text-amber-400">
-                    {Icons.star}
-                    <span>{doctor.rating_average.toFixed(1)}</span>
-                    <span className="text-slate-500">({doctor.rating_count})</span>
-                </div>
+                {doctor.rating_count > 0 ? (
+                    <div className="flex items-center gap-1 text-amber-400">
+                        {Icons.star}
+                        <span>{doctor.rating_average.toFixed(1)}</span>
+                        <span className="text-slate-500">({doctor.rating_count})</span>
+                    </div>
+                ) : (
+                    <span className="px-2 py-0.5 bg-teal-500/20 text-teal-400 text-xs rounded-full font-medium">
+                        {isRTL ? "جديد" : "New"}
+                    </span>
+                )}
 
                 {/* Wait time */}
                 <div className="flex items-center gap-1 text-slate-400">
@@ -192,6 +199,7 @@ export default function UrgentCarePage() {
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
     const [existingQueueEntry, setExistingQueueEntry] = useState<string | null>(null);
+    const [debugInfo, setDebugInfo] = useState<{ totalDoctors: number; onlineDoctors: number; verifiedDoctors: number } | null>(null);
 
     // Real-time updates for online doctors
     const { isConnected } = useOnlineDoctors(doctors);
@@ -212,6 +220,9 @@ export default function UrgentCarePage() {
             const result = await getOnlineDoctors();
             if (result.doctors) {
                 setDoctors(result.doctors);
+            }
+            if (result.debug) {
+                setDebugInfo(result.debug);
             }
         } catch (error) {
             console.error("Error loading doctors:", error);
@@ -330,6 +341,15 @@ export default function UrgentCarePage() {
                             ? "يرجى المحاولة مرة أخرى لاحقاً أو حجز موعد"
                             : "Please try again later or book an appointment"}
                     </p>
+                    {/* Debug info - remove in production */}
+                    {debugInfo && (
+                        <div className="mb-6 p-3 bg-slate-800/50 rounded-lg text-left text-sm">
+                            <p className="text-slate-500 mb-1">Debug Info:</p>
+                            <p className="text-slate-400">Total doctors in DB: {debugInfo.totalDoctors}</p>
+                            <p className="text-slate-400">Online doctors: {debugInfo.onlineDoctors}</p>
+                            <p className="text-slate-400">Verified doctors: {debugInfo.verifiedDoctors}</p>
+                        </div>
+                    )}
                     <button
                         onClick={() => loadDoctors(true)}
                         className="px-6 py-2 bg-slate-800 text-white rounded-lg font-medium hover:bg-slate-700 transition-colors inline-flex items-center gap-2"
