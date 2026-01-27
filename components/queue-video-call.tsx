@@ -68,6 +68,8 @@ export function QueueVideoCall({
     const router = useRouter();
     const containerRef = useRef<HTMLDivElement>(null);
     const callFrameRef = useRef<DailyCall | null>(null);
+    const isMountedRef = useRef(true);
+    const isInitializingRef = useRef(false);
 
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -81,39 +83,86 @@ export function QueueVideoCall({
 
     // Fetch token and join call
     const initializeCall = useCallback(async () => {
+        // Prevent multiple simultaneous initializations
+        if (isInitializingRef.current) {
+            console.log("[VideoCall] Already initializing, skipping");
+            return;
+        }
+        isInitializingRef.current = true;
+
         setLoading(true);
         setError(null);
 
         try {
-            // First get queue entry info for participant names
-            const entryResult = await getQueueEntryForCall(queueEntryId);
+            // Small delay to let the page fully initialize (fixes race condition after navigation)
+            await new Promise(resolve => setTimeout(resolve, 300));
+            if (!isMountedRef.current) return;
+
+            // First get queue entry info for participant names with retry logic
+            let entryResult = await getQueueEntryForCall(queueEntryId);
+
+            // Retry once if it fails (handles Next.js server action initialization issues)
+            if (!entryResult.success && isMountedRef.current) {
+                console.log("[VideoCall] First getQueueEntryForCall failed, retrying in 500ms...");
+                await new Promise(resolve => setTimeout(resolve, 500));
+                if (!isMountedRef.current) return;
+                entryResult = await getQueueEntryForCall(queueEntryId);
+            }
+
+            if (!isMountedRef.current) return;
+
             if (entryResult.success) {
                 setParticipantInfo({
                     doctorName: entryResult.doctor?.full_name,
                     patientName: entryResult.patient?.full_name,
                 });
+            } else {
+                console.error("[VideoCall] getQueueEntryForCall failed after retry:", entryResult.error);
             }
 
-            // Fetch meeting token from API
-            const response = await fetch("/api/daily/token", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ queueEntryId }),
-            });
+            // Fetch meeting token from API with retry logic
+            console.log("[VideoCall] Fetching token for queue entry:", queueEntryId);
 
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.error || "Failed to get meeting token");
+            const fetchTokenWithRetry = async (retryCount = 0): Promise<TokenResponse> => {
+                const response = await fetch("/api/daily/token", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ queueEntryId }),
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    // Retry once on certain errors (room not ready, etc.)
+                    if (retryCount < 1 && (errorData.error === "Video room not created yet" || response.status === 400)) {
+                        console.log("[VideoCall] Token fetch failed, retrying in 500ms...", errorData);
+                        await new Promise(resolve => setTimeout(resolve, 500));
+                        if (!isMountedRef.current) throw new Error("Component unmounted");
+                        return fetchTokenWithRetry(retryCount + 1);
+                    }
+                    console.error("[VideoCall] Token API error:", response.status, errorData);
+                    throw new Error(errorData.error || "Failed to get meeting token");
+                }
+
+                return response.json();
+            };
+
+            const tokenData = await fetchTokenWithRetry();
+
+            if (!isMountedRef.current) return;
+
+            // Check for existing Daily instance and destroy it safely
+            try {
+                const existingInstance = DailyIframe.getCallInstance();
+                if (existingInstance) {
+                    console.log("[VideoCall] Destroying existing Daily instance");
+                    await existingInstance.destroy();
+                }
+            } catch (destroyErr) {
+                console.warn("[VideoCall] Error destroying existing instance:", destroyErr);
+                // Continue anyway - the old instance might already be invalid
             }
 
-            const tokenData: TokenResponse = await response.json();
-
-            // Check for existing Daily instance
-            const existingInstance = DailyIframe.getCallInstance();
-            if (existingInstance) {
-                console.log("Daily: Destroying existing instance");
-                await existingInstance.destroy();
-            }
+            if (!isMountedRef.current) return;
 
             // Create new call frame
             if (!containerRef.current) {
@@ -133,43 +182,85 @@ export function QueueVideoCall({
 
             callFrameRef.current = callFrame;
 
-            // Set up event listeners
+            // Set up event listeners with mounted check
+            callFrame.on("joining-meeting", () => {
+                console.log("[VideoCall] Joining meeting...");
+                // Hide loading after a short delay - the iframe will show
+                if (isMountedRef.current) {
+                    setTimeout(() => {
+                        if (isMountedRef.current && callState === "joining") {
+                            setLoading(false);
+                        }
+                    }, 2000);
+                }
+            });
+
             callFrame.on("joined-meeting", () => {
-                console.log("Daily: Joined meeting");
-                setCallState("joined");
-                setLoading(false);
+                console.log("[VideoCall] Joined meeting");
+                if (isMountedRef.current) {
+                    setCallState("joined");
+                    setLoading(false);
+                }
             });
 
             callFrame.on("left-meeting", () => {
-                console.log("Daily: Left meeting");
-                setCallState("left");
-                handleCallEnded();
+                console.log("[VideoCall] Left meeting");
+                if (isMountedRef.current) {
+                    setCallState("left");
+                    handleCallEnded();
+                }
             });
 
             callFrame.on("error", (event) => {
-                console.error("Daily error:", event);
-                setError(event?.errorMsg || "Call error occurred");
-                setCallState("error");
+                console.error("[VideoCall] Daily error:", event);
+                if (isMountedRef.current) {
+                    setError(event?.errorMsg || "Call error occurred");
+                    setCallState("error");
+                    setLoading(false);
+                }
+            });
+
+            callFrame.on("camera-error", (event) => {
+                console.warn("[VideoCall] Camera error:", event);
+                // Don't set error state - just log it, call can continue without camera
             });
 
             callFrame.on("participant-left", (event) => {
                 // If the other participant left, show a notification
                 if (event?.participant && !event.participant.local) {
-                    console.log("Other participant left:", event.participant);
+                    console.log("[VideoCall] Other participant left:", event.participant);
                 }
             });
 
             // Join with token
+            console.log("[VideoCall] Joining room...");
             await callFrame.join({
                 url: tokenData.roomUrl,
                 token: tokenData.token,
             });
 
+            // join() resolves when join request is sent
+            // Give it a moment, then ensure UI is visible even without joined-meeting event
+            console.log("[VideoCall] Join request sent, showing UI");
+            if (isMountedRef.current) {
+                // Small delay to let Daily initialize, then show UI
+                setTimeout(() => {
+                    if (isMountedRef.current && callFrameRef.current) {
+                        setLoading(false);
+                        setCallState("joined");
+                    }
+                }, 1500);
+            }
+
         } catch (err) {
-            console.error("Error initializing call:", err);
-            setError(err instanceof Error ? err.message : "Failed to join call");
-            setCallState("error");
-            setLoading(false);
+            console.error("[VideoCall] Error initializing call:", err);
+            if (isMountedRef.current) {
+                setError(err instanceof Error ? err.message : "Failed to join call");
+                setCallState("error");
+                setLoading(false);
+            }
+        } finally {
+            isInitializingRef.current = false;
         }
     }, [queueEntryId]);
 
@@ -191,9 +282,14 @@ export function QueueVideoCall({
         setEnding(true);
 
         try {
-            // Leave the call
+            // Leave the call safely
             if (callFrameRef.current) {
-                await callFrameRef.current.leave();
+                try {
+                    await callFrameRef.current.leave();
+                } catch (leaveErr) {
+                    console.warn("[VideoCall] Error leaving call:", leaveErr);
+                    // Continue anyway - we want to end the consultation
+                }
             }
 
             // If doctor, mark consultation as completed
@@ -203,11 +299,14 @@ export function QueueVideoCall({
 
             handleCallEnded();
         } catch (err) {
-            console.error("Error ending call:", err);
-            setError("Failed to end call properly");
+            console.error("[VideoCall] Error ending call:", err);
+            // Still navigate away even if there's an error
+            handleCallEnded();
         } finally {
-            setEnding(false);
-            setShowEndConfirm(false);
+            if (isMountedRef.current) {
+                setEnding(false);
+                setShowEndConfirm(false);
+            }
         }
     }, [userRole, queueEntryId, handleCallEnded]);
 
@@ -215,24 +314,43 @@ export function QueueVideoCall({
     const handleLeaveCall = useCallback(async () => {
         try {
             if (callFrameRef.current) {
-                await callFrameRef.current.leave();
+                try {
+                    await callFrameRef.current.leave();
+                } catch (leaveErr) {
+                    console.warn("[VideoCall] Error leaving call:", leaveErr);
+                }
             }
             handleCallEnded();
         } catch (err) {
-            console.error("Error leaving call:", err);
+            console.error("[VideoCall] Error leaving call:", err);
             handleCallEnded();
         }
     }, [handleCallEnded]);
 
     // Initialize on mount
     useEffect(() => {
+        isMountedRef.current = true;
+        isInitializingRef.current = false; // Reset on mount (important for React Strict Mode)
         initializeCall();
 
         return () => {
-            // Cleanup on unmount
-            if (callFrameRef.current) {
-                callFrameRef.current.destroy().catch(console.error);
-            }
+            // Mark as unmounted first to prevent state updates
+            isMountedRef.current = false;
+
+            // Cleanup Daily instance on unmount
+            const cleanupDaily = async () => {
+                try {
+                    if (callFrameRef.current) {
+                        // Destroy cleans up all event listeners and the iframe
+                        await callFrameRef.current.destroy();
+                        callFrameRef.current = null;
+                    }
+                } catch (err) {
+                    console.warn("[VideoCall] Error during cleanup:", err);
+                }
+            };
+
+            cleanupDaily();
         };
     }, [initializeCall]);
 

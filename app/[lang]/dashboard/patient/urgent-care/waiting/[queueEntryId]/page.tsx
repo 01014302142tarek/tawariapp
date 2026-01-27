@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { useI18n } from "@/app/i18n";
 import { leaveQueue, getQueueEntryForCall } from "@/app/actions/queue";
 import { useMyQueuePosition } from "@/lib/hooks/useQueueRealtime";
+import { QueueChat } from "@/components/queue-chat";
 
 // ============================================
 // Icons
@@ -118,7 +119,9 @@ export default function WaitingRoomPage() {
         full_name: string;
         avatar_url?: string;
         specialty: string[];
+        messaging_profile_id?: string;
     } | null>(null);
+    const [userMessagingProfileId, setUserMessagingProfileId] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
     const [leaving, setLeaving] = useState(false);
     const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
@@ -141,7 +144,11 @@ export default function WaitingRoomPage() {
                         full_name: result.doctor.full_name,
                         avatar_url: result.doctor.avatar_url,
                         specialty: result.doctor.specialty || [],
+                        messaging_profile_id: result.doctor.messaging_profile_id,
                     });
+                    if (result.userMessagingProfileId) {
+                        setUserMessagingProfileId(result.userMessagingProfileId);
+                    }
                 } else {
                     setError(result.error || (isRTL ? "لم يتم العثور على الطلب" : "Queue entry not found"));
                 }
@@ -159,8 +166,10 @@ export default function WaitingRoomPage() {
     // Handle status changes - redirect when called or in_consultation
     useEffect(() => {
         if (entry) {
+            console.log("[Waiting Room] Entry status:", entry.status, "Room URL:", entry.daily_room_url);
             if (entry.status === "in_consultation" && entry.daily_room_url) {
                 // Room is ready - redirect to video call
+                console.log("[Waiting Room] Redirecting to call page...");
                 router.push(`/${language}/dashboard/patient/urgent-care/call/${queueEntryId}`);
             } else if (entry.status === "completed") {
                 // Consultation ended - go back to urgent care
@@ -172,6 +181,35 @@ export default function WaitingRoomPage() {
             // Note: When status is "called", we stay on waiting room until room is created
         }
     }, [entry, queueEntryId, language, router]);
+
+    // Polling fallback - check every 3 seconds in case real-time doesn't work
+    useEffect(() => {
+        const pollStatus = async () => {
+            try {
+                const result = await getQueueEntryForCall(queueEntryId);
+                if (result.success && result.entry) {
+                    console.log("[Waiting Room] Poll result:", result.entry.status, result.entry.daily_room_url);
+                    if (result.entry.status === "in_consultation" && result.entry.daily_room_url) {
+                        console.log("[Waiting Room] Redirecting via poll...");
+                        router.push(`/${language}/dashboard/patient/urgent-care/call/${queueEntryId}`);
+                    } else if (["completed", "cancelled", "expired"].includes(result.entry.status)) {
+                        router.push(`/${language}/dashboard/patient/urgent-care`);
+                    }
+                }
+            } catch (err) {
+                console.error("[Waiting Room] Poll error:", err);
+            }
+        };
+
+        // Start polling after 2 seconds, then every 3 seconds
+        const timeout = setTimeout(() => {
+            pollStatus();
+            const interval = setInterval(pollStatus, 3000);
+            return () => clearInterval(interval);
+        }, 2000);
+
+        return () => clearTimeout(timeout);
+    }, [queueEntryId, language, router]);
 
     // Handle leave queue
     const handleLeaveQueue = useCallback(async () => {
@@ -437,6 +475,18 @@ export default function WaitingRoomPage() {
                         : "Note: If you leave, your payment will be refunded (coming soon)"}
                 </p>
             </div>
+
+            {/* Queue Chat - Chat with doctor while waiting */}
+            {doctorInfo?.messaging_profile_id && userMessagingProfileId && (
+                <QueueChat
+                    recipientProfileId={doctorInfo.messaging_profile_id}
+                    recipientName={doctorInfo.full_name}
+                    recipientAvatar={doctorInfo.avatar_url}
+                    isDark={true}
+                    isRTL={isRTL}
+                    currentProfileId={userMessagingProfileId}
+                />
+            )}
         </div>
     );
 }

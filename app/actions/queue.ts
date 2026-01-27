@@ -137,8 +137,10 @@ export async function toggleDoctorOnline(
  */
 export async function getDoctorQueueStatus(): Promise<{
     isOnline: boolean;
-    currentPatient: QueueEntry | null;
-    waitingPatients: Array<QueueEntry & { patient_name: string; patient_avatar?: string }>;
+    doctorProfileId: string | null;
+    doctorMessagingProfileId: string | null;
+    currentPatient: (QueueEntry & { patient_messaging_profile_id?: string; patient_name?: string; patient_avatar?: string }) | null;
+    waitingPatients: Array<QueueEntry & { patient_name: string; patient_avatar?: string; patient_messaging_profile_id?: string }>;
     todayStats: { completed: number; earnings: number };
     error?: string;
 }> {
@@ -146,7 +148,7 @@ export async function getDoctorQueueStatus(): Promise<{
 
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
-        return { isOnline: false, currentPatient: null, waitingPatients: [], todayStats: { completed: 0, earnings: 0 }, error: "Not authenticated" };
+        return { isOnline: false, doctorProfileId: null, doctorMessagingProfileId: null, currentPatient: null, waitingPatients: [], todayStats: { completed: 0, earnings: 0 }, error: "Not authenticated" };
     }
 
     // Get doctor profile
@@ -158,7 +160,7 @@ export async function getDoctorQueueStatus(): Promise<{
 
     const profile = profileData as { id: string } | null;
     if (!profile) {
-        return { isOnline: false, currentPatient: null, waitingPatients: [], todayStats: { completed: 0, earnings: 0 }, error: "Profile not found" };
+        return { isOnline: false, doctorProfileId: null, doctorMessagingProfileId: null, currentPatient: null, waitingPatients: [], todayStats: { completed: 0, earnings: 0 }, error: "Profile not found" };
     }
 
     const { data: doctorData } = await supabase
@@ -170,28 +172,52 @@ export async function getDoctorQueueStatus(): Promise<{
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const doctor = doctorData as any;
     if (!doctor) {
-        return { isOnline: false, currentPatient: null, waitingPatients: [], todayStats: { completed: 0, earnings: 0 }, error: "Doctor profile not found" };
+        return { isOnline: false, doctorProfileId: null, doctorMessagingProfileId: null, currentPatient: null, waitingPatients: [], todayStats: { completed: 0, earnings: 0 }, error: "Doctor profile not found" };
     }
 
-    // Get current patient if any
-    let currentPatient: QueueEntry | null = null;
+    // Get current patient if any (including profile_id for messaging)
+    let currentPatient: (QueueEntry & { patient_messaging_profile_id?: string; patient_name?: string; patient_avatar?: string }) | null = null;
     if (doctor.current_queue_entry_id) {
         const { data: currentData } = await supabase
             .from("consultation_queue")
-            .select("*")
+            .select(`
+                *,
+                patient_profiles!consultation_queue_patient_profile_id_fkey (
+                    id,
+                    profile_id,
+                    profiles!patient_profiles_profile_id_fkey (
+                        id,
+                        full_name,
+                        avatar_url
+                    )
+                )
+            `)
             .eq("id", doctor.current_queue_entry_id)
             .single();
-        currentPatient = currentData as QueueEntry | null;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const rawCurrent = currentData as any;
+        if (rawCurrent) {
+            currentPatient = {
+                ...rawCurrent,
+                patient_name: rawCurrent.patient_profiles?.profiles?.full_name || "Patient",
+                patient_avatar: rawCurrent.patient_profiles?.profiles?.avatar_url,
+                patient_messaging_profile_id: rawCurrent.patient_profiles?.profiles?.id,
+                patient_profiles: undefined,
+            };
+        }
     }
 
     // Get waiting patients
+    // Note: Must specify FK for both patient_profiles and profiles due to multiple relationships
     const { data: waitingData } = await supabase
         .from("consultation_queue")
         .select(`
             *,
-            patient_profiles!inner (
+            patient_profiles!consultation_queue_patient_profile_id_fkey (
                 id,
-                profiles (
+                profile_id,
+                profiles!patient_profiles_profile_id_fkey (
+                    id,
                     full_name,
                     avatar_url
                 )
@@ -206,6 +232,8 @@ export async function getDoctorQueueStatus(): Promise<{
         ...entry,
         patient_name: entry.patient_profiles?.profiles?.full_name || "Patient",
         patient_avatar: entry.patient_profiles?.profiles?.avatar_url,
+        // Include profile_id for messaging
+        patient_messaging_profile_id: entry.patient_profiles?.profiles?.id,
         patient_profiles: undefined,
     }));
 
@@ -227,6 +255,8 @@ export async function getDoctorQueueStatus(): Promise<{
 
     return {
         isOnline: doctor.is_online || false,
+        doctorProfileId: doctor.id,
+        doctorMessagingProfileId: profile.id,
         currentPatient,
         waitingPatients,
         todayStats,
@@ -371,6 +401,12 @@ export async function startQueueConsultation(
     const queueEntry = queueData as QueueEntry | null;
     if (!queueEntry) {
         return { success: false, error: "Queue entry not found" };
+    }
+
+    // Allow rejoining if already in_consultation with existing room
+    if (queueEntry.status === "in_consultation" && queueEntry.daily_room_url) {
+        // Already in consultation - return existing room URL for rejoin
+        return { success: true, roomUrl: queueEntry.daily_room_url };
     }
 
     if (queueEntry.status !== "called") {
@@ -540,10 +576,24 @@ export async function endQueueConsultation(
 export async function getOnlineDoctors(): Promise<{
     doctors: OnlineDoctor[];
     error?: string;
+    debug?: { totalDoctors: number; onlineDoctors: number; verifiedDoctors: number };
 }> {
     const supabase = await createClient();
 
+    // Debug: Check total doctors, online doctors, and verified doctors separately
+    const { data: allDoctors } = await supabase
+        .from("doctor_profiles")
+        .select("id, is_online, verification_status");
+
+    const totalDoctors = allDoctors?.length || 0;
+    const onlineDoctors = allDoctors?.filter((d: { is_online: boolean }) => d.is_online).length || 0;
+    const verifiedDoctors = allDoctors?.filter((d: { verification_status: string }) => d.verification_status === "verified").length || 0;
+
+    console.log(`[getOnlineDoctors] Total: ${totalDoctors}, Online: ${onlineDoctors}, Verified: ${verifiedDoctors}`);
+    console.log(`[getOnlineDoctors] All doctors:`, allDoctors);
+
     // Get all online, verified doctors
+    // Note: Must specify FK because doctor_profiles has two FKs to profiles (profile_id and verified_by)
     const { data, error } = await supabase
         .from("doctor_profiles")
         .select(`
@@ -555,7 +605,7 @@ export async function getOnlineDoctors(): Promise<{
             is_online,
             current_queue_entry_id,
             average_consultation_minutes,
-            profiles!inner (
+            profiles!doctor_profiles_profile_id_fkey (
                 full_name,
                 avatar_url
             ),
@@ -570,8 +620,10 @@ export async function getOnlineDoctors(): Promise<{
 
     if (error) {
         console.error("Error fetching online doctors:", error);
-        return { doctors: [], error: error.message };
+        return { doctors: [], error: error.message, debug: { totalDoctors, onlineDoctors, verifiedDoctors } };
     }
+
+    console.log(`[getOnlineDoctors] Found ${data?.length || 0} online verified doctors:`, data);
 
     // Get queue counts for each doctor
     const doctorIds = (data || []).map((d: { id: string }) => d.id);
@@ -616,7 +668,7 @@ export async function getOnlineDoctors(): Promise<{
         };
     });
 
-    return { doctors };
+    return { doctors, debug: { totalDoctors, onlineDoctors, verifiedDoctors } };
 }
 
 /**
@@ -709,6 +761,7 @@ export async function joinDoctorQueue(data: {
             doctor_profile_id: data.doctorProfileId,
             patient_profile_id: patient.id,
             chief_complaint: data.chiefComplaint || null,
+            status: "waiting",  // Explicitly set status
             position: position,
             payment_status: "completed_mock",  // Mock payment for now
             payment_amount: data.paymentAmount,
@@ -842,16 +895,17 @@ export async function getMyQueuePosition(): Promise<{
     }
 
     // Get active queue entry
+    // Note: Must specify FK for both doctor_profiles and profiles due to multiple relationships
     const { data: queueData } = await supabase
         .from("consultation_queue")
         .select(`
             *,
-            doctor_profiles!inner (
+            doctor_profiles!consultation_queue_doctor_profile_id_fkey (
                 id,
                 is_online,
                 current_queue_entry_id,
                 average_consultation_minutes,
-                profiles (
+                profiles!doctor_profiles_profile_id_fkey (
                     full_name,
                     avatar_url
                 )
@@ -914,8 +968,9 @@ export async function getQueueEntryForCall(
     success: boolean;
     entry?: QueueEntry;
     userRole?: "doctor" | "patient";
-    doctor?: { full_name: string; avatar_url?: string; specialty: string[] };
-    patient?: { full_name: string; avatar_url?: string };
+    userMessagingProfileId?: string;
+    doctor?: { full_name: string; avatar_url?: string; specialty: string[]; messaging_profile_id?: string };
+    patient?: { full_name: string; avatar_url?: string; messaging_profile_id?: string };
     error?: string;
 }> {
     const supabase = await createClient();
@@ -938,13 +993,17 @@ export async function getQueueEntryForCall(
     }
 
     // Get queue entry with related data
+    // Note: Must specify FK for both doctor_profiles and profiles due to multiple relationships
+    // - consultation_queue has two FKs to doctor_profiles (doctor_profile_id and via current_queue_entry_id reverse)
+    // - doctor_profiles has two FKs to profiles (profile_id and verified_by)
     const { data: queueData, error } = await supabase
         .from("consultation_queue")
         .select(`
             *,
-            doctor_profiles!inner (
+            doctor_profiles!consultation_queue_doctor_profile_id_fkey (
                 id,
-                profiles (
+                profiles!doctor_profiles_profile_id_fkey (
+                    id,
                     full_name,
                     avatar_url
                 ),
@@ -954,9 +1013,10 @@ export async function getQueueEntryForCall(
                     )
                 )
             ),
-            patient_profiles!inner (
+            patient_profiles!consultation_queue_patient_profile_id_fkey (
                 id,
-                profiles (
+                profiles!patient_profiles_profile_id_fkey (
+                    id,
                     full_name,
                     avatar_url
                 )
@@ -966,6 +1026,7 @@ export async function getQueueEntryForCall(
         .single();
 
     if (error || !queueData) {
+        console.error("[getQueueEntryForCall] Error fetching queue entry:", error?.message, { queueEntryId });
         return { success: false, error: "Queue entry not found" };
     }
 
@@ -999,11 +1060,13 @@ export async function getQueueEntryForCall(
         full_name: data.doctor_profiles?.profiles?.full_name || "Doctor",
         avatar_url: data.doctor_profiles?.profiles?.avatar_url,
         specialty: doctorSpecialties,
+        messaging_profile_id: data.doctor_profiles?.profiles?.id,
     };
 
     const patientInfo = {
         full_name: data.patient_profiles?.profiles?.full_name || "Patient",
         avatar_url: data.patient_profiles?.profiles?.avatar_url,
+        messaging_profile_id: data.patient_profiles?.profiles?.id,
     };
 
     // Verify user is authorized (either the doctor or the patient)
@@ -1017,7 +1080,7 @@ export async function getQueueEntryForCall(
         if (!doctorData || (doctorData as { id: string }).id !== entry.doctor_profile_id) {
             return { success: false, error: "Not authorized" };
         }
-        return { success: true, entry, userRole: "doctor", doctor: doctorInfo, patient: patientInfo };
+        return { success: true, entry, userRole: "doctor", userMessagingProfileId: profile.id, doctor: doctorInfo, patient: patientInfo };
     } else if (profile.role === "patient") {
         const { data: patientData } = await supabase
             .from("patient_profiles")
@@ -1028,7 +1091,7 @@ export async function getQueueEntryForCall(
         if (!patientData || (patientData as { id: string }).id !== entry.patient_profile_id) {
             return { success: false, error: "Not authorized" };
         }
-        return { success: true, entry, userRole: "patient", doctor: doctorInfo, patient: patientInfo };
+        return { success: true, entry, userRole: "patient", userMessagingProfileId: profile.id, doctor: doctorInfo, patient: patientInfo };
     }
 
     return { success: false, error: "Not authorized" };

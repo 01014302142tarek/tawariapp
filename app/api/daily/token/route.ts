@@ -104,13 +104,25 @@ export async function POST(request: NextRequest) {
             isOwner = true; // Doctor gets owner privileges
             userName = profile.full_name || "Doctor";
         } else if (profile.role === "patient") {
-            const { data: patientData } = await supabase
+            const { data: patientData, error: patientError } = await supabase
                 .from("patient_profiles")
                 .select("id")
                 .eq("profile_id", profile.id)
                 .single();
 
-            if (!patientData || (patientData as { id: string }).id !== queueEntry.patient_profile_id) {
+            console.log("[Token API] Patient profile lookup:", {
+                profileId: profile.id,
+                patientData,
+                patientError,
+                queuePatientId: queueEntry.patient_profile_id
+            });
+
+            const patientProfile = patientData as { id: string } | null;
+            if (!patientProfile || patientProfile.id !== queueEntry.patient_profile_id) {
+                console.error("[Token API] Patient authorization failed:", {
+                    patientProfileId: patientProfile?.id,
+                    expectedPatientId: queueEntry.patient_profile_id,
+                });
                 return NextResponse.json(
                     { error: "Not authorized to join this consultation" },
                     { status: 403 }

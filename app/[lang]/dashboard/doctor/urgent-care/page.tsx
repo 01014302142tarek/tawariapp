@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useTheme } from "../context/ThemeContext";
 import { useI18n } from "@/app/i18n";
+import { useAuth } from "@/app/context/AuthContext";
 import {
     toggleDoctorOnline,
     getDoctorQueueStatus,
@@ -15,6 +16,7 @@ import {
     type QueueEntry,
 } from "@/app/actions/queue";
 import { useDoctorQueue, useDoctorOnlineStatus } from "@/lib/hooks/useQueueRealtime";
+import { QueueChat } from "@/components/queue-chat";
 
 // ============================================
 // Icons
@@ -340,26 +342,49 @@ export default function DoctorUrgentCarePage() {
     const router = useRouter();
     const { theme } = useTheme();
     const { isRTL, language } = useI18n();
+    const { profile, isLoading: profileLoading, refreshProfile } = useAuth();
     const isDark = theme === "dark";
 
+    // Get doctor's name and avatar from profile
+    // Show "..." during loading, then actual name
+    const doctorName = profile?.profile.full_name || (profileLoading ? "..." : "Doctor");
+    // Ensure avatar is a valid non-empty string, otherwise null
+    const avatarUrl = profile?.profile.avatar_url;
+    const doctorAvatar = avatarUrl && avatarUrl.trim() !== "" ? avatarUrl : null;
+
+    // Debug: Log profile data to help troubleshoot display issues
+    useEffect(() => {
+        if (profile) {
+            console.log("[Doctor Urgent Care] Profile loaded:", {
+                full_name: profile.profile.full_name,
+                avatar_url: profile.profile.avatar_url,
+                role: profile.profile.role,
+            });
+        }
+    }, [profile]);
+
     const [doctorProfileId, setDoctorProfileId] = useState<string | null>(null);
+    const [doctorMessagingProfileId, setDoctorMessagingProfileId] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
     const [toggling, setToggling] = useState(false);
     const [calling, setCalling] = useState(false);
     const [startingCall, setStartingCall] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [isOnline, setIsOnline] = useState(false);
 
-    const [currentPatient, setCurrentPatient] = useState<QueueEntry | null>(null);
-    const [waitingPatients, setWaitingPatients] = useState<Array<QueueEntry & { patient_name: string; patient_avatar?: string }>>([]);
+    const [currentPatient, setCurrentPatient] = useState<(QueueEntry & { patient_name?: string; patient_avatar?: string; patient_messaging_profile_id?: string }) | null>(null);
+    const [waitingPatients, setWaitingPatients] = useState<Array<QueueEntry & { patient_name: string; patient_avatar?: string; patient_messaging_profile_id?: string }>>([]);
     const [todayStats, setTodayStats] = useState({ completed: 0, earnings: 0 });
 
     // Real-time hooks
-    const { isOnline, currentQueueEntryId, isConnected } = useDoctorOnlineStatus(doctorProfileId);
+    const { isOnline: realtimeOnline, currentQueueEntryId, isConnected } = useDoctorOnlineStatus(doctorProfileId);
     const { queue } = useDoctorQueue(doctorProfileId);
 
-    // Load initial data
-    const loadQueueStatus = useCallback(async () => {
-        setLoading(true);
+    // Load initial data (showLoading = true for initial load, false for background refresh)
+    const loadQueueStatus = useCallback(async (showLoading = false) => {
+        if (showLoading) {
+            setLoading(true);
+        }
         try {
             const result = await getDoctorQueueStatus();
             if (result.error) {
@@ -368,55 +393,94 @@ export default function DoctorUrgentCarePage() {
                 setCurrentPatient(result.currentPatient);
                 setWaitingPatients(result.waitingPatients);
                 setTodayStats(result.todayStats);
-                // Extract doctor profile ID from queue entries if available
-                if (result.waitingPatients.length > 0) {
-                    setDoctorProfileId(result.waitingPatients[0].doctor_profile_id);
-                } else if (result.currentPatient) {
-                    setDoctorProfileId(result.currentPatient.doctor_profile_id);
+                setIsOnline(result.isOnline);
+                // Set doctor profile IDs from the result
+                if (result.doctorProfileId) {
+                    setDoctorProfileId(result.doctorProfileId);
+                }
+                if (result.doctorMessagingProfileId) {
+                    setDoctorMessagingProfileId(result.doctorMessagingProfileId);
                 }
             }
         } catch (err) {
             console.error("Error loading queue status:", err);
             setError(isRTL ? "حدث خطأ في تحميل البيانات" : "Error loading data");
         } finally {
-            setLoading(false);
+            if (showLoading) {
+                setLoading(false);
+            }
         }
     }, [isRTL]);
 
+    // Load queue status on mount (with loading spinner)
     useEffect(() => {
-        loadQueueStatus();
+        loadQueueStatus(true);
     }, [loadQueueStatus]);
+
+    // Refresh profile once on mount to ensure fresh data (bypass stale cache)
+    useEffect(() => {
+        refreshProfile();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    // Note: We no longer auto-set offline on page refresh/close
+    // The doctor's online status persists until they manually toggle offline
+    // This prevents the status from resetting when the page is refreshed
+
+    // Sync isOnline with realtime updates when connected
+    useEffect(() => {
+        if (isConnected && doctorProfileId) {
+            setIsOnline(realtimeOnline);
+        }
+    }, [isConnected, realtimeOnline, doctorProfileId]);
 
     // Update waiting patients when real-time queue updates
     useEffect(() => {
-        if (queue.length > 0) {
-            // Merge real-time updates with existing patient names
-            setWaitingPatients(prev => {
-                const updated = queue.map(q => {
-                    const existing = prev.find(p => p.id === q.id);
-                    return {
-                        ...q,
-                        patient_name: existing?.patient_name || "Patient",
-                        patient_avatar: existing?.patient_avatar,
-                    };
-                });
-                return updated;
+        // Merge real-time updates with existing patient names
+        // Handle both adding and removing patients
+        setWaitingPatients(prev => {
+            if (queue.length === 0) {
+                // Queue is empty - return empty array
+                return [];
+            }
+            const updated = queue.map(q => {
+                const existing = prev.find(p => p.id === q.id);
+                return {
+                    ...q,
+                    patient_name: existing?.patient_name || "Patient",
+                    patient_avatar: existing?.patient_avatar,
+                };
             });
-        }
+            return updated;
+        });
     }, [queue]);
+
+    // Polling fallback - refresh queue every 5 seconds in case real-time doesn't work
+    useEffect(() => {
+        if (!doctorProfileId) return;
+
+        const interval = setInterval(() => {
+            loadQueueStatus(false); // Background refresh without loading spinner
+        }, 5000);
+
+        return () => clearInterval(interval);
+    }, [doctorProfileId, loadQueueStatus]);
 
     // Handle toggle online status
     const handleToggleOnline = async () => {
         setToggling(true);
         setError(null);
+        const newOnlineStatus = !isOnline;
 
         try {
-            const result = await toggleDoctorOnline(!isOnline);
+            const result = await toggleDoctorOnline(newOnlineStatus);
             if (!result.success) {
                 setError(result.error || (isRTL ? "حدث خطأ" : "An error occurred"));
             } else {
-                // Refresh queue status
-                await loadQueueStatus();
+                // Update local state immediately for responsive UI
+                setIsOnline(newOnlineStatus);
+                // Refresh queue status (without showing loading spinner)
+                await loadQueueStatus(false);
             }
         } catch (err) {
             console.error("Error toggling online status:", err);
@@ -491,23 +555,43 @@ export default function DoctorUrgentCarePage() {
             {/* Header */}
             <div className="mb-8">
                 <div className="flex items-center justify-between mb-4">
-                    <div>
-                        <h1 className={cn("text-2xl font-bold mb-1", isDark ? "text-white" : "text-slate-900")}>
-                            {isRTL ? "الاستشارات العاجلة" : "Urgent Care Queue"}
-                        </h1>
-                        <p className={cn(isDark ? "text-slate-400" : "text-slate-600")}>
-                            {isRTL ? "إدارة قائمة انتظار المرضى" : "Manage your patient queue"}
-                        </p>
+                    <div className="flex items-center gap-4">
+                        {/* Doctor Avatar */}
+                        <div className="relative w-14 h-14 rounded-full overflow-hidden border-2 border-teal-500/30 flex items-center justify-center bg-teal-500/10">
+                            {profileLoading ? (
+                                <div className="w-6 h-6 border-2 border-teal-500 border-t-transparent rounded-full animate-spin" />
+                            ) : doctorAvatar ? (
+                                <Image
+                                    src={doctorAvatar}
+                                    alt={doctorName}
+                                    fill
+                                    className="object-cover"
+                                    unoptimized
+                                />
+                            ) : (
+                                <span className="text-xl font-semibold text-teal-500">
+                                    {getInitials(doctorName)}
+                                </span>
+                            )}
+                        </div>
+                        <div>
+                            <h1 className={cn("text-2xl font-bold mb-1", isDark ? "text-white" : "text-slate-900")}>
+                                {doctorName || (isRTL ? "الاستشارات العاجلة" : "Urgent Care Queue")}
+                            </h1>
+                            <p className={cn(isDark ? "text-slate-400" : "text-slate-600")}>
+                                {isRTL ? "إدارة قائمة انتظار المرضى" : "Manage your patient queue"}
+                            </p>
+                        </div>
                     </div>
 
-                    {/* Connection Status */}
+                    {/* Online Status */}
                     <div className="flex items-center gap-2 text-sm">
                         <div className={cn(
                             "w-2 h-2 rounded-full",
-                            isConnected ? "bg-green-500" : "bg-amber-500"
+                            isOnline ? "bg-green-500" : "bg-red-500"
                         )} />
                         <span className={cn(isDark ? "text-slate-400" : "text-slate-600")}>
-                            {isConnected ? (isRTL ? "متصل" : "Connected") : (isRTL ? "جاري الاتصال..." : "Connecting...")}
+                            {isOnline ? (isRTL ? "متصل" : "Online") : (isRTL ? "غير متصل" : "Offline")}
                         </span>
                     </div>
                 </div>
@@ -748,6 +832,30 @@ export default function DoctorUrgentCarePage() {
                             : "Toggle the switch above to start accepting patients in your queue"}
                     </p>
                 </div>
+            )}
+
+            {/* Queue Chat - Show when there's a patient to chat with */}
+            {isOnline && doctorMessagingProfileId && (
+                // Prioritize current patient, then first waiting patient
+                currentPatient?.patient_messaging_profile_id ? (
+                    <QueueChat
+                        recipientProfileId={currentPatient.patient_messaging_profile_id}
+                        recipientName={currentPatient.patient_name || (isRTL ? "مريض" : "Patient")}
+                        recipientAvatar={currentPatient.patient_avatar}
+                        isDark={isDark}
+                        isRTL={isRTL}
+                        currentProfileId={doctorMessagingProfileId}
+                    />
+                ) : waitingPatients.length > 0 && waitingPatients[0].patient_messaging_profile_id ? (
+                    <QueueChat
+                        recipientProfileId={waitingPatients[0].patient_messaging_profile_id}
+                        recipientName={waitingPatients[0].patient_name}
+                        recipientAvatar={waitingPatients[0].patient_avatar}
+                        isDark={isDark}
+                        isRTL={isRTL}
+                        currentProfileId={doctorMessagingProfileId}
+                    />
+                ) : null
             )}
         </div>
     );
