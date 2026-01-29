@@ -209,8 +209,12 @@ export default function Sidebar({ isMobileOpen, onClose }: { isMobileOpen?: bool
                 {/* Main Navigation - Centered vertically */}
                 <nav className="flex-1 py-4 overflow-y-auto overflow-x-hidden flex flex-col justify-center">
                     <div className="space-y-1">
-                        {navItems.map((item) => {
-                            const isActive = pathname === item.href || pathname?.startsWith(item.href + "/");
+                        {navItems.map((item, index) => {
+                            // Dashboard (index 0) should only be active on exact match
+                            // Other items can be active on exact match or sub-paths
+                            const isActive = index === 0
+                                ? pathname === item.href
+                                : pathname === item.href || pathname?.startsWith(item.href + "/");
                             const isHighlighted = "highlight" in item && item.highlight;
 
                             // Handle navigation click - close sidebar after delay on mobile

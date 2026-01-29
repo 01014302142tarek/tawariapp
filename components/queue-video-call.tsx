@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import DailyIframe, { DailyCall } from "@daily-co/daily-js";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { endQueueConsultation, getQueueEntryForCall } from "@/app/actions/queue";
+import { endQueueConsultation, getQueueEntryForCall, leaveQueue } from "@/app/actions/queue";
 
 // ============================================
 // Types
@@ -70,6 +70,7 @@ export function QueueVideoCall({
     const callFrameRef = useRef<DailyCall | null>(null);
     const isMountedRef = useRef(true);
     const isInitializingRef = useRef(false);
+    const hasJoinedRef = useRef(false); // Track if we successfully joined
 
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -80,6 +81,8 @@ export function QueueVideoCall({
         doctorName?: string;
         patientName?: string;
     }>({});
+    const [consultationEnded, setConsultationEnded] = useState(false);
+    const statusPollRef = useRef<NodeJS.Timeout | null>(null);
 
     // Fetch token and join call
     const initializeCall = useCallback(async () => {
@@ -89,6 +92,7 @@ export function QueueVideoCall({
             return;
         }
         isInitializingRef.current = true;
+        hasJoinedRef.current = false; // Reset join status for new call
 
         setLoading(true);
         setError(null);
@@ -132,6 +136,13 @@ export function QueueVideoCall({
 
                 if (!response.ok) {
                     const errorData = await response.json();
+
+                    // Handle room expired error specifically (410 Gone)
+                    if (response.status === 410 || errorData.code === "ROOM_EXPIRED") {
+                        console.log("[VideoCall] Room has expired:", errorData);
+                        throw new Error(errorData.message || "Video room has expired");
+                    }
+
                     // Retry once on certain errors (room not ready, etc.)
                     if (retryCount < 1 && (errorData.error === "Video room not created yet" || response.status === 400)) {
                         console.log("[VideoCall] Token fetch failed, retrying in 500ms...", errorData);
@@ -140,13 +151,20 @@ export function QueueVideoCall({
                         return fetchTokenWithRetry(retryCount + 1);
                     }
                     console.error("[VideoCall] Token API error:", response.status, errorData);
-                    throw new Error(errorData.error || "Failed to get meeting token");
+                    throw new Error(errorData.message || errorData.error || "Failed to get meeting token");
                 }
 
                 return response.json();
             };
 
             const tokenData = await fetchTokenWithRetry();
+            console.log("[VideoCall] Token received:", {
+                roomUrl: tokenData.roomUrl,
+                roomName: tokenData.roomName,
+                isOwner: tokenData.isOwner,
+                userName: tokenData.userName,
+                tokenLength: tokenData.token?.length || 0,
+            });
 
             if (!isMountedRef.current) return;
 
@@ -196,7 +214,8 @@ export function QueueVideoCall({
             });
 
             callFrame.on("joined-meeting", () => {
-                console.log("[VideoCall] Joined meeting");
+                console.log("[VideoCall] Joined meeting successfully");
+                hasJoinedRef.current = true; // Mark that we successfully joined
                 if (isMountedRef.current) {
                     setCallState("joined");
                     setLoading(false);
@@ -204,17 +223,35 @@ export function QueueVideoCall({
             });
 
             callFrame.on("left-meeting", () => {
-                console.log("[VideoCall] Left meeting");
+                console.log("[VideoCall] Left meeting, hasJoined:", hasJoinedRef.current);
                 if (isMountedRef.current) {
-                    setCallState("left");
-                    handleCallEnded();
+                    // Only navigate away if we were actually in a joined call
+                    // Don't navigate if we hit an error during join
+                    if (hasJoinedRef.current) {
+                        setCallState("left");
+                        handleCallEnded();
+                    } else {
+                        console.log("[VideoCall] Left meeting but was never joined, not navigating");
+                        setCallState("left");
+                    }
                 }
             });
 
             callFrame.on("error", (event) => {
-                console.error("[VideoCall] Daily error:", event);
+                console.error("[VideoCall] Daily error:", JSON.stringify(event, null, 2));
+                console.error("[VideoCall] Daily error action:", event?.action);
+                console.error("[VideoCall] Daily error msg:", event?.errorMsg);
+                console.error("[VideoCall] Daily error details:", event?.error);
                 if (isMountedRef.current) {
-                    setError(event?.errorMsg || "Call error occurred");
+                    const errorMsg = event?.errorMsg || event?.error?.message || "Call error occurred";
+                    // Check for room expired/unavailable error
+                    if (errorMsg.includes("no longer available") || errorMsg.includes("room not found") || errorMsg.includes("does not exist") || errorMsg.includes("has expired")) {
+                        setError(userRole === "patient"
+                            ? "The video room has expired. Please wait for the doctor to restart the call."
+                            : "The video room has expired. Please start the call again.");
+                    } else {
+                        setError(errorMsg);
+                    }
                     setCallState("error");
                     setLoading(false);
                 }
@@ -226,9 +263,15 @@ export function QueueVideoCall({
             });
 
             callFrame.on("participant-left", (event) => {
-                // If the other participant left, show a notification
+                // If the other participant left (doctor or patient)
                 if (event?.participant && !event.participant.local) {
                     console.log("[VideoCall] Other participant left:", event.participant);
+                    // If patient and doctor left, the consultation is likely over
+                    if (userRole === "patient") {
+                        console.log("[VideoCall] Doctor left the call, checking consultation status...");
+                        // Check if consultation ended
+                        checkConsultationStatus();
+                    }
                 }
             });
 
@@ -254,8 +297,30 @@ export function QueueVideoCall({
 
         } catch (err) {
             console.error("[VideoCall] Error initializing call:", err);
+            console.error("[VideoCall] Error type:", typeof err);
+            console.error("[VideoCall] Error stringified:", JSON.stringify(err, null, 2));
+            if (err && typeof err === 'object') {
+                console.error("[VideoCall] Error keys:", Object.keys(err));
+                console.error("[VideoCall] Error action:", (err as Record<string, unknown>).action);
+                console.error("[VideoCall] Error errorMsg:", (err as Record<string, unknown>).errorMsg);
+            }
             if (isMountedRef.current) {
-                setError(err instanceof Error ? err.message : "Failed to join call");
+                let errorMsg = "Failed to join call";
+                if (err instanceof Error) {
+                    errorMsg = err.message;
+                } else if (err && typeof err === 'object') {
+                    errorMsg = (err as Record<string, unknown>).errorMsg as string ||
+                               (err as Record<string, unknown>).message as string ||
+                               JSON.stringify(err);
+                }
+                // Check for room expired/unavailable error
+                if (errorMsg.includes("no longer available") || errorMsg.includes("room not found") || errorMsg.includes("does not exist") || errorMsg.includes("has expired")) {
+                    setError(userRole === "patient"
+                        ? "The video room has expired. Please wait for the doctor to restart the call."
+                        : "The video room has expired. Please start the call again.");
+                } else {
+                    setError(errorMsg);
+                }
                 setCallState("error");
                 setLoading(false);
             }
@@ -310,9 +375,11 @@ export function QueueVideoCall({
         }
     }, [userRole, queueEntryId, handleCallEnded]);
 
-    // Leave call (patient)
+    // Leave call (patient) - also properly ends the queue entry
     const handleLeaveCall = useCallback(async () => {
+        setEnding(true);
         try {
+            // Leave the Daily call
             if (callFrameRef.current) {
                 try {
                     await callFrameRef.current.leave();
@@ -320,18 +387,72 @@ export function QueueVideoCall({
                     console.warn("[VideoCall] Error leaving call:", leaveErr);
                 }
             }
+
+            // Also update the queue entry status so patient is no longer "in queue"
+            if (userRole === "patient") {
+                try {
+                    console.log("[VideoCall] Patient leaving - updating queue entry...");
+                    await leaveQueue(queueEntryId);
+                    console.log("[VideoCall] Queue entry updated successfully");
+                } catch (queueErr) {
+                    console.warn("[VideoCall] Error updating queue entry:", queueErr);
+                    // Continue even if this fails
+                }
+            }
+
             handleCallEnded();
         } catch (err) {
             console.error("[VideoCall] Error leaving call:", err);
             handleCallEnded();
+        } finally {
+            if (isMountedRef.current) {
+                setEnding(false);
+                setShowEndConfirm(false);
+            }
         }
-    }, [handleCallEnded]);
+    }, [handleCallEnded, userRole, queueEntryId]);
 
-    // Initialize on mount
+    // Check consultation status (for patients to detect when doctor ends the call)
+    const checkConsultationStatus = useCallback(async () => {
+        if (!isMountedRef.current || consultationEnded) return;
+
+        try {
+            const result = await getQueueEntryForCall(queueEntryId);
+            if (!isMountedRef.current) return;
+
+            if (result.success && result.entry) {
+                console.log("[VideoCall] Status check:", result.entry.status);
+                if (result.entry.status === "completed") {
+                    console.log("[VideoCall] Consultation completed, redirecting...");
+                    setConsultationEnded(true);
+                    // Clean up and redirect
+                    if (callFrameRef.current) {
+                        try {
+                            await callFrameRef.current.leave();
+                        } catch (e) {
+                            console.warn("[VideoCall] Error leaving after consultation ended:", e);
+                        }
+                    }
+                    handleCallEnded();
+                }
+            }
+        } catch (err) {
+            console.error("[VideoCall] Error checking consultation status:", err);
+        }
+    }, [queueEntryId, consultationEnded, handleCallEnded]);
+
+    // Initialize on mount - only run once
     useEffect(() => {
+        // Track if this specific effect has already run
+        let hasInitialized = false;
+
         isMountedRef.current = true;
-        isInitializingRef.current = false; // Reset on mount (important for React Strict Mode)
-        initializeCall();
+
+        // Only initialize if not already initializing
+        if (!isInitializingRef.current && !hasInitialized) {
+            hasInitialized = true;
+            initializeCall();
+        }
 
         return () => {
             // Mark as unmounted first to prevent state updates
@@ -352,7 +473,33 @@ export function QueueVideoCall({
 
             cleanupDaily();
         };
-    }, [initializeCall]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [queueEntryId]); // Only re-run if queueEntryId changes, not when initializeCall reference changes
+
+    // Poll for consultation status changes (for patients to detect when doctor ends the call)
+    useEffect(() => {
+        if (userRole !== "patient" || consultationEnded) return;
+
+        // Start polling after joining the call
+        const startPolling = () => {
+            statusPollRef.current = setInterval(() => {
+                if (isMountedRef.current && !consultationEnded) {
+                    checkConsultationStatus();
+                }
+            }, 5000); // Check every 5 seconds
+        };
+
+        // Wait a bit before starting to poll
+        const timeoutId = setTimeout(startPolling, 3000);
+
+        return () => {
+            clearTimeout(timeoutId);
+            if (statusPollRef.current) {
+                clearInterval(statusPollRef.current);
+                statusPollRef.current = null;
+            }
+        };
+    }, [userRole, consultationEnded, checkConsultationStatus]);
 
     // Handle back navigation
     const handleBack = () => {
@@ -364,7 +511,7 @@ export function QueueVideoCall({
     };
 
     return (
-        <div className={cn("min-h-screen flex flex-col", isRTL && "rtl")}>
+        <div className={cn("h-[100dvh] flex flex-col", isRTL && "rtl")}>
             {/* End Call Confirmation Modal */}
             <AnimatePresence>
                 {showEndConfirm && (
@@ -485,7 +632,7 @@ export function QueueVideoCall({
             </div>
 
             {/* Video Container */}
-            <div className="flex-1 relative">
+            <div className="flex-1 relative min-h-0 overflow-hidden">
                 {/* Loading State */}
                 {loading && (
                     <div className="absolute inset-0 flex items-center justify-center bg-slate-900 z-10">
@@ -498,10 +645,37 @@ export function QueueVideoCall({
                     </div>
                 )}
 
+                {/* Consultation Ended State (for patients) */}
+                {consultationEnded && userRole === "patient" && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-slate-900 z-10 overflow-auto">
+                        <div className="text-center max-w-md mx-auto p-6 my-auto">
+                            <div className="w-16 h-16 rounded-full bg-teal-500/10 flex items-center justify-center mx-auto mb-4">
+                                <svg className="w-8 h-8 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                            </div>
+                            <h3 className="text-xl font-semibold text-white mb-2">
+                                {isRTL ? "انتهت الاستشارة" : "Consultation Ended"}
+                            </h3>
+                            <p className="text-slate-400 mb-6">
+                                {isRTL
+                                    ? "شكراً لك. لقد أنهى الطبيب الاستشارة. يمكنك حجز استشارة جديدة في أي وقت."
+                                    : "Thank you. The doctor has ended the consultation. You can book a new consultation anytime."}
+                            </p>
+                            <button
+                                onClick={handleCallEnded}
+                                className="px-6 py-2 bg-teal-500 text-white rounded-lg font-medium hover:bg-teal-600 transition-colors"
+                            >
+                                {isRTL ? "العودة للأطباء المتاحين" : "Back to Available Doctors"}
+                            </button>
+                        </div>
+                    </div>
+                )}
+
                 {/* Error State */}
-                {error && callState === "error" && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-slate-900 z-10">
-                        <div className="text-center max-w-md mx-auto p-6">
+                {error && callState === "error" && !consultationEnded && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-slate-900 z-10 overflow-auto">
+                        <div className="text-center max-w-md mx-auto p-6 my-auto">
                             <div className="w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center mx-auto mb-4">
                                 <svg className="w-8 h-8 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />

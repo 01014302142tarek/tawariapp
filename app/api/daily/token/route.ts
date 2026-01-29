@@ -145,6 +145,44 @@ export async function POST(request: NextRequest) {
             );
         }
 
+        // CRITICAL: Verify the room still exists on Daily.co before generating token
+        // Rooms expire after 1 hour, but database still has the old room URL
+        try {
+            const roomCheckResponse = await fetch(
+                `https://api.daily.co/v1/rooms/${queueEntry.daily_room_name}`,
+                {
+                    method: "GET",
+                    headers: {
+                        Authorization: `Bearer ${dailyApiKey}`,
+                    },
+                }
+            );
+
+            if (!roomCheckResponse.ok) {
+                console.error("[Token API] Room no longer exists on Daily.co:", {
+                    roomName: queueEntry.daily_room_name,
+                    status: roomCheckResponse.status,
+                });
+
+                // Return a specific error so the client can show appropriate message
+                return NextResponse.json(
+                    {
+                        error: "Video room has expired",
+                        code: "ROOM_EXPIRED",
+                        message: profile.role === "patient"
+                            ? "The video room has expired. Please wait for the doctor to restart the call."
+                            : "The video room has expired. Please start the call again."
+                    },
+                    { status: 410 } // 410 Gone - room no longer exists
+                );
+            }
+
+            console.log("[Token API] Room verified to exist:", queueEntry.daily_room_name);
+        } catch (roomCheckError) {
+            console.error("[Token API] Error checking room existence:", roomCheckError);
+            // Continue anyway - let Daily.co handle the error during join
+        }
+
         // Create meeting token
         const tokenResponse = await fetch("https://api.daily.co/v1/meeting-tokens", {
             method: "POST",

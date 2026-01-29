@@ -6,7 +6,7 @@ import Image from "next/image";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useI18n } from "@/app/i18n";
-import { getOnlineDoctors, getMyQueuePosition, type OnlineDoctor } from "@/app/actions/queue";
+import { getOnlineDoctors, getMyQueuePosition, leaveQueue, type OnlineDoctor } from "@/app/actions/queue";
 import { useOnlineDoctors } from "@/lib/hooks/useQueueRealtime";
 
 // ============================================
@@ -193,12 +193,13 @@ const DoctorCard: React.FC<DoctorCardProps> = ({ doctor, onSelect, isRTL }) => {
 // ============================================
 export default function UrgentCarePage() {
     const router = useRouter();
-    const { t, isRTL, language } = useI18n();
+    const { isRTL, language } = useI18n();
 
     const [doctors, setDoctors] = useState<OnlineDoctor[]>([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
     const [existingQueueEntry, setExistingQueueEntry] = useState<string | null>(null);
+    const [leavingQueue, setLeavingQueue] = useState(false);
     const [debugInfo, setDebugInfo] = useState<{ totalDoctors: number; onlineDoctors: number; verifiedDoctors: number } | null>(null);
 
     // Real-time updates for online doctors
@@ -213,7 +214,11 @@ export default function UrgentCarePage() {
             // Check if patient is already in a queue
             const queueStatus = await getMyQueuePosition();
             if (queueStatus.inQueue && queueStatus.queueEntry) {
+                // Only set if truly in queue
                 setExistingQueueEntry(queueStatus.queueEntry.id);
+            } else {
+                // Clear any existing queue entry (e.g., after call ended)
+                setExistingQueueEntry(null);
             }
 
             // Get online doctors
@@ -232,8 +237,33 @@ export default function UrgentCarePage() {
         }
     };
 
+    // Load on mount
     useEffect(() => {
         loadDoctors();
+    }, []);
+
+    // Refresh when page gains focus (e.g., returning from call page)
+    useEffect(() => {
+        const handleFocus = () => {
+            console.log("[Urgent Care] Page focused, refreshing data...");
+            loadDoctors(false);
+        };
+
+        window.addEventListener("focus", handleFocus);
+
+        // Also refresh on visibility change (tab becomes visible)
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === "visible") {
+                console.log("[Urgent Care] Page visible, refreshing data...");
+                loadDoctors(false);
+            }
+        };
+        document.addEventListener("visibilitychange", handleVisibilityChange);
+
+        return () => {
+            window.removeEventListener("focus", handleFocus);
+            document.removeEventListener("visibilitychange", handleVisibilityChange);
+        };
     }, []);
 
     // Handle doctor selection - go to payment page
@@ -245,6 +275,27 @@ export default function UrgentCarePage() {
     const handleGoToWaitingRoom = () => {
         if (existingQueueEntry) {
             router.push(`/${language}/dashboard/patient/urgent-care/waiting/${existingQueueEntry}`);
+        }
+    };
+
+    // Handle leaving the queue (for stuck entries)
+    const handleLeaveQueue = async () => {
+        if (!existingQueueEntry) return;
+
+        setLeavingQueue(true);
+        try {
+            const result = await leaveQueue(existingQueueEntry);
+            if (result.success) {
+                setExistingQueueEntry(null);
+                // Refresh doctors list
+                loadDoctors(false);
+            } else {
+                console.error("Error leaving queue:", result.error);
+            }
+        } catch (error) {
+            console.error("Error leaving queue:", error);
+        } finally {
+            setLeavingQueue(false);
         }
     };
 
@@ -306,12 +357,23 @@ export default function UrgentCarePage() {
                             </p>
                         </div>
                     </div>
-                    <button
-                        onClick={handleGoToWaitingRoom}
-                        className="px-4 py-2 bg-teal-500 text-white rounded-lg font-medium hover:bg-teal-600 transition-colors"
-                    >
-                        {isRTL ? "غرفة الانتظار" : "Waiting Room"}
-                    </button>
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={handleLeaveQueue}
+                            disabled={leavingQueue}
+                            className="px-4 py-2 bg-slate-700 text-slate-300 rounded-lg font-medium hover:bg-slate-600 transition-colors disabled:opacity-50"
+                        >
+                            {leavingQueue
+                                ? (isRTL ? "جاري..." : "Leaving...")
+                                : (isRTL ? "مغادرة" : "Leave")}
+                        </button>
+                        <button
+                            onClick={handleGoToWaitingRoom}
+                            className="px-4 py-2 bg-teal-500 text-white rounded-lg font-medium hover:bg-teal-600 transition-colors"
+                        >
+                            {isRTL ? "غرفة الانتظار" : "Waiting Room"}
+                        </button>
+                    </div>
                 </motion.div>
             )}
 

@@ -1,6 +1,6 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { messageLimiter } from "@/lib/rate-limit";
 import { messageSchema, validateInput } from "@/lib/validations";
 import { notifyNewMessage } from "./notifications";
@@ -309,8 +309,11 @@ export async function sendMessage(data: {
 
     const senderName = (senderData as { full_name: string } | null)?.full_name || "Someone";
 
+    // Use admin client to bypass RLS since we've already verified the user
+    const adminSupabase = await createAdminClient();
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: insertedData, error } = await (supabase as any)
+    const { data: insertedData, error } = await (adminSupabase as any)
         .from("messages")
         .insert({
             conversation_id: data.conversationId,

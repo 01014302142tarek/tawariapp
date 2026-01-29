@@ -403,22 +403,41 @@ export async function startQueueConsultation(
         return { success: false, error: "Queue entry not found" };
     }
 
-    // Allow rejoining if already in_consultation with existing room
-    if (queueEntry.status === "in_consultation" && queueEntry.daily_room_url) {
-        // Already in consultation - return existing room URL for rejoin
-        return { success: true, roomUrl: queueEntry.daily_room_url };
-    }
-
-    if (queueEntry.status !== "called") {
-        return { success: false, error: "Patient must be called first" };
-    }
-
-    // Create Daily.co room
+    // Create Daily.co room configuration
     const dailyApiKey = process.env.DAILY_API_KEY;
     const dailyDomain = process.env.NEXT_PUBLIC_DAILY_DOMAIN;
 
     if (!dailyApiKey || !dailyDomain) {
         return { success: false, error: "Video service not configured" };
+    }
+
+    // Allow rejoining if already in_consultation with existing room
+    if (queueEntry.status === "in_consultation" && queueEntry.daily_room_url && queueEntry.daily_room_name) {
+        // Check if the room still exists on Daily.co
+        try {
+            const checkResponse = await fetch(`https://api.daily.co/v1/rooms/${queueEntry.daily_room_name}`, {
+                method: "GET",
+                headers: {
+                    Authorization: `Bearer ${dailyApiKey}`,
+                },
+            });
+
+            if (checkResponse.ok) {
+                // Room still exists - return existing URL for rejoin
+                console.log("[startQueueConsultation] Rejoining existing room:", queueEntry.daily_room_name);
+                return { success: true, roomUrl: queueEntry.daily_room_url };
+            } else {
+                // Room expired or deleted - will create a new one below
+                console.log("[startQueueConsultation] Existing room expired, creating new one");
+            }
+        } catch (err) {
+            console.warn("[startQueueConsultation] Error checking room existence:", err);
+            // Continue to create new room
+        }
+    }
+
+    if (queueEntry.status !== "called" && queueEntry.status !== "in_consultation") {
+        return { success: false, error: "Patient must be called first" };
     }
 
     let roomUrl: string;
@@ -782,20 +801,24 @@ export async function joinDoctorQueue(data: {
 }
 
 /**
- * Leave queue (cancel)
+ * Leave queue (cancel) - works for waiting, called, or in_consultation
  */
 export async function leaveQueue(
     queueEntryId: string
 ): Promise<{ success: boolean; error?: string }> {
+    console.log("[leaveQueue] Starting for queueEntryId:", queueEntryId);
+
     const supabase = await createClient();
 
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
+        console.log("[leaveQueue] Not authenticated");
         return { success: false, error: "Not authenticated" };
     }
+    console.log("[leaveQueue] User authenticated:", user.id);
 
     // Get patient profile
-    const { data: profileData } = await supabase
+    const { data: profileData, error: profileError } = await supabase
         .from("profiles")
         .select("id")
         .eq("user_id", user.id)
@@ -803,10 +826,12 @@ export async function leaveQueue(
 
     const profile = profileData as { id: string } | null;
     if (!profile) {
+        console.log("[leaveQueue] Profile not found:", profileError);
         return { success: false, error: "Profile not found" };
     }
+    console.log("[leaveQueue] Profile found:", profile.id);
 
-    const { data: patientData } = await supabase
+    const { data: patientData, error: patientError } = await supabase
         .from("patient_profiles")
         .select("id")
         .eq("profile_id", profile.id)
@@ -814,44 +839,94 @@ export async function leaveQueue(
 
     const patient = patientData as { id: string } | null;
     if (!patient) {
+        console.log("[leaveQueue] Patient profile not found:", patientError);
         return { success: false, error: "Patient profile not found" };
     }
+    console.log("[leaveQueue] Patient found:", patient.id);
 
     // Get queue entry
-    const { data: queueData } = await supabase
+    const { data: queueData, error: queueError } = await supabase
         .from("consultation_queue")
         .select("*")
         .eq("id", queueEntryId)
         .eq("patient_profile_id", patient.id)
         .single();
 
+    console.log("[leaveQueue] Queue query result:", { queueData, queueError });
+
     const queueEntry = queueData as QueueEntry | null;
     if (!queueEntry) {
+        console.log("[leaveQueue] Queue entry not found for id:", queueEntryId, "patient:", patient.id);
         return { success: false, error: "Queue entry not found" };
     }
+    console.log("[leaveQueue] Queue entry found with status:", queueEntry.status);
 
-    if (!["waiting", "called"].includes(queueEntry.status)) {
-        return { success: false, error: "Cannot leave queue at this stage" };
+    // Allow leaving from waiting, called, or in_consultation status
+    if (!["waiting", "called", "in_consultation"].includes(queueEntry.status)) {
+        console.log("[leaveQueue] Invalid status for leaving:", queueEntry.status);
+        return { success: false, error: `Cannot leave queue at this stage (status: ${queueEntry.status})` };
     }
 
-    // Update to cancelled
+    // Patient-initiated leave is always 'cancelled' (RLS only allows patients to set status to 'cancelled')
+    // Doctor-initiated end uses endQueueConsultation() which sets status to 'completed'
+    const finalStatus = "cancelled";
+
+    // Calculate duration if was in consultation
+    const endedAt = new Date();
+    const updateData: Record<string, unknown> = { status: finalStatus };
+
+    if (queueEntry.status === "in_consultation" && queueEntry.consultation_started_at) {
+        const startedAt = new Date(queueEntry.consultation_started_at);
+        const durationMinutes = Math.round((endedAt.getTime() - startedAt.getTime()) / 60000);
+        updateData.consultation_ended_at = endedAt.toISOString();
+        updateData.consultation_duration_minutes = durationMinutes;
+    }
+
+    console.log("[leaveQueue] Final status will be:", finalStatus);
+
+    console.log("[leaveQueue] Updating queue entry with:", updateData);
+
+    // Update queue entry - include patient_profile_id check for RLS
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { error: updateError } = await (supabase as any)
+    const { data: updateResult, error: updateError } = await (supabase as any)
         .from("consultation_queue")
-        .update({ status: "cancelled" })
-        .eq("id", queueEntryId);
+        .update(updateData)
+        .eq("id", queueEntryId)
+        .eq("patient_profile_id", patient.id)
+        .select();
+
+    console.log("[leaveQueue] Update result:", { updateResult, updateError });
 
     if (updateError) {
-        console.error("Error leaving queue:", updateError);
+        console.error("[leaveQueue] Error leaving queue:", updateError);
         return { success: false, error: updateError.message };
     }
 
+    // Check if any rows were actually updated
+    if (!updateResult || updateResult.length === 0) {
+        console.error("[leaveQueue] No rows updated - possible RLS issue");
+        return { success: false, error: "Failed to update queue entry - please try again" };
+    }
+
+    // If was in_consultation, also clear doctor's current_queue_entry_id
+    if (queueEntry.status === "in_consultation") {
+        console.log("[leaveQueue] Clearing doctor's current_queue_entry_id");
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        await (supabase as any)
+            .from("doctor_profiles")
+            .update({ current_queue_entry_id: null })
+            .eq("id", queueEntry.doctor_profile_id)
+            .eq("current_queue_entry_id", queueEntryId); // Only clear if it's still this entry
+    }
+
     // Recalculate positions
+    console.log("[leaveQueue] Recalculating positions for doctor:", queueEntry.doctor_profile_id);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await (supabase as any).rpc("recalculate_queue_positions", {
         p_doctor_profile_id: queueEntry.doctor_profile_id
     });
 
+    console.log("[leaveQueue] Successfully left queue");
     return { success: true };
 }
 

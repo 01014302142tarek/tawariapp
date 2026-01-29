@@ -74,8 +74,11 @@ export function QueueChat({
     const [conversationId, setConversationId] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
     const [sending, setSending] = useState(false);
+    const [sendError, setSendError] = useState<string | null>(null);
     const [unreadCount, setUnreadCount] = useState(0);
+    const [hasNewMessage, setHasNewMessage] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
+    const textareaRef = useRef<HTMLTextAreaElement>(null);
     const pollingRef = useRef<NodeJS.Timeout | null>(null);
 
     // Initialize conversation
@@ -102,9 +105,13 @@ export function QueueChat({
             if (result.messages) {
                 const prevCount = messages.length;
                 setMessages(result.messages);
-                // If chat is closed and we have new messages, increment unread
+                // If chat is closed and we have new messages, increment unread and trigger animation
                 if (!isOpen && result.messages.length > prevCount) {
-                    setUnreadCount(prev => prev + (result.messages.length - prevCount));
+                    const newCount = result.messages.length - prevCount;
+                    setUnreadCount(prev => prev + newCount);
+                    setHasNewMessage(true);
+                    // Reset animation after 3 seconds
+                    setTimeout(() => setHasNewMessage(false), 3000);
                 }
             }
         } catch (err) {
@@ -160,25 +167,65 @@ export function QueueChat({
         if (!newMessage.trim() || !conversationId || sending) return;
 
         setSending(true);
+        setSendError(null);
         try {
+            console.log("[QueueChat] Sending message:", {
+                conversationId,
+                recipientProfileId,
+                contentLength: newMessage.trim().length,
+                currentProfileId,
+            });
             const result = await sendMessage({
                 conversationId,
                 recipientProfileId,
                 content: newMessage.trim(),
             });
 
+            console.log("[QueueChat] Send result:", result);
+
+            if (result.error) {
+                console.error("[QueueChat] Send error:", result.error);
+                setSendError(result.error);
+                // Clear error after 5 seconds
+                setTimeout(() => setSendError(null), 5000);
+                return;
+            }
+
             if (result.message) {
                 setMessages(prev => [...prev, { ...result.message!, sender: undefined }]);
                 setNewMessage("");
+                // Reset textarea height
+                if (textareaRef.current) {
+                    textareaRef.current.style.height = "auto";
+                }
                 setTimeout(() => {
                     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
                 }, 50);
             }
         } catch (err) {
             console.error("[QueueChat] Error sending message:", err);
+            setSendError("Failed to send message");
+            setTimeout(() => setSendError(null), 5000);
         } finally {
             setSending(false);
         }
+    };
+
+    // Handle key down for Shift+Enter (new line) and Enter (send)
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+        if (e.key === "Enter" && !e.shiftKey) {
+            e.preventDefault();
+            handleSendMessage();
+        }
+        // Shift+Enter will naturally create a new line
+    };
+
+    // Auto-resize textarea
+    const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+        setNewMessage(e.target.value);
+        // Auto-resize
+        e.target.style.height = "auto";
+        e.target.style.height = Math.min(e.target.scrollHeight, 100) + "px";
     };
 
     // Format time
@@ -331,29 +378,45 @@ export function QueueChat({
                                         "p-2 border-t",
                                         isDark ? "border-white/10" : "border-gray-200"
                                     )}>
+                                        {/* Error message */}
+                                        <AnimatePresence>
+                                            {sendError && (
+                                                <motion.div
+                                                    initial={{ opacity: 0, height: 0 }}
+                                                    animate={{ opacity: 1, height: "auto" }}
+                                                    exit={{ opacity: 0, height: 0 }}
+                                                    className="mb-2 px-2 py-1 bg-red-500/20 text-red-400 text-xs rounded"
+                                                >
+                                                    {sendError}
+                                                </motion.div>
+                                            )}
+                                        </AnimatePresence>
                                         <form
                                             onSubmit={(e) => {
                                                 e.preventDefault();
                                                 handleSendMessage();
                                             }}
-                                            className="flex gap-2"
+                                            className="flex gap-2 items-end"
                                         >
-                                            <input
-                                                type="text"
-                                                placeholder={isRTL ? "اكتب رسالة..." : "Type a message..."}
+                                            <textarea
+                                                ref={textareaRef}
+                                                placeholder={isRTL ? "اكتب رسالة... (Shift+Enter للسطر الجديد)" : "Type a message... (Shift+Enter for new line)"}
                                                 value={newMessage}
-                                                onChange={(e) => setNewMessage(e.target.value)}
+                                                onChange={handleTextareaChange}
+                                                onKeyDown={handleKeyDown}
+                                                rows={1}
                                                 className={cn(
-                                                    "flex-1 px-3 py-2 rounded-lg text-sm border transition-colors",
+                                                    "flex-1 px-3 py-2 rounded-lg text-sm border transition-colors resize-none overflow-hidden",
                                                     isDark
                                                         ? "bg-slate-800 border-slate-700 text-white placeholder:text-slate-500 focus:border-teal-500"
                                                         : "bg-gray-50 border-gray-200 text-slate-900 placeholder:text-gray-400 focus:border-teal-500"
                                                 )}
+                                                style={{ minHeight: "38px", maxHeight: "100px" }}
                                             />
                                             <button
                                                 type="submit"
                                                 disabled={!newMessage.trim() || sending}
-                                                className="px-3 py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                                className="px-3 py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
                                             >
                                                 {sending ? (
                                                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -370,16 +433,39 @@ export function QueueChat({
                 ) : (
                     <motion.button
                         initial={{ scale: 0 }}
-                        animate={{ scale: 1 }}
+                        animate={{
+                            scale: hasNewMessage ? [1, 1.2, 1] : 1,
+                            rotate: hasNewMessage ? [0, -10, 10, -10, 0] : 0,
+                        }}
+                        transition={{
+                            duration: hasNewMessage ? 0.5 : 0.2,
+                            repeat: hasNewMessage ? 2 : 0,
+                        }}
                         exit={{ scale: 0 }}
-                        onClick={() => setIsOpen(true)}
-                        className="relative w-14 h-14 rounded-full bg-gradient-to-br from-teal-500 to-cyan-500 text-white shadow-lg shadow-teal-500/30 flex items-center justify-center hover:shadow-xl hover:shadow-teal-500/40 transition-shadow"
+                        onClick={() => {
+                            setIsOpen(true);
+                            setHasNewMessage(false);
+                        }}
+                        className={cn(
+                            "relative w-14 h-14 rounded-full text-white shadow-lg flex items-center justify-center transition-all",
+                            unreadCount > 0
+                                ? "bg-gradient-to-br from-red-500 to-orange-500 shadow-red-500/40 hover:shadow-xl hover:shadow-red-500/50"
+                                : "bg-gradient-to-br from-teal-500 to-cyan-500 shadow-teal-500/30 hover:shadow-xl hover:shadow-teal-500/40"
+                        )}
                     >
+                        {/* Pulse ring when there are unread messages */}
+                        {unreadCount > 0 && (
+                            <span className="absolute inset-0 rounded-full animate-ping bg-red-500 opacity-30" />
+                        )}
                         {Icons.chat}
                         {unreadCount > 0 && (
-                            <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
+                            <motion.span
+                                initial={{ scale: 0 }}
+                                animate={{ scale: 1 }}
+                                className="absolute -top-1 -right-1 w-6 h-6 bg-red-600 text-white text-xs font-bold rounded-full flex items-center justify-center border-2 border-white shadow-md"
+                            >
                                 {unreadCount > 9 ? "9+" : unreadCount}
-                            </span>
+                            </motion.span>
                         )}
                     </motion.button>
                 )}
