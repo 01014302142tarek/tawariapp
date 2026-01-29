@@ -10,6 +10,7 @@ import { useRouter } from "next/navigation";
 import { useI18n } from "@/app/i18n";
 import { useAuth } from "@/app/context/AuthContext";
 import { completeOnboarding, getDoctorOnboardingStatus, uploadDoctorAvatar, uploadDoctorCredentials } from "@/app/actions/doctor-onboarding";
+import { validatePhoneNumber, sendPhoneOTP, verifyPhoneOTP } from "@/app/actions/phone-verification";
 
 // Helper to convert File to base64 string
 const fileToBase64 = (file: File): Promise<string> => {
@@ -97,9 +98,35 @@ const Icons = {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
         </svg>
     ),
+    eye: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+        </svg>
+    ),
+    eyeOff: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />
+        </svg>
+    ),
     trash: (
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+        </svg>
+    ),
+    phone: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z" />
+        </svg>
+    ),
+    checkCircle: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+    ),
+    xCircle: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
     ),
 };
@@ -132,8 +159,31 @@ const onboardingTranslations = {
             emailPlaceholder: "ahmed.hassan@email.com",
             password: "Password",
             passwordPlaceholder: "Enter your password",
+            showPassword: "Show password",
+            hidePassword: "Hide password",
+            passwordReq: "Password must have:",
+            passwordMinLength: "At least 8 characters",
+            passwordUppercase: "One uppercase letter",
+            passwordLowercase: "One lowercase letter",
+            passwordNumber: "One number",
+            passwordSpecial: "One special character (!@#$%^&*)",
             phone: "Phone Number",
-            phonePlaceholder: "+20 123 456 7890",
+            phonePlaceholder: "01xxxxxxxxx",
+            phoneHint: "Egyptian mobile number (01x xxx xxxx)",
+            phoneInvalid: "Invalid phone format. Use: 01xxxxxxxxx",
+            phoneExists: "This phone is already registered",
+            phoneValid: "Valid phone number",
+            verifyPhone: "Verify Phone",
+            sendOtp: "Send Code",
+            otpSent: "Verification code sent!",
+            otpTitle: "Verify Your Phone",
+            otpSubtitle: "Enter the 6-digit code sent to",
+            otpPlaceholder: "Enter 6-digit code",
+            otpVerify: "Verify",
+            otpResend: "Resend Code",
+            otpSecurityWait: "For security purposes, you can only request this after",
+            otpSeconds: "seconds",
+            phoneVerified: "Phone verified",
             uploadPhoto: "Upload photo",
             clickToChange: "Click to change"
         },
@@ -201,8 +251,31 @@ const onboardingTranslations = {
             emailPlaceholder: "ahmed.hassan@email.com",
             password: "كلمة المرور",
             passwordPlaceholder: "أدخل كلمة المرور",
+            showPassword: "إظهار كلمة المرور",
+            hidePassword: "إخفاء كلمة المرور",
+            passwordReq: "كلمة المرور يجب أن تحتوي على:",
+            passwordMinLength: "8 أحرف على الأقل",
+            passwordUppercase: "حرف كبير واحد",
+            passwordLowercase: "حرف صغير واحد",
+            passwordNumber: "رقم واحد",
+            passwordSpecial: "رمز خاص (!@#$%^&*)",
             phone: "رقم الهاتف",
-            phonePlaceholder: "+٢٠ ١٢٣ ٤٥٦ ٧٨٩٠",
+            phonePlaceholder: "01xxxxxxxxx",
+            phoneHint: "رقم موبايل مصري (01x xxx xxxx)",
+            phoneInvalid: "صيغة الهاتف غير صحيحة. استخدم: 01xxxxxxxxx",
+            phoneExists: "هذا الرقم مسجل بالفعل",
+            phoneValid: "رقم هاتف صحيح",
+            verifyPhone: "تحقق من الهاتف",
+            sendOtp: "إرسال الكود",
+            otpSent: "تم إرسال كود التحقق!",
+            otpTitle: "تحقق من هاتفك",
+            otpSubtitle: "أدخل الكود المكون من 6 أرقام المرسل إلى",
+            otpPlaceholder: "أدخل الكود المكون من 6 أرقام",
+            otpVerify: "تحقق",
+            otpResend: "إعادة إرسال الكود",
+            otpSecurityWait: "لأسباب أمنية، يمكنك طلب ذلك بعد",
+            otpSeconds: "ثانية",
+            phoneVerified: "تم التحقق من الهاتف",
             uploadPhoto: "رفع صورة",
             clickToChange: "انقر للتغيير"
         },
@@ -293,6 +366,457 @@ const Input = ({ label, placeholder, value, onChange, type = "text", isDark, req
         />
     </div>
 );
+
+// Password validation helper
+const validatePassword = (password: string) => ({
+    minLength: password.length >= 8,
+    hasUppercase: /[A-Z]/.test(password),
+    hasLowercase: /[a-z]/.test(password),
+    hasNumber: /[0-9]/.test(password),
+    hasSpecial: /[!@#$%^&*(),.?":{}|<>]/.test(password),
+});
+
+const isPasswordValid = (password: string) => {
+    const v = validatePassword(password);
+    return v.minLength && v.hasUppercase && v.hasLowercase && v.hasNumber && v.hasSpecial;
+};
+
+// Password Input Component with show/hide toggle and requirements
+const PasswordInput = ({ label, placeholder, value, onChange, isDark, required = false, showPasswordLabel, hidePasswordLabel, requirementsText }: {
+    label: string;
+    placeholder: string;
+    value: string;
+    onChange: (value: string) => void;
+    isDark: boolean;
+    required?: boolean;
+    showPasswordLabel?: string;
+    hidePasswordLabel?: string;
+    requirementsText?: {
+        title: string;
+        minLength: string;
+        uppercase: string;
+        lowercase: string;
+        number: string;
+        special: string;
+    };
+}) => {
+    const [showPassword, setShowPassword] = useState(false);
+    const [showRequirements, setShowRequirements] = useState(false);
+    const validation = validatePassword(value);
+    const allValid = isPasswordValid(value);
+
+    const RequirementItem = ({ met, text }: { met: boolean; text: string }) => (
+        <div className={cn("flex items-center gap-1.5 text-xs", met ? "text-teal-500" : (isDark ? "text-gray-500" : "text-gray-400"))}>
+            {met ? Icons.checkCircle : (
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="9" strokeWidth={1.5} />
+                </svg>
+            )}
+            <span>{text}</span>
+        </div>
+    );
+
+    return (
+        <div className="space-y-1">
+            <label className={cn("block text-xs font-medium", isDark ? "text-gray-300" : "text-gray-700")}>
+                {label} {required && <span className="text-teal-500">*</span>}
+            </label>
+            <div className="relative">
+                <input
+                    type={showPassword ? "text" : "password"}
+                    placeholder={placeholder}
+                    value={value}
+                    onChange={(e) => onChange(e.target.value)}
+                    onFocus={() => setShowRequirements(true)}
+                    onBlur={() => setTimeout(() => setShowRequirements(false), 200)}
+                    className={cn(
+                        "w-full px-3 py-2 pr-10 text-sm rounded-lg border outline-none transition-all",
+                        value && (allValid ? (isDark ? "border-teal-500/50" : "border-teal-500") : (isDark ? "border-amber-500/50" : "border-amber-500")),
+                        !value && (isDark ? "border-white/10" : "border-gray-200"),
+                        isDark
+                            ? "bg-slate-800/50 text-white placeholder-gray-500 focus:ring-1 focus:ring-teal-500/20"
+                            : "bg-white text-slate-900 placeholder-gray-400 focus:ring-1 focus:ring-teal-500/20"
+                    )}
+                />
+                <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className={cn(
+                        "absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded transition-colors",
+                        isDark
+                            ? "text-gray-400 hover:text-teal-400"
+                            : "text-gray-500 hover:text-teal-500"
+                    )}
+                    title={showPassword ? (hidePasswordLabel || "Hide password") : (showPasswordLabel || "Show password")}
+                >
+                    {showPassword ? Icons.eyeOff : Icons.eye}
+                </button>
+            </div>
+            {/* Password requirements - show when focused or has value but not valid */}
+            {requirementsText && (showRequirements || (value && !allValid)) && (
+                <div className={cn(
+                    "mt-2 p-2 rounded-lg text-xs",
+                    isDark ? "bg-slate-800/50 border border-white/5" : "bg-gray-50 border border-gray-200"
+                )}>
+                    <p className={cn("font-medium mb-1.5", isDark ? "text-gray-300" : "text-gray-600")}>
+                        {requirementsText.title}
+                    </p>
+                    <div className="grid grid-cols-2 gap-1">
+                        <RequirementItem met={validation.minLength} text={requirementsText.minLength} />
+                        <RequirementItem met={validation.hasUppercase} text={requirementsText.uppercase} />
+                        <RequirementItem met={validation.hasLowercase} text={requirementsText.lowercase} />
+                        <RequirementItem met={validation.hasNumber} text={requirementsText.number} />
+                        <RequirementItem met={validation.hasSpecial} text={requirementsText.special} />
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+};
+
+// Phone Input Component with validation
+const PhoneInput = ({
+    label,
+    placeholder,
+    value,
+    onChange,
+    isDark,
+    required = false,
+    hint,
+    validMessage,
+    invalidMessage,
+    existsMessage,
+    isValidating,
+    validationStatus,
+    isVerified,
+    verifiedMessage,
+    onVerify,
+    verifyButtonText,
+}: {
+    label: string;
+    placeholder: string;
+    value: string;
+    onChange: (value: string) => void;
+    isDark: boolean;
+    required?: boolean;
+    hint?: string;
+    validMessage?: string;
+    invalidMessage?: string;
+    existsMessage?: string;
+    isValidating?: boolean;
+    validationStatus?: "idle" | "valid" | "invalid" | "exists";
+    isVerified?: boolean;
+    verifiedMessage?: string;
+    onVerify?: () => void;
+    verifyButtonText?: string;
+}) => {
+    const getStatusColor = () => {
+        if (isVerified) return "text-teal-500";
+        if (validationStatus === "valid") return "text-teal-500";
+        if (validationStatus === "invalid" || validationStatus === "exists") return "text-red-500";
+        return isDark ? "text-gray-500" : "text-gray-400";
+    };
+
+    const getStatusMessage = () => {
+        if (isVerified) return verifiedMessage || "Verified";
+        if (validationStatus === "valid") return validMessage;
+        if (validationStatus === "invalid") return invalidMessage;
+        if (validationStatus === "exists") return existsMessage;
+        return hint;
+    };
+
+    const getStatusIcon = () => {
+        if (isValidating) return Icons.spinner;
+        if (isVerified) return Icons.checkCircle;
+        if (validationStatus === "valid") return Icons.checkCircle;
+        if (validationStatus === "invalid" || validationStatus === "exists") return Icons.xCircle;
+        return null;
+    };
+
+    const getBorderColor = () => {
+        if (isVerified) return isDark ? "border-teal-500/50" : "border-teal-500";
+        if (validationStatus === "valid") return isDark ? "border-teal-500/50" : "border-teal-500";
+        if (validationStatus === "invalid" || validationStatus === "exists") return isDark ? "border-red-500/50" : "border-red-500";
+        return isDark ? "border-white/10" : "border-gray-200";
+    };
+
+    return (
+        <div className="space-y-1">
+            <label className={cn("block text-xs font-medium", isDark ? "text-gray-300" : "text-gray-700")}>
+                {label} {required && <span className="text-teal-500">*</span>}
+            </label>
+            <div className="relative">
+                <input
+                    type="tel"
+                    placeholder={placeholder}
+                    value={value}
+                    onChange={(e) => onChange(e.target.value)}
+                    disabled={isVerified}
+                    dir="ltr"
+                    className={cn(
+                        "w-full px-3 py-2 text-sm rounded-lg border outline-none transition-all",
+                        isVerified ? "pr-10" : (validationStatus === "valid" && onVerify) ? "pr-24" : "pr-10",
+                        getBorderColor(),
+                        isDark
+                            ? "bg-slate-800/50 text-white placeholder-gray-500 focus:ring-1 focus:ring-teal-500/20"
+                            : "bg-white text-slate-900 placeholder-gray-400 focus:ring-1 focus:ring-teal-500/20",
+                        isVerified && "opacity-75 cursor-not-allowed"
+                    )}
+                />
+                <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                    {/* Status icon */}
+                    {getStatusIcon() && (
+                        <span className={cn("p-0.5", getStatusColor())}>
+                            {getStatusIcon()}
+                        </span>
+                    )}
+                    {/* Verify button - only show when valid and not verified */}
+                    {validationStatus === "valid" && !isVerified && onVerify && (
+                        <button
+                            type="button"
+                            onClick={onVerify}
+                            className="px-2 py-1 text-xs font-medium rounded bg-teal-500 hover:bg-teal-600 text-white transition-colors"
+                        >
+                            {verifyButtonText || "Verify"}
+                        </button>
+                    )}
+                </div>
+            </div>
+            {/* Status message */}
+            {getStatusMessage() && (
+                <p className={cn("text-xs mt-1", getStatusColor())}>
+                    {getStatusMessage()}
+                </p>
+            )}
+        </div>
+    );
+};
+
+// OTP Verification Dialog Component
+const OTPDialog = ({
+    isOpen,
+    onClose,
+    phone,
+    isDark,
+    isRTL,
+    text,
+    onVerifySuccess,
+}: {
+    isOpen: boolean;
+    onClose: () => void;
+    phone: string;
+    isDark: boolean;
+    isRTL: boolean;
+    text: {
+        otpTitle: string;
+        otpSubtitle: string;
+        otpPlaceholder: string;
+        otpVerify: string;
+        otpResend: string;
+        otpSecurityWait: string;
+        otpSeconds: string;
+    };
+    onVerifySuccess: () => void;
+}) => {
+    const [otp, setOtp] = useState("");
+    const [error, setError] = useState<string | null>(null);
+    const [isVerifying, setIsVerifying] = useState(false);
+    const [isSending, setIsSending] = useState(false);
+    const [resendTimer, setResendTimer] = useState(60);
+    const [canResend, setCanResend] = useState(false);
+
+    // Countdown timer for resend
+    useEffect(() => {
+        if (!isOpen) return;
+
+        // Send OTP when dialog opens
+        const sendInitialOTP = async () => {
+            setIsSending(true);
+            const result = await sendPhoneOTP(phone);
+            setIsSending(false);
+            if (!result.success) {
+                setError(result.error || "Failed to send code");
+            }
+        };
+        sendInitialOTP();
+
+        // Start countdown
+        setResendTimer(25);
+        setCanResend(false);
+        const interval = setInterval(() => {
+            setResendTimer(prev => {
+                if (prev <= 1) {
+                    setCanResend(true);
+                    clearInterval(interval);
+                    return 0;
+                }
+                return prev - 1;
+            });
+        }, 1000);
+
+        return () => clearInterval(interval);
+    }, [isOpen, phone]);
+
+    const handleResend = async () => {
+        if (!canResend) return;
+        setIsSending(true);
+        setError(null);
+        const result = await sendPhoneOTP(phone);
+        setIsSending(false);
+
+        if (result.success) {
+            setResendTimer(25);
+            setCanResend(false);
+            const interval = setInterval(() => {
+                setResendTimer(prev => {
+                    if (prev <= 1) {
+                        setCanResend(true);
+                        clearInterval(interval);
+                        return 0;
+                    }
+                    return prev - 1;
+                });
+            }, 1000);
+        } else {
+            setError(result.error || "Failed to send code");
+        }
+    };
+
+    const handleVerify = async () => {
+        if (otp.length !== 6) {
+            setError("Please enter a 6-digit code");
+            return;
+        }
+
+        setIsVerifying(true);
+        setError(null);
+
+        const result = await verifyPhoneOTP(phone, otp);
+        setIsVerifying(false);
+
+        if (result.success) {
+            onVerifySuccess();
+            onClose();
+        } else {
+            setError(result.error || "Verification failed");
+        }
+    };
+
+    if (!isOpen) return null;
+
+    return (
+        <>
+            {/* Backdrop */}
+            <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[101]"
+                onClick={onClose}
+            />
+            {/* Dialog */}
+            <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[102] w-full max-w-sm mx-4"
+                onClick={(e) => e.stopPropagation()}
+            >
+                <div className={cn(
+                    "rounded-2xl p-6 shadow-2xl border",
+                    isDark ? "bg-slate-900 border-white/10" : "bg-white border-gray-200"
+                )}>
+                    {/* Header */}
+                    <div className="text-center mb-6">
+                        <div className="w-12 h-12 rounded-full bg-teal-500/10 flex items-center justify-center mx-auto mb-3 text-teal-500">
+                            {Icons.phone}
+                        </div>
+                        <h3 className={cn("text-lg font-semibold mb-1", isDark ? "text-white" : "text-slate-900")}>
+                            {text.otpTitle}
+                        </h3>
+                        <p className={cn("text-sm", isDark ? "text-gray-400" : "text-gray-600")}>
+                            {text.otpSubtitle}
+                        </p>
+                        <p className={cn("text-sm font-medium mt-1", isDark ? "text-teal-400" : "text-teal-600")} dir="ltr">
+                            {phone}
+                        </p>
+                    </div>
+
+                    {/* OTP Input */}
+                    <div className="mb-4">
+                        <input
+                            type="text"
+                            inputMode="numeric"
+                            maxLength={6}
+                            value={otp}
+                            onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                            placeholder={text.otpPlaceholder}
+                            className={cn(
+                                "w-full px-4 py-3 text-center text-xl font-mono tracking-[0.5em] rounded-lg border outline-none transition-all",
+                                isDark
+                                    ? "bg-slate-800/50 border-white/10 text-white placeholder-gray-500 focus:border-teal-500/50"
+                                    : "bg-gray-50 border-gray-200 text-slate-900 placeholder-gray-400 focus:border-teal-500"
+                            )}
+                            dir="ltr"
+                        />
+                    </div>
+
+                    {/* Error message */}
+                    {error && (
+                        <p className="text-red-500 text-sm text-center mb-4">{error}</p>
+                    )}
+
+                    {/* Buttons */}
+                    <div className="space-y-3">
+                        <button
+                            type="button"
+                            onClick={handleVerify}
+                            disabled={otp.length !== 6 || isVerifying}
+                            className={cn(
+                                "w-full py-2.5 rounded-lg font-medium transition-all",
+                                otp.length === 6 && !isVerifying
+                                    ? "bg-teal-500 hover:bg-teal-600 text-white"
+                                    : isDark
+                                        ? "bg-slate-800 text-gray-500 cursor-not-allowed"
+                                        : "bg-gray-100 text-gray-400 cursor-not-allowed"
+                            )}
+                        >
+                            {isVerifying ? Icons.spinner : text.otpVerify}
+                        </button>
+
+                        <button
+                            type="button"
+                            onClick={handleResend}
+                            disabled={!canResend || isSending}
+                            className={cn(
+                                "w-full py-2 text-sm font-medium transition-colors",
+                                canResend && !isSending
+                                    ? (isDark ? "text-teal-400 hover:text-teal-300" : "text-teal-600 hover:text-teal-500")
+                                    : (isDark ? "text-gray-500" : "text-gray-400")
+                            )}
+                        >
+                            {isSending ? Icons.spinner : canResend ? text.otpResend : `${text.otpSecurityWait} ${resendTimer} ${text.otpSeconds}`}
+                        </button>
+                    </div>
+
+                    {/* Close button */}
+                    <button
+                        type="button"
+                        onClick={onClose}
+                        className={cn(
+                            "absolute top-3 right-3 p-1 rounded-full transition-colors",
+                            isDark ? "text-gray-400 hover:text-white hover:bg-white/10" : "text-gray-500 hover:text-gray-700 hover:bg-gray-100"
+                        )}
+                    >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+            </motion.div>
+        </>
+    );
+};
 
 // Select Component
 const Select = ({ label, value, onChange, options, isDark, required = false, selectLabel = "Select" }: {
@@ -452,7 +976,35 @@ const FileUpload = ({ label, fileName, onFileChange, isDark, accept = "*", fileP
 type OnboardingText = typeof onboardingTranslations.en;
 
 // Step 1: Welcome & Personal Info
-const Step1Welcome = ({ formData, setFormData, isDark, text, isRTL, onPhotoUpload }: { formData: FormData; setFormData: (data: FormData) => void; isDark: boolean; text: OnboardingText; isRTL: boolean; onPhotoUpload?: (file: File) => void }) => {
+const Step1Welcome = ({
+    formData,
+    setFormData,
+    isDark,
+    text,
+    isRTL,
+    onPhotoUpload,
+    phoneValidation,
+    onPhoneChange,
+    onVerifyPhone,
+    isPhoneVerified,
+    showOtpDialog,
+    onCloseOtpDialog,
+    onPhoneVerified,
+}: {
+    formData: FormData;
+    setFormData: (data: FormData) => void;
+    isDark: boolean;
+    text: OnboardingText;
+    isRTL: boolean;
+    onPhotoUpload?: (file: File) => void;
+    phoneValidation: { status: "idle" | "valid" | "invalid" | "exists"; isValidating: boolean };
+    onPhoneChange: (phone: string) => void;
+    onVerifyPhone: () => void;
+    isPhoneVerified: boolean;
+    showOtpDialog: boolean;
+    onCloseOtpDialog: () => void;
+    onPhoneVerified: () => void;
+}) => {
     const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
@@ -517,6 +1069,7 @@ const Step1Welcome = ({ formData, setFormData, isDark, text, isRTL, onPhotoUploa
                 value={formData.fullName}
                 onChange={(val) => setFormData({ ...formData, fullName: val })}
                 isDark={isDark}
+                required
             />
             <Input
                 label={text.step1.email}
@@ -525,24 +1078,67 @@ const Step1Welcome = ({ formData, setFormData, isDark, text, isRTL, onPhotoUploa
                 onChange={(val) => setFormData({ ...formData, email: val })}
                 type="email"
                 isDark={isDark}
+                required
             />
-            <Input
+            <PasswordInput
                 label={text.step1.password}
                 placeholder={text.step1.passwordPlaceholder}
                 value={formData.password}
                 onChange={(val) => setFormData({ ...formData, password: val })}
-                type="password"
                 isDark={isDark}
+                required
+                showPasswordLabel={text.step1.showPassword}
+                hidePasswordLabel={text.step1.hidePassword}
+                requirementsText={{
+                    title: text.step1.passwordReq,
+                    minLength: text.step1.passwordMinLength,
+                    uppercase: text.step1.passwordUppercase,
+                    lowercase: text.step1.passwordLowercase,
+                    number: text.step1.passwordNumber,
+                    special: text.step1.passwordSpecial,
+                }}
             />
-            <Input
+            <PhoneInput
                 label={text.step1.phone}
                 placeholder={text.step1.phonePlaceholder}
                 value={formData.phone}
-                onChange={(val) => setFormData({ ...formData, phone: val })}
-                type="tel"
+                onChange={onPhoneChange}
                 isDark={isDark}
-                dir={isRTL ? "rtl" : "ltr"}
+                required
+                hint={text.step1.phoneHint}
+                validMessage={text.step1.phoneValid}
+                invalidMessage={text.step1.phoneInvalid}
+                existsMessage={text.step1.phoneExists}
+                isValidating={phoneValidation.isValidating}
+                validationStatus={phoneValidation.status}
+                isVerified={isPhoneVerified}
+                verifiedMessage={text.step1.phoneVerified}
+                onVerify={onVerifyPhone}
+                verifyButtonText={text.step1.verifyPhone}
             />
+
+            {/* OTP Dialog */}
+            <AnimatePresence>
+                {showOtpDialog && (
+                    <OTPDialog
+                        isOpen={showOtpDialog}
+                        onClose={onCloseOtpDialog}
+                        phone={formData.phone}
+                        isDark={isDark}
+                        isRTL={isRTL}
+                        text={{
+                            otpTitle: text.step1.otpTitle,
+                            otpSubtitle: text.step1.otpSubtitle,
+                            otpPlaceholder: text.step1.otpPlaceholder,
+                            otpVerify: text.step1.otpVerify,
+                            otpResend: text.step1.otpResend,
+                            otpSecurityWait: text.step1.otpSecurityWait,
+                            otpSeconds: text.step1.otpSeconds,
+                        }}
+                        onVerifySuccess={onPhoneVerified}
+                    />
+                )}
+            </AnimatePresence>
         </div>
     );
 };
@@ -568,6 +1164,7 @@ const Step2Professional = ({ formData, setFormData, isDark, text, specialties }:
                 options={specialties}
                 isDark={isDark}
                 selectLabel={text.nav.select}
+                required
             />
             <Input
                 label={text.step2.experience}
@@ -576,6 +1173,7 @@ const Step2Professional = ({ formData, setFormData, isDark, text, specialties }:
                 onChange={(val) => setFormData({ ...formData, experience: val })}
                 type="number"
                 isDark={isDark}
+                required
             />
         </div>
         <div className="grid grid-cols-2 gap-3">
@@ -585,6 +1183,7 @@ const Step2Professional = ({ formData, setFormData, isDark, text, specialties }:
                 value={formData.licenseNumber}
                 onChange={(val) => setFormData({ ...formData, licenseNumber: val })}
                 isDark={isDark}
+                required
             />
             <Input
                 label={text.step2.certifications}
@@ -617,6 +1216,7 @@ const Step3Practice = ({ formData, setFormData, isDark, text }: { formData: Form
                 value={formData.clinicName}
                 onChange={(val) => setFormData({ ...formData, clinicName: val })}
                 isDark={isDark}
+                required
             />
             <Input
                 label={text.step3.fee}
@@ -625,6 +1225,7 @@ const Step3Practice = ({ formData, setFormData, isDark, text }: { formData: Form
                 onChange={(val) => setFormData({ ...formData, consultationFee: val })}
                 type="number"
                 isDark={isDark}
+                required
             />
         </div>
         <Input
@@ -934,6 +1535,64 @@ export default function DoctorOnboarding() {
     const [licensePreview, setLicensePreview] = useState<string>("");
     const [extraFiles, setExtraFiles] = useState<File[]>([]);
 
+    // Phone validation state
+    const [phoneValidation, setPhoneValidation] = useState<{ status: "idle" | "valid" | "invalid" | "exists"; isValidating: boolean }>({
+        status: "idle",
+        isValidating: false,
+    });
+    const [isPhoneVerified, setIsPhoneVerified] = useState(false);
+    const [showOtpDialog, setShowOtpDialog] = useState(false);
+    const phoneValidationTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
+
+    // Phone change handler with debounced validation
+    const handlePhoneChange = (phone: string) => {
+        setFormData(prev => ({ ...prev, phone }));
+
+        // Reset verification if phone changes after being verified
+        if (isPhoneVerified) {
+            setIsPhoneVerified(false);
+        }
+
+        // Clear previous timeout
+        if (phoneValidationTimeoutRef.current) {
+            clearTimeout(phoneValidationTimeoutRef.current);
+        }
+
+        // Reset to idle if phone is empty
+        if (!phone || phone.length < 10) {
+            setPhoneValidation({ status: "idle", isValidating: false });
+            return;
+        }
+
+        // Set validating state
+        setPhoneValidation(prev => ({ ...prev, isValidating: true }));
+
+        // Debounce validation
+        phoneValidationTimeoutRef.current = setTimeout(async () => {
+            const result = await validatePhoneNumber(phone);
+            if (result.alreadyExists) {
+                setPhoneValidation({ status: "exists", isValidating: false });
+            } else if (result.valid) {
+                setPhoneValidation({ status: "valid", isValidating: false });
+            } else {
+                setPhoneValidation({ status: "invalid", isValidating: false });
+            }
+        }, 500);
+    };
+
+    // Open OTP dialog to verify phone
+    const handleVerifyPhone = () => {
+        if (phoneValidation.status === "valid" && !isPhoneVerified) {
+            setShowOtpDialog(true);
+        }
+    };
+
+    // Phone verified callback
+    const handlePhoneVerified = () => {
+        setIsPhoneVerified(true);
+        setShowOtpDialog(false);
+    };
+
     // Pre-fill form with user data if logged in
     useEffect(() => {
         if (profile) {
@@ -954,13 +1613,34 @@ export default function DoctorOnboarding() {
         }
     }, [profile, user, language, router]);
 
-    // Validation for Step 1 (account creation)
+    // Validation for each step
     const canProceed = () => {
         if (currentStep === 1) {
-            // If user is already logged in, allow proceeding
-            if (user) return true;
-            // Otherwise require email and password
-            return formData.email.length > 0 && formData.password.length >= 6;
+            // If user is already logged in, only require full name
+            if (user) {
+                return formData.fullName.trim().length > 0;
+            }
+            // Otherwise require full name, email, password, and phone
+            const hasFullName = formData.fullName.trim().length > 0;
+            const hasValidEmail = formData.email.length > 0 && formData.email.includes("@");
+            const hasValidPassword = isPasswordValid(formData.password);
+            const hasPhone = formData.phone.length >= 10;
+            return hasFullName && hasValidEmail && hasValidPassword && hasPhone;
+            // TODO: Re-enable phone verification for production:
+            // return hasFullName && hasValidEmail && hasValidPassword && isPhoneVerified;
+        }
+        if (currentStep === 2) {
+            // Require specialty, experience, and license number
+            const hasSpecialty = formData.specialty.length > 0;
+            const hasExperience = formData.experience.length > 0;
+            const hasLicense = formData.licenseNumber.trim().length > 0;
+            return hasSpecialty && hasExperience && hasLicense;
+        }
+        if (currentStep === 3) {
+            // Require clinic name and consultation fee
+            const hasClinicName = formData.clinicName.trim().length > 0;
+            const hasFee = formData.consultationFee.length > 0 && parseInt(formData.consultationFee) > 0;
+            return hasClinicName && hasFee;
         }
         if (currentStep === 4) {
             // Require terms acceptance on verification step
@@ -1092,7 +1772,23 @@ export default function DoctorOnboarding() {
     const renderStep = () => {
         switch (currentStep) {
             case 1:
-                return <Step1Welcome formData={formData} setFormData={setFormData} isDark={isDark} text={text} isRTL={isRTL} onPhotoUpload={(file) => setPhotoFile(file)} />;
+                return (
+                    <Step1Welcome
+                        formData={formData}
+                        setFormData={setFormData}
+                        isDark={isDark}
+                        text={text}
+                        isRTL={isRTL}
+                        onPhotoUpload={(file) => setPhotoFile(file)}
+                        phoneValidation={phoneValidation}
+                        onPhoneChange={handlePhoneChange}
+                        onVerifyPhone={handleVerifyPhone}
+                        isPhoneVerified={isPhoneVerified}
+                        showOtpDialog={showOtpDialog}
+                        onCloseOtpDialog={() => setShowOtpDialog(false)}
+                        onPhoneVerified={handlePhoneVerified}
+                    />
+                );
             case 2:
                 return <Step2Professional formData={formData} setFormData={setFormData} isDark={isDark} text={text} specialties={specialties} />;
             case 3:
