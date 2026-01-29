@@ -576,21 +576,8 @@ export async function endQueueConsultation(
 export async function getOnlineDoctors(): Promise<{
     doctors: OnlineDoctor[];
     error?: string;
-    debug?: { totalDoctors: number; onlineDoctors: number; verifiedDoctors: number };
 }> {
     const supabase = await createClient();
-
-    // Debug: Check total doctors, online doctors, and verified doctors separately
-    const { data: allDoctors } = await supabase
-        .from("doctor_profiles")
-        .select("id, is_online, verification_status");
-
-    const totalDoctors = allDoctors?.length || 0;
-    const onlineDoctors = allDoctors?.filter((d: { is_online: boolean }) => d.is_online).length || 0;
-    const verifiedDoctors = allDoctors?.filter((d: { verification_status: string }) => d.verification_status === "verified").length || 0;
-
-    console.log(`[getOnlineDoctors] Total: ${totalDoctors}, Online: ${onlineDoctors}, Verified: ${verifiedDoctors}`);
-    console.log(`[getOnlineDoctors] All doctors:`, allDoctors);
 
     // Get all online, verified doctors
     // Note: Must specify FK because doctor_profiles has two FKs to profiles (profile_id and verified_by)
@@ -620,10 +607,8 @@ export async function getOnlineDoctors(): Promise<{
 
     if (error) {
         console.error("Error fetching online doctors:", error);
-        return { doctors: [], error: error.message, debug: { totalDoctors, onlineDoctors, verifiedDoctors } };
+        return { doctors: [], error: error.message };
     }
-
-    console.log(`[getOnlineDoctors] Found ${data?.length || 0} online verified doctors:`, data);
 
     // Get queue counts for each doctor
     const doctorIds = (data || []).map((d: { id: string }) => d.id);
@@ -668,7 +653,7 @@ export async function getOnlineDoctors(): Promise<{
         };
     });
 
-    return { doctors, debug: { totalDoctors, onlineDoctors, verifiedDoctors } };
+    return { doctors };
 }
 
 /**

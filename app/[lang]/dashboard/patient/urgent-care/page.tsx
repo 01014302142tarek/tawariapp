@@ -199,7 +199,6 @@ export default function UrgentCarePage() {
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
     const [existingQueueEntry, setExistingQueueEntry] = useState<string | null>(null);
-    const [debugInfo, setDebugInfo] = useState<{ totalDoctors: number; onlineDoctors: number; verifiedDoctors: number } | null>(null);
 
     // Real-time updates for online doctors
     const { isConnected } = useOnlineDoctors(doctors);
@@ -220,9 +219,6 @@ export default function UrgentCarePage() {
             const result = await getOnlineDoctors();
             if (result.doctors) {
                 setDoctors(result.doctors);
-            }
-            if (result.debug) {
-                setDebugInfo(result.debug);
             }
         } catch (error) {
             console.error("Error loading doctors:", error);
@@ -341,15 +337,6 @@ export default function UrgentCarePage() {
                             ? "يرجى المحاولة مرة أخرى لاحقاً أو حجز موعد"
                             : "Please try again later or book an appointment"}
                     </p>
-                    {/* Debug info - remove in production */}
-                    {debugInfo && (
-                        <div className="mb-6 p-3 bg-slate-800/50 rounded-lg text-left text-sm">
-                            <p className="text-slate-500 mb-1">Debug Info:</p>
-                            <p className="text-slate-400">Total doctors in DB: {debugInfo.totalDoctors}</p>
-                            <p className="text-slate-400">Online doctors: {debugInfo.onlineDoctors}</p>
-                            <p className="text-slate-400">Verified doctors: {debugInfo.verifiedDoctors}</p>
-                        </div>
-                    )}
                     <button
                         onClick={() => loadDoctors(true)}
                         className="px-6 py-2 bg-slate-800 text-white rounded-lg font-medium hover:bg-slate-700 transition-colors inline-flex items-center gap-2"

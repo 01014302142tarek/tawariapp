@@ -352,17 +352,6 @@ export default function DoctorUrgentCarePage() {
     const avatarUrl = profile?.profile.avatar_url;
     const doctorAvatar = avatarUrl && avatarUrl.trim() !== "" ? avatarUrl : null;
 
-    // Debug: Log profile data to help troubleshoot display issues
-    useEffect(() => {
-        if (profile) {
-            console.log("[Doctor Urgent Care] Profile loaded:", {
-                full_name: profile.profile.full_name,
-                avatar_url: profile.profile.avatar_url,
-                role: profile.profile.role,
-            });
-        }
-    }, [profile]);
-
     const [doctorProfileId, setDoctorProfileId] = useState<string | null>(null);
     const [doctorMessagingProfileId, setDoctorMessagingProfileId] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
