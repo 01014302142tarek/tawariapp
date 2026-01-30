@@ -1,6 +1,6 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { appointmentLimiter } from "@/lib/rate-limit";
 import { appointmentSchema, validateInput } from "@/lib/validations";
 import { notifyNewAppointment, notifyAppointmentCancelled } from "./notifications";
@@ -328,10 +328,13 @@ export async function cancelAppointmentAsPatient(
         return { success: false, error: "Patient profile not found" };
     }
 
-    // Get appointment details for notification before cancelling
+    // Get appointment details for validation and notification
     const { data: appointmentData } = await supabase
         .from("appointments")
         .select(`
+            id,
+            status,
+            patient_profile_id,
             scheduled_start,
             doctor_profiles!inner (
                 profile_id
@@ -343,18 +346,32 @@ export async function cancelAppointmentAsPatient(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const appointment = appointmentData as any;
 
-    // Update appointment
+    if (!appointment) {
+        return { success: false, error: "Appointment not found" };
+    }
+
+    // Verify patient owns this appointment
+    if (appointment.patient_profile_id !== patientProfile.id) {
+        return { success: false, error: "Not authorized to cancel this appointment" };
+    }
+
+    // Only allow cancelling scheduled appointments
+    if (appointment.status !== "scheduled") {
+        return { success: false, error: `Cannot cancel appointment with status: ${appointment.status}` };
+    }
+
+    // Use admin client to bypass RLS policies for the update
+    const adminSupabase = await createAdminClient();
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { error } = await (supabase as any)
+    const { error } = await (adminSupabase as any)
         .from("appointments")
         .update({
             status: "cancelled",
             cancellation_reason: reason || null,
-            cancelled_by: user.id,
+            cancelled_by: profile.id, // Use profile.id, not user.id (FK references profiles table)
         })
-        .eq("id", appointmentId)
-        .eq("patient_profile_id", patientProfile.id)
-        .in("status", ["scheduled"]); // Can only cancel scheduled appointments
+        .eq("id", appointmentId);
 
     if (error) {
         console.error("Error cancelling appointment:", error);

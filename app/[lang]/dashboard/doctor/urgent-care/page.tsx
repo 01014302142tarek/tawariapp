@@ -455,6 +455,30 @@ export default function DoctorUrgentCarePage() {
         return () => clearInterval(interval);
     }, [doctorProfileId, loadQueueStatus]);
 
+    // Refresh immediately when page gains focus (e.g., returning from call page)
+    useEffect(() => {
+        const handleFocus = () => {
+            console.log("[Doctor Urgent Care] Page focused, refreshing data...");
+            loadQueueStatus(false);
+        };
+
+        window.addEventListener("focus", handleFocus);
+
+        // Also refresh on visibility change (tab becomes visible)
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === "visible") {
+                console.log("[Doctor Urgent Care] Page visible, refreshing data...");
+                loadQueueStatus(false);
+            }
+        };
+        document.addEventListener("visibilitychange", handleVisibilityChange);
+
+        return () => {
+            window.removeEventListener("focus", handleFocus);
+            document.removeEventListener("visibilitychange", handleVisibilityChange);
+        };
+    }, [loadQueueStatus]);
+
     // Handle toggle online status
     const handleToggleOnline = async () => {
         setToggling(true);
@@ -624,16 +648,34 @@ export default function DoctorUrgentCarePage() {
                         </div>
                     </div>
 
-                    <div className={cn(
-                        "w-16 h-8 rounded-full relative transition-colors",
-                        isOnline ? "bg-teal-500" : isDark ? "bg-slate-600" : "bg-gray-300"
-                    )}>
+                    <motion.div
+                        className={cn(
+                            "w-16 h-8 rounded-full relative",
+                            isOnline ? "bg-teal-500" : isDark ? "bg-slate-600" : "bg-gray-300"
+                        )}
+                        animate={{
+                            backgroundColor: isOnline
+                                ? "rgb(20, 184, 166)"
+                                : isDark
+                                    ? "rgb(71, 85, 105)"
+                                    : "rgb(209, 213, 219)"
+                        }}
+                        transition={{ duration: 0.3, ease: "easeInOut" }}
+                    >
                         <motion.div
-                            className="absolute top-1 w-6 h-6 rounded-full bg-white shadow-md"
-                            animate={{ x: isOnline ? 32 : 4 }}
-                            transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                            className="absolute top-1 w-6 h-6 rounded-full bg-white shadow-lg"
+                            animate={{
+                                x: isOnline ? 32 : 4,
+                                scale: toggling ? 0.9 : 1
+                            }}
+                            transition={{
+                                type: "spring",
+                                stiffness: 300,
+                                damping: 25,
+                                mass: 0.8
+                            }}
                         />
-                    </div>
+                    </motion.div>
                 </motion.button>
             </div>
 

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useThemeStyles } from "../context/useThemeStyles";
 import { GlowingCard } from "@/components/ui/glowing-card";
@@ -72,6 +72,11 @@ export default function AppointmentsPage() {
     const [loading, setLoading] = useState(true);
     const [actionLoading, setActionLoading] = useState<string | null>(null);
 
+    // Cancellation dialog state
+    const [showCancelDialog, setShowCancelDialog] = useState(false);
+    const [cancellingAppointmentId, setCancellingAppointmentId] = useState<string | null>(null);
+    const [cancellationReason, setCancellationReason] = useState("");
+
     useEffect(() => {
         const fetchAppointments = async () => {
             setLoading(true);
@@ -97,6 +102,7 @@ export default function AppointmentsPage() {
         { key: "All", label: t.patientDashboard.appointmentsPage.filters.all },
         { key: "Upcoming", label: t.patientDashboard.appointmentsPage.filters.upcoming },
         { key: "Completed", label: t.patientDashboard.appointmentsPage.filters.completed },
+        { key: "Cancelled", label: isRTL ? "ملغي" : "Cancelled" },
     ];
 
     const getStatusVariant = (status: AppointmentStatus): "default" | "success" | "warning" | "primary" | "error" => {
@@ -163,21 +169,50 @@ export default function AppointmentsPage() {
     };
 
     const handleCancel = (appointmentId: string) => {
-        showConfirm(
-            isRTL ? "هل أنت متأكد من إلغاء هذا الموعد؟" : "Are you sure you want to cancel this appointment?",
-            async () => {
-                setActionLoading(appointmentId);
-                await cancelAppointmentAsPatient(appointmentId);
+        setCancellingAppointmentId(appointmentId);
+        setCancellationReason("");
+        setShowCancelDialog(true);
+    };
+
+    const handleConfirmCancel = async () => {
+        if (!cancellingAppointmentId) return;
+
+        if (!cancellationReason.trim()) {
+            showError(isRTL ? "يرجى إدخال سبب الإلغاء" : "Please enter a cancellation reason");
+            return;
+        }
+
+        setActionLoading(cancellingAppointmentId);
+        setShowCancelDialog(false);
+
+        try {
+            const result = await cancelAppointmentAsPatient(cancellingAppointmentId, cancellationReason.trim());
+            if (result.success) {
                 await loadAppointments();
-                setActionLoading(null);
+            } else {
+                showError(result.error || (isRTL ? "فشل إلغاء الموعد" : "Failed to cancel appointment"));
             }
-        );
+        } catch (error) {
+            console.error("Error cancelling appointment:", error);
+            showError(isRTL ? "حدث خطأ غير متوقع" : "An unexpected error occurred");
+        }
+
+        setActionLoading(null);
+        setCancellingAppointmentId(null);
+        setCancellationReason("");
+    };
+
+    const handleCloseCancelDialog = () => {
+        setShowCancelDialog(false);
+        setCancellingAppointmentId(null);
+        setCancellationReason("");
     };
 
     const filteredAppointments = appointments.filter(apt => {
         if (activeFilter === "All") return true;
         if (activeFilter === "Upcoming") return ["scheduled", "in_waiting_room", "in_progress"].includes(apt.status);
         if (activeFilter === "Completed") return apt.status === "completed";
+        if (activeFilter === "Cancelled") return apt.status === "cancelled";
         return true;
     });
 
@@ -199,6 +234,91 @@ export default function AppointmentsPage() {
 
     return (
         <div className="p-4 md:p-6 lg:p-8">
+            {/* Cancellation Reason Dialog */}
+            <AnimatePresence>
+                {showCancelDialog && (
+                    <>
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[101]"
+                            onClick={handleCloseCancelDialog}
+                        />
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                            className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[102] w-full max-w-md mx-4"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <div className={cn(
+                                "rounded-2xl p-6 shadow-2xl border",
+                                isDark ? "bg-slate-900 border-white/10" : "bg-white border-gray-200"
+                            )}>
+                                <div className="flex items-center gap-3 mb-4">
+                                    <button
+                                        type="button"
+                                        onClick={handleCloseCancelDialog}
+                                        className="w-10 h-10 rounded-full bg-red-500/10 flex items-center justify-center text-red-500 hover:bg-red-500/20 transition-colors cursor-pointer"
+                                        title={isRTL ? "إغلاق" : "Close"}
+                                    >
+                                        {Icons.x}
+                                    </button>
+                                    <h3 className={cn("text-lg font-semibold", isDark ? "text-white" : "text-slate-900")}>
+                                        {isRTL ? "إلغاء الموعد" : "Cancel Appointment"}
+                                    </h3>
+                                </div>
+                                <p className={cn("mb-4", isDark ? "text-gray-300" : "text-gray-700")}>
+                                    {isRTL
+                                        ? "يرجى إخبارنا بسبب الإلغاء حتى نتمكن من تحسين خدماتنا."
+                                        : "Please tell us why you're cancelling so we can improve our service."}
+                                </p>
+                                <textarea
+                                    value={cancellationReason}
+                                    onChange={(e) => setCancellationReason(e.target.value)}
+                                    placeholder={isRTL ? "اكتب سبب الإلغاء هنا..." : "Enter your reason for cancelling..."}
+                                    className={cn(
+                                        "w-full p-3 rounded-lg border resize-none h-24 mb-4 focus:outline-none focus:ring-2 focus:ring-teal-500",
+                                        isDark
+                                            ? "bg-slate-800 border-white/10 text-white placeholder-gray-500"
+                                            : "bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400"
+                                    )}
+                                    dir={isRTL ? "rtl" : "ltr"}
+                                />
+                                <div className="flex gap-3 justify-end">
+                                    <button
+                                        type="button"
+                                        onClick={handleCloseCancelDialog}
+                                        className={cn(
+                                            "px-4 py-2 rounded-lg text-sm font-medium transition-colors",
+                                            isDark
+                                                ? "text-gray-400 hover:text-white hover:bg-white/5"
+                                                : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+                                        )}
+                                    >
+                                        {isRTL ? "تراجع" : "Go Back"}
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={handleConfirmCancel}
+                                        disabled={!cancellationReason.trim()}
+                                        className={cn(
+                                            "px-4 py-2 rounded-lg text-sm font-medium transition-colors",
+                                            cancellationReason.trim()
+                                                ? "bg-red-500 text-white hover:bg-red-600"
+                                                : "bg-red-500/50 text-white/50 cursor-not-allowed"
+                                        )}
+                                    >
+                                        {isRTL ? "تأكيد الإلغاء" : "Confirm Cancel"}
+                                    </button>
+                                </div>
+                            </div>
+                        </motion.div>
+                    </>
+                )}
+            </AnimatePresence>
+
             {/* Header */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 md:mb-8">
                 <div>
@@ -389,6 +509,21 @@ export default function AppointmentsPage() {
                                                     >
                                                         {isRTL ? "عرض التفاصيل" : "View Details"}
                                                     </button>
+                                                </div>
+                                            )}
+                                            {apt.status === "cancelled" && apt.cancellation_reason && (
+                                                <div className="w-full mt-2 sm:mt-0 sm:w-auto">
+                                                    <div className={cn(
+                                                        "p-3 rounded-lg border",
+                                                        isDark ? "bg-red-500/5 border-red-500/20" : "bg-red-50 border-red-100"
+                                                    )}>
+                                                        <p className={cn("text-xs font-medium mb-1", isDark ? "text-red-400" : "text-red-600")}>
+                                                            {isRTL ? "سبب الإلغاء:" : "Cancellation Reason:"}
+                                                        </p>
+                                                        <p className={cn("text-sm", isDark ? "text-gray-300" : "text-gray-700")}>
+                                                            {apt.cancellation_reason}
+                                                        </p>
+                                                    </div>
                                                 </div>
                                             )}
                                         </>

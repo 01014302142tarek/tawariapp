@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
@@ -127,6 +127,10 @@ export default function WaitingRoomPage() {
     const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
+    // Ref to track if we've already initiated a redirect (prevents infinite loops)
+    const hasRedirectedRef = useRef(false);
+    const isMountedRef = useRef(true);
+
     // Real-time queue position updates
     const { entry, isConnected } = useMyQueuePosition(queueEntryId);
 
@@ -165,18 +169,34 @@ export default function WaitingRoomPage() {
 
     // Handle status changes - redirect when called or in_consultation
     useEffect(() => {
+        // Prevent redirect if already redirecting or unmounted
+        if (hasRedirectedRef.current || !isMountedRef.current) return;
+
+        // Also check if we're already on the call page (prevents loops if component remounts)
+        if (typeof window !== "undefined" && window.location.pathname.includes("/call/")) {
+            console.log("[Waiting Room] Already on call page, skipping redirect");
+            return;
+        }
+
         if (entry) {
             console.log("[Waiting Room] Entry status:", entry.status, "Room URL:", entry.daily_room_url);
             if (entry.status === "in_consultation" && entry.daily_room_url) {
                 // Room is ready - redirect to video call
                 console.log("[Waiting Room] Redirecting to call page...");
-                router.push(`/${language}/dashboard/patient/urgent-care/call/${queueEntryId}`);
+                hasRedirectedRef.current = true; // Mark as redirected to prevent loops
+                // Use replace instead of push to prevent back-navigation issues
+                const callUrl = `/${language}/dashboard/patient/urgent-care/call/${queueEntryId}`;
+                console.log("[Waiting Room] Navigation URL:", callUrl);
+                // Use window.location.replace for hard navigation without history entry
+                window.location.replace(callUrl);
             } else if (entry.status === "completed") {
                 // Consultation ended - go back to urgent care
-                router.push(`/${language}/dashboard/patient/urgent-care`);
+                hasRedirectedRef.current = true;
+                router.replace(`/${language}/dashboard/patient/urgent-care`);
             } else if (entry.status === "cancelled" || entry.status === "expired") {
                 // Queue entry cancelled - go back
-                router.push(`/${language}/dashboard/patient/urgent-care`);
+                hasRedirectedRef.current = true;
+                router.replace(`/${language}/dashboard/patient/urgent-care`);
             }
             // Note: When status is "called", we stay on waiting room until room is created
         }
@@ -184,16 +204,39 @@ export default function WaitingRoomPage() {
 
     // Polling fallback - check every 3 seconds in case real-time doesn't work
     useEffect(() => {
+        isMountedRef.current = true;
+        let intervalId: NodeJS.Timeout | null = null;
+
         const pollStatus = async () => {
+            // Skip if already redirecting or unmounted
+            if (hasRedirectedRef.current || !isMountedRef.current) return;
+
+            // Also check if we're already on the call page
+            if (typeof window !== "undefined" && window.location.pathname.includes("/call/")) {
+                console.log("[Waiting Room] Already on call page, stopping poll");
+                if (intervalId) clearInterval(intervalId);
+                return;
+            }
+
             try {
                 const result = await getQueueEntryForCall(queueEntryId);
+                if (!isMountedRef.current || hasRedirectedRef.current) return;
+
                 if (result.success && result.entry) {
                     console.log("[Waiting Room] Poll result:", result.entry.status, result.entry.daily_room_url);
                     if (result.entry.status === "in_consultation" && result.entry.daily_room_url) {
                         console.log("[Waiting Room] Redirecting via poll...");
-                        router.push(`/${language}/dashboard/patient/urgent-care/call/${queueEntryId}`);
+                        hasRedirectedRef.current = true;
+                        // Clear interval immediately to stop further polls
+                        if (intervalId) clearInterval(intervalId);
+                        // Use hard navigation with replace (no history entry)
+                        const callUrl = `/${language}/dashboard/patient/urgent-care/call/${queueEntryId}`;
+                        console.log("[Waiting Room] Poll navigation URL:", callUrl);
+                        window.location.replace(callUrl);
                     } else if (["completed", "cancelled", "expired"].includes(result.entry.status)) {
-                        router.push(`/${language}/dashboard/patient/urgent-care`);
+                        hasRedirectedRef.current = true;
+                        if (intervalId) clearInterval(intervalId);
+                        router.replace(`/${language}/dashboard/patient/urgent-care`);
                     }
                 }
             } catch (err) {
@@ -202,29 +245,45 @@ export default function WaitingRoomPage() {
         };
 
         // Start polling after 2 seconds, then every 3 seconds
-        const timeout = setTimeout(() => {
+        const timeoutId = setTimeout(() => {
+            if (!isMountedRef.current || hasRedirectedRef.current) return;
+            // Check if already on call page before starting
+            if (typeof window !== "undefined" && window.location.pathname.includes("/call/")) {
+                return;
+            }
             pollStatus();
-            const interval = setInterval(pollStatus, 3000);
-            return () => clearInterval(interval);
+            intervalId = setInterval(pollStatus, 3000);
         }, 2000);
 
-        return () => clearTimeout(timeout);
+        return () => {
+            isMountedRef.current = false;
+            clearTimeout(timeoutId);
+            if (intervalId) {
+                clearInterval(intervalId);
+            }
+        };
     }, [queueEntryId, language, router]);
 
     // Handle leave queue
     const handleLeaveQueue = useCallback(async () => {
+        console.log("[WaitingRoom] Leaving queue:", queueEntryId);
         setLeaving(true);
+        setError(null); // Clear previous errors
         try {
             const result = await leaveQueue(queueEntryId);
+            console.log("[WaitingRoom] Leave queue result:", result);
             if (result.success) {
+                console.log("[WaitingRoom] Successfully left queue, navigating...");
                 router.push(`/${language}/dashboard/patient/urgent-care`);
             } else {
+                console.error("[WaitingRoom] Leave queue failed:", result.error);
                 setError(result.error || (isRTL ? "حدث خطأ" : "An error occurred"));
                 setShowLeaveConfirm(false);
             }
         } catch (err) {
-            console.error("Error leaving queue:", err);
-            setError(isRTL ? "حدث خطأ" : "An error occurred");
+            console.error("[WaitingRoom] Exception leaving queue:", err);
+            const errorMessage = err instanceof Error ? err.message : "An error occurred";
+            setError(isRTL ? "حدث خطأ: " + errorMessage : "Error: " + errorMessage);
             setShowLeaveConfirm(false);
         } finally {
             setLeaving(false);
