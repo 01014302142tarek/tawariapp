@@ -595,21 +595,8 @@ export async function endQueueConsultation(
 export async function getOnlineDoctors(): Promise<{
     doctors: OnlineDoctor[];
     error?: string;
-    debug?: { totalDoctors: number; onlineDoctors: number; verifiedDoctors: number };
 }> {
     const supabase = await createClient();
-
-    // Debug: Check total doctors, online doctors, and verified doctors separately
-    const { data: allDoctors } = await supabase
-        .from("doctor_profiles")
-        .select("id, is_online, verification_status");
-
-    const totalDoctors = allDoctors?.length || 0;
-    const onlineDoctors = allDoctors?.filter((d: { is_online: boolean }) => d.is_online).length || 0;
-    const verifiedDoctors = allDoctors?.filter((d: { verification_status: string }) => d.verification_status === "verified").length || 0;
-
-    console.log(`[getOnlineDoctors] Total: ${totalDoctors}, Online: ${onlineDoctors}, Verified: ${verifiedDoctors}`);
-    console.log(`[getOnlineDoctors] All doctors:`, allDoctors);
 
     // Get all online, verified doctors
     // Note: Must specify FK because doctor_profiles has two FKs to profiles (profile_id and verified_by)
@@ -639,10 +626,8 @@ export async function getOnlineDoctors(): Promise<{
 
     if (error) {
         console.error("Error fetching online doctors:", error);
-        return { doctors: [], error: error.message, debug: { totalDoctors, onlineDoctors, verifiedDoctors } };
+        return { doctors: [], error: error.message };
     }
-
-    console.log(`[getOnlineDoctors] Found ${data?.length || 0} online verified doctors:`, data);
 
     // Get queue counts for each doctor
     const doctorIds = (data || []).map((d: { id: string }) => d.id);
@@ -687,7 +672,7 @@ export async function getOnlineDoctors(): Promise<{
         };
     });
 
-    return { doctors, debug: { totalDoctors, onlineDoctors, verifiedDoctors } };
+    return { doctors };
 }
 
 /**
@@ -806,19 +791,15 @@ export async function joinDoctorQueue(data: {
 export async function leaveQueue(
     queueEntryId: string
 ): Promise<{ success: boolean; error?: string }> {
-    console.log("[leaveQueue] Starting for queueEntryId:", queueEntryId);
-
     const supabase = await createClient();
 
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
-        console.log("[leaveQueue] Not authenticated");
         return { success: false, error: "Not authenticated" };
     }
-    console.log("[leaveQueue] User authenticated:", user.id);
 
     // Get patient profile
-    const { data: profileData, error: profileError } = await supabase
+    const { data: profileData } = await supabase
         .from("profiles")
         .select("id")
         .eq("user_id", user.id)
@@ -826,12 +807,10 @@ export async function leaveQueue(
 
     const profile = profileData as { id: string } | null;
     if (!profile) {
-        console.log("[leaveQueue] Profile not found:", profileError);
         return { success: false, error: "Profile not found" };
     }
-    console.log("[leaveQueue] Profile found:", profile.id);
 
-    const { data: patientData, error: patientError } = await supabase
+    const { data: patientData } = await supabase
         .from("patient_profiles")
         .select("id")
         .eq("profile_id", profile.id)
@@ -839,31 +818,24 @@ export async function leaveQueue(
 
     const patient = patientData as { id: string } | null;
     if (!patient) {
-        console.log("[leaveQueue] Patient profile not found:", patientError);
         return { success: false, error: "Patient profile not found" };
     }
-    console.log("[leaveQueue] Patient found:", patient.id);
 
     // Get queue entry
-    const { data: queueData, error: queueError } = await supabase
+    const { data: queueData } = await supabase
         .from("consultation_queue")
         .select("*")
         .eq("id", queueEntryId)
         .eq("patient_profile_id", patient.id)
         .single();
 
-    console.log("[leaveQueue] Queue query result:", { queueData, queueError });
-
     const queueEntry = queueData as QueueEntry | null;
     if (!queueEntry) {
-        console.log("[leaveQueue] Queue entry not found for id:", queueEntryId, "patient:", patient.id);
         return { success: false, error: "Queue entry not found" };
     }
-    console.log("[leaveQueue] Queue entry found with status:", queueEntry.status);
 
     // Allow leaving from waiting, called, or in_consultation status
     if (!["waiting", "called", "in_consultation"].includes(queueEntry.status)) {
-        console.log("[leaveQueue] Invalid status for leaving:", queueEntry.status);
         return { success: false, error: `Cannot leave queue at this stage (status: ${queueEntry.status})` };
     }
 
@@ -882,10 +854,6 @@ export async function leaveQueue(
         updateData.consultation_duration_minutes = durationMinutes;
     }
 
-    console.log("[leaveQueue] Final status will be:", finalStatus);
-
-    console.log("[leaveQueue] Updating queue entry with:", updateData);
-
     // Update queue entry - include patient_profile_id check for RLS
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: updateResult, error: updateError } = await (supabase as any)
@@ -895,22 +863,18 @@ export async function leaveQueue(
         .eq("patient_profile_id", patient.id)
         .select();
 
-    console.log("[leaveQueue] Update result:", { updateResult, updateError });
-
     if (updateError) {
-        console.error("[leaveQueue] Error leaving queue:", updateError);
+        console.error("Error leaving queue:", updateError);
         return { success: false, error: updateError.message };
     }
 
     // Check if any rows were actually updated
     if (!updateResult || updateResult.length === 0) {
-        console.error("[leaveQueue] No rows updated - possible RLS issue");
         return { success: false, error: "Failed to update queue entry - please try again" };
     }
 
     // If was in_consultation, also clear doctor's current_queue_entry_id
     if (queueEntry.status === "in_consultation") {
-        console.log("[leaveQueue] Clearing doctor's current_queue_entry_id");
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         await (supabase as any)
             .from("doctor_profiles")
@@ -920,13 +884,11 @@ export async function leaveQueue(
     }
 
     // Recalculate positions
-    console.log("[leaveQueue] Recalculating positions for doctor:", queueEntry.doctor_profile_id);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await (supabase as any).rpc("recalculate_queue_positions", {
         p_doctor_profile_id: queueEntry.doctor_profile_id
     });
 
-    console.log("[leaveQueue] Successfully left queue");
     return { success: true };
 }
 
