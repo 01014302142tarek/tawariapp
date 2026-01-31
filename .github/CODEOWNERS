@@ -1,0 +1,37 @@
+# Tawari CODEOWNERS
+# These paths require review from designated owners before merging
+
+# ============================================
+# Security-Critical: Auth & User Management
+# ============================================
+/app/actions/auth* @northshoremn
+/lib/supabase/ @northshoremn
+/middleware.ts @northshoremn
+
+# ============================================
+# Financial: Payments & Billing
+# ============================================
+/app/actions/*payment* @northshoremn
+/app/[lang]/checkout/ @northshoremn
+/app/[lang]/dashboard/doctor/earnings/ @northshoremn
+
+# ============================================
+# Medical Data: Prescriptions & Health Records
+# ============================================
+/app/actions/prescriptions.ts @northshoremn
+/app/actions/appointments.ts @northshoremn
+/app/[lang]/dashboard/*/prescriptions/ @northshoremn
+/components/post-consultation/ @northshoremn
+
+# ============================================
+# Video Calls: Telemedicine Core
+# ============================================
+/app/api/daily/ @northshoremn
+/components/*video* @northshoremn
+/components/queue-video-call.tsx @northshoremn
+
+# ============================================
+# Admin Functions
+# ============================================
+/app/[lang]/dashboard/admin/ @northshoremn
+/app/actions/admin* @northshoremn
