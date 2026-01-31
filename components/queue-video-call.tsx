@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { endQueueConsultation, getQueueEntryForCall, leaveQueue } from "@/app/actions/queue";
 import { PrescriptionPromptModal, QuickPrescriptionForm, ReviewPromptModal } from "@/components/post-consultation";
+import { createClient as createBrowserSupabaseClient } from "@/lib/supabase/client";
 
 // ============================================
 // Types
@@ -72,6 +73,7 @@ export function QueueVideoCall({
     const isMountedRef = useRef(true);
     const isInitializingRef = useRef(false);
     const hasJoinedRef = useRef(false); // Track if we successfully joined
+    const showingPostCallRef = useRef(false); // Prevent auto-navigation when showing post-call modals
 
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -114,10 +116,19 @@ export function QueueVideoCall({
             if (result.success && result.entry) {
                 console.log("[VideoCall] Status check:", result.entry.status);
                 if (result.entry.status === "completed") {
-                    console.log("[VideoCall] Consultation completed");
+                    console.log("[VideoCall] Consultation completed by doctor");
                     setConsultationEnded(true);
 
-                    // Clean up call
+                    // If appointment ID is available, show review modal
+                    if (result.entry.appointment_id) {
+                        console.log("[VideoCall] Appointment ID found, showing review modal:", result.entry.appointment_id);
+                        // Set flag BEFORE leaving call to prevent auto-navigation
+                        showingPostCallRef.current = true;
+                        setCreatedAppointmentId(result.entry.appointment_id);
+                        setPostCallPhase("review_prompt");
+                    }
+
+                    // Clean up call AFTER setting modal state
                     if (callFrameRef.current) {
                         try {
                             await callFrameRef.current.leave();
@@ -126,13 +137,8 @@ export function QueueVideoCall({
                         }
                     }
 
-                    // If appointment ID is available, show review modal
-                    if (result.entry.appointment_id) {
-                        console.log("[VideoCall] Appointment ID found, showing review modal:", result.entry.appointment_id);
-                        setCreatedAppointmentId(result.entry.appointment_id);
-                        setPostCallPhase("review_prompt");
-                    } else {
-                        // No appointment ID, just redirect
+                    // Only navigate if no modal to show (no appointment ID)
+                    if (!result.entry.appointment_id) {
                         handleCallEnded();
                     }
                 }
@@ -292,16 +298,17 @@ export function QueueVideoCall({
             });
 
             callFrame.on("left-meeting", () => {
-                console.log("[VideoCall] Left meeting, hasJoined:", hasJoinedRef.current);
+                console.log("[VideoCall] Left meeting, hasJoined:", hasJoinedRef.current, "showingPostCall:", showingPostCallRef.current);
                 if (isMountedRef.current) {
+                    setCallState("left");
                     // Only navigate away if we were actually in a joined call
-                    // Don't navigate if we hit an error during join
-                    if (hasJoinedRef.current) {
-                        setCallState("left");
+                    // AND we're not showing post-call modals (prescription/review)
+                    if (hasJoinedRef.current && !showingPostCallRef.current) {
                         handleCallEnded();
-                    } else {
+                    } else if (!hasJoinedRef.current) {
                         console.log("[VideoCall] Left meeting but was never joined, not navigating");
-                        setCallState("left");
+                    } else {
+                        console.log("[VideoCall] Left meeting but showing post-call modal, not navigating");
                     }
                 }
             });
@@ -403,32 +410,43 @@ export function QueueVideoCall({
         setEnding(true);
 
         try {
-            // Leave the call safely
+            // If doctor, mark consultation as completed FIRST (before leaving call)
+            // This ensures we get the appointment ID and can show the prescription modal
+            if (userRole === "doctor") {
+                const result = await endQueueConsultation(queueEntryId);
+                if (result.success) {
+                    // Set flag BEFORE leaving call to prevent auto-navigation
+                    showingPostCallRef.current = true;
+
+                    // Store IDs for prescription creation
+                    setCreatedAppointmentId(result.appointmentId || null);
+                    setPatientProfileId(result.patientProfileId || null);
+                    // Show prescription prompt
+                    setPostCallPhase("prescription_prompt");
+
+                    // NOW leave the call (won't navigate due to flag)
+                    if (callFrameRef.current) {
+                        try {
+                            await callFrameRef.current.leave();
+                        } catch (leaveErr) {
+                            console.warn("[VideoCall] Error leaving call:", leaveErr);
+                        }
+                    }
+
+                    setEnding(false);
+                    setShowEndConfirm(false);
+                    return; // Don't navigate - showing prescription modal
+                }
+            }
+
+            // Only reach here on error or non-doctor - leave and navigate
             if (callFrameRef.current) {
                 try {
                     await callFrameRef.current.leave();
                 } catch (leaveErr) {
                     console.warn("[VideoCall] Error leaving call:", leaveErr);
-                    // Continue anyway - we want to end the consultation
                 }
             }
-
-            // If doctor, mark consultation as completed and get appointment ID
-            if (userRole === "doctor") {
-                const result = await endQueueConsultation(queueEntryId);
-                if (result.success) {
-                    // Store IDs for prescription creation
-                    // Show prescription prompt even if no appointmentId (rare case)
-                    setCreatedAppointmentId(result.appointmentId || null);
-                    setPatientProfileId(result.patientProfileId || null);
-                    // Show prescription prompt instead of navigating away
-                    setPostCallPhase("prescription_prompt");
-                    setEnding(false);
-                    setShowEndConfirm(false);
-                    return; // Don't navigate yet
-                }
-            }
-
             handleCallEnded();
         } catch (err) {
             console.error("[VideoCall] Error ending call:", err);
@@ -448,10 +466,12 @@ export function QueueVideoCall({
     }, []);
 
     const handleSkipPrescription = useCallback(() => {
+        showingPostCallRef.current = false;
         handleCallEnded();
     }, [handleCallEnded]);
 
     const handlePrescriptionSaved = useCallback(() => {
+        showingPostCallRef.current = false;
         handleCallEnded();
     }, [handleCallEnded]);
 
@@ -462,10 +482,12 @@ export function QueueVideoCall({
 
     // Review flow handlers (patient)
     const handleReviewSubmitted = useCallback(() => {
+        showingPostCallRef.current = false;
         handleCallEnded();
     }, [handleCallEnded]);
 
     const handleSkipReview = useCallback(() => {
+        showingPostCallRef.current = false;
         handleCallEnded();
     }, [handleCallEnded]);
 
@@ -541,21 +563,47 @@ export function QueueVideoCall({
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [queueEntryId]); // Only re-run if queueEntryId changes, not when initializeCall reference changes
 
-    // Poll for consultation status changes (for patients to detect when doctor ends the call)
+    // Use Supabase Realtime for instant notification when doctor ends the call
+    // Falls back to polling every 15 seconds as a safety net
     useEffect(() => {
         if (userRole !== "patient" || consultationEnded) return;
 
-        // Start polling after joining the call
+        const supabase = createBrowserSupabaseClient();
+
+        // Subscribe to realtime changes on this queue entry
+        const channel = supabase
+            .channel(`queue-status-${queueEntryId}`)
+            .on(
+                "postgres_changes",
+                {
+                    event: "UPDATE",
+                    schema: "public",
+                    table: "consultation_queue",
+                    filter: `id=eq.${queueEntryId}`,
+                },
+                (payload) => {
+                    console.log("[VideoCall] Realtime update received:", payload.new);
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    if ((payload.new as any).status === "completed") {
+                        checkConsultationStatus();
+                    }
+                }
+            )
+            .subscribe((status) => {
+                console.log("[VideoCall] Realtime subscription status:", status);
+            });
+
+        // Also keep polling as fallback (but less frequently - every 15 seconds)
         const startPolling = () => {
             statusPollRef.current = setInterval(() => {
                 if (isMountedRef.current && !consultationEnded) {
                     checkConsultationStatus();
                 }
-            }, 5000); // Check every 5 seconds
+            }, 15000); // Fallback check every 15 seconds
         };
 
         // Wait a bit before starting to poll
-        const timeoutId = setTimeout(startPolling, 3000);
+        const timeoutId = setTimeout(startPolling, 5000);
 
         return () => {
             clearTimeout(timeoutId);
@@ -563,8 +611,9 @@ export function QueueVideoCall({
                 clearInterval(statusPollRef.current);
                 statusPollRef.current = null;
             }
+            supabase.removeChannel(channel);
         };
-    }, [userRole, consultationEnded, checkConsultationStatus]);
+    }, [userRole, consultationEnded, checkConsultationStatus, queueEntryId]);
 
     // Handle back navigation
     const handleBack = () => {
