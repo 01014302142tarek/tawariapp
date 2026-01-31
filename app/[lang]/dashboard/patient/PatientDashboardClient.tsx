@@ -276,8 +276,8 @@ export default function PatientDashboard({
         unreadMessages: 0,
     };
 
+    // Secondary quick actions (regular cards)
     const quickActions = [
-        { title: isRTL ? "استشارة عاجلة" : "Urgent Care", description: isRTL ? "تحدث مع طبيب الآن" : "Talk to a doctor now", icon: Icons.video, href: `/${language}/dashboard/patient/urgent-care`, highlight: true },
         { title: t.patientDashboard.actions.bookAppointment, description: t.patientDashboard.actionDesc.bookAppointment, icon: Icons.calendar, href: `/${language}/dashboard/patient/doctors` },
         { title: t.patientDashboard.actions.viewPrescriptions, description: t.patientDashboard.actionDesc.viewPrescriptions, icon: Icons.prescription, href: `/${language}/dashboard/patient/prescriptions` },
         { title: t.patientDashboard.actions.messageDoctor, description: t.patientDashboard.actionDesc.messageDoctor, icon: Icons.message, href: `/${language}/dashboard/patient/messages` },
@@ -314,6 +314,48 @@ export default function PatientDashboard({
                     <p className={cn("text-base md:text-lg", isDark ? "text-gray-400" : "text-gray-600")}>
                         {t.patientDashboard.greeting.subtitle}
                     </p>
+                </section>
+
+                {/* Primary Action Buttons - Urgent Care & Video Call */}
+                <section className="mb-6 md:mb-8">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {/* Urgent Care Button */}
+                        <AnimatedActionButton
+                            href={`/${language}/dashboard/patient/urgent-care`}
+                            icon={
+                                <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+                                </svg>
+                            }
+                            title={isRTL ? "استشارة عاجلة" : "Urgent Care"}
+                            description={isRTL ? "تحدث مع طبيب متاح الآن" : "Talk to an available doctor now"}
+                            variant="urgent"
+                            isDark={isDark}
+                        />
+
+                        {/* Start Video Call Button */}
+                        <AnimatedActionButton
+                            href={nextAppointment ? undefined : `/${language}/dashboard/patient/doctors`}
+                            onClick={nextAppointment ? handleStartCall : undefined}
+                            icon={Icons.video}
+                            title={
+                                nextAppointment
+                                    ? (nextAppointment.status === "in_progress"
+                                        ? (isRTL ? "انضم للمكالمة" : "Join Call")
+                                        : (isRTL ? "ابدأ استشارتك" : "Start Your Consultation"))
+                                    : (isRTL ? "احجز استشارة" : "Book a Consultation")
+                            }
+                            description={
+                                nextAppointment
+                                    ? (isRTL ? `مع ${nextAppointment.doctor}` : `With ${nextAppointment.doctor}`)
+                                    : (isRTL ? "اختر طبيبًا واحجز موعدًا" : "Choose a doctor and schedule")
+                            }
+                            variant="primary"
+                            isDark={isDark}
+                            isLoading={joiningCall}
+                            loadingText={isRTL ? "جارٍ الانضمام..." : "Joining..."}
+                        />
+                    </div>
                 </section>
 
                 {/* Stats Row */}
@@ -568,7 +610,7 @@ export default function PatientDashboard({
                 {/* Quick Actions */}
                 <section>
                     <SectionHeader title={t.patientDashboard.sections.quickActions} subtitle={t.patientDashboard.actionDesc.bookAppointment} isDark={isDark} />
-                    <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+                    <div className="grid grid-cols-3 gap-3 md:gap-4">
                         {quickActions.map((action, idx) => (
                             <motion.div
                                 key={idx}

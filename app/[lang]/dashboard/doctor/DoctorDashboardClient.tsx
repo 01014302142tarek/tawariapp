@@ -16,6 +16,7 @@ import { getDoctorDashboardData, type DoctorDashboardData } from "@/app/actions/
 import { GlowingCard } from "@/components/ui/glowing-card";
 import { AnimatedNumber } from "@/components/ui/animated-number";
 import { SparklesCore } from "@/components/ui/sparkles";
+import { AnimatedActionButton } from "@/components/ui/animated-action-button";
 
 // ============================================
 // ICONS
@@ -295,9 +296,8 @@ export default function Doctor2Dashboard({
         image: msg.patientAvatar || "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&crop=face"
     })) || [];
 
-    // Keep quick actions and health tips static
+    // Secondary quick actions (moved Start Video Call and Urgent Care to primary buttons)
     const quickActions = [
-        { title: t.doctorDashboard.actions.startVideoCall, description: t.doctorDashboard.actions.connectWithPatient, icon: Icons.video, href: `/${language}/dashboard/doctor/appointments` },
         { title: t.doctorDashboard.actions.viewSchedule, description: t.doctorDashboard.actions.manageAppointments, icon: Icons.calendarDays, href: `/${language}/dashboard/doctor/schedule` },
         { title: t.doctorDashboard.actions.patientRecords, description: t.doctorDashboard.actions.accessRecords, icon: Icons.document, href: `/${language}/dashboard/doctor/patients` },
         { title: t.doctorDashboard.actions.messagesAction, description: t.doctorDashboard.actions.chatWithPatients, icon: Icons.chat, href: `/${language}/dashboard/doctor/messages` },
@@ -343,6 +343,35 @@ export default function Doctor2Dashboard({
                     <p className={cn("text-base md:text-lg", isDark ? "text-gray-400" : "text-gray-600")}>
                         {t.doctorDashboard.greeting.subtitle}
                     </p>
+                </section>
+
+                {/* Primary Action Buttons - Urgent Care & Video Call */}
+                <section className="mb-6 md:mb-8">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {/* Urgent Care Queue Button */}
+                        <AnimatedActionButton
+                            href={`/${language}/dashboard/doctor/urgent-care`}
+                            icon={
+                                <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+                                </svg>
+                            }
+                            title={isRTL ? "الاستشارات العاجلة" : "Urgent Care Queue"}
+                            description={isRTL ? "شاهد المرضى المنتظرين" : "View waiting patients"}
+                            variant="urgent"
+                            isDark={isDark}
+                        />
+
+                        {/* Start Video Call Button */}
+                        <AnimatedActionButton
+                            href={`/${language}/dashboard/doctor/appointments`}
+                            icon={Icons.video}
+                            title={t.doctorDashboard.actions.startVideoCall}
+                            description={t.doctorDashboard.actions.connectWithPatient}
+                            variant="primary"
+                            isDark={isDark}
+                        />
+                    </div>
                 </section>
 
                 {/* Stats Row */}
@@ -666,7 +695,7 @@ export default function Doctor2Dashboard({
                 {/* Quick Actions */}
                 <section>
                     <SectionHeader title={t.doctorDashboard.sections.quickActions} subtitle={t.doctorDashboard.sections.manageYourPractice} isDark={isDark} />
-                    <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+                    <div className="grid grid-cols-3 gap-3 md:gap-4">
                         {quickActions.map((action, idx) => (
                             <motion.div
                                 key={idx}
