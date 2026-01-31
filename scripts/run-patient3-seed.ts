@@ -30,7 +30,7 @@ async function runSeedSQL() {
     .filter(s => s.length > 0 && !s.startsWith('--'));
 
   let successCount = 0;
-  let errorCount = 0;
+  const errorCount = 0;
 
   for (const statement of statements) {
     if (statement.toLowerCase().startsWith('select')) {

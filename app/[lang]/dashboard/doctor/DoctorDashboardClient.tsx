@@ -182,7 +182,7 @@ export default function Doctor2Dashboard({
     
     // State for dashboard data
     const [dashboardData, setDashboardData] = useState<DoctorDashboardData | null>(initialData);
-    const [isLoading, setIsLoading] = useState(!initialData);
+    const [_isLoading, setIsLoading] = useState(!initialData);
     const [hasFetched, setHasFetched] = useState(Boolean(initialData));
 
     // Handle hydration - only compute time-based values after mount
@@ -258,6 +258,7 @@ export default function Doctor2Dashboard({
 
     // Helper function to format relative time (defined before use)
     const formatRelativeTime = (timestamp: string): string => {
+        // eslint-disable-next-line react-hooks/purity -- Relative time formatting inherently needs current time
         const now = Date.now();
         const then = new Date(timestamp).getTime();
         const diffMinutes = Math.floor((now - then) / (1000 * 60));
@@ -392,7 +393,7 @@ export default function Doctor2Dashboard({
                             />
 
                             <div className="space-y-3">
-                                {appointments.map((apt, idx) => (
+                                {appointments.map((apt) => (
                                     <motion.div
                                         key={apt.id}
                                         initial={false}
@@ -449,7 +450,7 @@ export default function Doctor2Dashboard({
                                 }
                             />
                             <div className="space-y-3">
-                                {recentMessages.map((msg, idx) => (
+                                {recentMessages.map((msg) => (
                                     <motion.div
                                         key={msg.id}
                                         initial={false}
@@ -499,7 +500,7 @@ export default function Doctor2Dashboard({
                                 isDark={isDark}
                             />
                             <div className="space-y-3">
-                                {healthTips.map((tip, idx) => (
+                                {healthTips.map((tip) => (
                                     <motion.div
                                         key={tip.id}
                                         initial={false}
@@ -607,7 +608,7 @@ export default function Doctor2Dashboard({
                                 }
                             />
                             <div className="space-y-3">
-                                {pendingTasks.map((task, idx) => (
+                                {pendingTasks.map((task) => (
                                     <motion.div
                                         key={task.id}
                                         initial={false}

@@ -2730,6 +2730,7 @@ export function I18nProvider({ children, locale }: { children: React.ReactNode; 
     useEffect(() => {
         // Store current language in localStorage for persistence
         localStorage.setItem(LANGUAGE_STORAGE_KEY, locale);
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- Syncing language state with URL locale
         setLanguageState(locale);
 
         // Ensure document direction is set correctly

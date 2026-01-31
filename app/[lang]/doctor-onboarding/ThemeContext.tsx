@@ -17,6 +17,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
     useEffect(() => {
         const saved = localStorage.getItem("doctor-theme") as Theme;
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- Required to load saved theme from localStorage
         if (saved) setTheme(saved);
     }, []);
 

@@ -104,6 +104,7 @@ export default function AppointmentsPage({
 
     useEffect(() => {
         if (!initialLoaded) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect -- Initial data load on mount is valid
             loadAppointments();
         }
     }, [initialLoaded, loadAppointments]);
@@ -329,7 +330,7 @@ export default function AppointmentsPage({
                     </div>
                     <GlowingCard isDark={isDark} glowColor="teal" className="p-0 overflow-hidden">
                         <div className={divider}>
-                            {todayAppointments.map((apt, idx) => (
+                            {todayAppointments.map((apt) => (
                                 <motion.div
                                     key={apt.id}
                                     initial={false}
@@ -497,7 +498,7 @@ export default function AppointmentsPage({
                     </div>
                     <GlowingCard isDark={isDark} glowColor="teal" className="p-0 overflow-hidden">
                         <div className={divider}>
-                            {upcomingAppointments.map((apt, idx) => (
+                            {upcomingAppointments.map((apt) => (
                                 <motion.div
                                     key={apt.id}
                                     initial={false}

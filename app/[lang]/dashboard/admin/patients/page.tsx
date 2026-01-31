@@ -124,6 +124,7 @@ export default function PatientsPage() {
     }, [isFirstLoad]);
 
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- Initial data load on dependency change is valid
         loadPatients(currentPage, debouncedSearch, statusFilter, genderFilter, bloodTypeFilter);
     }, [currentPage, debouncedSearch, statusFilter, genderFilter, bloodTypeFilter, loadPatients]);
 
@@ -139,6 +140,7 @@ export default function PatientsPage() {
     const [currentDate, setCurrentDate] = useState<Date | null>(null);
 
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- Required to avoid hydration mismatch
         setCurrentDate(new Date());
     }, []);
 

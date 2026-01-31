@@ -134,6 +134,7 @@ export default function DoctorsPage() {
 
     // Handle hydration and cleanup
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- Required to track hydration state
         setMounted(true);
         return () => {
             if (bookingTimerRef.current) clearTimeout(bookingTimerRef.current);
@@ -170,6 +171,7 @@ export default function DoctorsPage() {
 
     // Load specializations on mount
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- Initial data load on mount is valid
         loadSpecializations();
     }, [loadSpecializations]);
 

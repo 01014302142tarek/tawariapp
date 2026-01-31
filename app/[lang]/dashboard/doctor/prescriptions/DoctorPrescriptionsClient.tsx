@@ -154,6 +154,7 @@ export default function PrescriptionsPage({
 
     useEffect(() => {
         if (!initialLoaded) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect -- Initial data load on mount is valid
             loadData();
         }
     }, [loadData, initialLoaded]);
@@ -164,7 +165,7 @@ export default function PrescriptionsPage({
         // Validate at least one medication has a name and strip _formId
         const validMeds = medications
             .filter(m => m.medication_name.trim())
-            .map(({ _formId, ...med }) => med);
+            .map(({ _formId: _, ...med }) => med);
         if (validMeds.length === 0) return;
 
         setCreating(true);

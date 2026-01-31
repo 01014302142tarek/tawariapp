@@ -381,6 +381,18 @@ const isPasswordValid = (password: string) => {
     return v.minLength && v.hasUppercase && v.hasLowercase && v.hasNumber && v.hasSpecial;
 };
 
+// Password requirement item (extracted to avoid creating during render)
+const RequirementItem = ({ met, text, isDark }: { met: boolean; text: string; isDark: boolean }) => (
+    <div className={cn("flex items-center gap-1.5 text-xs", met ? "text-teal-500" : (isDark ? "text-gray-500" : "text-gray-400"))}>
+        {met ? Icons.checkCircle : (
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="9" strokeWidth={1.5} />
+            </svg>
+        )}
+        <span>{text}</span>
+    </div>
+);
+
 // Password Input Component with show/hide toggle and requirements
 const PasswordInput = ({ label, placeholder, value, onChange, isDark, required = false, showPasswordLabel, hidePasswordLabel, requirementsText }: {
     label: string;
@@ -404,17 +416,6 @@ const PasswordInput = ({ label, placeholder, value, onChange, isDark, required =
     const [showRequirements, setShowRequirements] = useState(false);
     const validation = validatePassword(value);
     const allValid = isPasswordValid(value);
-
-    const RequirementItem = ({ met, text }: { met: boolean; text: string }) => (
-        <div className={cn("flex items-center gap-1.5 text-xs", met ? "text-teal-500" : (isDark ? "text-gray-500" : "text-gray-400"))}>
-            {met ? Icons.checkCircle : (
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <circle cx="12" cy="12" r="9" strokeWidth={1.5} />
-                </svg>
-            )}
-            <span>{text}</span>
-        </div>
-    );
 
     return (
         <div className="space-y-1">
@@ -462,11 +463,11 @@ const PasswordInput = ({ label, placeholder, value, onChange, isDark, required =
                         {requirementsText.title}
                     </p>
                     <div className="grid grid-cols-2 gap-1">
-                        <RequirementItem met={validation.minLength} text={requirementsText.minLength} />
-                        <RequirementItem met={validation.hasUppercase} text={requirementsText.uppercase} />
-                        <RequirementItem met={validation.hasLowercase} text={requirementsText.lowercase} />
-                        <RequirementItem met={validation.hasNumber} text={requirementsText.number} />
-                        <RequirementItem met={validation.hasSpecial} text={requirementsText.special} />
+                        <RequirementItem met={validation.minLength} text={requirementsText.minLength} isDark={isDark} />
+                        <RequirementItem met={validation.hasUppercase} text={requirementsText.uppercase} isDark={isDark} />
+                        <RequirementItem met={validation.hasLowercase} text={requirementsText.lowercase} isDark={isDark} />
+                        <RequirementItem met={validation.hasNumber} text={requirementsText.number} isDark={isDark} />
+                        <RequirementItem met={validation.hasSpecial} text={requirementsText.special} isDark={isDark} />
                     </div>
                 </div>
             )}
@@ -641,6 +642,7 @@ const OTPDialog = ({
         sendInitialOTP();
 
         // Start countdown
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- Timer initialization on modal open
         setResendTimer(25);
         setCanResend(false);
         const interval = setInterval(() => {
@@ -1596,6 +1598,7 @@ export default function DoctorOnboarding() {
     // Pre-fill form with user data if logged in
     useEffect(() => {
         if (profile) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect -- Pre-filling form with user profile data
             setFormData(prev => ({
                 ...prev,
                 fullName: profile.profile.full_name || prev.fullName,

@@ -118,11 +118,18 @@ Changes to these paths require explicit approval:
 
 ---
 
+## Releases
+
+- Tag-based releases (`v*`) create GitHub Releases automatically
+- Use `workflow_dispatch` for manual release creation if needed
+
+---
+
 ## What's NOT Included (Intentionally)
 
 | Feature | Reason |
 |---------|--------|
-| CodeQL | Adds CI time; most issues are dependency-related (covered by Dependabot) |
+| CodeQL | Optional later; Semgrep is used for baseline static analysis |
 | GitHub Environments | Vercel already handles preview/production |
 | Signed commits | Adds friction for small team |
 | npm audit in CI | High false positive rate; Dependabot is better |
@@ -140,7 +147,7 @@ Changes to these paths require explicit approval:
 5. Add E2E tests for critical flows
 
 ### Phase 3: Advanced Security (If/When Scaling)
-1. Add CodeQL for deeper static analysis
+1. Add CodeQL for deeper static analysis (if needed)
 2. Add SAST scanning
 3. Implement audit logging for PHI access
 4. Add rate limiting monitoring

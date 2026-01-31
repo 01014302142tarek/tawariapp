@@ -18,6 +18,7 @@ import { PendingReviews } from "@/components/reviews";
 import { GlowingCard } from "@/components/ui/glowing-card";
 import { AnimatedNumber } from "@/components/ui/animated-number";
 import { SparklesCore } from "@/components/ui/sparkles";
+import { AnimatedActionButton } from "@/components/ui/animated-action-button";
 
 // ============================================
 // ICONS

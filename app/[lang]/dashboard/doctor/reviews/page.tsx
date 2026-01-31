@@ -41,9 +41,9 @@ const Icons = {
 };
 
 export default function DoctorReviewsPage() {
-    const { t, isRTL, formatNumber } = useI18n();
+    const { isRTL, formatNumber } = useI18n();
     const { profile } = useAuth();
-    const { isDark, textPrimary, textSecondary, textMuted, inputBg, inputFocus, buttonSecondary, buttonSecondaryActive } = useThemeStyles();
+    const { isDark, textPrimary, textMuted, inputBg, inputFocus, buttonSecondary, buttonSecondaryActive } = useThemeStyles();
 
     const [reviews, setReviews] = useState<ReviewWithDetails[]>([]);
     const [stats, setStats] = useState({ rating_average: 0, rating_count: 0 });

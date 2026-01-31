@@ -32,6 +32,9 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
+      - name: Tests
+        run: npm run test:ci
+
       - name: Build
         env:
           NEXT_TELEMETRY_DISABLED: "1"

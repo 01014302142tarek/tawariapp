@@ -158,7 +158,7 @@ const SettingsSection = ({
 };
 
 export default function SettingsPage() {
-    const { t, isRTL, formatNumber, formatDate, language } = useI18n();
+    const { t, isRTL, formatNumber, formatDate } = useI18n();
     const { isDark } = useGlobalTheme();
     const { profile, user, isLoading, refreshProfile } = useAuth();
 

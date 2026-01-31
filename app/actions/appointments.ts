@@ -1216,8 +1216,8 @@ export async function getAvailableDoctors(filters?: {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let doctors: DoctorForBooking[] = (data || []).map((doc: any) => {
         // Extract specializations and remove duplicates
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const specNames = (doc.doctor_specializations || [])
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Supabase returns dynamic nested types
             .map((ds: any) => ds.specializations?.name_en || "")
             .filter(Boolean);
         
@@ -1568,8 +1568,8 @@ export async function getDoctorById(
     }));
 
     // Build specializations array and remove duplicates
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const specNames = (doc.doctor_specializations || [])
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Supabase returns dynamic nested types
         .map((ds: any) => ds.specializations?.name_en || "")
         .filter(Boolean);
     

@@ -128,7 +128,7 @@ export async function getAdminUsers(options?: {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const users: AdminUser[] = (data || []).map((profile: any) => {
         // Determine status based on role-specific profile status
-        let status: UserStatus = "active";
+        const status: UserStatus = "active";
 
         return {
             id: profile.id,
@@ -472,6 +472,7 @@ export async function createUser(input: CreateUserInput): Promise<{ success: boo
 
         // Step 2: Create profile (admin can insert due to RLS policy)
         const profileId = crypto.randomUUID();
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Service role client needs type override
         const { error: profileError } = await (supabase as any)
             .from("profiles")
             .insert({
@@ -495,6 +496,7 @@ export async function createUser(input: CreateUserInput): Promise<{ success: boo
         // Step 3: Create role-specific profile
         if (input.role === "doctor") {
             const doctorProfileId = crypto.randomUUID();
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Service role client needs type override
             const { error: doctorError } = await (supabase as any)
                 .from("doctor_profiles")
                 .insert({
@@ -519,28 +521,32 @@ export async function createUser(input: CreateUserInput): Promise<{ success: boo
             // Add specializations if provided
             if (input.specializations && input.specializations.length > 0) {
                 // Get specialization IDs from names
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Service role client needs type override
                 const { data: specializations } = await (supabase as any)
                     .from("specializations")
                     .select("id, name_en")
                     .in("name_en", input.specializations);
 
                 if (specializations && specializations.length > 0) {
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Supabase returns dynamic types
                     const doctorSpecializations = specializations.map((spec: any) => ({
                         id: crypto.randomUUID(),
                         doctor_profile_id: doctorProfileId,
                         specialization_id: spec.id,
                     }));
 
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Service role client needs type override
                     await (supabase as any)
                         .from("doctor_specializations")
                         .insert(doctorSpecializations);
-                    
+
                     console.log("✅ Specializations added");
                 }
             }
 
         } else if (input.role === "patient") {
             const patientProfileId = crypto.randomUUID();
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Service role client needs type override
             const { error: patientError } = await (supabase as any)
                 .from("patient_profiles")
                 .insert({
@@ -562,6 +568,7 @@ export async function createUser(input: CreateUserInput): Promise<{ success: boo
 
         } else if (input.role === "admin") {
             const adminProfileId = crypto.randomUUID();
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Service role client needs type override
             const { error: adminError } = await (supabase as any)
                 .from("admin_profiles")
                 .insert({

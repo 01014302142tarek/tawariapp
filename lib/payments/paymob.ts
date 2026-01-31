@@ -339,6 +339,7 @@ export function verifyWebhookSignature(
 
     // Paymob HMAC verification
     // The signature is calculated from concatenated sorted keys
+    // eslint-disable-next-line @typescript-eslint/no-require-imports -- Dynamic import inside function scope
     const crypto = require("crypto");
 
     try {

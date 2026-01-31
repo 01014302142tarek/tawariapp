@@ -106,10 +106,10 @@ export default function AboutPage() {
     };
 
     const text = translations[language as keyof typeof translations] || translations.en;
-    const values = [
+    const values: { icon: React.ReactNode; title: string; desc: string; color: "teal" | "amber" | "purple" | "blue" | "pink" | "green" }[] = [
         { icon: Icons.heart, title: text.value1Title, desc: text.value1Text, color: "teal" },
         { icon: Icons.shield, title: text.value2Title, desc: text.value2Text, color: "amber" },
-        { icon: Icons.users, title: text.value3Title, desc: text.value3Text, color: "emerald" },
+        { icon: Icons.users, title: text.value3Title, desc: text.value3Text, color: "green" },
         { icon: Icons.globe, title: text.value4Title, desc: text.value4Text, color: "blue" },
     ];
 
@@ -168,7 +168,7 @@ export default function AboutPage() {
                         <h2 className={`text-2xl font-bold mb-6 text-center ${isDark ? 'text-white' : 'text-slate-900'}`}>{text.values}</h2>
                         <div className="grid sm:grid-cols-2 gap-4">
                             {values.map((value, idx) => (
-                                <GlowingCard key={idx} isDark={isDark} glowColor={value.color as any} className="p-5 transition-all hover:scale-[1.02]">
+                                <GlowingCard key={idx} isDark={isDark} glowColor={value.color} className="p-5 transition-all hover:scale-[1.02]">
                                     <div className={`w-10 h-10 rounded-lg bg-${value.color}-500/20 flex items-center justify-center text-${value.color}-400 mb-3`}>
                                         {value.icon}
                                     </div>

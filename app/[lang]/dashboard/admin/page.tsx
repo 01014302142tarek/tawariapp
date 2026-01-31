@@ -225,6 +225,7 @@ export default function AdminDashboard() {
 
     // Helper function to format relative time
     const formatRelativeTime = (timestamp: string): string => {
+        // eslint-disable-next-line react-hooks/purity -- Relative time formatting inherently needs current time
         const now = Date.now();
         const then = new Date(timestamp).getTime();
         const diffMinutes = Math.floor((now - then) / (1000 * 60));
@@ -359,7 +360,7 @@ export default function AdminDashboard() {
                                             {isRTL ? "لا توجد طلبات معلقة" : "No pending approvals"}
                                         </p>
                                     </div>
-                                ) : pendingApprovals.map((item, idx) => (
+                                ) : pendingApprovals.map((item) => (
                                     <motion.div
                                         key={item.id}
                                         initial={false}
@@ -456,7 +457,7 @@ export default function AdminDashboard() {
                                     <div className={cn("p-4 text-center", isDark ? "text-gray-500" : "text-gray-600")}>
                                         <p className="text-sm">{isRTL ? "لا يوجد نشاط حديث" : "No recent activity"}</p>
                                     </div>
-                                ) : recentActivity.map((activity, idx) => (
+                                ) : recentActivity.map((activity) => (
                                     <motion.div
                                         key={activity.id}
                                         initial={false}

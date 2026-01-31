@@ -117,6 +117,7 @@ export default function WaitingRoomPage() {
 
     // Initial check and polling
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- Initial status check and polling is required
         checkStatus();
 
         // Poll every 3 seconds

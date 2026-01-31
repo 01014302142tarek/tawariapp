@@ -370,7 +370,7 @@ export default function DoctorUrgentCarePage() {
     const isCallingNextRef = useRef(false);
 
     // Real-time hooks
-    const { isOnline: realtimeOnline, currentQueueEntryId, isConnected } = useDoctorOnlineStatus(doctorProfileId);
+    const { isOnline: realtimeOnline, currentQueueEntryId: _currentQueueEntryId, isConnected } = useDoctorOnlineStatus(doctorProfileId);
     const { queue } = useDoctorQueue(doctorProfileId);
 
     // Load initial data (showLoading = true for initial load, false for background refresh)

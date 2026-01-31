@@ -377,6 +377,7 @@ export default function Header({ onMenuClick }: { onMenuClick?: () => void }) {
     const [currentDate, setCurrentDate] = useState("");
 
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- Required to avoid hydration mismatch (server/client timezone)
         setCurrentDate(new Date().toLocaleDateString(isRTL ? "ar-EG" : "en-US", {
             weekday: "long",
             year: "numeric",

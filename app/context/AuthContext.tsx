@@ -106,6 +106,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             hasMounted.current = true;
             const cached = loadCachedProfile();
             if (cached) {
+                // eslint-disable-next-line react-hooks/set-state-in-effect -- Loading cached profile on mount
                 setProfile(cached);
             }
         }

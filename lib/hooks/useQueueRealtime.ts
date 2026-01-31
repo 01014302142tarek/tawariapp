@@ -114,13 +114,13 @@ export function useDoctorQueue(doctorProfileId: string | null) {
         if (!doctorProfileId) return;
 
         const supabase = createClient();
-        let channel: RealtimeChannel;
 
         // Initial fetch
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- Initial data load on mount is valid
         refreshQueue();
 
         // Subscribe to changes
-        channel = supabase
+        const channel = supabase
             .channel(`queue-${doctorProfileId}`)
             .on(
                 "postgres_changes",
@@ -180,7 +180,6 @@ export function useMyQueuePosition(queueEntryId: string | null) {
         if (!queueEntryId) return;
 
         const supabase = createClient();
-        let channel: RealtimeChannel;
 
         // Initial fetch
         const fetchEntry = async () => {
@@ -198,7 +197,7 @@ export function useMyQueuePosition(queueEntryId: string | null) {
         fetchEntry();
 
         // Subscribe to changes
-        channel = supabase
+        const channel = supabase
             .channel(`my-queue-${queueEntryId}`)
             .on(
                 "postgres_changes",
@@ -240,7 +239,6 @@ export function useDoctorOnlineStatus(doctorProfileId: string | null) {
         if (!doctorProfileId) return;
 
         const supabase = createClient();
-        let channel: RealtimeChannel;
 
         // Initial fetch
         const fetchStatus = async () => {
@@ -259,7 +257,7 @@ export function useDoctorOnlineStatus(doctorProfileId: string | null) {
         fetchStatus();
 
         // Subscribe to changes
-        channel = supabase
+        const channel = supabase
             .channel(`doctor-status-${doctorProfileId}`)
             .on(
                 "postgres_changes",

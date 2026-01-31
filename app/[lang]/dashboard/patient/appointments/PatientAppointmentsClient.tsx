@@ -70,7 +70,7 @@ export default function AppointmentsPage({
 }) {
     const { t, isRTL, language } = useI18n();
     const router = useRouter();
-    const { showConfirm, showError } = useToast();
+    const { showError } = useToast();
     const [activeFilter, setActiveFilter] = useState("All");
     const { isDark, textPrimary, textMuted } = useThemeStyles();
 
@@ -94,6 +94,7 @@ export default function AppointmentsPage({
 
     useEffect(() => {
         if (!initialLoaded) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect -- Initial data load on mount is valid
             loadAppointments();
         }
     }, [initialLoaded, loadAppointments]);

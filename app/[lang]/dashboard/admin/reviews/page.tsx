@@ -76,7 +76,7 @@ const Badge = ({ variant, children }: { variant: string; children: React.ReactNo
 };
 
 export default function AdminReviewsPage() {
-    const { t, isRTL, formatNumber } = useI18n();
+    const { isRTL, formatNumber } = useI18n();
     const { theme } = useTheme();
     const isDark = theme === "dark";
     const [filter, setFilter] = useState<"all" | "visible" | "hidden">("all");

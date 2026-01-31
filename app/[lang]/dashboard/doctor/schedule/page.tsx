@@ -132,6 +132,7 @@ export default function SchedulePage() {
             slots: [],
             isActive: true,
         }));
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- Initialize schedule once on mount
         setSchedule(initSchedule);
         loadData();
     }, [loadData]);

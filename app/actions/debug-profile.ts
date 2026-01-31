@@ -20,6 +20,7 @@ export async function debugUserProfile() {
     }
 
     // Get profile
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Service role client needs type override
     const { data: profile, error: profileError } = await (supabase as any)
         .from("profiles")
         .select("*")
@@ -29,6 +30,7 @@ export async function debugUserProfile() {
     // Get patient profile if profile exists
     let patientProfile = null;
     if (profile) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Service role client needs type override
         const { data, error: ppError } = await (supabase as any)
             .from("patient_profiles")
             .select("*")

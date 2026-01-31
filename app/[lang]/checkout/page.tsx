@@ -70,7 +70,7 @@ interface AppointmentDetails {
 function CheckoutPageContent() {
     const searchParams = useSearchParams();
     const router = useRouter();
-    const { t, isRTL, language } = useI18n();
+    const { isRTL } = useI18n();
     const { isDark } = useTheme();
 
     const appointmentId = searchParams.get("appointment");

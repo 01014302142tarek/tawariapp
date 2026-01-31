@@ -136,8 +136,11 @@ export async function getAdminAppointments(options?: {
     }
 
     // Collect all profile IDs we need to fetch
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Supabase returns dynamic types
     const patientProfileIds = [...new Set((data || []).map((apt: any) => apt.patient_profile_id).filter(Boolean))];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Supabase returns dynamic types
     const doctorProfileIds = [...new Set((data || []).map((apt: any) => apt.doctor_profile_id).filter(Boolean))];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Supabase returns dynamic types
     const cancelledByIds = [...new Set((data || []).filter((apt: any) => apt.cancelled_by).map((apt: any) => apt.cancelled_by))];
 
     // Fetch patient profiles with their profile info
@@ -156,6 +159,7 @@ export async function getAdminAppointments(options?: {
             .in("id", patientProfileIds);
 
         if (patientData) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Supabase returns dynamic types
             patientData.forEach((p: any) => {
                 patientProfiles.set(p.id, {
                     id: p.id,
@@ -182,6 +186,7 @@ export async function getAdminAppointments(options?: {
             .in("id", doctorProfileIds);
 
         if (doctorData) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Supabase returns dynamic types
             doctorData.forEach((d: any) => {
                 doctorProfiles.set(d.id, {
                     id: d.id,
@@ -201,6 +206,7 @@ export async function getAdminAppointments(options?: {
             .in("id", cancelledByIds);
 
         if (cancelledByProfiles) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Supabase returns dynamic types
             cancelledByProfiles.forEach((p: any) => {
                 cancelledByNames.set(p.id, p.full_name);
             });
@@ -221,6 +227,7 @@ export async function getAdminAppointments(options?: {
             .in("doctor_profile_id", doctorProfileIds);
 
         if (specData) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Supabase returns dynamic types
             specData.forEach((s: any) => {
                 if (s.specializations?.name_en && !doctorSpecialties.has(s.doctor_profile_id)) {
                     doctorSpecialties.set(s.doctor_profile_id, s.specializations.name_en);
