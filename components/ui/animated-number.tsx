@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { motion, useMotionValue, useTransform, animate } from "framer-motion";
+import { motion, useMotionValue, useTransform, animate, useReducedMotion } from "framer-motion";
 import React, { useEffect, useRef } from "react";
 
 export function AnimatedNumber({
@@ -27,11 +27,16 @@ export function AnimatedNumber({
         return latest >= 1000 ? `${(latest / 1000).toFixed(1)}k` : latest.toString();
     });
     const ref = useRef<HTMLSpanElement>(null);
+    const reduceMotion = useReducedMotion();
 
     useEffect(() => {
+        if (reduceMotion) {
+            count.set(value);
+            return;
+        }
         const controls = animate(count, value, { duration });
         return controls.stop;
-    }, [count, value, duration]);
+    }, [count, value, duration, reduceMotion]);
 
     return (
         <motion.span ref={ref} className={cn("tabular-nums", className)}>

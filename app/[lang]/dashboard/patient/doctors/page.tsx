@@ -527,7 +527,7 @@ export default function DoctorsPage() {
                                                             alt={doctor.full_name}
                                                             fill
                                                             className="object-cover"
-                                                            unoptimized
+                                                            sizes="64px"
                                                         />
                                                     ) : (
                                                         <div className={cn("w-full h-full flex items-center justify-center text-2xl font-bold", isDark ? "bg-teal-500/10 text-teal-400" : "bg-teal-50 text-teal-600")}>
@@ -631,7 +631,7 @@ export default function DoctorsPage() {
                                                     alt={booking.doctor.full_name}
                                                     fill
                                                     className="object-cover"
-                                                    unoptimized
+                                                    sizes="80px"
                                                 />
                                             ) : (
                                                 <div className={cn("w-full h-full flex items-center justify-center text-3xl font-bold", isDark ? "bg-teal-500/10 text-teal-400" : "bg-teal-50 text-teal-600")}>

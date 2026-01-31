@@ -211,7 +211,13 @@ export default function ConsultationsPage() {
                                 <div className="relative">
                                     <div className="w-14 h-14 md:w-16 md:h-16 rounded-full overflow-hidden border-2 border-teal-500">
                                         {consultation.patient_avatar ? (
-                                            <Image src={consultation.patient_avatar} alt={consultation.patient_name} fill className="object-cover" unoptimized />
+                                            <Image
+                                                src={consultation.patient_avatar}
+                                                alt={consultation.patient_name}
+                                                fill
+                                                className="object-cover"
+                                                sizes="(max-width: 768px) 56px, 64px"
+                                            />
                                         ) : (
                                             <div className={cn("w-full h-full flex items-center justify-center text-xl font-semibold", isDark ? "bg-slate-700 text-gray-300" : "bg-gray-200 text-gray-600")}>
                                                 {consultation.patient_name.charAt(0)}
@@ -286,7 +292,13 @@ export default function ConsultationsPage() {
                                 >
                                     <div className="relative w-10 h-10 md:w-12 md:h-12 rounded-full overflow-hidden border-2 border-teal-500/30">
                                         {item.patient_avatar ? (
-                                            <Image src={item.patient_avatar} alt={item.patient_name} fill className="object-cover" unoptimized />
+                                            <Image
+                                                src={item.patient_avatar}
+                                                alt={item.patient_name}
+                                                fill
+                                                className="object-cover"
+                                                sizes="(max-width: 768px) 40px, 48px"
+                                            />
                                         ) : (
                                             <div className={cn("w-full h-full flex items-center justify-center text-sm font-semibold", isDark ? "bg-slate-700 text-gray-300" : "bg-gray-200 text-gray-600")}>
                                                 {item.patient_name.charAt(0)}

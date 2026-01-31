@@ -183,7 +183,13 @@ export default function PatientsPage() {
                                 <div className="flex items-start gap-3 md:gap-4 mb-3 md:mb-4">
                                     <div className="relative w-12 h-12 md:w-14 md:h-14 rounded-full overflow-hidden border-2 border-teal-500/30">
                                         {patient.avatar_url ? (
-                                            <Image src={patient.avatar_url} alt={patient.full_name} fill className="object-cover" unoptimized />
+                                            <Image
+                                                src={patient.avatar_url}
+                                                alt={patient.full_name}
+                                                fill
+                                                className="object-cover"
+                                                sizes="(max-width: 768px) 48px, 56px"
+                                            />
                                         ) : (
                                             <div className={cn("w-full h-full flex items-center justify-center text-lg font-semibold", isDark ? "bg-slate-700 text-gray-300" : "bg-gray-200 text-gray-600")}>
                                                 {patient.full_name.charAt(0)}
@@ -250,7 +256,13 @@ export default function PatientsPage() {
                             >
                                 <div className="relative w-10 h-10 md:w-12 md:h-12 rounded-full overflow-hidden border-2 border-teal-500/30">
                                     {patient.avatar_url ? (
-                                        <Image src={patient.avatar_url} alt={patient.full_name} fill className="object-cover" unoptimized />
+                                        <Image
+                                            src={patient.avatar_url}
+                                            alt={patient.full_name}
+                                            fill
+                                            className="object-cover"
+                                            sizes="(max-width: 768px) 40px, 48px"
+                                        />
                                     ) : (
                                         <div className={cn("w-full h-full flex items-center justify-center text-sm font-semibold", isDark ? "bg-slate-700 text-gray-300" : "bg-gray-200 text-gray-600")}>
                                             {patient.full_name.charAt(0)}

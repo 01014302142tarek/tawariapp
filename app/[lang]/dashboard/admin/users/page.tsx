@@ -339,7 +339,13 @@ export default function UsersPage() {
                                         <div className="flex items-center gap-2 md:gap-3">
                                             <div className="relative w-10 h-10 md:w-12 md:h-12 rounded-lg md:rounded-xl overflow-hidden border-2 border-teal-500/30">
                                                 {user.avatar_url ? (
-                                                    <Image src={user.avatar_url} alt={user.full_name} fill className="object-cover" unoptimized />
+                                                    <Image
+                                                        src={user.avatar_url}
+                                                        alt={user.full_name}
+                                                        fill
+                                                        className="object-cover"
+                                                        sizes="(max-width: 768px) 40px, 48px"
+                                                    />
                                                 ) : (
                                                     <div className={cn("w-full h-full flex items-center justify-center text-lg font-semibold", isDark ? "bg-slate-700 text-gray-300" : "bg-gray-200 text-gray-600")}>
                                                         {user.full_name.charAt(0)}
@@ -429,7 +435,13 @@ export default function UsersPage() {
                         <div className="flex items-center gap-3 mb-6">
                             <div className="relative w-12 h-12 rounded-xl overflow-hidden border-2 border-teal-500/30">
                                 {showStatusModal.avatar_url ? (
-                                    <Image src={showStatusModal.avatar_url} alt={showStatusModal.full_name} fill className="object-cover" unoptimized />
+                                    <Image
+                                        src={showStatusModal.avatar_url}
+                                        alt={showStatusModal.full_name}
+                                        fill
+                                        className="object-cover"
+                                        sizes="48px"
+                                    />
                                 ) : (
                                     <div className={cn("w-full h-full flex items-center justify-center text-lg font-semibold", isDark ? "bg-slate-700 text-gray-300" : "bg-gray-200 text-gray-600")}>
                                         {showStatusModal.full_name.charAt(0)}

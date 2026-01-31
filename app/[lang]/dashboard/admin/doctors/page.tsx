@@ -411,7 +411,7 @@ export default function DoctorsPage() {
                                                     alt={doctor.fullName}
                                                     fill
                                                     className="object-cover"
-                                                    unoptimized
+                                                    sizes="(max-width: 768px) 48px, 64px"
                                                 />
                                             </div>
                                             <div>
@@ -531,7 +531,7 @@ export default function DoctorsPage() {
                                                     alt={selectedDoctor.fullName}
                                                     fill
                                                     className="object-cover"
-                                                    unoptimized
+                                                    sizes="64px"
                                                 />
                                             </div>
                                             <div>

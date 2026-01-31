@@ -579,7 +579,7 @@ export default function DoctorUrgentCarePage() {
                                     alt={doctorName}
                                     fill
                                     className="object-cover"
-                                    unoptimized
+                                    sizes="56px"
                                 />
                             ) : (
                                 <span className="text-xl font-semibold text-teal-500">

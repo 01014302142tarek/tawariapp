@@ -345,7 +345,7 @@ export default function AdminReviewsPage() {
                                                             alt={getPatientName(review)}
                                                             fill
                                                             className="object-cover"
-                                                            unoptimized
+                                                            sizes="40px"
                                                         />
                                                     </div>
                                                     <div>

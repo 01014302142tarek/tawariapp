@@ -147,7 +147,13 @@ const UserDropdown = ({
             >
                 <div className="relative">
                     <div className="w-9 h-9 md:w-10 md:h-10 rounded-full overflow-hidden border-2 border-teal-500/30">
-                        <Image src={image} alt={name} fill className="object-cover" unoptimized />
+                        <Image
+                            src={image}
+                            alt={name}
+                            fill
+                            className="object-cover"
+                            sizes="(max-width: 768px) 36px, 40px"
+                        />
                     </div>
                 </div>
                 <div className="text-left hidden sm:block">

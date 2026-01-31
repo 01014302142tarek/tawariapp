@@ -356,7 +356,13 @@ export default function AdminAppointmentsPage() {
                                             <div className="flex items-center gap-3 flex-1">
                                                 <div className="relative w-10 h-10 md:w-12 md:h-12 rounded-lg md:rounded-xl overflow-hidden border-2 border-teal-500/30 flex-shrink-0">
                                                     {apt.patient.avatar_url ? (
-                                                        <Image src={apt.patient.avatar_url} alt={apt.patient.full_name} fill className="object-cover" unoptimized />
+                                                        <Image
+                                                            src={apt.patient.avatar_url}
+                                                            alt={apt.patient.full_name}
+                                                            fill
+                                                            className="object-cover"
+                                                            sizes="(max-width: 768px) 40px, 48px"
+                                                        />
                                                     ) : (
                                                         <div className={cn("w-full h-full flex items-center justify-center text-lg font-semibold", isDark ? "bg-slate-700 text-gray-300" : "bg-gray-200 text-gray-600")}>
                                                             {apt.patient.full_name.charAt(0)}
@@ -387,7 +393,13 @@ export default function AdminAppointmentsPage() {
                                             <div className="flex items-center gap-3 flex-1">
                                                 <div className="relative w-10 h-10 md:w-12 md:h-12 rounded-lg md:rounded-xl overflow-hidden border-2 border-emerald-500/30 flex-shrink-0">
                                                     {apt.doctor.avatar_url ? (
-                                                        <Image src={apt.doctor.avatar_url} alt={apt.doctor.full_name} fill className="object-cover" unoptimized />
+                                                        <Image
+                                                            src={apt.doctor.avatar_url}
+                                                            alt={apt.doctor.full_name}
+                                                            fill
+                                                            className="object-cover"
+                                                            sizes="(max-width: 768px) 40px, 48px"
+                                                        />
                                                     ) : (
                                                         <div className={cn("w-full h-full flex items-center justify-center text-lg font-semibold", isDark ? "bg-slate-700 text-gray-300" : "bg-gray-200 text-gray-600")}>
                                                             {apt.doctor.full_name.charAt(0)}

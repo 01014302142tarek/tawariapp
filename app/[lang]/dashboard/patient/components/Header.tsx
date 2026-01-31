@@ -165,7 +165,13 @@ const UserDropdown = ({
             >
                 <div className="relative w-9 h-9 md:w-10 md:h-10 rounded-full overflow-hidden border-2 border-teal-500/30 flex items-center justify-center bg-teal-500/10">
                     {avatarUrl ? (
-                        <Image src={avatarUrl} alt={name} fill className="object-cover" unoptimized />
+                        <Image
+                            src={avatarUrl}
+                            alt={name}
+                            fill
+                            className="object-cover"
+                            sizes="(max-width: 768px) 36px, 40px"
+                        />
                     ) : (
                         <span className="text-sm font-semibold text-teal-500">{getInitials(name)}</span>
                     )}

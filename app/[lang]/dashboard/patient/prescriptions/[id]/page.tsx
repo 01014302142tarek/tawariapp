@@ -224,7 +224,13 @@ export default function PrescriptionDetailPage() {
                         <div className="flex items-center gap-4">
                             <div className="relative w-14 h-14 rounded-xl overflow-hidden border-2 border-teal-500/30 flex-shrink-0">
                                 {prescription.doctor?.avatar_url ? (
-                                    <Image src={prescription.doctor.avatar_url} alt={prescription.doctor.full_name || ""} fill className="object-cover" unoptimized />
+                                    <Image
+                                        src={prescription.doctor.avatar_url}
+                                        alt={prescription.doctor.full_name || ""}
+                                        fill
+                                        className="object-cover"
+                                        sizes="56px"
+                                    />
                                 ) : (
                                     <div className={cn("w-full h-full flex items-center justify-center text-xl font-bold", isDark ? "bg-teal-500/10 text-teal-400" : "bg-teal-50 text-teal-600")}>
                                         {prescription.doctor?.full_name?.charAt(0) || "D"}

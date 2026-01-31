@@ -105,7 +105,6 @@ const DoctorCard: React.FC<DoctorCardProps> = ({ doctor, onSelect, isRTL }) => {
                             width={56}
                             height={56}
                             className="w-14 h-14 rounded-full object-cover"
-                            unoptimized
                         />
                     ) : (
                         <div className="w-14 h-14 rounded-full bg-gradient-to-br from-teal-500 to-cyan-500 flex items-center justify-center text-white font-semibold text-lg">

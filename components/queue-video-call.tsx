@@ -198,6 +198,17 @@ export function QueueVideoCall({
                 showFullscreenButton: true,
             });
 
+            // Add display-capture permission to the iframe for screen sharing
+            // This is required for the browser to allow screen capture API
+            const iframe = containerRef.current.querySelector("iframe");
+            if (iframe) {
+                const currentAllow = iframe.getAttribute("allow") || "";
+                if (!currentAllow.includes("display-capture")) {
+                    const newAllow = currentAllow ? `${currentAllow}; display-capture` : "display-capture";
+                    iframe.setAttribute("allow", newAllow);
+                }
+            }
+
             callFrameRef.current = callFrame;
 
             // Set up event listeners with mounted check

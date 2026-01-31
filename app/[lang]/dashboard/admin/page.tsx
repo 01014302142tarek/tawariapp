@@ -371,7 +371,7 @@ export default function AdminDashboard() {
                                         )}
                                     >
                                         <div className="relative w-10 h-10 rounded-full overflow-hidden border-2 border-teal-500/30 flex-shrink-0">
-                                            <Image src={item.image} alt={item.name} fill className="object-cover" unoptimized />
+                                            <Image src={item.image} alt={item.name} fill className="object-cover" sizes="40px" />
                                         </div>
                                         <div className="flex-1 min-w-0">
                                             <p className={cn("font-medium text-sm truncate", isDark ? "text-white" : "text-slate-900")}>{item.name}</p>

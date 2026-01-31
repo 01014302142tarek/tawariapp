@@ -62,6 +62,9 @@ export const SparklesCore = ({
 }) => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
+    const [reduceMotion, setReduceMotion] = useState(false);
+    const [isDocumentVisible, setIsDocumentVisible] = useState(true);
+    const [isReady, setIsReady] = useState(false);
     const particles = useRef<Particle[]>([]);
     const animationRef = useRef<number | undefined>(undefined);
 
@@ -69,6 +72,48 @@ export const SparklesCore = ({
     const minSizeValue = minSize || 0.5;
     const maxSizeValue = maxSize || 2;
     const colorValue = particleColor || "255, 255, 255";
+
+    useEffect(() => {
+        if (typeof window === "undefined") return;
+        const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+        const update = () => setReduceMotion(mediaQuery.matches);
+        update();
+        if (mediaQuery.addEventListener) {
+            mediaQuery.addEventListener("change", update);
+            return () => mediaQuery.removeEventListener("change", update);
+        }
+        mediaQuery.addListener(update);
+        return () => mediaQuery.removeListener(update);
+    }, []);
+
+    useEffect(() => {
+        if (typeof window === "undefined") return;
+        let timeoutId: number | undefined;
+        const { requestIdleCallback, cancelIdleCallback } = window as Window & {
+            requestIdleCallback?: (cb: () => void) => number;
+            cancelIdleCallback?: (id: number) => void;
+        };
+        const idleCallback = requestIdleCallback ? requestIdleCallback(() => setIsReady(true)) : undefined;
+        if (!idleCallback) {
+            timeoutId = window.setTimeout(() => setIsReady(true), 250);
+        }
+        return () => {
+            if (idleCallback && cancelIdleCallback) {
+                cancelIdleCallback(idleCallback);
+            }
+            if (timeoutId) {
+                window.clearTimeout(timeoutId);
+            }
+        };
+    }, []);
+
+    useEffect(() => {
+        if (typeof document === "undefined") return;
+        const handleVisibility = () => setIsDocumentVisible(document.visibilityState === "visible");
+        handleVisibility();
+        document.addEventListener("visibilitychange", handleVisibility);
+        return () => document.removeEventListener("visibilitychange", handleVisibility);
+    }, []);
 
     useEffect(() => {
         const canvas = canvasRef.current;
@@ -91,23 +136,35 @@ export const SparklesCore = ({
 
     useEffect(() => {
         const canvas = canvasRef.current;
-        if (!canvas || canvasSize.width === 0) return;
+        if (!canvas || canvasSize.width === 0 || !isDocumentVisible || !isReady) return;
 
         const ctx = canvas.getContext("2d");
         if (!ctx) return;
 
         const density = particleDensity || 100;
+        const effectiveDensity = reduceMotion ? Math.max(10, Math.floor(density * 0.3)) : density;
         particles.current = Array.from(
-            { length: density },
+            { length: effectiveDensity },
             () => new Particle(canvas, minSizeValue, maxSizeValue)
         );
 
-        const animate = () => {
+        const drawFrame = () => {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             particles.current.forEach((particle) => {
                 particle.update(canvas);
                 particle.draw(ctx, colorValue);
             });
+        };
+
+        if (reduceMotion) {
+            drawFrame();
+            return () => {
+                if (animationRef.current) cancelAnimationFrame(animationRef.current);
+            };
+        }
+
+        const animate = () => {
+            drawFrame();
             animationRef.current = requestAnimationFrame(animate);
         };
 
@@ -116,7 +173,7 @@ export const SparklesCore = ({
         return () => {
             if (animationRef.current) cancelAnimationFrame(animationRef.current);
         };
-    }, [canvasSize, particleDensity, minSizeValue, maxSizeValue, colorValue]);
+    }, [canvasSize, particleDensity, minSizeValue, maxSizeValue, colorValue, reduceMotion, isDocumentVisible, isReady]);
 
     return (
         <canvas

@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useI18n } from "@/app/i18n";
@@ -134,6 +135,7 @@ export default function NotificationDropdown({ isDark, dashboardType }: Notifica
     const [isMarkingAll, setIsMarkingAll] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
     const { isRTL, language } = useI18n();
+    const router = useRouter();
 
     // Use realtime notifications hook for live updates
     const {
@@ -228,7 +230,7 @@ export default function NotificationDropdown({ isDark, dashboardType }: Notifica
         }
 
         setIsOpen(false);
-        window.location.href = href;
+        router.push(href);
     };
 
     // Handle mark all as read

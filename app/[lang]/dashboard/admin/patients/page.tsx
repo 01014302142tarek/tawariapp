@@ -388,7 +388,13 @@ export default function PatientsPage() {
                                             <div className="flex items-center gap-3 md:gap-4 flex-1">
                                                 <div className="relative w-10 h-10 md:w-14 md:h-14 rounded-lg md:rounded-xl overflow-hidden border-2 border-teal-500/30 flex-shrink-0">
                                                     {patient.avatar_url ? (
-                                                        <Image src={patient.avatar_url} alt={patient.full_name} fill className="object-cover" unoptimized />
+                                                        <Image
+                                                            src={patient.avatar_url}
+                                                            alt={patient.full_name}
+                                                            fill
+                                                            className="object-cover"
+                                                            sizes="(max-width: 768px) 40px, 56px"
+                                                        />
                                                     ) : (
                                                         <div className={cn("w-full h-full flex items-center justify-center text-lg font-semibold", isDark ? "bg-slate-700 text-gray-300" : "bg-gray-200 text-gray-600")}>
                                                             {patient.full_name.charAt(0)}
