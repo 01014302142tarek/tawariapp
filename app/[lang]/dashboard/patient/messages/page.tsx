@@ -13,6 +13,8 @@ import {
     markMessagesAsRead,
     getPatientContacts,
     getOrCreateConversation,
+    uploadMessageAttachment,
+    getAttachmentUrl,
     type Conversation,
     type MessageWithSender,
     type ContactForMessaging,
@@ -66,6 +68,21 @@ const Icons = {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
         </svg>
     ),
+    attachment: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+        </svg>
+    ),
+    document: (
+        <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+    ),
+    download: (
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+        </svg>
+    ),
 };
 
 export default function MessagesPage() {
@@ -84,8 +101,14 @@ export default function MessagesPage() {
     const [loading, setLoading] = useState(true);
     const [loadingMessages, setLoadingMessages] = useState(false);
     const [sendingMessage, setSendingMessage] = useState(false);
+    const [selectedFile, setSelectedFile] = useState<File | null>(null);
+    const [filePreview, setFilePreview] = useState<string | null>(null);
+    const [uploading, setUploading] = useState(false);
+    const [attachmentUrls, setAttachmentUrls] = useState<Record<string, string>>({});
+    const [sendError, setSendError] = useState<string | null>(null);
 
     const messagesEndRef = useRef<HTMLDivElement>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     // Define loadConversations with useCallback
     const loadConversations = useCallback(async () => {
@@ -143,43 +166,151 @@ export default function MessagesPage() {
         }
     }, [showNewChatModal, loadContacts]);
 
+    // Handle file selection
+    const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        // Validate file type
+        const allowedTypes = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
+        if (!allowedTypes.includes(file.type)) {
+            setSendError(isRTL ? "نوع الملف غير مدعوم. يرجى اختيار صورة أو PDF." : "File type not supported. Please select an image or PDF.");
+            setTimeout(() => setSendError(null), 5000);
+            return;
+        }
+
+        // Validate file size (10MB max)
+        if (file.size > 10 * 1024 * 1024) {
+            setSendError(isRTL ? "الملف كبير جداً. الحد الأقصى 10 ميجابايت." : "File too large. Maximum size is 10MB.");
+            setTimeout(() => setSendError(null), 5000);
+            return;
+        }
+
+        setSelectedFile(file);
+
+        // Create preview for images
+        if (file.type.startsWith("image/")) {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setFilePreview(reader.result as string);
+            };
+            reader.readAsDataURL(file);
+        } else {
+            setFilePreview(null);
+        }
+    };
+
+    // Clear selected file
+    const clearSelectedFile = () => {
+        setSelectedFile(null);
+        setFilePreview(null);
+        if (fileInputRef.current) {
+            fileInputRef.current.value = "";
+        }
+    };
+
+    // Load attachment URL for display
+    const loadAttachmentUrl = useCallback(async (attachmentPath: string, conversationId: string, messageId: string) => {
+        if (attachmentUrls[messageId]) return;
+
+        try {
+            const result = await getAttachmentUrl(attachmentPath, conversationId);
+            if (result.url) {
+                setAttachmentUrls(prev => ({ ...prev, [messageId]: result.url! }));
+            }
+        } catch (err) {
+            console.error("Error loading attachment URL:", err);
+        }
+    }, [attachmentUrls]);
+
     const handleSendMessage = async () => {
-        if (!newMessage.trim() || !selectedConversation || sendingMessage) return;
+        if ((!newMessage.trim() && !selectedFile) || !selectedConversation || sendingMessage || uploading) return;
 
         setSendingMessage(true);
-        const { message, error } = await sendMessage({
-            conversationId: selectedConversation.id,
-            recipientProfileId: selectedConversation.participant_id,
-            content: newMessage.trim(),
-        });
+        setSendError(null);
 
-        if (error) {
-            console.error("Failed to send message:", error);
+        try {
+            let attachmentUrl: string | null = null;
+            let attachmentType: string | null = null;
+
+            // Upload file if selected
+            if (selectedFile) {
+                setUploading(true);
+
+                // Convert file to base64
+                const base64 = await new Promise<string>((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onloadend = () => resolve(reader.result as string);
+                    reader.onerror = reject;
+                    reader.readAsDataURL(selectedFile);
+                });
+
+                const uploadResult = await uploadMessageAttachment({
+                    conversationId: selectedConversation.id,
+                    recipientProfileId: selectedConversation.participant_id,
+                    fileBase64: base64,
+                    fileName: selectedFile.name,
+                });
+
+                setUploading(false);
+
+                if (uploadResult.error) {
+                    setSendError(uploadResult.error);
+                    setTimeout(() => setSendError(null), 5000);
+                    setSendingMessage(false);
+                    return;
+                }
+
+                attachmentUrl = uploadResult.attachmentUrl;
+                attachmentType = uploadResult.attachmentType;
+            }
+
+            const { message, error } = await sendMessage({
+                conversationId: selectedConversation.id,
+                recipientProfileId: selectedConversation.participant_id,
+                content: newMessage.trim() || (selectedFile ? `📎 ${selectedFile.name}` : ""),
+                messageType: attachmentUrl ? "file" : "text",
+                attachmentUrl: attachmentUrl || undefined,
+                attachmentType: attachmentType || undefined,
+            });
+
+            if (error) {
+                console.error("Failed to send message:", error);
+                setSendError(error);
+                setTimeout(() => setSendError(null), 5000);
+            }
+
+            if (message && !error) {
+                // Add message with sender info
+                const newMsg: MessageWithSender = {
+                    ...message,
+                    sender: {
+                        id: message.sender_profile_id,
+                        full_name: isRTL ? "أنت" : "You",
+                        role: "patient",
+                    },
+                };
+                setMessages(prev => [...prev, newMsg]);
+                setNewMessage("");
+                clearSelectedFile();
+
+                // Update conversation list
+                setConversations(prev =>
+                    prev.map(c =>
+                        c.id === selectedConversation.id
+                            ? { ...c, last_message: message.content, last_message_at: message.created_at }
+                            : c
+                    )
+                );
+            }
+        } catch (err) {
+            console.error("Error sending message:", err);
+            setSendError(isRTL ? "حدث خطأ أثناء الإرسال" : "Error sending message");
+            setTimeout(() => setSendError(null), 5000);
+        } finally {
+            setSendingMessage(false);
+            setUploading(false);
         }
-
-        if (message && !error) {
-            // Add message with sender info
-            const newMsg: MessageWithSender = {
-                ...message,
-                sender: {
-                    id: message.sender_profile_id,
-                    full_name: isRTL ? "أنت" : "You",
-                    role: "patient",
-                },
-            };
-            setMessages(prev => [...prev, newMsg]);
-            setNewMessage("");
-
-            // Update conversation list
-            setConversations(prev =>
-                prev.map(c =>
-                    c.id === selectedConversation.id
-                        ? { ...c, last_message: message.content, last_message_at: message.created_at }
-                        : c
-                )
-            );
-        }
-        setSendingMessage(false);
     };
 
     const handleSelectConversation = (conv: Conversation) => {
@@ -338,7 +469,7 @@ export default function MessagesPage() {
                                                 alt={conv.participant_name}
                                                 fill
                                                 className="object-cover"
-                                                unoptimized
+                                                sizes="(max-width: 768px) 40px, 48px"
                                             />
                                         ) : (
                                             <div className={cn(
@@ -406,7 +537,7 @@ export default function MessagesPage() {
                                             alt={selectedConversation.participant_name}
                                             fill
                                             className="object-cover"
-                                            unoptimized
+                                            sizes="(max-width: 768px) 32px, 40px"
                                         />
                                     ) : (
                                         <div className={cn(
@@ -447,6 +578,13 @@ export default function MessagesPage() {
                             ) : (
                                 messages.map((msg) => {
                                     const isOwnMessage = msg.sender?.role === "patient";
+                                    const hasAttachment = msg.attachment_url && msg.attachment_type;
+
+                                    // Load attachment URL if needed
+                                    if (hasAttachment && selectedConversation && !attachmentUrls[msg.id]) {
+                                        loadAttachmentUrl(msg.attachment_url!, selectedConversation.id, msg.id);
+                                    }
+
                                     return (
                                         <motion.div
                                             key={msg.id}
@@ -468,7 +606,71 @@ export default function MessagesPage() {
                                                         )
                                                 )}
                                             >
-                                                <p className="text-sm">{msg.content}</p>
+                                                {/* Attachment display */}
+                                                {hasAttachment && (
+                                                    <div className="mb-2">
+                                                        {msg.attachment_type === "image" ? (
+                                                            attachmentUrls[msg.id] ? (
+                                                                <a
+                                                                    href={attachmentUrls[msg.id]}
+                                                                    target="_blank"
+                                                                    rel="noopener noreferrer"
+                                                                    className="block"
+                                                                >
+                                                                    <img
+                                                                        src={attachmentUrls[msg.id]}
+                                                                        alt="Attachment"
+                                                                        className="max-w-full rounded-lg max-h-48 object-cover cursor-pointer hover:opacity-90 transition-opacity"
+                                                                    />
+                                                                </a>
+                                                            ) : (
+                                                                <div className={cn(
+                                                                    "w-full h-24 rounded-lg flex items-center justify-center",
+                                                                    isOwnMessage ? "bg-teal-600" : isDark ? "bg-slate-700" : "bg-gray-300"
+                                                                )}>
+                                                                    <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin opacity-50" />
+                                                                </div>
+                                                            )
+                                                        ) : (
+                                                            <a
+                                                                href={attachmentUrls[msg.id] || "#"}
+                                                                target="_blank"
+                                                                rel="noopener noreferrer"
+                                                                className={cn(
+                                                                    "flex items-center gap-2 p-2 rounded-lg transition-colors",
+                                                                    isOwnMessage
+                                                                        ? "bg-teal-600 hover:bg-teal-700"
+                                                                        : isDark
+                                                                            ? "bg-slate-700 hover:bg-slate-600"
+                                                                            : "bg-gray-300 hover:bg-gray-400",
+                                                                    !attachmentUrls[msg.id] && "pointer-events-none opacity-70"
+                                                                )}
+                                                            >
+                                                                <div className={cn(
+                                                                    "w-8 h-8 rounded flex items-center justify-center flex-shrink-0",
+                                                                    isOwnMessage ? "bg-teal-700" : isDark ? "bg-slate-600" : "bg-gray-400"
+                                                                )}>
+                                                                    {Icons.document}
+                                                                </div>
+                                                                <div className="flex-1 min-w-0">
+                                                                    <p className="text-xs font-medium truncate">
+                                                                        {isRTL ? "مستند PDF" : "PDF Document"}
+                                                                    </p>
+                                                                </div>
+                                                                {attachmentUrls[msg.id] && (
+                                                                    <div className="flex-shrink-0">
+                                                                        {Icons.download}
+                                                                    </div>
+                                                                )}
+                                                            </a>
+                                                        )}
+                                                    </div>
+                                                )}
+
+                                                {/* Message content (hide if it's just the file emoji placeholder) */}
+                                                {msg.content && !msg.content.startsWith("📎") && (
+                                                    <p className="text-sm">{msg.content}</p>
+                                                )}
                                                 <p className={cn(
                                                     "text-[10px] md:text-xs mt-1",
                                                     isOwnMessage ? "text-teal-100" : textMuted
@@ -485,7 +687,98 @@ export default function MessagesPage() {
 
                         {/* Message Input */}
                         <div className={cn("p-3 md:p-4 border-t", border)}>
+                            {/* Error message */}
+                            <AnimatePresence>
+                                {sendError && (
+                                    <motion.div
+                                        initial={{ opacity: 0, height: 0 }}
+                                        animate={{ opacity: 1, height: "auto" }}
+                                        exit={{ opacity: 0, height: 0 }}
+                                        className="mb-2 px-3 py-2 bg-red-500/10 text-red-500 text-sm rounded-lg"
+                                    >
+                                        {sendError}
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+
+                            {/* File preview */}
+                            <AnimatePresence>
+                                {selectedFile && (
+                                    <motion.div
+                                        initial={{ opacity: 0, height: 0 }}
+                                        animate={{ opacity: 1, height: "auto" }}
+                                        exit={{ opacity: 0, height: 0 }}
+                                        className={cn(
+                                            "mb-2 p-2 rounded-lg flex items-center gap-2",
+                                            isDark ? "bg-slate-800" : "bg-gray-100"
+                                        )}
+                                    >
+                                        {filePreview ? (
+                                            <img
+                                                src={filePreview}
+                                                alt="Preview"
+                                                className="w-12 h-12 object-cover rounded"
+                                            />
+                                        ) : (
+                                            <div className={cn(
+                                                "w-12 h-12 rounded flex items-center justify-center",
+                                                isDark ? "bg-slate-700 text-slate-400" : "bg-gray-200 text-gray-500"
+                                            )}>
+                                                {Icons.document}
+                                            </div>
+                                        )}
+                                        <div className="flex-1 min-w-0">
+                                            <p className={cn(
+                                                "text-sm font-medium truncate",
+                                                textPrimary
+                                            )}>
+                                                {selectedFile.name}
+                                            </p>
+                                            <p className={cn("text-xs", textMuted)}>
+                                                {(selectedFile.size / 1024).toFixed(1)} KB
+                                            </p>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={clearSelectedFile}
+                                            className={cn(
+                                                "p-1 rounded-full transition-colors",
+                                                isDark ? "hover:bg-slate-600 text-slate-400" : "hover:bg-gray-200 text-gray-500"
+                                            )}
+                                        >
+                                            {Icons.close}
+                                        </button>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+
                             <div className="flex gap-2 md:gap-3">
+                                {/* Hidden file input */}
+                                <input
+                                    ref={fileInputRef}
+                                    type="file"
+                                    accept="image/jpeg,image/png,image/webp,application/pdf"
+                                    onChange={handleFileSelect}
+                                    className="hidden"
+                                />
+
+                                {/* Attachment button */}
+                                <button
+                                    type="button"
+                                    onClick={() => fileInputRef.current?.click()}
+                                    disabled={sendingMessage || uploading}
+                                    className={cn(
+                                        "p-2 md:p-3 rounded-lg md:rounded-xl transition-colors flex-shrink-0",
+                                        isDark
+                                            ? "hover:bg-slate-700 text-slate-400 hover:text-teal-400"
+                                            : "hover:bg-gray-100 text-gray-500 hover:text-teal-500",
+                                        "disabled:opacity-50 disabled:cursor-not-allowed"
+                                    )}
+                                    title={isRTL ? "إرفاق ملف" : "Attach file"}
+                                >
+                                    {Icons.attachment}
+                                </button>
+
                                 <input
                                     type="text"
                                     placeholder={t.patientDashboard.messagesPage.inputPlaceholder}
@@ -496,19 +789,19 @@ export default function MessagesPage() {
                                         "flex-1 px-3 md:px-4 py-2 md:py-3 rounded-lg md:rounded-xl border transition-colors text-sm",
                                         inputBg, inputFocus
                                     )}
-                                    disabled={sendingMessage}
+                                    disabled={sendingMessage || uploading}
                                 />
                                 <button
                                     onClick={handleSendMessage}
-                                    disabled={!newMessage.trim() || sendingMessage}
+                                    disabled={(!newMessage.trim() && !selectedFile) || sendingMessage || uploading}
                                     className={cn(
                                         "px-4 md:px-5 py-2 md:py-3 bg-gradient-to-r from-teal-500 to-teal-600 text-white rounded-lg md:rounded-xl transition-all shadow-lg shadow-teal-500/20",
-                                        newMessage.trim() && !sendingMessage
+                                        (newMessage.trim() || selectedFile) && !sendingMessage && !uploading
                                             ? "hover:from-teal-400 hover:to-teal-500"
                                             : "opacity-50 cursor-not-allowed"
                                     )}
                                 >
-                                    {sendingMessage ? Icons.spinner : Icons.send}
+                                    {sendingMessage || uploading ? Icons.spinner : Icons.send}
                                 </button>
                             </div>
                         </div>
@@ -601,7 +894,6 @@ export default function MessagesPage() {
                                                         width={40}
                                                         height={40}
                                                         className="object-cover"
-                                                        unoptimized
                                                     />
                                                 ) : (
                                                     <div className={cn(
