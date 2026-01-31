@@ -577,15 +577,17 @@ export async function endQueueConsultation(
             .insert({
                 patient_profile_id: queueEntry.patient_profile_id,
                 doctor_profile_id: queueEntry.doctor_profile_id,
+                // For urgent care, scheduled times are when patient was called/consultation started
                 scheduled_start: queueEntry.called_at || queueEntry.joined_at,
+                scheduled_end: endedAt.toISOString(), // Required NOT NULL field
                 actual_start: queueEntry.consultation_started_at,
                 actual_end: endedAt.toISOString(),
                 status: "completed",
                 type: "urgent_care",
                 consultation_queue_id: queueEntryId,
                 payment_status: queueEntry.payment_status === "completed_mock" ? "completed" : queueEntry.payment_status,
-                amount: queueEntry.payment_amount,
-                notes: queueEntry.chief_complaint || null,
+                consultation_fee: queueEntry.payment_amount || 0, // Required NOT NULL field
+                chief_complaint: queueEntry.chief_complaint || null,
             })
             .select("id")
             .single();
