@@ -354,7 +354,7 @@ export function QueueChat({
     };
 
     return (
-        <div className={cn("fixed bottom-4 z-40", isRTL ? "left-4" : "right-4", className)}>
+        <div className={cn("fixed bottom-20 sm:bottom-4 z-50", isRTL ? "left-4" : "right-4", className)}>
             <AnimatePresence>
                 {isOpen ? (
                     <motion.div
@@ -362,7 +362,7 @@ export function QueueChat({
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.9, y: 20 }}
                         className={cn(
-                            "w-80 rounded-2xl border shadow-2xl overflow-hidden",
+                            "w-[calc(100vw-2rem)] sm:w-80 max-w-80 rounded-2xl border shadow-2xl overflow-hidden",
                             isDark
                                 ? "bg-slate-900 border-white/10"
                                 : "bg-white border-gray-200"
