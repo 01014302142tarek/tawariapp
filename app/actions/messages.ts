@@ -1,10 +1,14 @@
 "use server";
 
 import { createClient, createAdminClient } from "@/lib/supabase/server";
+import type { DashboardUserContext } from "@/lib/supabase/context";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "@/lib/supabase/types";
 import { messageLimiter } from "@/lib/rate-limit";
 import { messageSchema, validateInput } from "@/lib/validations";
 import { notifyNewMessage } from "./notifications";
 import { uploadChatAttachment, getChatAttachmentSignedUrl } from "@/lib/supabase/storage";
+import { revalidateTag } from "next/cache";
 
 // ============================================
 // Types
@@ -47,6 +51,32 @@ export interface Conversation {
     unread_count: number;
 }
 
+type ConversationContext = Pick<DashboardUserContext, "profileId">;
+
+// ============================================
+// Cache Helpers
+// ============================================
+
+async function getUserIdByProfileId(
+    supabase: SupabaseClient<Database>,
+    profileId: string
+): Promise<string | null> {
+    const { data } = await supabase
+        .from("profiles")
+        .select("user_id")
+        .eq("id", profileId)
+        .single();
+
+    return (data as { user_id: string } | null)?.user_id || null;
+}
+
+function revalidateConversationCaches(userIds: Array<string | undefined>) {
+    userIds.filter(Boolean).forEach((userId) => {
+        revalidateTag(`conversations:${userId}`, "default");
+        revalidateTag(`dashboard:${userId}`, "default");
+    });
+}
+
 // ============================================
 // Conversation Functions
 // ============================================
@@ -54,28 +84,39 @@ export interface Conversation {
 /**
  * Get all conversations for the current user
  */
-export async function getConversations(): Promise<{
+export async function getConversations(
+    supabaseClient?: SupabaseClient<Database>,
+    context?: ConversationContext
+): Promise<{
     conversations: Conversation[];
     error?: string;
 }> {
-    const supabase = await createClient();
+    const supabase = supabaseClient ?? await createClient();
 
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-        return { conversations: [], error: "Not authenticated" };
+    let profileId = context?.profileId;
+
+    if (!profileId) {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+            return { conversations: [], error: "Not authenticated" };
+        }
+
+        // Get current user's profile
+        const { data: profileData } = await supabase
+            .from("profiles")
+            .select("id")
+            .eq("user_id", user.id)
+            .single();
+
+        const profile = profileData as { id: string } | null;
+        if (!profile) {
+            return { conversations: [], error: "Profile not found" };
+        }
+
+        profileId = profile.id;
     }
 
-    // Get current user's profile
-    const { data: profileData } = await supabase
-        .from("profiles")
-        .select("id")
-        .eq("user_id", user.id)
-        .single();
-
-    const profile = profileData as { id: string } | null;
-    if (!profile) {
-        return { conversations: [], error: "Profile not found" };
-    }
+    const resolvedProfileId = profileId as string;
 
     // Get all messages where user is sender or recipient, grouped by conversation
     const { data: messages, error } = await supabase
@@ -101,7 +142,7 @@ export async function getConversations(): Promise<{
                 role
             )
         `)
-        .or(`sender_profile_id.eq.${profile.id},recipient_profile_id.eq.${profile.id}`)
+        .or(`sender_profile_id.eq.${resolvedProfileId},recipient_profile_id.eq.${resolvedProfileId}`)
         .eq("is_deleted", false)
         .order("created_at", { ascending: false });
 
@@ -118,7 +159,7 @@ export async function getConversations(): Promise<{
         const convId = msg.conversation_id;
         if (!conversationMap.has(convId)) {
             // Determine the other participant
-            const isUserSender = msg.sender_profile_id === profile.id;
+            const isUserSender = msg.sender_profile_id === resolvedProfileId;
             const otherParticipant = isUserSender ? msg.recipient : msg.sender;
 
             conversationMap.set(convId, {
@@ -134,7 +175,7 @@ export async function getConversations(): Promise<{
         }
 
         // Count unread messages
-        if (msg.recipient_profile_id === profile.id && !msg.is_read) {
+        if (msg.recipient_profile_id === resolvedProfileId && !msg.is_read) {
             const conv = conversationMap.get(convId)!;
             conv.unread_count++;
         }
@@ -342,6 +383,9 @@ export async function sendMessage(data: {
         data.conversationId
     ).catch(err => console.error("Failed to send message notification:", err));
 
+    const recipientUserId = await getUserIdByProfileId(supabase, data.recipientProfileId);
+    revalidateConversationCaches([user.id, recipientUserId || undefined]);
+
     return { message: insertedData as Message };
 }
 
@@ -384,6 +428,8 @@ export async function markMessagesAsRead(
         console.error("Error marking messages as read:", error);
         return { success: false, error: error.message };
     }
+
+    revalidateConversationCaches([user.id]);
 
     return { success: true };
 }
@@ -451,16 +497,23 @@ export async function deleteMessage(
 
     // Only allow deleting own messages
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { error } = await (supabase as any)
+    const { data: updatedMessage, error } = await (supabase as any)
         .from("messages")
         .update({ is_deleted: true })
         .eq("id", messageId)
-        .eq("sender_profile_id", profile.id);
+        .eq("sender_profile_id", profile.id)
+        .select("recipient_profile_id")
+        .single();
 
     if (error) {
         console.error("Error deleting message:", error);
         return { success: false, error: error.message };
     }
+
+    const recipientUserId = (updatedMessage as { recipient_profile_id?: string } | null)?.recipient_profile_id
+        ? await getUserIdByProfileId(supabase, updatedMessage.recipient_profile_id)
+        : null;
+    revalidateConversationCaches([user.id, recipientUserId || undefined]);
 
     return { success: true };
 }

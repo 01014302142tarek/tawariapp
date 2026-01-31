@@ -1,7 +1,11 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import type { DashboardUserContext } from "@/lib/supabase/context";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "@/lib/supabase/types";
 import { notifyPrescriptionIssued } from "./notifications";
+import { revalidateTag } from "next/cache";
 
 // ============================================
 // Types
@@ -59,6 +63,61 @@ export interface PrescriptionMedication {
     is_controlled_substance?: boolean;
 }
 
+type DoctorContext = Pick<DashboardUserContext, "doctorProfileId" | "role">;
+type PatientContext = Pick<DashboardUserContext, "patientProfileId" | "role">;
+
+// ============================================
+// Cache Helpers
+// ============================================
+
+async function getUserIdByProfileId(
+    supabase: SupabaseClient<Database>,
+    profileId: string
+): Promise<string | null> {
+    const { data } = await supabase
+        .from("profiles")
+        .select("user_id")
+        .eq("id", profileId)
+        .single();
+
+    return (data as { user_id: string } | null)?.user_id || null;
+}
+
+async function getUserIdByDoctorProfileId(
+    supabase: SupabaseClient<Database>,
+    doctorProfileId: string
+): Promise<string | null> {
+    const { data } = await supabase
+        .from("doctor_profiles")
+        .select("profile_id")
+        .eq("id", doctorProfileId)
+        .single();
+
+    const profileId = (data as { profile_id: string } | null)?.profile_id;
+    return profileId ? getUserIdByProfileId(supabase, profileId) : null;
+}
+
+async function getUserIdByPatientProfileId(
+    supabase: SupabaseClient<Database>,
+    patientProfileId: string
+): Promise<string | null> {
+    const { data } = await supabase
+        .from("patient_profiles")
+        .select("profile_id")
+        .eq("id", patientProfileId)
+        .single();
+
+    const profileId = (data as { profile_id: string } | null)?.profile_id;
+    return profileId ? getUserIdByProfileId(supabase, profileId) : null;
+}
+
+function revalidatePrescriptionCaches(userIds: Array<string | undefined>) {
+    userIds.filter(Boolean).forEach((userId) => {
+        revalidateTag(`prescriptions:${userId}`, "default");
+        revalidateTag(`dashboard:${userId}`, "default");
+    });
+}
+
 // ============================================
 // Doctor Actions
 // ============================================
@@ -71,7 +130,7 @@ export async function createPrescription(data: {
     appointmentId?: string;
     medications: PrescriptionMedication[];
     validUntil?: string;
-}): Promise<{ success: boolean; prescriptionIds?: string[]; error?: string }> {
+}): Promise<{ success: boolean; prescriptionIds?: string[]; error?: string; requiresClinicInfo?: boolean }> {
     const supabase = await createClient();
 
     const { data: { user } } = await supabase.auth.getUser();
@@ -93,17 +152,31 @@ export async function createPrescription(data: {
 
     const { data: doctorProfileData } = await supabase
         .from("doctor_profiles")
-        .select("id, verification_status")
+        .select("id, verification_status, clinic_name, clinic_address")
         .eq("profile_id", profile.id)
         .single();
 
-    const doctorProfile = doctorProfileData as { id: string; verification_status: string } | null;
+    const doctorProfile = doctorProfileData as {
+        id: string;
+        verification_status: string;
+        clinic_name?: string;
+        clinic_address?: string;
+    } | null;
     if (!doctorProfile) {
         return { success: false, error: "Doctor profile not found" };
     }
 
     if (doctorProfile.verification_status !== "verified") {
         return { success: false, error: "Doctor not verified" };
+    }
+
+    // Check if doctor has clinic info filled - required for prescription PDF generation
+    if (!doctorProfile.clinic_name || !doctorProfile.clinic_address) {
+        return {
+            success: false,
+            error: "Please complete your clinic information in settings before creating prescriptions",
+            requiresClinicInfo: true
+        };
     }
 
     // Get patient's base profile_id for notification
@@ -174,46 +247,67 @@ export async function createPrescription(data: {
         ).catch(err => console.error("Failed to send prescription notification:", err));
     }
 
+    const patientUserId = patientProfile?.profile_id
+        ? await getUserIdByProfileId(supabase, patientProfile.profile_id)
+        : null;
+    revalidatePrescriptionCaches([user.id, patientUserId || undefined]);
+
     return { success: true, prescriptionIds };
 }
 
 /**
  * Get prescriptions created by the doctor
  */
-export async function getDoctorPrescriptions(filters?: {
-    patientProfileId?: string;
-    status?: PrescriptionStatus[];
-    limit?: number;
-}): Promise<{ prescriptions: PrescriptionWithDetails[]; error?: string }> {
-    const supabase = await createClient();
+export async function getDoctorPrescriptions(
+    filters?: {
+        patientProfileId?: string;
+        status?: PrescriptionStatus[];
+        limit?: number;
+    },
+    supabaseClient?: SupabaseClient<Database>,
+    context?: DoctorContext
+): Promise<{ prescriptions: PrescriptionWithDetails[]; error?: string }> {
+    const supabase = supabaseClient ?? await createClient();
 
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-        return { prescriptions: [], error: "Not authenticated" };
-    }
-
-    // Get doctor profile
-    const { data: profileData } = await supabase
-        .from("profiles")
-        .select("id, role")
-        .eq("user_id", user.id)
-        .single();
-
-    const profile = profileData as { id: string; role: string } | null;
-    if (!profile || profile.role !== "doctor") {
+    if (context?.role && context.role !== "doctor") {
         return { prescriptions: [], error: "Not a doctor profile" };
     }
 
-    const { data: doctorProfileData } = await supabase
-        .from("doctor_profiles")
-        .select("id")
-        .eq("profile_id", profile.id)
-        .single();
+    let doctorProfileId = context?.doctorProfileId;
 
-    const doctorProfile = doctorProfileData as { id: string } | null;
-    if (!doctorProfile) {
-        return { prescriptions: [], error: "Doctor profile not found" };
+    if (!doctorProfileId) {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+            return { prescriptions: [], error: "Not authenticated" };
+        }
+
+        // Get doctor profile
+        const { data: profileData } = await supabase
+            .from("profiles")
+            .select("id, role")
+            .eq("user_id", user.id)
+            .single();
+
+        const profile = profileData as { id: string; role: string } | null;
+        if (!profile || profile.role !== "doctor") {
+            return { prescriptions: [], error: "Not a doctor profile" };
+        }
+
+        const { data: doctorProfileData } = await supabase
+            .from("doctor_profiles")
+            .select("id")
+            .eq("profile_id", profile.id)
+            .single();
+
+        const doctorProfile = doctorProfileData as { id: string } | null;
+        if (!doctorProfile) {
+            return { prescriptions: [], error: "Doctor profile not found" };
+        }
+
+        doctorProfileId = doctorProfile.id;
     }
+
+    const resolvedDoctorProfileId = doctorProfileId as string;
 
     // Build query
     let query = supabase
@@ -233,7 +327,7 @@ export async function getDoctorPrescriptions(filters?: {
                 scheduled_start
             )
         `)
-        .eq("doctor_profile_id", doctorProfile.id)
+        .eq("doctor_profile_id", resolvedDoctorProfileId)
         .order("prescribed_at", { ascending: false });
 
     if (filters?.patientProfileId) {
@@ -324,11 +418,11 @@ export async function updatePrescription(data: {
     // Verify the prescription belongs to this doctor and get current data
     const { data: existingPrescription } = await supabase
         .from("prescriptions")
-        .select("id, doctor_profile_id, status")
+        .select("id, doctor_profile_id, patient_profile_id, status")
         .eq("id", data.prescriptionId)
         .single();
 
-    const prescription = existingPrescription as { id: string; doctor_profile_id: string; status: string } | null;
+    const prescription = existingPrescription as { id: string; doctor_profile_id: string; patient_profile_id: string; status: string } | null;
     if (!prescription) {
         return { success: false, error: "Prescription not found" };
     }
@@ -387,6 +481,11 @@ export async function updatePrescription(data: {
         return { success: false, error: error.message };
     }
 
+    const patientUserId = prescription.patient_profile_id
+        ? await getUserIdByPatientProfileId(supabase, prescription.patient_profile_id)
+        : null;
+    revalidatePrescriptionCaches([user.id, patientUserId || undefined]);
+
     return { success: true };
 }
 
@@ -426,16 +525,23 @@ export async function cancelPrescription(
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { error } = await (supabase as any)
+    const { data: cancelledPrescription, error } = await (supabase as any)
         .from("prescriptions")
         .update({ status: "cancelled" })
         .eq("id", prescriptionId)
-        .eq("doctor_profile_id", doctorProfile.id);
+        .eq("doctor_profile_id", doctorProfile.id)
+        .select("patient_profile_id")
+        .single();
 
     if (error) {
         console.error("Error cancelling prescription:", error);
         return { success: false, error: error.message };
     }
+
+    const patientUserId = (cancelledPrescription as { patient_profile_id?: string } | null)?.patient_profile_id
+        ? await getUserIdByPatientProfileId(supabase, cancelledPrescription.patient_profile_id)
+        : null;
+    revalidatePrescriptionCaches([user.id, patientUserId || undefined]);
 
     return { success: true };
 }
@@ -447,40 +553,56 @@ export async function cancelPrescription(
 /**
  * Get patient's prescriptions
  */
-export async function getPatientPrescriptions(filters?: {
-    status?: PrescriptionStatus[];
-    activeOnly?: boolean;
-    limit?: number;
-}): Promise<{ prescriptions: PrescriptionWithDetails[]; error?: string }> {
-    const supabase = await createClient();
+export async function getPatientPrescriptions(
+    filters?: {
+        status?: PrescriptionStatus[];
+        activeOnly?: boolean;
+        limit?: number;
+    },
+    supabaseClient?: SupabaseClient<Database>,
+    context?: PatientContext
+): Promise<{ prescriptions: PrescriptionWithDetails[]; error?: string }> {
+    const supabase = supabaseClient ?? await createClient();
 
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-        return { prescriptions: [], error: "Not authenticated" };
-    }
-
-    // Get patient profile
-    const { data: profileData } = await supabase
-        .from("profiles")
-        .select("id, role")
-        .eq("user_id", user.id)
-        .single();
-
-    const profile = profileData as { id: string; role: string } | null;
-    if (!profile || profile.role !== "patient") {
+    if (context?.role && context.role !== "patient") {
         return { prescriptions: [], error: "Not a patient profile" };
     }
 
-    const { data: patientProfileData } = await supabase
-        .from("patient_profiles")
-        .select("id")
-        .eq("profile_id", profile.id)
-        .single();
+    let patientProfileId = context?.patientProfileId;
 
-    const patientProfile = patientProfileData as { id: string } | null;
-    if (!patientProfile) {
-        return { prescriptions: [], error: "Patient profile not found" };
+    if (!patientProfileId) {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+            return { prescriptions: [], error: "Not authenticated" };
+        }
+
+        // Get patient profile
+        const { data: profileData } = await supabase
+            .from("profiles")
+            .select("id, role")
+            .eq("user_id", user.id)
+            .single();
+
+        const profile = profileData as { id: string; role: string } | null;
+        if (!profile || profile.role !== "patient") {
+            return { prescriptions: [], error: "Not a patient profile" };
+        }
+
+        const { data: patientProfileData } = await supabase
+            .from("patient_profiles")
+            .select("id")
+            .eq("profile_id", profile.id)
+            .single();
+
+        const patientProfile = patientProfileData as { id: string } | null;
+        if (!patientProfile) {
+            return { prescriptions: [], error: "Patient profile not found" };
+        }
+
+        patientProfileId = patientProfile.id;
     }
+
+    const resolvedPatientProfileId = patientProfileId as string;
 
     // Build query
     let query = supabase
@@ -500,7 +622,7 @@ export async function getPatientPrescriptions(filters?: {
                 scheduled_start
             )
         `)
-        .eq("patient_profile_id", patientProfile.id)
+        .eq("patient_profile_id", resolvedPatientProfileId)
         .order("prescribed_at", { ascending: false });
 
     if (filters?.status && filters.status.length > 0) {
@@ -692,46 +814,64 @@ export async function requestPrescriptionRenewal(
         return { success: false, error: error.message };
     }
 
+    const doctorUserId = await getUserIdByDoctorProfileId(supabase, prescription.doctor_profile_id);
+    revalidatePrescriptionCaches([user.id, doctorUserId || undefined]);
+
     return { success: true };
 }
 
 /**
  * Get pending renewal requests (doctor)
  */
-export async function getPendingRenewalRequests(): Promise<{
+export async function getPendingRenewalRequests(
+    supabaseClient?: SupabaseClient<Database>,
+    context?: DoctorContext
+): Promise<{
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     requests: any[];
     error?: string;
 }> {
-    const supabase = await createClient();
+    const supabase = supabaseClient ?? await createClient();
 
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-        return { requests: [], error: "Not authenticated" };
+    if (context?.role && context.role !== "doctor") {
+        return { requests: [], error: "Not a doctor profile" };
     }
 
-    // Get doctor profile
-    const { data: profileData } = await supabase
-        .from("profiles")
-        .select("id")
-        .eq("user_id", user.id)
-        .single();
+    let doctorProfileId = context?.doctorProfileId;
 
-    const profile = profileData as { id: string } | null;
-    if (!profile) {
-        return { requests: [], error: "Profile not found" };
+    if (!doctorProfileId) {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+            return { requests: [], error: "Not authenticated" };
+        }
+
+        // Get doctor profile
+        const { data: profileData } = await supabase
+            .from("profiles")
+            .select("id")
+            .eq("user_id", user.id)
+            .single();
+
+        const profile = profileData as { id: string } | null;
+        if (!profile) {
+            return { requests: [], error: "Profile not found" };
+        }
+
+        const { data: doctorProfileData } = await supabase
+            .from("doctor_profiles")
+            .select("id")
+            .eq("profile_id", profile.id)
+            .single();
+
+        const doctorProfile = doctorProfileData as { id: string } | null;
+        if (!doctorProfile) {
+            return { requests: [], error: "Doctor profile not found" };
+        }
+
+        doctorProfileId = doctorProfile.id;
     }
 
-    const { data: doctorProfileData } = await supabase
-        .from("doctor_profiles")
-        .select("id")
-        .eq("profile_id", profile.id)
-        .single();
-
-    const doctorProfile = doctorProfileData as { id: string } | null;
-    if (!doctorProfile) {
-        return { requests: [], error: "Doctor profile not found" };
-    }
+    const resolvedDoctorProfileId = doctorProfileId as string;
 
     const { data, error } = await supabase
         .from("prescription_renewal_requests")
@@ -751,7 +891,7 @@ export async function getPendingRenewalRequests(): Promise<{
                 )
             )
         `)
-        .eq("doctor_profile_id", doctorProfile.id)
+        .eq("doctor_profile_id", resolvedDoctorProfileId)
         .eq("status", "pending")
         .order("created_at", { ascending: false });
 
@@ -884,6 +1024,11 @@ export async function respondToRenewalRequest(
             })
             .eq("id", requestId);
     }
+
+    const patientUserId = request?.patient_profile_id
+        ? await getUserIdByPatientProfileId(supabase, request.patient_profile_id)
+        : null;
+    revalidatePrescriptionCaches([user.id, patientUserId || undefined]);
 
     return { success: true, newPrescriptionId };
 }
@@ -1026,39 +1171,54 @@ export interface PatientForPrescription {
 /**
  * Get list of patients who have had appointments with this doctor
  */
-export async function getDoctorPatients(): Promise<{
+export async function getDoctorPatients(
+    supabaseClient?: SupabaseClient<Database>,
+    context?: DoctorContext
+): Promise<{
     patients: PatientForPrescription[];
     error?: string;
 }> {
-    const supabase = await createClient();
+    const supabase = supabaseClient ?? await createClient();
 
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-        return { patients: [], error: "Not authenticated" };
+    if (context?.role && context.role !== "doctor") {
+        return { patients: [], error: "Not a doctor profile" };
     }
 
-    // Get doctor profile
-    const { data: profileData } = await supabase
-        .from("profiles")
-        .select("id")
-        .eq("user_id", user.id)
-        .single();
+    let doctorProfileId = context?.doctorProfileId;
 
-    const profile = profileData as { id: string } | null;
-    if (!profile) {
-        return { patients: [], error: "Profile not found" };
+    if (!doctorProfileId) {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+            return { patients: [], error: "Not authenticated" };
+        }
+
+        // Get doctor profile
+        const { data: profileData } = await supabase
+            .from("profiles")
+            .select("id")
+            .eq("user_id", user.id)
+            .single();
+
+        const profile = profileData as { id: string } | null;
+        if (!profile) {
+            return { patients: [], error: "Profile not found" };
+        }
+
+        const { data: doctorProfileData } = await supabase
+            .from("doctor_profiles")
+            .select("id")
+            .eq("profile_id", profile.id)
+            .single();
+
+        const doctorProfile = doctorProfileData as { id: string } | null;
+        if (!doctorProfile) {
+            return { patients: [], error: "Doctor profile not found" };
+        }
+
+        doctorProfileId = doctorProfile.id;
     }
 
-    const { data: doctorProfileData } = await supabase
-        .from("doctor_profiles")
-        .select("id")
-        .eq("profile_id", profile.id)
-        .single();
-
-    const doctorProfile = doctorProfileData as { id: string } | null;
-    if (!doctorProfile) {
-        return { patients: [], error: "Doctor profile not found" };
-    }
+    const resolvedDoctorProfileId = doctorProfileId as string;
 
     // Get unique patients from completed appointments
     const { data, error } = await supabase
@@ -1075,7 +1235,7 @@ export async function getDoctorPatients(): Promise<{
                 )
             )
         `)
-        .eq("doctor_profile_id", doctorProfile.id)
+        .eq("doctor_profile_id", resolvedDoctorProfileId)
         .in("status", ["completed", "in_progress"]);
 
     if (error) {
@@ -1100,4 +1260,214 @@ export async function getDoctorPatients(): Promise<{
     });
 
     return { patients: Array.from(patientMap.values()) };
+}
+
+// ============================================
+// PDF Generation Support
+// ============================================
+
+export interface PrescriptionPdfData {
+    id: string;
+    prescribed_at: string;
+    medications: Array<{
+        medication_name: string;
+        dosage?: string;
+        frequency?: string;
+        duration?: string;
+        quantity?: number;
+        instructions?: string;
+    }>;
+    doctor: {
+        full_name: string;
+        specialty?: string;
+        license_number?: string;
+        clinic_name?: string;
+        clinic_address?: string;
+        clinic_phone?: string;
+        phone_number?: string;
+    };
+    patient: {
+        full_name: string;
+    };
+}
+
+/**
+ * Get prescription data for PDF generation
+ * Includes full doctor details (clinic info, specialty, license)
+ */
+export async function getPrescriptionForPdf(
+    prescriptionId: string
+): Promise<{ data: PrescriptionPdfData | null; error?: string }> {
+    const supabase = await createClient();
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+        return { data: null, error: "Not authenticated" };
+    }
+
+    // Get user's profile to determine role
+    const { data: profileData } = await supabase
+        .from("profiles")
+        .select("id, role")
+        .eq("user_id", user.id)
+        .single();
+
+    const profile = profileData as { id: string; role: string } | null;
+    if (!profile) {
+        return { data: null, error: "Profile not found" };
+    }
+
+    // Fetch prescription with full doctor details
+    // Note: Must specify FK because doctor_profiles has two FKs to profiles (profile_id and verified_by)
+    const { data, error } = await supabase
+        .from("prescriptions")
+        .select(`
+            id,
+            prescribed_at,
+            medication_name,
+            dosage,
+            frequency,
+            duration,
+            quantity,
+            instructions,
+            doctor_profile_id,
+            patient_profile_id,
+            doctor_profiles (
+                id,
+                license_number,
+                clinic_name,
+                clinic_address,
+                clinic_phone,
+                phone_number,
+                profiles!doctor_profiles_profile_id_fkey (
+                    id,
+                    full_name
+                )
+            ),
+            patient_profiles (
+                id,
+                profiles (
+                    id,
+                    full_name
+                )
+            )
+        `)
+        .eq("id", prescriptionId)
+        .single();
+
+    if (error) {
+        console.error("Error fetching prescription for PDF:", error);
+        return { data: null, error: error.message };
+    }
+
+    if (!data) {
+        return { data: null, error: "Prescription not found" };
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const rx = data as any;
+
+    // Authorization check - must be the doctor or the patient
+    let isAuthorized = false;
+
+    if (profile.role === "patient") {
+        const { data: patientData } = await supabase
+            .from("patient_profiles")
+            .select("id")
+            .eq("profile_id", profile.id)
+            .single();
+
+        const patientProfile = patientData as { id: string } | null;
+        isAuthorized = patientProfile?.id === rx.patient_profile_id;
+    } else if (profile.role === "doctor") {
+        const { data: doctorData } = await supabase
+            .from("doctor_profiles")
+            .select("id")
+            .eq("profile_id", profile.id)
+            .single();
+
+        const doctorProfile = doctorData as { id: string } | null;
+        isAuthorized = doctorProfile?.id === rx.doctor_profile_id;
+    }
+
+    if (!isAuthorized) {
+        return { data: null, error: "Not authorized to view this prescription" };
+    }
+
+    // Fetch doctor's specialties
+    const { data: specialtyData } = await supabase
+        .from("doctor_specializations")
+        .select(`
+            specializations (
+                name_en
+            )
+        `)
+        .eq("doctor_profile_id", rx.doctor_profile_id);
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const specialties = (specialtyData || []).map((s: any) => s.specializations?.name_en).filter(Boolean);
+    // Deduplicate specialties using Set
+    const uniqueSpecialties = [...new Set(specialties)];
+    const specialtyString = uniqueSpecialties.join(", ");
+
+    // Fetch all medications for this prescription
+    // (In case we want to support multi-medication prescriptions grouped by some ID in the future)
+    // For now, each prescription row is one medication
+    const pdfData: PrescriptionPdfData = {
+        id: rx.id,
+        prescribed_at: rx.prescribed_at,
+        medications: [{
+            medication_name: rx.medication_name,
+            dosage: rx.dosage,
+            frequency: rx.frequency,
+            duration: rx.duration,
+            quantity: rx.quantity,
+            instructions: rx.instructions,
+        }],
+        doctor: {
+            full_name: rx.doctor_profiles?.profiles?.full_name || "Doctor",
+            specialty: specialtyString || undefined,
+            license_number: rx.doctor_profiles?.license_number,
+            clinic_name: rx.doctor_profiles?.clinic_name,
+            clinic_address: rx.doctor_profiles?.clinic_address,
+            clinic_phone: rx.doctor_profiles?.clinic_phone,
+            phone_number: rx.doctor_profiles?.phone_number,
+        },
+        patient: {
+            full_name: rx.patient_profiles?.profiles?.full_name || "Patient",
+        },
+    };
+
+    return { data: pdfData };
+}
+
+/**
+ * Update prescription PDF path after generation
+ */
+export async function updatePrescriptionPdfPath(
+    prescriptionId: string,
+    pdfPath: string
+): Promise<{ success: boolean; error?: string }> {
+    const supabase = await createClient();
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+        return { success: false, error: "Not authenticated" };
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error } = await (supabase as any)
+        .from("prescriptions")
+        .update({
+            pdf_path: pdfPath,
+            pdf_generated_at: new Date().toISOString(),
+        })
+        .eq("id", prescriptionId);
+
+    if (error) {
+        console.error("Error updating prescription PDF path:", error);
+        return { success: false, error: error.message };
+    }
+
+    return { success: true };
 }

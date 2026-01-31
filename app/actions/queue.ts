@@ -506,7 +506,7 @@ export async function startQueueConsultation(
  */
 export async function endQueueConsultation(
     queueEntryId: string
-): Promise<{ success: boolean; error?: string }> {
+): Promise<{ success: boolean; appointmentId?: string; patientProfileId?: string; error?: string }> {
     const supabase = await createClient();
 
     const { data: { user } } = await supabase.auth.getUser();
@@ -571,6 +571,47 @@ export async function endQueueConsultation(
         return { success: false, error: updateError.message };
     }
 
+    // Create an appointment record for this urgent care consultation
+    // This enables reviews, prescription linking, and consultation history
+    let appointmentId: string | null = null;
+    try {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data: appointmentData, error: appointmentError } = await (supabase as any)
+            .from("appointments")
+            .insert({
+                patient_profile_id: queueEntry.patient_profile_id,
+                doctor_profile_id: queueEntry.doctor_profile_id,
+                scheduled_start: queueEntry.called_at || queueEntry.joined_at,
+                actual_start: queueEntry.consultation_started_at,
+                actual_end: endedAt.toISOString(),
+                status: "completed",
+                type: "urgent_care",
+                consultation_queue_id: queueEntryId,
+                payment_status: queueEntry.payment_status === "completed_mock" ? "completed" : queueEntry.payment_status,
+                amount: queueEntry.payment_amount,
+                notes: queueEntry.chief_complaint || null,
+            })
+            .select("id")
+            .single();
+
+        if (appointmentError) {
+            console.error("Error creating appointment for urgent care:", appointmentError);
+            // Don't fail the whole operation, just log the error
+        } else {
+            appointmentId = (appointmentData as { id: string })?.id;
+            console.log("Created appointment for urgent care:", appointmentId);
+
+            // Update queue entry with the appointment ID so patient can find it
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            await (supabase as any)
+                .from("consultation_queue")
+                .update({ appointment_id: appointmentId })
+                .eq("id", queueEntryId);
+        }
+    } catch (err) {
+        console.error("Exception creating appointment for urgent care:", err);
+    }
+
     // Clear doctor's current queue entry
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await (supabase as any)
@@ -582,7 +623,11 @@ export async function endQueueConsultation(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await (supabase as any).rpc("recalculate_queue_positions", { p_doctor_profile_id: doctor.id });
 
-    return { success: true };
+    return {
+        success: true,
+        appointmentId: appointmentId || undefined,
+        patientProfileId: queueEntry.patient_profile_id,
+    };
 }
 
 // ============================================

@@ -1,6 +1,9 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import type { DashboardUserContext } from "@/lib/supabase/context";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "@/lib/supabase/types";
 
 // ============================================
 // Types
@@ -51,6 +54,8 @@ export interface DoctorDashboardData {
     recentMessages: RecentMessage[];
 }
 
+type DoctorContext = Pick<DashboardUserContext, "profileId" | "doctorProfileId" | "role">;
+
 // ============================================
 // Helper Functions
 // ============================================
@@ -90,18 +95,32 @@ async function getDoctorProfileId(supabase: Awaited<ReturnType<typeof createClie
 // Main Dashboard Data Function
 // ============================================
 
-export async function getDoctorDashboardData(): Promise<{
+export async function getDoctorDashboardData(
+    supabaseClient?: SupabaseClient<Database>,
+    context?: DoctorContext
+): Promise<{
     data: DoctorDashboardData | null;
     error?: string;
 }> {
-    const supabase = await createClient();
+    const supabase = supabaseClient ?? await createClient();
 
-    const ids = await getDoctorProfileId(supabase);
-    if (!ids) {
-        return { data: null, error: "Not authenticated or not a doctor" };
+    if (context?.role && context.role !== "doctor") {
+        return { data: null, error: "Not a doctor profile" };
     }
 
-    const { profileId, doctorProfileId } = ids;
+    let profileId = context?.profileId;
+    let doctorProfileId = context?.doctorProfileId;
+
+    if (!profileId || !doctorProfileId) {
+        const ids = await getDoctorProfileId(supabase);
+        if (!ids) {
+            return { data: null, error: "Not authenticated or not a doctor" };
+        }
+        profileId = ids.profileId;
+        doctorProfileId = ids.doctorProfileId;
+    }
+    const resolvedProfileId = profileId as string;
+    const resolvedDoctorProfileId = doctorProfileId as string;
 
     // Get today's date range
     const today = new Date();
@@ -154,7 +173,7 @@ export async function getDoctorDashboardData(): Promise<{
         supabase
             .from("appointments")
             .select("consultation_fee")
-            .eq("doctor_profile_id", doctorProfileId)
+            .eq("doctor_profile_id", resolvedDoctorProfileId)
             .eq("status", "completed")
             .gte("scheduled_start", today.toISOString())
             .lt("scheduled_start", tomorrow.toISOString()),
@@ -163,7 +182,7 @@ export async function getDoctorDashboardData(): Promise<{
         supabase
             .from("doctor_profiles")
             .select("rating_average")
-            .eq("id", doctorProfileId)
+            .eq("id", resolvedDoctorProfileId)
             .single(),
 
         // Get recent messages
@@ -182,7 +201,7 @@ export async function getDoctorDashboardData(): Promise<{
                     role
                 )
             `)
-            .eq("recipient_profile_id", profileId)
+            .eq("recipient_profile_id", resolvedProfileId)
             .order("created_at", { ascending: false })
             .limit(5),
     ]);
@@ -239,7 +258,7 @@ export async function getDoctorDashboardData(): Promise<{
                 )
             )
         `)
-        .eq("doctor_profile_id", doctorProfileId)
+        .eq("doctor_profile_id", resolvedDoctorProfileId)
         .eq("status", "completed")
         .lt("scheduled_start", new Date().toISOString())
         .limit(10);

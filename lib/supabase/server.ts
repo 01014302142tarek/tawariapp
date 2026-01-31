@@ -54,3 +54,22 @@ export async function createAdminClient() {
         }
     );
 }
+
+// Service-role client without cookies (safe to use inside cached functions)
+export async function createServiceRoleClient() {
+    return createServerClient<Database>(
+        process.env.NEXT_PUBLIC_TawariAppSUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!,
+        {
+            cookies: {
+                getAll() {
+                    return [];
+                },
+                setAll(cookiesToSet) {
+                    // No-op: avoid touching request cookies in cached scopes
+                    void cookiesToSet;
+                },
+            },
+        }
+    );
+}

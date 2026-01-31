@@ -32,6 +32,16 @@ const Icons = {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
         </svg>
     ),
+    pdf: (
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+        </svg>
+    ),
+    download: (
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+        </svg>
+    ),
 };
 
 const Badge = ({ variant, children, isDark = true }: { variant: string; children: React.ReactNode; isDark?: boolean }) => {
@@ -66,6 +76,27 @@ export default function PrescriptionsPage({
     const [prescriptions, setPrescriptions] = useState<PrescriptionWithDetails[]>(initialPrescriptions);
     const [loading, setLoading] = useState(!initialLoaded);
     const [actionLoading, setActionLoading] = useState<string | null>(null);
+    const [pdfLoading, setPdfLoading] = useState<string | null>(null);
+
+    const handleViewPdf = async (prescriptionId: string) => {
+        setPdfLoading(prescriptionId);
+        try {
+            // Open PDF in new tab
+            window.open(`/api/prescriptions/${prescriptionId}/pdf`, '_blank');
+        } finally {
+            setPdfLoading(null);
+        }
+    };
+
+    const handleDownloadPdf = async (prescriptionId: string) => {
+        setPdfLoading(prescriptionId);
+        try {
+            // Trigger download
+            window.open(`/api/prescriptions/${prescriptionId}/pdf?download=true`, '_blank');
+        } finally {
+            setPdfLoading(null);
+        }
+    };
 
     const loadPrescriptions = useCallback(async () => {
         setLoading(true);
@@ -254,16 +285,6 @@ export default function PrescriptionsPage({
                                                 {formatDate(rx.prescribed_at)}
                                             </p>
                                         </div>
-                                        {rx.valid_until && (
-                                            <div>
-                                                <p className={cn("text-[10px] uppercase tracking-wide mb-0.5", textMuted)}>
-                                                    {isRTL ? "صالح حتى" : "Valid Until"}
-                                                </p>
-                                                <p className={cn("text-xs font-medium", textPrimary)}>
-                                                    {formatDate(rx.valid_until)}
-                                                </p>
-                                            </div>
-                                        )}
                                         {rx.duration && (
                                             <div>
                                                 <p className={cn("text-[10px] uppercase tracking-wide mb-0.5", textMuted)}>
@@ -286,7 +307,41 @@ export default function PrescriptionsPage({
                                         </div>
                                     )}
 
-                                    {/* Action Button */}
+                                    {/* PDF Actions */}
+                                    <div className="flex gap-2 mb-3">
+                                        <button
+                                            onClick={() => handleViewPdf(rx.id)}
+                                            disabled={pdfLoading === rx.id}
+                                            className={cn(
+                                                "flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-colors",
+                                                isDark
+                                                    ? "bg-slate-700 text-slate-200 hover:bg-slate-600"
+                                                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                                            )}
+                                        >
+                                            {pdfLoading === rx.id ? (
+                                                <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                                            ) : (
+                                                Icons.pdf
+                                            )}
+                                            {isRTL ? "عرض PDF" : "View PDF"}
+                                        </button>
+                                        <button
+                                            onClick={() => handleDownloadPdf(rx.id)}
+                                            disabled={pdfLoading === rx.id}
+                                            className={cn(
+                                                "flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-colors",
+                                                isDark
+                                                    ? "bg-slate-700 text-slate-200 hover:bg-slate-600"
+                                                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                                            )}
+                                        >
+                                            {Icons.download}
+                                            {isRTL ? "تحميل" : "Download"}
+                                        </button>
+                                    </div>
+
+                                    {/* Refill Button */}
                                     {needsRefill(rx) && (
                                         <button
                                             onClick={() => handleRequestRenewal(rx.id)}
@@ -363,9 +418,39 @@ export default function PrescriptionsPage({
                                         </p>
                                     </div>
 
-                                    {/* Status + Action - 3 cols */}
-                                    <div className="col-span-3 flex items-center justify-end gap-3">
+                                    {/* Status + Actions - 3 cols */}
+                                    <div className="col-span-3 flex items-center justify-end gap-2">
                                         {getStatusBadge(rx.status)}
+                                        <button
+                                            onClick={() => handleViewPdf(rx.id)}
+                                            disabled={pdfLoading === rx.id}
+                                            title={isRTL ? "عرض PDF" : "View PDF"}
+                                            className={cn(
+                                                "p-2 rounded-lg transition-colors",
+                                                isDark
+                                                    ? "bg-slate-700 text-slate-300 hover:bg-slate-600"
+                                                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                                            )}
+                                        >
+                                            {pdfLoading === rx.id ? (
+                                                <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                                            ) : (
+                                                Icons.pdf
+                                            )}
+                                        </button>
+                                        <button
+                                            onClick={() => handleDownloadPdf(rx.id)}
+                                            disabled={pdfLoading === rx.id}
+                                            title={isRTL ? "تحميل PDF" : "Download PDF"}
+                                            className={cn(
+                                                "p-2 rounded-lg transition-colors",
+                                                isDark
+                                                    ? "bg-slate-700 text-slate-300 hover:bg-slate-600"
+                                                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                                            )}
+                                        >
+                                            {Icons.download}
+                                        </button>
                                         {needsRefill(rx) && (
                                             <button
                                                 onClick={() => handleRequestRenewal(rx.id)}

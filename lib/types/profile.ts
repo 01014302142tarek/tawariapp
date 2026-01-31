@@ -3,7 +3,13 @@ import type { Database } from "@/lib/supabase/types";
 // Type aliases for cleaner code
 export type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 export type PatientProfile = Database["public"]["Tables"]["patient_profiles"]["Row"];
-export type DoctorProfile = Database["public"]["Tables"]["doctor_profiles"]["Row"];
+// Extend DoctorProfile with clinic fields that are added via migration but not yet in generated types
+export type DoctorProfile = Database["public"]["Tables"]["doctor_profiles"]["Row"] & {
+    clinic_name?: string | null;
+    clinic_address?: string | null;
+    clinic_phone?: string | null;
+    phone_number?: string | null;
+};
 export type AdminProfile = Database["public"]["Tables"]["admin_profiles"]["Row"];
 export type AssistantProfile = Database["public"]["Tables"]["assistant_profiles"]["Row"];
 

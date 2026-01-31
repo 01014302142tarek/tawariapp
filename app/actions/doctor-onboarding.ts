@@ -169,12 +169,14 @@ export async function savePracticeInfo(data: {
         return { success: false, error: "Not a doctor profile" };
     }
 
-    // Update doctor_profile with consultation fee
+    // Update doctor_profile with consultation fee and clinic info
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { error } = await (supabase as any)
         .from("doctor_profiles")
         .update({
             consultation_fee: data.consultationFee || null,
+            clinic_name: data.clinicName || null,
+            clinic_address: data.address || null,
         })
         .eq("profile_id", profile.id);
 

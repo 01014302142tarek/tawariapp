@@ -6,6 +6,7 @@ import DailyIframe, { DailyCall } from "@daily-co/daily-js";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { endQueueConsultation, getQueueEntryForCall, leaveQueue } from "@/app/actions/queue";
+import { PrescriptionPromptModal, QuickPrescriptionForm, ReviewPromptModal } from "@/components/post-consultation";
 
 // ============================================
 // Types
@@ -83,6 +84,11 @@ export function QueueVideoCall({
     }>({});
     const [consultationEnded, setConsultationEnded] = useState(false);
     const statusPollRef = useRef<NodeJS.Timeout | null>(null);
+
+    // Post-consultation flow state
+    const [postCallPhase, setPostCallPhase] = useState<"none" | "prescription_prompt" | "prescription_form" | "review_prompt">("none");
+    const [createdAppointmentId, setCreatedAppointmentId] = useState<string | null>(null);
+    const [patientProfileId, setPatientProfileId] = useState<string | null>(null);
 
     // Fetch token and join call
     const initializeCall = useCallback(async () => {
@@ -368,9 +374,19 @@ export function QueueVideoCall({
                 }
             }
 
-            // If doctor, mark consultation as completed
+            // If doctor, mark consultation as completed and get appointment ID
             if (userRole === "doctor") {
-                await endQueueConsultation(queueEntryId);
+                const result = await endQueueConsultation(queueEntryId);
+                if (result.success && result.appointmentId) {
+                    // Store IDs for prescription creation
+                    setCreatedAppointmentId(result.appointmentId);
+                    setPatientProfileId(result.patientProfileId || null);
+                    // Show prescription prompt instead of navigating away
+                    setPostCallPhase("prescription_prompt");
+                    setEnding(false);
+                    setShowEndConfirm(false);
+                    return; // Don't navigate yet
+                }
             }
 
             handleCallEnded();
@@ -385,6 +401,33 @@ export function QueueVideoCall({
             }
         }
     }, [userRole, queueEntryId, handleCallEnded]);
+
+    // Prescription flow handlers (doctor)
+    const handleAddPrescription = useCallback(() => {
+        setPostCallPhase("prescription_form");
+    }, []);
+
+    const handleSkipPrescription = useCallback(() => {
+        handleCallEnded();
+    }, [handleCallEnded]);
+
+    const handlePrescriptionSaved = useCallback(() => {
+        handleCallEnded();
+    }, [handleCallEnded]);
+
+    const handlePrescriptionCancelled = useCallback(() => {
+        // Go back to prompt or skip
+        setPostCallPhase("prescription_prompt");
+    }, []);
+
+    // Review flow handlers (patient)
+    const handleReviewSubmitted = useCallback(() => {
+        handleCallEnded();
+    }, [handleCallEnded]);
+
+    const handleSkipReview = useCallback(() => {
+        handleCallEnded();
+    }, [handleCallEnded]);
 
     // Leave call (patient) - also properly ends the queue entry
     const handleLeaveCall = useCallback(async () => {
@@ -434,9 +477,10 @@ export function QueueVideoCall({
             if (result.success && result.entry) {
                 console.log("[VideoCall] Status check:", result.entry.status);
                 if (result.entry.status === "completed") {
-                    console.log("[VideoCall] Consultation completed, redirecting...");
+                    console.log("[VideoCall] Consultation completed");
                     setConsultationEnded(true);
-                    // Clean up and redirect
+
+                    // Clean up call
                     if (callFrameRef.current) {
                         try {
                             await callFrameRef.current.leave();
@@ -444,7 +488,16 @@ export function QueueVideoCall({
                             console.warn("[VideoCall] Error leaving after consultation ended:", e);
                         }
                     }
-                    handleCallEnded();
+
+                    // If appointment ID is available, show review modal
+                    if (result.entry.appointment_id) {
+                        console.log("[VideoCall] Appointment ID found, showing review modal:", result.entry.appointment_id);
+                        setCreatedAppointmentId(result.entry.appointment_id);
+                        setPostCallPhase("review_prompt");
+                    } else {
+                        // No appointment ID, just redirect
+                        handleCallEnded();
+                    }
                 }
             }
         } catch (err) {
@@ -656,8 +709,8 @@ export function QueueVideoCall({
                     </div>
                 )}
 
-                {/* Consultation Ended State (for patients) */}
-                {consultationEnded && userRole === "patient" && (
+                {/* Consultation Ended State (for patients) - Show review modal if appointment ID available */}
+                {consultationEnded && userRole === "patient" && postCallPhase !== "review_prompt" && !createdAppointmentId && (
                     <div className="absolute inset-0 flex items-center justify-center bg-slate-900 z-10 overflow-auto">
                         <div className="text-center max-w-md mx-auto p-6 my-auto">
                             <div className="w-16 h-16 rounded-full bg-teal-500/10 flex items-center justify-center mx-auto mb-4">
@@ -721,6 +774,47 @@ export function QueueVideoCall({
                     style={{ minHeight: "400px" }}
                 />
             </div>
+
+            {/* Post-Consultation Modals */}
+
+            {/* Doctor: Prescription Prompt */}
+            {userRole === "doctor" && (
+                <PrescriptionPromptModal
+                    isOpen={postCallPhase === "prescription_prompt"}
+                    patientName={participantInfo.patientName || (isRTL ? "المريض" : "Patient")}
+                    isDark={isDark}
+                    isRTL={isRTL}
+                    onAddPrescription={handleAddPrescription}
+                    onSkip={handleSkipPrescription}
+                />
+            )}
+
+            {/* Doctor: Prescription Form */}
+            {userRole === "doctor" && patientProfileId && (
+                <QuickPrescriptionForm
+                    isOpen={postCallPhase === "prescription_form"}
+                    patientProfileId={patientProfileId}
+                    patientName={participantInfo.patientName || (isRTL ? "المريض" : "Patient")}
+                    appointmentId={createdAppointmentId || undefined}
+                    isDark={isDark}
+                    isRTL={isRTL}
+                    onSuccess={handlePrescriptionSaved}
+                    onCancel={handlePrescriptionCancelled}
+                />
+            )}
+
+            {/* Patient: Review Modal */}
+            {userRole === "patient" && consultationEnded && createdAppointmentId && (
+                <ReviewPromptModal
+                    isOpen={postCallPhase === "review_prompt" || (consultationEnded && !!createdAppointmentId)}
+                    doctorName={participantInfo.doctorName || (isRTL ? "الطبيب" : "Doctor")}
+                    appointmentId={createdAppointmentId}
+                    isDark={isDark}
+                    isRTL={isRTL}
+                    onSuccess={handleReviewSubmitted}
+                    onSkip={handleSkipReview}
+                />
+            )}
         </div>
     );
 }

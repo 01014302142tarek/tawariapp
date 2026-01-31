@@ -248,6 +248,10 @@ export async function updateDoctorProfile(data: {
     bio?: string;
     consultation_fee?: number;
     is_available_now?: boolean;
+    clinic_name?: string;
+    clinic_address?: string;
+    clinic_phone?: string;
+    phone_number?: string;
 }): Promise<{ success: boolean; error?: string }> {
     const supabase = await createClient();
 

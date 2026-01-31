@@ -83,7 +83,7 @@ const newTestUsers = [
     role: 'patient',
     fullName: 'Mariam Saeed',
     preferredLanguage: 'ar',
-    avatarUrl: 'https://images.unsplash.com/photo-1581579438747-104c53d7fbc4?w=200&h=200&fit=crop&crop=face',
+    avatarUrl: 'https://images.unsplash.com/photo-1566616213894-2d4e1baee5d8?w=200&h=200&fit=crop&crop=face',
     patientData: {
       dateOfBirth: '1958-07-22',
       gender: 'female',

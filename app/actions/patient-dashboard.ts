@@ -1,6 +1,9 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import type { DashboardUserContext } from "@/lib/supabase/context";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "@/lib/supabase/types";
 
 // ============================================
 // Types
@@ -50,6 +53,8 @@ export interface PatientDashboardData {
     recentActivity: RecentActivity[];
 }
 
+type PatientContext = Pick<DashboardUserContext, "profileId" | "patientProfileId" | "role">;
+
 // ============================================
 // Dashboard Data Functions
 // ============================================
@@ -57,39 +62,57 @@ export interface PatientDashboardData {
 /**
  * Get comprehensive patient dashboard data
  */
-export async function getPatientDashboardData(): Promise<{
+export async function getPatientDashboardData(
+    supabaseClient?: SupabaseClient<Database>,
+    context?: PatientContext
+): Promise<{
     data: PatientDashboardData | null;
     error?: string;
 }> {
-    const supabase = await createClient();
+    const supabase = supabaseClient ?? await createClient();
 
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-        return { data: null, error: "Not authenticated" };
-    }
-
-    // Get patient profile
-    const { data: profileData } = await supabase
-        .from("profiles")
-        .select("id, role")
-        .eq("user_id", user.id)
-        .single();
-
-    const profile = profileData as { id: string; role: string } | null;
-    if (!profile || profile.role !== "patient") {
+    if (context?.role && context.role !== "patient") {
         return { data: null, error: "Not a patient profile" };
     }
 
-    const { data: patientProfileData } = await supabase
-        .from("patient_profiles")
-        .select("id")
-        .eq("profile_id", profile.id)
-        .single();
+    let profileId = context?.profileId;
+    let patientProfileId = context?.patientProfileId;
 
-    const patientProfile = patientProfileData as { id: string } | null;
-    if (!patientProfile) {
-        return { data: null, error: "Patient profile not found" };
+    if (!profileId || !patientProfileId) {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+            return { data: null, error: "Not authenticated" };
+        }
+
+        // Get patient profile
+        const { data: profileData } = await supabase
+            .from("profiles")
+            .select("id, role")
+            .eq("user_id", user.id)
+            .single();
+
+        const profile = profileData as { id: string; role: string } | null;
+        if (!profile || profile.role !== "patient") {
+            return { data: null, error: "Not a patient profile" };
+        }
+
+        const { data: patientProfileData } = await supabase
+            .from("patient_profiles")
+            .select("id")
+            .eq("profile_id", profile.id)
+            .single();
+
+        const patientProfile = patientProfileData as { id: string } | null;
+        if (!patientProfile) {
+            return { data: null, error: "Patient profile not found" };
+        }
+
+        profileId = profile.id;
+        patientProfileId = patientProfile.id;
     }
+
+    const resolvedProfileId = profileId as string;
+    const resolvedPatientProfileId = patientProfileId as string;
 
     // Fetch all data in parallel (optimized - all queries run concurrently)
     const [
@@ -126,7 +149,7 @@ export async function getPatientDashboardData(): Promise<{
                     )
                 )
             `)
-            .eq("patient_profile_id", patientProfile.id)
+            .eq("patient_profile_id", resolvedPatientProfileId)
             .in("status", ["scheduled", "in_waiting_room"])
             .gte("scheduled_start", new Date().toISOString())
             .order("scheduled_start", { ascending: true })
@@ -148,7 +171,7 @@ export async function getPatientDashboardData(): Promise<{
                     )
                 )
             `)
-            .eq("patient_profile_id", patientProfile.id)
+            .eq("patient_profile_id", resolvedPatientProfileId)
             .eq("status", "active")
             .order("prescribed_at", { ascending: false })
             .limit(5),
@@ -157,7 +180,7 @@ export async function getPatientDashboardData(): Promise<{
         supabase
             .from("messages")
             .select("id", { count: "exact", head: true })
-            .eq("recipient_profile_id", profile.id)
+            .eq("recipient_profile_id", resolvedProfileId)
             .eq("is_read", false),
 
         // Recent activity queries - all in parallel
@@ -174,7 +197,7 @@ export async function getPatientDashboardData(): Promise<{
                     )
                 )
             `)
-            .eq("patient_profile_id", patientProfile.id)
+            .eq("patient_profile_id", resolvedPatientProfileId)
             .eq("status", "completed")
             .order("actual_end", { ascending: false })
             .limit(3),
@@ -192,7 +215,7 @@ export async function getPatientDashboardData(): Promise<{
                     )
                 )
             `)
-            .eq("patient_profile_id", patientProfile.id)
+            .eq("patient_profile_id", resolvedPatientProfileId)
             .order("prescribed_at", { ascending: false })
             .limit(3),
 
@@ -207,7 +230,7 @@ export async function getPatientDashboardData(): Promise<{
                     full_name
                 )
             `)
-            .eq("recipient_profile_id", profile.id)
+            .eq("recipient_profile_id", resolvedProfileId)
             .order("created_at", { ascending: false })
             .limit(3),
 
@@ -215,7 +238,7 @@ export async function getPatientDashboardData(): Promise<{
         supabase
             .from("medical_records")
             .select("id, title, record_type, created_at")
-            .eq("patient_profile_id", patientProfile.id)
+            .eq("patient_profile_id", resolvedPatientProfileId)
             .order("created_at", { ascending: false })
             .limit(2),
     ]);

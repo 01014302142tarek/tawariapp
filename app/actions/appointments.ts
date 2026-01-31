@@ -1,9 +1,13 @@
 "use server";
 
 import { createClient, createAdminClient } from "@/lib/supabase/server";
+import type { DashboardUserContext } from "@/lib/supabase/context";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "@/lib/supabase/types";
 import { appointmentLimiter } from "@/lib/rate-limit";
 import { appointmentSchema, validateInput } from "@/lib/validations";
 import { notifyNewAppointment, notifyAppointmentCancelled } from "./notifications";
+import { revalidateTag } from "next/cache";
 
 // ============================================
 // Types
@@ -56,6 +60,67 @@ export interface ConsultationSession {
     started_at?: string;
     ended_at?: string;
     recording_consent: boolean;
+}
+
+type PatientContext = Pick<DashboardUserContext, "profileId" | "patientProfileId" | "role">;
+type DoctorContext = Pick<DashboardUserContext, "profileId" | "doctorProfileId" | "role">;
+
+// ============================================
+// Cache Helpers
+// ============================================
+
+async function getUserIdByProfileId(
+    supabase: SupabaseClient<Database>,
+    profileId: string
+): Promise<string | null> {
+    const { data } = await supabase
+        .from("profiles")
+        .select("user_id")
+        .eq("id", profileId)
+        .single();
+
+    return (data as { user_id: string } | null)?.user_id || null;
+}
+
+async function getUserIdsForAppointment(
+    supabase: SupabaseClient<Database>,
+    appointmentId: string
+): Promise<{ doctorUserId?: string; patientUserId?: string }> {
+    const { data } = await supabase
+        .from("appointments")
+        .select(`
+            doctor_profile_id,
+            patient_profile_id,
+            doctor_profiles (
+                profile_id
+            ),
+            patient_profiles (
+                profile_id
+            )
+        `)
+        .eq("id", appointmentId)
+        .single();
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const appointment = data as any;
+    if (!appointment) return {};
+
+    const doctorProfileId = appointment.doctor_profiles?.profile_id;
+    const patientProfileId = appointment.patient_profiles?.profile_id;
+
+    const [doctorUserId, patientUserId] = await Promise.all([
+        doctorProfileId ? getUserIdByProfileId(supabase, doctorProfileId) : Promise.resolve(null),
+        patientProfileId ? getUserIdByProfileId(supabase, patientProfileId) : Promise.resolve(null),
+    ]);
+
+    return { doctorUserId: doctorUserId || undefined, patientUserId: patientUserId || undefined };
+}
+
+function revalidateAppointmentCaches(userIds: Array<string | undefined>) {
+    userIds.filter(Boolean).forEach((userId) => {
+        revalidateTag(`appointments:${userId}`, "default");
+        revalidateTag(`dashboard:${userId}`, "default");
+    });
 }
 
 // ============================================
@@ -197,46 +262,67 @@ export async function bookAppointment(data: {
         ).catch(err => console.error("Failed to send appointment notification:", err));
     }
 
+    const doctorUserId = doctor?.profile_id
+        ? await getUserIdByProfileId(supabase, doctor.profile_id)
+        : null;
+    revalidateAppointmentCaches([user.id, doctorUserId || undefined]);
+
     return { success: true, appointmentId: insertedData?.id };
 }
 
 /**
  * Get patient's appointments
  */
-export async function getPatientAppointments(filters?: {
-    status?: AppointmentStatus[];
-    upcoming?: boolean;
-    limit?: number;
-}): Promise<{ appointments: AppointmentWithDetails[]; error?: string }> {
-    const supabase = await createClient();
+export async function getPatientAppointments(
+    filters?: {
+        status?: AppointmentStatus[];
+        upcoming?: boolean;
+        limit?: number;
+    },
+    supabaseClient?: SupabaseClient<Database>,
+    context?: PatientContext
+): Promise<{ appointments: AppointmentWithDetails[]; error?: string }> {
+    const supabase = supabaseClient ?? await createClient();
 
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-        return { appointments: [], error: "Not authenticated" };
-    }
-
-    // Get patient profile
-    const { data: profileData } = await supabase
-        .from("profiles")
-        .select("id, role")
-        .eq("user_id", user.id)
-        .single();
-
-    const profile = profileData as { id: string; role: string } | null;
-    if (!profile || profile.role !== "patient") {
+    if (context?.role && context.role !== "patient") {
         return { appointments: [], error: "Not a patient profile" };
     }
 
-    const { data: patientProfileData } = await supabase
-        .from("patient_profiles")
-        .select("id")
-        .eq("profile_id", profile.id)
-        .single();
+    let patientProfileId = context?.patientProfileId;
 
-    const patientProfile = patientProfileData as { id: string } | null;
-    if (!patientProfile) {
-        return { appointments: [], error: "Patient profile not found" };
+    if (!patientProfileId) {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+            return { appointments: [], error: "Not authenticated" };
+        }
+
+        // Get patient profile
+        const { data: profileData } = await supabase
+            .from("profiles")
+            .select("id, role")
+            .eq("user_id", user.id)
+            .single();
+
+        const profile = profileData as { id: string; role: string } | null;
+        if (!profile || profile.role !== "patient") {
+            return { appointments: [], error: "Not a patient profile" };
+        }
+
+        const { data: patientProfileData } = await supabase
+            .from("patient_profiles")
+            .select("id")
+            .eq("profile_id", profile.id)
+            .single();
+
+        const patientProfile = patientProfileData as { id: string } | null;
+        if (!patientProfile) {
+            return { appointments: [], error: "Patient profile not found" };
+        }
+
+        patientProfileId = patientProfile.id;
     }
+
+    const resolvedPatientProfileId = patientProfileId as string;
 
     // Build query
     let query = supabase
@@ -253,7 +339,7 @@ export async function getPatientAppointments(filters?: {
                 )
             )
         `)
-        .eq("patient_profile_id", patientProfile.id)
+        .eq("patient_profile_id", resolvedPatientProfileId)
         .order("scheduled_start", { ascending: filters?.upcoming !== false });
 
     if (filters?.status && filters.status.length > 0) {
@@ -391,6 +477,9 @@ export async function cancelAppointmentAsPatient(
         ).catch(err => console.error("Failed to send cancellation notification:", err));
     }
 
+    const userIds = await getUserIdsForAppointment(supabase, appointmentId);
+    revalidateAppointmentCaches([user.id, userIds.doctorUserId, userIds.patientUserId]);
+
     return { success: true };
 }
 
@@ -401,41 +490,57 @@ export async function cancelAppointmentAsPatient(
 /**
  * Get doctor's appointments
  */
-export async function getDoctorAppointments(filters?: {
-    status?: AppointmentStatus[];
-    date?: string; // YYYY-MM-DD
-    upcoming?: boolean;
-    limit?: number;
-}): Promise<{ appointments: AppointmentWithDetails[]; error?: string }> {
-    const supabase = await createClient();
+export async function getDoctorAppointments(
+    filters?: {
+        status?: AppointmentStatus[];
+        date?: string; // YYYY-MM-DD
+        upcoming?: boolean;
+        limit?: number;
+    },
+    supabaseClient?: SupabaseClient<Database>,
+    context?: DoctorContext
+): Promise<{ appointments: AppointmentWithDetails[]; error?: string }> {
+    const supabase = supabaseClient ?? await createClient();
 
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-        return { appointments: [], error: "Not authenticated" };
-    }
-
-    // Get doctor profile
-    const { data: profileData } = await supabase
-        .from("profiles")
-        .select("id, role")
-        .eq("user_id", user.id)
-        .single();
-
-    const profile = profileData as { id: string; role: string } | null;
-    if (!profile || profile.role !== "doctor") {
+    if (context?.role && context.role !== "doctor") {
         return { appointments: [], error: "Not a doctor profile" };
     }
 
-    const { data: doctorProfileData } = await supabase
-        .from("doctor_profiles")
-        .select("id")
-        .eq("profile_id", profile.id)
-        .single();
+    let doctorProfileId = context?.doctorProfileId;
 
-    const doctorProfile = doctorProfileData as { id: string } | null;
-    if (!doctorProfile) {
-        return { appointments: [], error: "Doctor profile not found" };
+    if (!doctorProfileId) {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+            return { appointments: [], error: "Not authenticated" };
+        }
+
+        // Get doctor profile
+        const { data: profileData } = await supabase
+            .from("profiles")
+            .select("id, role")
+            .eq("user_id", user.id)
+            .single();
+
+        const profile = profileData as { id: string; role: string } | null;
+        if (!profile || profile.role !== "doctor") {
+            return { appointments: [], error: "Not a doctor profile" };
+        }
+
+        const { data: doctorProfileData } = await supabase
+            .from("doctor_profiles")
+            .select("id")
+            .eq("profile_id", profile.id)
+            .single();
+
+        const doctorProfile = doctorProfileData as { id: string } | null;
+        if (!doctorProfile) {
+            return { appointments: [], error: "Doctor profile not found" };
+        }
+
+        doctorProfileId = doctorProfile.id;
     }
+
+    const resolvedDoctorProfileId = doctorProfileId as string;
 
     // Build query
     let query = supabase
@@ -451,7 +556,7 @@ export async function getDoctorAppointments(filters?: {
                 )
             )
         `)
-        .eq("doctor_profile_id", doctorProfile.id)
+        .eq("doctor_profile_id", resolvedDoctorProfileId)
         .order("scheduled_start", { ascending: true });
 
     if (filters?.status && filters.status.length > 0) {
@@ -547,6 +652,9 @@ export async function cancelAppointmentAsDoctor(
         return { success: false, error: error.message };
     }
 
+    const { doctorUserId, patientUserId } = await getUserIdsForAppointment(supabase, appointmentId);
+    revalidateAppointmentCaches([doctorUserId || user.id, patientUserId]);
+
     return { success: true };
 }
 
@@ -602,6 +710,9 @@ export async function joinWaitingRoom(
         console.error("Error joining waiting room:", error);
         return { success: false, error: error.message };
     }
+
+    const { doctorUserId } = await getUserIdsForAppointment(supabase, appointmentId);
+    revalidateAppointmentCaches([user.id, doctorUserId]);
 
     return { success: true };
 }
@@ -722,6 +833,9 @@ export async function startConsultation(
         // Don't fail the whole operation, just log
     }
 
+    const { doctorUserId, patientUserId } = await getUserIdsForAppointment(supabase, appointmentId);
+    revalidateAppointmentCaches([doctorUserId || user.id, patientUserId]);
+
     return { success: true, roomUrl };
 }
 
@@ -786,6 +900,9 @@ export async function resetAppointmentToScheduled(
         .delete()
         .eq("appointment_id", appointmentId);
 
+    const { doctorUserId, patientUserId } = await getUserIdsForAppointment(supabase, appointmentId);
+    revalidateAppointmentCaches([doctorUserId || user.id, patientUserId]);
+
     return { success: true };
 }
 
@@ -848,6 +965,9 @@ export async function endConsultation(
         .update({ ended_at: new Date().toISOString() })
         .eq("appointment_id", appointmentId);
 
+    const { doctorUserId, patientUserId } = await getUserIdsForAppointment(supabase, appointmentId);
+    revalidateAppointmentCaches([doctorUserId || user.id, patientUserId]);
+
     return { success: true };
 }
 
@@ -898,6 +1018,9 @@ export async function markNoShow(
         console.error("Error marking no-show:", error);
         return { success: false, error: error.message };
     }
+
+    const { doctorUserId, patientUserId } = await getUserIdsForAppointment(supabase, appointmentId);
+    revalidateAppointmentCaches([doctorUserId || user.id, patientUserId]);
 
     return { success: true };
 }
@@ -1256,6 +1379,9 @@ export async function rescheduleAppointment(data: {
         console.error("Error rescheduling appointment:", updateError);
         return { success: false, error: updateError.message };
     }
+
+    const { doctorUserId, patientUserId } = await getUserIdsForAppointment(supabase, data.appointmentId);
+    revalidateAppointmentCaches([doctorUserId, patientUserId]);
 
     return { success: true };
 }
