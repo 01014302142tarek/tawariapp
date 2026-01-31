@@ -407,27 +407,38 @@ export function QueueVideoCall({
 
     // End call (doctor only)
     const handleEndCall = useCallback(async () => {
+        console.log("[VideoCall] handleEndCall started, userRole:", userRole);
         setEnding(true);
 
         try {
             // If doctor, mark consultation as completed FIRST (before leaving call)
             // This ensures we get the appointment ID and can show the prescription modal
             if (userRole === "doctor") {
+                console.log("[VideoCall] Doctor ending call, calling endQueueConsultation...");
                 const result = await endQueueConsultation(queueEntryId);
+                console.log("[VideoCall] endQueueConsultation result:", result);
+
                 if (result.success) {
+                    console.log("[VideoCall] Consultation ended successfully, setting up prescription modal");
                     // Set flag BEFORE leaving call to prevent auto-navigation
                     showingPostCallRef.current = true;
+                    console.log("[VideoCall] showingPostCallRef set to true");
 
                     // Store IDs for prescription creation
                     setCreatedAppointmentId(result.appointmentId || null);
                     setPatientProfileId(result.patientProfileId || null);
+                    console.log("[VideoCall] IDs set - appointmentId:", result.appointmentId, "patientProfileId:", result.patientProfileId);
+
                     // Show prescription prompt
                     setPostCallPhase("prescription_prompt");
+                    console.log("[VideoCall] postCallPhase set to prescription_prompt");
 
                     // NOW leave the call (won't navigate due to flag)
                     if (callFrameRef.current) {
                         try {
+                            console.log("[VideoCall] Leaving Daily call...");
                             await callFrameRef.current.leave();
+                            console.log("[VideoCall] Left Daily call successfully");
                         } catch (leaveErr) {
                             console.warn("[VideoCall] Error leaving call:", leaveErr);
                         }
@@ -435,11 +446,15 @@ export function QueueVideoCall({
 
                     setEnding(false);
                     setShowEndConfirm(false);
+                    console.log("[VideoCall] handleEndCall complete, modal should be visible now");
                     return; // Don't navigate - showing prescription modal
+                } else {
+                    console.error("[VideoCall] endQueueConsultation failed:", result.error);
                 }
             }
 
             // Only reach here on error or non-doctor - leave and navigate
+            console.log("[VideoCall] Falling through to navigation (error or non-doctor)");
             if (callFrameRef.current) {
                 try {
                     await callFrameRef.current.leave();
@@ -623,6 +638,17 @@ export function QueueVideoCall({
             handleCallEnded();
         }
     };
+
+    // Debug: log render state
+    console.log("[VideoCall] Render state:", {
+        userRole,
+        postCallPhase,
+        consultationEnded,
+        createdAppointmentId,
+        patientProfileId,
+        callState,
+        showingPostCall: showingPostCallRef.current,
+    });
 
     return (
         <div className={cn("h-[100dvh] flex flex-col", isRTL && "rtl")}>
@@ -817,11 +843,14 @@ export function QueueVideoCall({
                     </div>
                 )}
 
-                {/* Daily.co Container */}
+                {/* Daily.co Container - hide when showing post-call modals */}
                 <div
                     ref={containerRef}
                     className="absolute inset-0 bg-slate-900"
-                    style={{ minHeight: "400px" }}
+                    style={{
+                        minHeight: "400px",
+                        display: postCallPhase !== "none" ? "none" : "block"
+                    }}
                 />
             </div>
 
