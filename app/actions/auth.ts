@@ -1,6 +1,6 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { loginLimiter, passwordResetLimiter } from "@/lib/rate-limit";
 import { headers } from "next/headers";
 
@@ -191,4 +191,90 @@ export async function signOut(): Promise<{ success: boolean; error?: string }> {
     }
 
     return { success: true };
+}
+
+/**
+ * Sign up a doctor with email and password (auto-confirms email)
+ * Uses admin API to bypass email confirmation requirement for doctor onboarding
+ * Rate limited: 5 attempts per 15 minutes per IP
+ */
+export async function signUpDoctor(
+    email: string,
+    password: string,
+    metadata?: { fullName?: string; phone?: string }
+): Promise<{ success: boolean; error?: string; retryAfter?: number }> {
+    const clientIP = await getClientIP();
+    const rateLimitKey = `signup:${clientIP}`;
+
+    // Check rate limit
+    const rateLimit = await loginLimiter.check(rateLimitKey);
+    if (!rateLimit.allowed) {
+        return {
+            success: false,
+            error: "Too many signup attempts. Please try again later.",
+            retryAfter: rateLimit.retryAfter ?? undefined,
+        };
+    }
+
+    try {
+        const adminClient = await createAdminClient();
+        const normalizedEmail = email.toLowerCase().trim();
+
+        // Create user with admin API and auto-confirm email
+        // This allows doctors to complete onboarding immediately
+        const { data, error: createError } = await adminClient.auth.admin.createUser({
+            email: normalizedEmail,
+            password,
+            email_confirm: true, // Auto-confirm to allow immediate onboarding
+            user_metadata: {
+                full_name: metadata?.fullName,
+                phone: metadata?.phone,
+                role: "doctor",
+            },
+        });
+
+        if (createError) {
+            // Handle duplicate email error specifically
+            if (createError.message.includes("already been registered") ||
+                createError.message.includes("already exists")) {
+                return {
+                    success: false,
+                    error: "An account with this email already exists. Please sign in instead.",
+                };
+            }
+            return {
+                success: false,
+                error: createError.message,
+            };
+        }
+
+        if (!data.user) {
+            return {
+                success: false,
+                error: "Failed to create user account",
+            };
+        }
+
+        // Now sign in the user to establish a session
+        const supabase = await createClient();
+        const { error: signInError } = await supabase.auth.signInWithPassword({
+            email: normalizedEmail,
+            password,
+        });
+
+        if (signInError) {
+            return {
+                success: false,
+                error: "Account created but sign-in failed. Please try logging in.",
+            };
+        }
+
+        return { success: true };
+    } catch (error) {
+        console.error("Doctor signup error:", error);
+        return {
+            success: false,
+            error: "An unexpected error occurred. Please try again.",
+        };
+    }
 }

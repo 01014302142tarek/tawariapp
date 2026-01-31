@@ -293,11 +293,12 @@ export async function completeOnboarding(data: DoctorOnboardingData): Promise<{ 
 
     // Save specialty if provided
     if (data.specialty) {
+        // Use maybeSingle() to avoid throwing errors when no match is found
         const { data: specDataRaw } = await supabase
             .from("specializations")
             .select("id")
             .or(`name_en.eq.${data.specialty},name_ar.eq.${data.specialty}`)
-            .single();
+            .maybeSingle();
 
         const specData = specDataRaw as { id: string } | null;
         if (specData) {
@@ -305,17 +306,17 @@ export async function completeOnboarding(data: DoctorOnboardingData): Promise<{ 
                 .from("doctor_profiles")
                 .select("id")
                 .eq("profile_id", profile.id)
-                .single();
+                .maybeSingle();
 
             const doctorProfile = doctorProfileRaw as { id: string } | null;
             if (doctorProfile) {
-                // Check if already exists
+                // Check if already exists (use maybeSingle to avoid error on no match)
                 const { data: existing } = await supabase
                     .from("doctor_specializations")
                     .select("id")
                     .eq("doctor_profile_id", doctorProfile.id)
                     .eq("specialization_id", specData.id)
-                    .single();
+                    .maybeSingle();
 
                 if (!existing) {
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -9,6 +9,7 @@ const PROFILE_CACHE_KEY = "tawari_profile_cache";
 import {
     signInWithPassword as serverSignIn,
     signUpWithPassword as serverSignUp,
+    signUpDoctor as serverSignUpDoctor,
 } from "@/app/actions/auth";
 import {
     type FullProfile,
@@ -156,8 +157,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         password: string,
         metadata?: { fullName?: string; phone?: string; role?: string }
     ): Promise<AuthResult> => {
-        // Use rate-limited server action
-        const result = await serverSignUp(email, password, metadata);
+        // Use doctor-specific signup for doctors (auto-confirms email for onboarding)
+        // This ensures doctors can complete the onboarding flow without email confirmation blocking them
+        const isDoctor = metadata?.role === "doctor";
+        const result = isDoctor
+            ? await serverSignUpDoctor(email, password, { fullName: metadata?.fullName, phone: metadata?.phone })
+            : await serverSignUp(email, password, metadata);
 
         if (!result.success) {
             return {
@@ -165,6 +170,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 retryAfter: result.retryAfter,
             };
         }
+
+        // After successful server-side auth, refresh the client session
+        // The auth state change listener will update the UI
+        await supabase.auth.getSession();
 
         return { error: null };
     };
