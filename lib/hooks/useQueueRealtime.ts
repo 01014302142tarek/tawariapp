@@ -40,45 +40,37 @@ export function useOnlineDoctors(initialDoctors: OnlineDoctor[] = []) {
 
     useEffect(() => {
         const supabase = createClient();
-        let channel: RealtimeChannel;
-
-        const setupSubscription = async () => {
-            channel = supabase
-                .channel("online-doctors")
-                .on(
-                    "postgres_changes",
-                    {
-                        event: "UPDATE",
-                        schema: "public",
-                        table: "doctor_profiles",
-                        filter: "verification_status=eq.verified",
-                    },
-                    (payload) => {
-                        const updated = payload.new as OnlineDoctor;
-                        setDoctors((prev) => {
-                            const existing = prev.find((d) => d.id === updated.id);
-                            if (existing) {
-                                return prev.map((d) =>
-                                    d.id === updated.id ? { ...d, ...updated } : d
-                                );
-                            } else if (updated.is_online) {
-                                return [...prev, updated];
-                            }
-                            return prev;
-                        });
-                    }
-                )
-                .subscribe((status) => {
-                    setIsConnected(status === "SUBSCRIBED");
-                });
-        };
-
-        setupSubscription();
+        const channel: RealtimeChannel = supabase
+            .channel("online-doctors")
+            .on(
+                "postgres_changes",
+                {
+                    event: "UPDATE",
+                    schema: "public",
+                    table: "doctor_profiles",
+                    filter: "verification_status=eq.verified",
+                },
+                (payload) => {
+                    const updated = payload.new as OnlineDoctor;
+                    setDoctors((prev) => {
+                        const existing = prev.find((d) => d.id === updated.id);
+                        if (existing) {
+                            return prev.map((d) =>
+                                d.id === updated.id ? { ...d, ...updated } : d
+                            );
+                        } else if (updated.is_online) {
+                            return [...prev, updated];
+                        }
+                        return prev;
+                    });
+                }
+            )
+            .subscribe((status) => {
+                setIsConnected(status === "SUBSCRIBED");
+            });
 
         return () => {
-            if (channel) {
-                supabase.removeChannel(channel);
-            }
+            supabase.removeChannel(channel);
         };
     }, []);
 

@@ -7,6 +7,8 @@
  * Documentation: https://docs.paymob.com/docs/accept-standard-redirect
  */
 
+import crypto from "crypto";
+
 // Paymob API endpoints
 const PAYMOB_API_BASE = "https://accept.paymob.com/api";
 
@@ -339,8 +341,6 @@ export function verifyWebhookSignature(
 
     // Paymob HMAC verification
     // The signature is calculated from concatenated sorted keys
-    // eslint-disable-next-line @typescript-eslint/no-require-imports -- Dynamic import inside function scope
-    const crypto = require("crypto");
 
     try {
         const parsedBody = JSON.parse(requestBody);
