@@ -64,7 +64,7 @@ function PulsingGlow({ color = "teal" }: { color?: "teal" | "red" | "amber" }) {
 }
 
 interface AnimatedActionButtonProps {
-    children: React.ReactNode;
+    children?: React.ReactNode;
     href?: string;
     onClick?: () => void;
     icon?: React.ReactNode;
