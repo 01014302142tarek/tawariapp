@@ -131,6 +131,8 @@ function InputField({
     onTogglePassword,
     isRTL,
     isDark = true,
+    onFocus,
+    onBlur,
 }: {
     icon: React.ReactNode;
     type: string;
@@ -142,6 +144,8 @@ function InputField({
     onTogglePassword?: () => void;
     isRTL?: boolean;
     isDark?: boolean;
+    onFocus?: () => void;
+    onBlur?: () => void;
 }) {
     // Browsers enforce LTR for type="tel" and type="email", so we use type="text" in RTL mode
     const inputType = showPasswordToggle
@@ -158,6 +162,8 @@ function InputField({
                 placeholder={placeholder}
                 value={value}
                 onChange={onChange}
+                onFocus={onFocus}
+                onBlur={onBlur}
                 dir={isRTL ? "rtl" : "ltr"}
                 style={isRTL ? { textAlign: 'right' } : undefined}
                 className={`w-full py-3.5 border rounded-xl placeholder-gray-500 focus:ring-2 focus:ring-teal-500/20 transition-all outline-none ${isRTL ? 'pr-12 pl-12' : 'pl-12 pr-12'
@@ -187,6 +193,7 @@ export default function RegisterPage() {
 
     const isDark = theme === "dark";
     const [showPassword, setShowPassword] = useState(false);
+    const [passwordFocused, setPasswordFocused] = useState(false);
     const [formData, setFormData] = useState({
         fullName: "",
         email: "",
@@ -197,9 +204,35 @@ export default function RegisterPage() {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
+    // Password validation - moderate: 8+ chars + at least 2 of: uppercase, lowercase, number, special
+    const validatePassword = (password: string) => {
+        const checks = {
+            minLength: password.length >= 8,
+            hasUppercase: /[A-Z]/.test(password),
+            hasLowercase: /[a-z]/.test(password),
+            hasNumber: /[0-9]/.test(password),
+            hasSpecial: /[!@#$%^&*(),.?":{}|<>]/.test(password),
+        };
+        const typeCount = [checks.hasUppercase, checks.hasLowercase, checks.hasNumber, checks.hasSpecial].filter(Boolean).length;
+        return {
+            ...checks,
+            hasAtLeastTwoTypes: typeCount >= 2,
+            isValid: checks.minLength && typeCount >= 2,
+        };
+    };
+
+    const passwordValidation = validatePassword(formData.password);
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError(null);
+
+        // Check password validity
+        if (!passwordValidation.isValid) {
+            setError(text.passwordError);
+            return;
+        }
+
         setIsSubmitting(true);
 
         const { error } = await signUp(formData.email, formData.password, {
@@ -242,6 +275,16 @@ export default function RegisterPage() {
             orContinue: "Or continue with",
             alreadyHave: "Already have an account?",
             loginLink: "Login here",
+            passwordRequirements: {
+                title: "Password must have:",
+                minLength: "At least 8 characters",
+                twoTypes: "At least 2 of the following:",
+                uppercase: "Uppercase letter (A-Z)",
+                lowercase: "Lowercase letter (a-z)",
+                number: "Number (0-9)",
+                special: "Special character (!@#$%...)",
+            },
+            passwordError: "Please create a stronger password",
         },
         ar: {
             title: "إنشاء حسابك",
@@ -259,6 +302,16 @@ export default function RegisterPage() {
             orContinue: "أو المتابعة باستخدام",
             alreadyHave: "لديك حساب بالفعل؟",
             loginLink: "سجل دخولك هنا",
+            passwordRequirements: {
+                title: "يجب أن تحتوي كلمة المرور على:",
+                minLength: "8 أحرف على الأقل",
+                twoTypes: "نوعين على الأقل مما يلي:",
+                uppercase: "حرف كبير (A-Z)",
+                lowercase: "حرف صغير (a-z)",
+                number: "رقم (0-9)",
+                special: "رمز خاص (!@#$%...)",
+            },
+            passwordError: "يرجى إنشاء كلمة مرور أقوى",
         },
     };
 
@@ -347,18 +400,76 @@ export default function RegisterPage() {
                             isDark={isDark}
                         />
 
-                        <InputField
-                            icon={Icons.lock}
-                            type="password"
-                            placeholder={text.password}
-                            value={formData.password}
-                            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                            showPasswordToggle
-                            showPassword={showPassword}
-                            onTogglePassword={() => setShowPassword(!showPassword)}
-                            isRTL={isRTL}
-                            isDark={isDark}
-                        />
+                        <div>
+                            <InputField
+                                icon={Icons.lock}
+                                type="password"
+                                placeholder={text.password}
+                                value={formData.password}
+                                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                                showPasswordToggle
+                                showPassword={showPassword}
+                                onTogglePassword={() => setShowPassword(!showPassword)}
+                                isRTL={isRTL}
+                                isDark={isDark}
+                                onFocus={() => setPasswordFocused(true)}
+                                onBlur={() => setPasswordFocused(false)}
+                            />
+
+                            {/* Password Requirements */}
+                            {(passwordFocused || formData.password.length > 0) && (
+                                <div className={`mt-2 p-3 rounded-lg text-xs space-y-1.5 ${isDark ? 'bg-slate-800/50 border border-white/10' : 'bg-gray-50 border border-gray-200'}`}>
+                                    <p className={`font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                                        {text.passwordRequirements.title}
+                                    </p>
+                                    <div className="flex items-center gap-2">
+                                        <span className={passwordValidation.minLength ? 'text-teal-500' : (isDark ? 'text-gray-500' : 'text-gray-400')}>
+                                            {passwordValidation.minLength ? '✓' : '○'}
+                                        </span>
+                                        <span className={passwordValidation.minLength ? (isDark ? 'text-teal-400' : 'text-teal-600') : (isDark ? 'text-gray-400' : 'text-gray-500')}>
+                                            {text.passwordRequirements.minLength}
+                                        </span>
+                                    </div>
+                                    <p className={`font-medium mt-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                                        {text.passwordRequirements.twoTypes}
+                                    </p>
+                                    <div className="grid grid-cols-2 gap-1">
+                                        <div className="flex items-center gap-2">
+                                            <span className={passwordValidation.hasUppercase ? 'text-teal-500' : (isDark ? 'text-gray-500' : 'text-gray-400')}>
+                                                {passwordValidation.hasUppercase ? '✓' : '○'}
+                                            </span>
+                                            <span className={passwordValidation.hasUppercase ? (isDark ? 'text-teal-400' : 'text-teal-600') : (isDark ? 'text-gray-400' : 'text-gray-500')}>
+                                                {text.passwordRequirements.uppercase}
+                                            </span>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <span className={passwordValidation.hasLowercase ? 'text-teal-500' : (isDark ? 'text-gray-500' : 'text-gray-400')}>
+                                                {passwordValidation.hasLowercase ? '✓' : '○'}
+                                            </span>
+                                            <span className={passwordValidation.hasLowercase ? (isDark ? 'text-teal-400' : 'text-teal-600') : (isDark ? 'text-gray-400' : 'text-gray-500')}>
+                                                {text.passwordRequirements.lowercase}
+                                            </span>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <span className={passwordValidation.hasNumber ? 'text-teal-500' : (isDark ? 'text-gray-500' : 'text-gray-400')}>
+                                                {passwordValidation.hasNumber ? '✓' : '○'}
+                                            </span>
+                                            <span className={passwordValidation.hasNumber ? (isDark ? 'text-teal-400' : 'text-teal-600') : (isDark ? 'text-gray-400' : 'text-gray-500')}>
+                                                {text.passwordRequirements.number}
+                                            </span>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <span className={passwordValidation.hasSpecial ? 'text-teal-500' : (isDark ? 'text-gray-500' : 'text-gray-400')}>
+                                                {passwordValidation.hasSpecial ? '✓' : '○'}
+                                            </span>
+                                            <span className={passwordValidation.hasSpecial ? (isDark ? 'text-teal-400' : 'text-teal-600') : (isDark ? 'text-gray-400' : 'text-gray-500')}>
+                                                {text.passwordRequirements.special}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
 
                         {/* Terms Checkbox */}
                         <div className="flex items-start gap-3">

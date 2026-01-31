@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { useGlobalTheme } from "@/app/context/GlobalThemeContext";
 import { GlowingCard } from "@/components/ui/glowing-card";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useI18n } from "@/app/i18n";
 import { useAuth } from "@/app/context/AuthContext";
 import { completeOnboarding, getDoctorOnboardingStatus, uploadDoctorAvatar, uploadDoctorCredentials } from "@/app/actions/doctor-onboarding";
@@ -1251,7 +1252,7 @@ const Step3Practice = ({ formData, setFormData, isDark, text }: { formData: Form
 );
 
 // Step 4: Verification & Bio
-const Step4Verification = ({ formData, setFormData, isDark, text, licensePreview, onLicenseUpload, onExtraUpload, onExtraRemove }: { formData: FormData; setFormData: (data: FormData) => void; isDark: boolean; text: OnboardingText; licensePreview?: string; onLicenseUpload?: (name: string, file?: File) => void; onExtraUpload?: (file: File) => void; onExtraRemove?: (docName: string) => void }) => {
+const Step4Verification = ({ formData, setFormData, isDark, text, language, licensePreview, onLicenseUpload, onExtraUpload, onExtraRemove }: { formData: FormData; setFormData: (data: FormData) => void; isDark: boolean; text: OnboardingText; language: string; licensePreview?: string; onLicenseUpload?: (name: string, file?: File) => void; onExtraUpload?: (file: File) => void; onExtraRemove?: (docName: string) => void }) => {
 
     const handleRemoveExtra = (docName: string) => {
         const newDocs = formData.extraDocuments.filter(d => d !== docName);
@@ -1358,7 +1359,14 @@ const Step4Verification = ({ formData, setFormData, isDark, text, licensePreview
                         className="mt-0.5 w-4 h-4 rounded border-gray-300 text-teal-500 focus:ring-teal-500"
                     />
                     <span className={cn("text-xs", isDark ? "text-gray-300" : "text-gray-600")}>
-                        {text.step4.terms} <span className="text-teal-500">{text.step4.termsLink}</span> {text.step4.and} <span className="text-teal-500">{text.step4.privacyLink}</span>
+                        {text.step4.terms}{" "}
+                        <Link href={`/${language}/terms`} target="_blank" className="text-teal-500 hover:text-teal-400 underline">
+                            {text.step4.termsLink}
+                        </Link>{" "}
+                        {text.step4.and}{" "}
+                        <Link href={`/${language}/privacy`} target="_blank" className="text-teal-500 hover:text-teal-400 underline">
+                            {text.step4.privacyLink}
+                        </Link>
                     </span>
                 </label>
             </div>
@@ -1794,6 +1802,7 @@ export default function DoctorOnboarding() {
                     setFormData={setFormData}
                     isDark={isDark}
                     text={text}
+                    language={language}
                     licensePreview={licensePreview}
                     onLicenseUpload={handleLicenseUpload}
                     onExtraUpload={(file) => setExtraFiles(prev => [...prev, file])}
