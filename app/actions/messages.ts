@@ -4,6 +4,7 @@ import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { messageLimiter } from "@/lib/rate-limit";
 import { messageSchema, validateInput } from "@/lib/validations";
 import { notifyNewMessage } from "./notifications";
+import { uploadChatAttachment, getChatAttachmentSignedUrl } from "@/lib/supabase/storage";
 
 // ============================================
 // Types
@@ -630,4 +631,73 @@ export async function getDoctorContacts(): Promise<{
     });
 
     return { contacts: Array.from(contactMap.values()) };
+}
+
+// ============================================
+// File Attachment Functions
+// ============================================
+
+/**
+ * Upload a file attachment for a message
+ * Returns the URL and type to be used when calling sendMessage
+ */
+export async function uploadMessageAttachment(data: {
+    conversationId: string;
+    recipientProfileId: string;
+    fileBase64: string;
+    fileName: string;
+}): Promise<{
+    attachmentUrl: string | null;
+    attachmentType: string | null;
+    error?: string;
+}> {
+    const supabase = await createClient();
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+        return { attachmentUrl: null, attachmentType: null, error: "Not authenticated" };
+    }
+
+    const { data: profileData } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("user_id", user.id)
+        .single();
+
+    const profile = profileData as { id: string } | null;
+    if (!profile) {
+        return { attachmentUrl: null, attachmentType: null, error: "Profile not found" };
+    }
+
+    // Upload the file
+    const uploadResult = await uploadChatAttachment(
+        profile.id,
+        data.conversationId,
+        data.fileBase64,
+        data.fileName
+    );
+
+    if (uploadResult.error || !uploadResult.url) {
+        return {
+            attachmentUrl: null,
+            attachmentType: null,
+            error: uploadResult.error || "Failed to upload file",
+        };
+    }
+
+    return {
+        attachmentUrl: uploadResult.path, // Store path, not signed URL (URLs expire)
+        attachmentType: uploadResult.attachmentType,
+    };
+}
+
+/**
+ * Get a fresh signed URL for viewing an attachment
+ * Call this when displaying attachments since signed URLs expire
+ */
+export async function getAttachmentUrl(
+    attachmentPath: string,
+    conversationId: string
+): Promise<{ url: string | null; error?: string }> {
+    return getChatAttachmentSignedUrl(attachmentPath, conversationId);
 }

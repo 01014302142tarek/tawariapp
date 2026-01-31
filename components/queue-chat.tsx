@@ -8,6 +8,8 @@ import {
     getMessages,
     sendMessage,
     getOrCreateConversation,
+    uploadMessageAttachment,
+    getAttachmentUrl,
     type MessageWithSender,
 } from "@/app/actions/messages";
 
@@ -53,6 +55,21 @@ const Icons = {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
         </svg>
     ),
+    attachment: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+        </svg>
+    ),
+    document: (
+        <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+    ),
+    download: (
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+        </svg>
+    ),
 };
 
 // ============================================
@@ -77,8 +94,16 @@ export function QueueChat({
     const [sendError, setSendError] = useState<string | null>(null);
     const [unreadCount, setUnreadCount] = useState(0);
     const [hasNewMessage, setHasNewMessage] = useState(false);
+
+    // File attachment state
+    const [selectedFile, setSelectedFile] = useState<File | null>(null);
+    const [filePreview, setFilePreview] = useState<string | null>(null);
+    const [uploading, setUploading] = useState(false);
+    const [attachmentUrls, setAttachmentUrls] = useState<Record<string, string>>({});
+
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
     const pollingRef = useRef<NodeJS.Timeout | null>(null);
 
     // Initialize conversation
@@ -162,31 +187,113 @@ export function QueueChat({
         }
     }, [isOpen]);
 
-    // Send message
-    const handleSendMessage = async () => {
-        if (!newMessage.trim() || !conversationId || sending) return;
+    // Auto-resize textarea
+    const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+        setNewMessage(e.target.value);
+        // Auto-resize
+        e.target.style.height = "auto";
+        e.target.style.height = Math.min(e.target.scrollHeight, 100) + "px";
+    };
+
+    // Handle file selection
+    const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        // Validate file type
+        const allowedTypes = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
+        if (!allowedTypes.includes(file.type)) {
+            setSendError(isRTL ? "نوع الملف غير مدعوم. يرجى اختيار صورة أو PDF." : "File type not supported. Please select an image or PDF.");
+            setTimeout(() => setSendError(null), 5000);
+            return;
+        }
+
+        // Validate file size (10MB max)
+        if (file.size > 10 * 1024 * 1024) {
+            setSendError(isRTL ? "الملف كبير جداً. الحد الأقصى 10 ميجابايت." : "File too large. Maximum size is 10MB.");
+            setTimeout(() => setSendError(null), 5000);
+            return;
+        }
+
+        setSelectedFile(file);
+
+        // Create preview for images
+        if (file.type.startsWith("image/")) {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setFilePreview(reader.result as string);
+            };
+            reader.readAsDataURL(file);
+        } else {
+            // For PDFs, just show the filename
+            setFilePreview(null);
+        }
+    };
+
+    // Clear selected file
+    const clearSelectedFile = () => {
+        setSelectedFile(null);
+        setFilePreview(null);
+        if (fileInputRef.current) {
+            fileInputRef.current.value = "";
+        }
+    };
+
+    // Send message with optional attachment
+    const handleSendWithAttachment = async () => {
+        if ((!newMessage.trim() && !selectedFile) || !conversationId || sending || uploading) return;
 
         setSending(true);
         setSendError(null);
+
         try {
-            console.log("[QueueChat] Sending message:", {
-                conversationId,
-                recipientProfileId,
-                contentLength: newMessage.trim().length,
-                currentProfileId,
-            });
+            let attachmentUrl: string | null = null;
+            let attachmentType: string | null = null;
+
+            // Upload file if selected
+            if (selectedFile) {
+                setUploading(true);
+
+                // Convert file to base64
+                const base64 = await new Promise<string>((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onloadend = () => resolve(reader.result as string);
+                    reader.onerror = reject;
+                    reader.readAsDataURL(selectedFile);
+                });
+
+                const uploadResult = await uploadMessageAttachment({
+                    conversationId,
+                    recipientProfileId,
+                    fileBase64: base64,
+                    fileName: selectedFile.name,
+                });
+
+                setUploading(false);
+
+                if (uploadResult.error) {
+                    setSendError(uploadResult.error);
+                    setTimeout(() => setSendError(null), 5000);
+                    setSending(false);
+                    return;
+                }
+
+                attachmentUrl = uploadResult.attachmentUrl;
+                attachmentType = uploadResult.attachmentType;
+            }
+
+            // Send message
             const result = await sendMessage({
                 conversationId,
                 recipientProfileId,
-                content: newMessage.trim(),
+                content: newMessage.trim() || (selectedFile ? `📎 ${selectedFile.name}` : ""),
+                messageType: attachmentUrl ? "file" : "text",
+                attachmentUrl: attachmentUrl || undefined,
+                attachmentType: attachmentType || undefined,
             });
 
-            console.log("[QueueChat] Send result:", result);
-
             if (result.error) {
-                console.error("[QueueChat] Send error:", result.error);
                 setSendError(result.error);
-                // Clear error after 5 seconds
                 setTimeout(() => setSendError(null), 5000);
                 return;
             }
@@ -194,7 +301,8 @@ export function QueueChat({
             if (result.message) {
                 setMessages(prev => [...prev, { ...result.message!, sender: undefined }]);
                 setNewMessage("");
-                // Reset textarea height
+                clearSelectedFile();
+
                 if (textareaRef.current) {
                     textareaRef.current.style.height = "auto";
                 }
@@ -208,25 +316,23 @@ export function QueueChat({
             setTimeout(() => setSendError(null), 5000);
         } finally {
             setSending(false);
+            setUploading(false);
         }
     };
 
-    // Handle key down for Shift+Enter (new line) and Enter (send)
-    const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-        if (e.key === "Enter" && !e.shiftKey) {
-            e.preventDefault();
-            handleSendMessage();
-        }
-        // Shift+Enter will naturally create a new line
-    };
+    // Load attachment URL for display
+    const loadAttachmentUrl = useCallback(async (attachmentPath: string, messageId: string) => {
+        if (!conversationId || attachmentUrls[messageId]) return;
 
-    // Auto-resize textarea
-    const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-        setNewMessage(e.target.value);
-        // Auto-resize
-        e.target.style.height = "auto";
-        e.target.style.height = Math.min(e.target.scrollHeight, 100) + "px";
-    };
+        try {
+            const result = await getAttachmentUrl(attachmentPath, conversationId);
+            if (result.url) {
+                setAttachmentUrls(prev => ({ ...prev, [messageId]: result.url! }));
+            }
+        } catch (err) {
+            console.error("[QueueChat] Error loading attachment URL:", err);
+        }
+    }, [conversationId, attachmentUrls]);
 
     // Format time
     const formatTime = (isoString: string): string => {
@@ -338,6 +444,13 @@ export function QueueChat({
                                         ) : (
                                             messages.map((msg) => {
                                                 const isOwnMessage = msg.sender_profile_id === currentProfileId;
+                                                const hasAttachment = msg.attachment_url && msg.attachment_type;
+
+                                                // Load attachment URL if needed
+                                                if (hasAttachment && !attachmentUrls[msg.id]) {
+                                                    loadAttachmentUrl(msg.attachment_url!, msg.id);
+                                                }
+
                                                 return (
                                                     <motion.div
                                                         key={msg.id}
@@ -358,7 +471,73 @@ export function QueueChat({
                                                                         : "bg-gray-100 text-slate-900 rounded-bl-sm"
                                                             )}
                                                         >
-                                                            <p className="text-sm">{msg.content}</p>
+                                                            {/* Attachment display */}
+                                                            {hasAttachment && (
+                                                                <div className="mb-2">
+                                                                    {msg.attachment_type === "image" ? (
+                                                                        // Image attachment
+                                                                        attachmentUrls[msg.id] ? (
+                                                                            <a
+                                                                                href={attachmentUrls[msg.id]}
+                                                                                target="_blank"
+                                                                                rel="noopener noreferrer"
+                                                                                className="block"
+                                                                            >
+                                                                                <img
+                                                                                    src={attachmentUrls[msg.id]}
+                                                                                    alt="Attachment"
+                                                                                    className="max-w-full rounded-lg max-h-40 object-cover cursor-pointer hover:opacity-90 transition-opacity"
+                                                                                />
+                                                                            </a>
+                                                                        ) : (
+                                                                            <div className={cn(
+                                                                                "w-full h-20 rounded-lg flex items-center justify-center",
+                                                                                isOwnMessage ? "bg-teal-600" : isDark ? "bg-slate-700" : "bg-gray-200"
+                                                                            )}>
+                                                                                <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin opacity-50" />
+                                                                            </div>
+                                                                        )
+                                                                    ) : (
+                                                                        // Document attachment
+                                                                        <a
+                                                                            href={attachmentUrls[msg.id] || "#"}
+                                                                            target="_blank"
+                                                                            rel="noopener noreferrer"
+                                                                            className={cn(
+                                                                                "flex items-center gap-2 p-2 rounded-lg transition-colors",
+                                                                                isOwnMessage
+                                                                                    ? "bg-teal-600 hover:bg-teal-700"
+                                                                                    : isDark
+                                                                                        ? "bg-slate-700 hover:bg-slate-600"
+                                                                                        : "bg-gray-200 hover:bg-gray-300",
+                                                                                !attachmentUrls[msg.id] && "pointer-events-none opacity-70"
+                                                                            )}
+                                                                        >
+                                                                            <div className={cn(
+                                                                                "w-8 h-8 rounded flex items-center justify-center flex-shrink-0",
+                                                                                isOwnMessage ? "bg-teal-700" : isDark ? "bg-slate-600" : "bg-gray-300"
+                                                                            )}>
+                                                                                {Icons.document}
+                                                                            </div>
+                                                                            <div className="flex-1 min-w-0">
+                                                                                <p className="text-xs font-medium truncate">
+                                                                                    {isRTL ? "مستند PDF" : "PDF Document"}
+                                                                                </p>
+                                                                            </div>
+                                                                            {attachmentUrls[msg.id] && (
+                                                                                <div className="flex-shrink-0">
+                                                                                    {Icons.download}
+                                                                                </div>
+                                                                            )}
+                                                                        </a>
+                                                                    )}
+                                                                </div>
+                                                            )}
+
+                                                            {/* Message content (hide if it's just the file emoji placeholder) */}
+                                                            {msg.content && !msg.content.startsWith("📎") && (
+                                                                <p className="text-sm">{msg.content}</p>
+                                                            )}
                                                             <p className={cn(
                                                                 "text-[10px] mt-1",
                                                                 isOwnMessage ? "text-teal-100" : isDark ? "text-slate-500" : "text-gray-400"
@@ -391,19 +570,105 @@ export function QueueChat({
                                                 </motion.div>
                                             )}
                                         </AnimatePresence>
+
+                                        {/* File preview */}
+                                        <AnimatePresence>
+                                            {selectedFile && (
+                                                <motion.div
+                                                    initial={{ opacity: 0, height: 0 }}
+                                                    animate={{ opacity: 1, height: "auto" }}
+                                                    exit={{ opacity: 0, height: 0 }}
+                                                    className={cn(
+                                                        "mb-2 p-2 rounded-lg flex items-center gap-2",
+                                                        isDark ? "bg-slate-800" : "bg-gray-100"
+                                                    )}
+                                                >
+                                                    {filePreview ? (
+                                                        <img
+                                                            src={filePreview}
+                                                            alt="Preview"
+                                                            className="w-12 h-12 object-cover rounded"
+                                                        />
+                                                    ) : (
+                                                        <div className={cn(
+                                                            "w-12 h-12 rounded flex items-center justify-center",
+                                                            isDark ? "bg-slate-700 text-slate-400" : "bg-gray-200 text-gray-500"
+                                                        )}>
+                                                            {Icons.document}
+                                                        </div>
+                                                    )}
+                                                    <div className="flex-1 min-w-0">
+                                                        <p className={cn(
+                                                            "text-sm font-medium truncate",
+                                                            isDark ? "text-white" : "text-slate-900"
+                                                        )}>
+                                                            {selectedFile.name}
+                                                        </p>
+                                                        <p className={cn(
+                                                            "text-xs",
+                                                            isDark ? "text-slate-400" : "text-gray-500"
+                                                        )}>
+                                                            {(selectedFile.size / 1024).toFixed(1)} KB
+                                                        </p>
+                                                    </div>
+                                                    <button
+                                                        type="button"
+                                                        onClick={clearSelectedFile}
+                                                        className={cn(
+                                                            "p-1 rounded-full transition-colors",
+                                                            isDark ? "hover:bg-slate-600 text-slate-400" : "hover:bg-gray-200 text-gray-500"
+                                                        )}
+                                                    >
+                                                        {Icons.close}
+                                                    </button>
+                                                </motion.div>
+                                            )}
+                                        </AnimatePresence>
+
                                         <form
                                             onSubmit={(e) => {
                                                 e.preventDefault();
-                                                handleSendMessage();
+                                                handleSendWithAttachment();
                                             }}
                                             className="flex gap-2 items-end"
                                         >
+                                            {/* Hidden file input */}
+                                            <input
+                                                ref={fileInputRef}
+                                                type="file"
+                                                accept="image/jpeg,image/png,image/webp,application/pdf"
+                                                onChange={handleFileSelect}
+                                                className="hidden"
+                                            />
+
+                                            {/* Attachment button */}
+                                            <button
+                                                type="button"
+                                                onClick={() => fileInputRef.current?.click()}
+                                                disabled={sending || uploading}
+                                                className={cn(
+                                                    "p-2 rounded-lg transition-colors flex-shrink-0",
+                                                    isDark
+                                                        ? "hover:bg-slate-700 text-slate-400 hover:text-teal-400"
+                                                        : "hover:bg-gray-200 text-gray-500 hover:text-teal-500",
+                                                    "disabled:opacity-50 disabled:cursor-not-allowed"
+                                                )}
+                                                title={isRTL ? "إرفاق ملف" : "Attach file"}
+                                            >
+                                                {Icons.attachment}
+                                            </button>
+
                                             <textarea
                                                 ref={textareaRef}
-                                                placeholder={isRTL ? "اكتب رسالة... (Shift+Enter للسطر الجديد)" : "Type a message... (Shift+Enter for new line)"}
+                                                placeholder={isRTL ? "اكتب رسالة..." : "Type a message..."}
                                                 value={newMessage}
                                                 onChange={handleTextareaChange}
-                                                onKeyDown={handleKeyDown}
+                                                onKeyDown={(e) => {
+                                                    if (e.key === "Enter" && !e.shiftKey) {
+                                                        e.preventDefault();
+                                                        handleSendWithAttachment();
+                                                    }
+                                                }}
                                                 rows={1}
                                                 className={cn(
                                                     "flex-1 px-3 py-2 rounded-lg text-sm border transition-colors resize-none overflow-hidden",
@@ -415,10 +680,10 @@ export function QueueChat({
                                             />
                                             <button
                                                 type="submit"
-                                                disabled={!newMessage.trim() || sending}
+                                                disabled={(!newMessage.trim() && !selectedFile) || sending || uploading}
                                                 className="px-3 py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
                                             >
-                                                {sending ? (
+                                                {sending || uploading ? (
                                                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                                                 ) : (
                                                     Icons.send

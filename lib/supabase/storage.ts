@@ -559,3 +559,172 @@ export async function deleteMedicalDocument(
 
     return { success: true };
 }
+
+// ============================================
+// Chat Attachment Storage
+// ============================================
+
+const MAX_CHAT_ATTACHMENT_SIZE = 10 * 1024 * 1024; // 10MB
+
+export type ChatAttachmentType = "image" | "document";
+
+/**
+ * Upload a chat attachment (image or document)
+ * Used for sending files in messages between patients and doctors
+ * @param senderProfileId - The sender's profile ID
+ * @param conversationId - The conversation ID
+ * @param fileBase64 - Base64 encoded file
+ * @param fileName - Original file name
+ * @returns The storage path and signed URL
+ */
+export async function uploadChatAttachment(
+    senderProfileId: string,
+    conversationId: string,
+    fileBase64: string,
+    fileName: string
+): Promise<{
+    path: string | null;
+    url: string | null;
+    attachmentType: ChatAttachmentType | null;
+    error?: string;
+}> {
+    const supabase = await createClient();
+
+    // Verify caller is authenticated
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+        return { path: null, url: null, attachmentType: null, error: "Not authenticated" };
+    }
+
+    // Verify the sender profile belongs to the current user
+    const { data: profileData } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("user_id", user.id)
+        .single();
+
+    const profile = profileData as { id: string } | null;
+    if (!profile || profile.id !== senderProfileId) {
+        return { path: null, url: null, attachmentType: null, error: "Unauthorized" };
+    }
+
+    // Validate file extension
+    const ext = fileName.split(".").pop()?.toLowerCase();
+    if (!ext || !["jpg", "jpeg", "png", "pdf", "webp"].includes(ext)) {
+        return { path: null, url: null, attachmentType: null, error: "Invalid file type. Only JPG, PNG, WebP, and PDF are allowed." };
+    }
+
+    // Determine attachment type
+    const attachmentType: ChatAttachmentType = ext === "pdf" ? "document" : "image";
+
+    // Convert base64 to buffer
+    const base64Data = fileBase64.replace(/^data:(image|application)\/\w+;base64,/, "");
+    const buffer = Buffer.from(base64Data, "base64");
+
+    // Validate file size
+    if (!validateFileSize(buffer, MAX_CHAT_ATTACHMENT_SIZE)) {
+        return { path: null, url: null, attachmentType: null, error: "File too large. Maximum size is 10MB." };
+    }
+
+    // Validate file content (magic bytes) to prevent malicious file uploads
+    if (!validateFileContent(buffer, ext)) {
+        return { path: null, url: null, attachmentType: null, error: "File content does not match the expected type. Please upload a valid file." };
+    }
+
+    // Generate unique file path using UUID to prevent path traversal
+    // Structure: conversations/{conversationId}/{fileId}_{sanitizedName}
+    const fileId = crypto.randomUUID();
+    const sanitizedName = fileName.replace(/[^a-zA-Z0-9.-]/g, "_").substring(0, 100);
+    const filePath = `conversations/${conversationId}/${fileId}_${sanitizedName}`;
+
+    // Determine content type
+    let contentType = "application/octet-stream";
+    if (ext === "pdf") {
+        contentType = "application/pdf";
+    } else if (["jpg", "jpeg"].includes(ext)) {
+        contentType = "image/jpeg";
+    } else if (ext === "png") {
+        contentType = "image/png";
+    } else if (ext === "webp") {
+        contentType = "image/webp";
+    }
+
+    // Upload to medical_documents bucket (private, with RLS)
+    const { error: uploadError } = await supabase.storage
+        .from("medical_documents")
+        .upload(filePath, buffer, {
+            contentType,
+            upsert: false,
+        });
+
+    if (uploadError) {
+        return { path: null, url: null, attachmentType: null, error: uploadError.message };
+    }
+
+    // Generate signed URL for immediate access (1 hour expiry)
+    const { data: signedUrlData } = await supabase.storage
+        .from("medical_documents")
+        .createSignedUrl(filePath, 3600);
+
+    return {
+        path: filePath,
+        url: signedUrlData?.signedUrl || null,
+        attachmentType,
+    };
+}
+
+/**
+ * Get a signed URL for a chat attachment
+ * Verifies the user is a participant in the conversation
+ * @param path - The storage path of the attachment
+ * @param conversationId - The conversation ID (for authorization)
+ * @param expiresIn - URL expiration in seconds (default 1 hour)
+ */
+export async function getChatAttachmentSignedUrl(
+    path: string,
+    conversationId: string,
+    expiresIn: number = 3600
+): Promise<{ url: string | null; error?: string }> {
+    const supabase = await createClient();
+
+    // Verify caller is authenticated
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+        return { url: null, error: "Not authenticated" };
+    }
+
+    const { data: profileData } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("user_id", user.id)
+        .single();
+
+    const profile = profileData as { id: string } | null;
+    if (!profile) {
+        return { url: null, error: "Profile not found" };
+    }
+
+    // Verify user is a participant in this conversation
+    // Check if they have any messages in this conversation (as sender or recipient)
+    const { data: messageCheck, error: checkError } = await supabase
+        .from("messages")
+        .select("id")
+        .eq("conversation_id", conversationId)
+        .or(`sender_profile_id.eq.${profile.id},recipient_profile_id.eq.${profile.id}`)
+        .limit(1);
+
+    if (checkError || !messageCheck || messageCheck.length === 0) {
+        return { url: null, error: "Unauthorized - Not a participant in this conversation" };
+    }
+
+    // Generate signed URL
+    const { data, error } = await supabase.storage
+        .from("medical_documents")
+        .createSignedUrl(path, expiresIn);
+
+    if (error) {
+        return { url: null, error: error.message };
+    }
+
+    return { url: data.signedUrl };
+}
