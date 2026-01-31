@@ -21,6 +21,10 @@ export interface QueueEntry {
     daily_room_url?: string;
     payment_status: "pending" | "completed_mock" | "completed" | "refunded" | "failed";
     payment_amount: number;
+    // Patient details (fetched via FK joins)
+    patient_name?: string;
+    patient_avatar?: string;
+    patient_messaging_profile_id?: string;
 }
 
 export interface OnlineDoctor {
@@ -90,15 +94,35 @@ export function useDoctorQueue(doctorProfileId: string | null) {
         if (!doctorProfileId) return;
 
         const supabase = createClient();
+        // Fetch queue entries with patient profile data via FK joins
         const { data } = await supabase
             .from("consultation_queue")
-            .select("*")
+            .select(`
+                *,
+                patient_profiles!consultation_queue_patient_profile_id_fkey (
+                    id,
+                    profiles!patient_profiles_profile_id_fkey (
+                        id,
+                        full_name,
+                        avatar_url
+                    )
+                )
+            `)
             .eq("doctor_profile_id", doctorProfileId)
             .eq("status", "waiting")
             .order("position", { ascending: true });
 
         if (data) {
-            setQueue(data as QueueEntry[]);
+            // Transform to include patient details at top level
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const transformed = data.map((entry: any) => ({
+                ...entry,
+                patient_name: entry.patient_profiles?.profiles?.full_name || undefined,
+                patient_avatar: entry.patient_profiles?.profiles?.avatar_url || undefined,
+                patient_messaging_profile_id: entry.patient_profiles?.profiles?.id || undefined,
+                patient_profiles: undefined, // Remove nested object
+            }));
+            setQueue(transformed as QueueEntry[]);
         }
     }, [doctorProfileId]);
 
@@ -123,15 +147,20 @@ export function useDoctorQueue(doctorProfileId: string | null) {
                 },
                 (payload) => {
                     if (payload.eventType === "INSERT") {
-                        const newEntry = payload.new as QueueEntry;
-                        if (newEntry.status === "waiting") {
-                            setQueue((prev) => [...prev, newEntry].sort((a, b) => a.position - b.position));
-                        }
+                        // Realtime payloads don't include FK relationships
+                        // Refresh the queue to get patient details
+                        refreshQueue();
                     } else if (payload.eventType === "UPDATE") {
                         const updated = payload.new as QueueEntry;
                         if (updated.status === "waiting") {
+                            // Preserve patient details from existing entry
                             setQueue((prev) =>
-                                prev.map((e) => (e.id === updated.id ? updated : e))
+                                prev.map((e) => (e.id === updated.id ? {
+                                    ...updated,
+                                    patient_name: e.patient_name,
+                                    patient_avatar: e.patient_avatar,
+                                    patient_messaging_profile_id: e.patient_messaging_profile_id,
+                                } : e))
                                     .sort((a, b) => a.position - b.position)
                             );
                         } else {

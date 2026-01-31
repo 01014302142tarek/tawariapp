@@ -440,8 +440,10 @@ export default function DoctorUrgentCarePage() {
                 const existing = prev.find(p => p.id === q.id);
                 return {
                     ...q,
-                    patient_name: existing?.patient_name || "Patient",
-                    patient_avatar: existing?.patient_avatar,
+                    // Prefer queue's patient_name (from FK join), then existing, then fallback
+                    patient_name: q.patient_name || existing?.patient_name || "Patient",
+                    patient_avatar: q.patient_avatar || existing?.patient_avatar,
+                    patient_messaging_profile_id: q.patient_messaging_profile_id || existing?.patient_messaging_profile_id,
                 };
             });
             return updated;
