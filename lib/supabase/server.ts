@@ -4,10 +4,20 @@ import type { Database } from "@/lib/supabase/types";
 
 export async function createClient() {
     const cookieStore = await cookies();
+    const supabaseUrl =
+        process.env.NEXT_PUBLIC_SUPABASE_URL ??
+        process.env.NEXT_PUBLIC_TawariAppSUPABASE_URL;
+    const supabaseAnonKey =
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ??
+        process.env.NEXT_PUBLIC_TawariAppSUPABASE_ANON_KEY;
+
+    if (!supabaseUrl || !supabaseAnonKey) {
+        throw new Error("Missing Supabase environment variables");
+    }
 
     return createServerClient<Database>(
-        process.env.NEXT_PUBLIC_TawariAppSUPABASE_URL!,
-        process.env.NEXT_PUBLIC_TawariAppSUPABASE_ANON_KEY!,
+        supabaseUrl,
+        supabaseAnonKey,
         {
             cookies: {
                 getAll() {
@@ -32,10 +42,18 @@ export async function createClient() {
 // Admin client with service role for server-side operations that bypass RLS
 export async function createAdminClient() {
     const cookieStore = await cookies();
+    const supabaseUrl =
+        process.env.NEXT_PUBLIC_SUPABASE_URL ??
+        process.env.NEXT_PUBLIC_TawariAppSUPABASE_URL;
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+    if (!supabaseUrl || !serviceRoleKey) {
+        throw new Error("Missing Supabase environment variables");
+    }
 
     return createServerClient<Database>(
-        process.env.NEXT_PUBLIC_TawariAppSUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY!,
+        supabaseUrl,
+        serviceRoleKey,
         {
             cookies: {
                 getAll() {
@@ -57,9 +75,18 @@ export async function createAdminClient() {
 
 // Service-role client without cookies (safe to use inside cached functions)
 export async function createServiceRoleClient() {
+    const supabaseUrl =
+        process.env.NEXT_PUBLIC_SUPABASE_URL ??
+        process.env.NEXT_PUBLIC_TawariAppSUPABASE_URL;
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+    if (!supabaseUrl || !serviceRoleKey) {
+        throw new Error("Missing Supabase environment variables");
+    }
+
     return createServerClient<Database>(
-        process.env.NEXT_PUBLIC_TawariAppSUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY!,
+        supabaseUrl,
+        serviceRoleKey,
         {
             cookies: {
                 getAll() {
