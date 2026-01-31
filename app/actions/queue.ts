@@ -43,7 +43,7 @@ export interface OnlineDoctor {
     id: string;
     profile_id: string;
     full_name: string;
-    avatar_url?: string;
+    avatar_url?: string | null;
     specialty: string[];
     consultation_fee: number;
     rating_average: number;
@@ -711,8 +711,12 @@ export async function getOnlineDoctors(): Promise<{
         const avgMinutes = doc.average_consultation_minutes || 15;
 
         const specialties = (doc.doctor_specializations || [])
-            .map((ds: { specializations?: { name_en?: string } }) => ds.specializations?.name_en)
-            .filter(Boolean);
+            .map((ds) => ds.specializations?.name_en)
+            .filter((name): name is string => Boolean(name));
+
+        const consultationFee = Number(doc.consultation_fee ?? 0);
+        const ratingAverage = Number(doc.rating_average ?? 0);
+        const ratingCount = Number(doc.rating_count ?? 0);
 
         return {
             id: doc.id,
@@ -720,9 +724,9 @@ export async function getOnlineDoctors(): Promise<{
             full_name: doc.profiles.full_name,
             avatar_url: doc.profiles.avatar_url,
             specialty: specialties,
-            consultation_fee: parseFloat(doc.consultation_fee) || 0,
-            rating_average: parseFloat(doc.rating_average) || 0,
-            rating_count: doc.rating_count || 0,
+            consultation_fee: Number.isFinite(consultationFee) ? consultationFee : 0,
+            rating_average: Number.isFinite(ratingAverage) ? ratingAverage : 0,
+            rating_count: Number.isFinite(ratingCount) ? ratingCount : 0,
             is_online: doc.is_online,
             is_in_consultation: !!doc.current_queue_entry_id,
             queue_length: queueLength,
