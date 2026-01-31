@@ -583,9 +583,9 @@ export async function endQueueConsultation(
                 actual_start: queueEntry.consultation_started_at,
                 actual_end: endedAt.toISOString(),
                 status: "completed",
-                type: "urgent_care",
-                consultation_queue_id: queueEntryId,
-                payment_status: queueEntry.payment_status === "completed_mock" ? "completed" : queueEntry.payment_status,
+                // appointment_type only accepts 'scheduled' or 'on_demand', use on_demand for urgent care
+                appointment_type: "on_demand",
+                is_urgent: true, // Mark as urgent care
                 consultation_fee: queueEntry.payment_amount || 0, // Required NOT NULL field
                 chief_complaint: queueEntry.chief_complaint || null,
             })
