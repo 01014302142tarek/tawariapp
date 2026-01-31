@@ -1,21 +1,18 @@
 ## Summary
-<!-- Brief description of changes -->
+- 
 
-## Type of Change
-- [ ] Bug fix
-- [ ] New feature
-- [ ] Refactor
-- [ ] Documentation
-- [ ] Other: ___
+## Changes
+- 
 
-## Checklist
-- [ ] I have tested this locally
-- [ ] I have reviewed my own code
-- [ ] This doesn't expose any secrets or PII
-- [ ] This doesn't break existing functionality
+## Testing
+- [ ] `npm run lint`
+- [ ] `npm run typecheck`
+- [ ] `npm run build`
 
-## Security Considerations
-<!-- Does this touch auth, payments, prescriptions, or patient data? If yes, explain the changes -->
+## Security/Privacy (Telemedicine)
+- [ ] No patient data exposed in logs
+- [ ] No secrets committed
+- [ ] PHI/PII access reviewed (if applicable)
 
-## Screenshots (if UI changes)
-<!-- Add screenshots or screen recordings -->
+## Notes
+- 
