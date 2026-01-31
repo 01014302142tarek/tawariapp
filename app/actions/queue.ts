@@ -196,7 +196,9 @@ export async function getDoctorQueueStatus(): Promise<{
             .single();
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const rawCurrent = currentData as any;
-        if (rawCurrent) {
+        const isActive = rawCurrent && ["called", "in_consultation"].includes(rawCurrent.status);
+
+        if (isActive) {
             currentPatient = {
                 ...rawCurrent,
                 patient_name: rawCurrent.patient_profiles?.profiles?.full_name || "Patient",
@@ -204,6 +206,14 @@ export async function getDoctorQueueStatus(): Promise<{
                 patient_messaging_profile_id: rawCurrent.patient_profiles?.profiles?.id,
                 patient_profiles: undefined,
             };
+        } else {
+            // Clear stale current queue entry reference to allow calling next patient
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            await (supabase as any)
+                .from("doctor_profiles")
+                .update({ current_queue_entry_id: null })
+                .eq("id", doctor.id)
+                .eq("current_queue_entry_id", doctor.current_queue_entry_id);
         }
     }
 
