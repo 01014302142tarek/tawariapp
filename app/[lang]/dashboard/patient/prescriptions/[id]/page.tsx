@@ -57,8 +57,8 @@ const Icons = {
 export default function PrescriptionDetailPage() {
     const params = useParams();
     const router = useRouter();
-    const { isRTL, language } = useI18n();
-    const { isDark, textPrimary, textSecondary, textMuted } = useThemeStyles();
+    const { isRTL } = useI18n();
+    const { isDark, textPrimary, textMuted } = useThemeStyles();
     const prescriptionId = params.id as string;
 
     const [prescription, setPrescription] = useState<PrescriptionWithDetails | null>(null);

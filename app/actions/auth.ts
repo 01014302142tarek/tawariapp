@@ -1,7 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { loginLimiter, passwordResetLimiter, rateLimitResponse } from "@/lib/rate-limit";
+import { loginLimiter, passwordResetLimiter } from "@/lib/rate-limit";
 import { headers } from "next/headers";
 
 /**

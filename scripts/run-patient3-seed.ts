@@ -30,7 +30,6 @@ async function runSeedSQL() {
     .filter(s => s.length > 0 && !s.startsWith('--'));
 
   let successCount = 0;
-  const errorCount = 0;
 
   for (const statement of statements) {
     if (statement.toLowerCase().startsWith('select')) {
@@ -42,17 +41,19 @@ async function runSeedSQL() {
       const { error } = await supabase.rpc('exec_sql', { sql: statement });
       if (error) {
         // Try direct query for inserts
-        const { error: directError } = await supabase.from('_').select().limit(0);
+        await supabase.from('_').select().limit(0);
         // Actually, let's just run via postgres function
         throw error;
       }
       successCount++;
-    } catch (err) {
+    } catch {
       // Many of these might fail due to ON CONFLICT DO NOTHING being fine
       // Let's just continue
       successCount++;
     }
   }
+
+  console.log(`Processed ${successCount} SQL statements (best-effort)`);
 
   // Let's verify the data was inserted by checking counts
   console.log('\nVerifying patient3 data...\n');

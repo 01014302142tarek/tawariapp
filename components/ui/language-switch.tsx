@@ -15,7 +15,6 @@ export function LanguageSwitch({ isDark = false, className }: LanguageSwitchProp
 
     // Prevent hydration mismatch by only rendering dynamic content after mount
     useEffect(() => {
-        // eslint-disable-next-line react-hooks/set-state-in-effect -- Hydration flag
         setMounted(true);
     }, []);
 

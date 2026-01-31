@@ -12,7 +12,6 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey, {
 
 async function verifyAnalytics() {
     const drNourDoctorProfileId = "db44e99b-5491-4241-b5a0-14d2668668bf";
-    const drNourProfileId = "04dc906b-a477-4f3f-82df-30e15be19332";
 
     console.log("=== Verifying Analytics Data for Dr. Nour ===\n");
 
@@ -21,6 +20,10 @@ async function verifyAnalytics() {
         .from("appointments")
         .select("patient_profile_id")
         .eq("doctor_profile_id", drNourDoctorProfileId);
+
+    if (patientsError) {
+        console.error("Error fetching patients:", patientsError.message);
+    }
 
     const uniquePatients = new Set(patients?.map(p => p.patient_profile_id));
     console.log(`1. TOTAL PATIENTS: ${uniquePatients.size}`);
@@ -32,6 +35,10 @@ async function verifyAnalytics() {
         .from("appointments")
         .select("id, status, scheduled_start")
         .eq("doctor_profile_id", drNourDoctorProfileId);
+
+    if (consultationsError) {
+        console.error("Error fetching consultations:", consultationsError.message);
+    }
 
     const completedConsultations = consultations?.filter(c => c.status === "completed") || [];
     console.log(`2. TOTAL CONSULTATIONS (completed): ${completedConsultations.length}`);
@@ -48,6 +55,10 @@ async function verifyAnalytics() {
         .select("amount, status, appointment_id")
         .in("appointment_id", consultations?.map(c => c.id) || []);
 
+    if (transactionsError) {
+        console.error("Error fetching transactions:", transactionsError.message);
+    }
+
     const completedTransactions = transactions?.filter(t => t.status === "completed") || [];
     const totalRevenue = completedTransactions.reduce((sum, t) => sum + (t.amount || 0), 0);
     console.log(`3. REVENUE: ${totalRevenue} EGP`);
@@ -63,6 +74,10 @@ async function verifyAnalytics() {
         .from("reviews")
         .select("rating, comment")
         .eq("doctor_profile_id", drNourDoctorProfileId);
+
+    if (reviewsError) {
+        console.error("Error fetching reviews:", reviewsError.message);
+    }
 
     const avgRating = reviews?.length
         ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1)
@@ -100,6 +115,10 @@ async function verifyAnalytics() {
         .select("rating_average, rating_count, total_consultations")
         .eq("id", drNourDoctorProfileId)
         .single();
+
+    if (dpError) {
+        console.error("Error fetching doctor profile:", dpError.message);
+    }
 
     console.log(`6. DOCTOR PROFILE STATS:`);
     console.log(`   Rating Average: ${doctorProfile?.rating_average}`);

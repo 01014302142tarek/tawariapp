@@ -599,7 +599,6 @@ const OTPDialog = ({
     onClose,
     phone,
     isDark,
-    isRTL,
     text,
     onVerifySuccess,
 }: {
@@ -607,7 +606,6 @@ const OTPDialog = ({
     onClose: () => void;
     phone: string;
     isDark: boolean;
-    isRTL: boolean;
     text: {
         otpTitle: string;
         otpSubtitle: string;
@@ -642,7 +640,6 @@ const OTPDialog = ({
         sendInitialOTP();
 
         // Start countdown
-        // eslint-disable-next-line react-hooks/set-state-in-effect -- Timer initialization on modal open
         setResendTimer(25);
         setCanResend(false);
         const interval = setInterval(() => {
@@ -983,7 +980,6 @@ const Step1Welcome = ({
     setFormData,
     isDark,
     text,
-    isRTL,
     onPhotoUpload,
     phoneValidation,
     onPhoneChange,
@@ -997,7 +993,6 @@ const Step1Welcome = ({
     setFormData: (data: FormData) => void;
     isDark: boolean;
     text: OnboardingText;
-    isRTL: boolean;
     onPhotoUpload?: (file: File) => void;
     phoneValidation: { status: "idle" | "valid" | "invalid" | "exists"; isValidating: boolean };
     onPhoneChange: (phone: string) => void;
@@ -1127,7 +1122,6 @@ const Step1Welcome = ({
                         onClose={onCloseOtpDialog}
                         phone={formData.phone}
                         isDark={isDark}
-                        isRTL={isRTL}
                         text={{
                             otpTitle: text.step1.otpTitle,
                             otpSubtitle: text.step1.otpSubtitle,
@@ -1598,7 +1592,6 @@ export default function DoctorOnboarding() {
     // Pre-fill form with user data if logged in
     useEffect(() => {
         if (profile) {
-            // eslint-disable-next-line react-hooks/set-state-in-effect -- Pre-filling form with user profile data
             setFormData(prev => ({
                 ...prev,
                 fullName: profile.profile.full_name || prev.fullName,
@@ -1781,7 +1774,6 @@ export default function DoctorOnboarding() {
                         setFormData={setFormData}
                         isDark={isDark}
                         text={text}
-                        isRTL={isRTL}
                         onPhotoUpload={(file) => setPhotoFile(file)}
                         phoneValidation={phoneValidation}
                         onPhoneChange={handlePhoneChange}

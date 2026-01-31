@@ -20,9 +20,7 @@ import {
     deleteLabResult,
     updateConditionStatus,
     uploadMedicalDocument,
-    getMedicalDocumentSignedUrl,
     getPatientProfileId,
-    addMedicalRecordAttachment,
     uploadLabResultDocument,
     getLabResultDocumentUrl,
     type MedicalRecord,
@@ -196,7 +194,6 @@ export default function RecordsPage() {
     }, []);
 
     useEffect(() => {
-        // eslint-disable-next-line react-hooks/set-state-in-effect -- Initial data load on mount is valid
         loadData();
     }, [loadData]);
 

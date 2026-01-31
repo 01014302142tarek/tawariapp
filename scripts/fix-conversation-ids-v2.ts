@@ -41,7 +41,7 @@ async function fixConversationIds() {
 
         console.log(`\nUpdating conversation: ${oldId} -> ${newId}`);
 
-        const { error: updateError, count } = await supabase
+        const { error: updateError } = await supabase
             .from("messages")
             .update({ conversation_id: newId })
             .eq("conversation_id", oldId);

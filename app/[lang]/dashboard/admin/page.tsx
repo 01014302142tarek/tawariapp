@@ -225,7 +225,6 @@ export default function AdminDashboard() {
 
     // Helper function to format relative time
     const formatRelativeTime = (timestamp: string): string => {
-        // eslint-disable-next-line react-hooks/purity -- Relative time formatting inherently needs current time
         const now = Date.now();
         const then = new Date(timestamp).getTime();
         const diffMinutes = Math.floor((now - then) / (1000 * 60));

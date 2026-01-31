@@ -1,20 +1,13 @@
 "use client";
 
-import React, { useState, useRef, useEffect, useCallback } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useI18n } from "@/app/i18n";
 import { useRealtimeNotifications } from "@/lib/useRealtimeNotifications";
-import {
-    getNotifications,
-    getUnreadCount,
-    markAsRead,
-    markAllAsRead,
-    type Notification,
-    type NotificationType,
-} from "@/app/actions/notifications";
+import { type Notification, type NotificationType } from "@/app/actions/notifications";
 
 // Icons for notification types
 const NotificationIcons: Record<NotificationType, React.ReactNode> = {

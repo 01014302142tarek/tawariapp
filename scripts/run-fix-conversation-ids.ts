@@ -24,7 +24,7 @@ async function fixConversationIds() {
     console.log("Fixing invalid conversation IDs in messages table...\n");
 
     // Fix conversation 1
-    const { error: error1, count: count1 } = await supabase
+    const { error: error1 } = await supabase
         .from("messages")
         .update({ conversation_id: "c0ff0001-0001-0001-0001-000000000001" })
         .eq("conversation_id", "conv0001-0001-0001-0001-000000000001");

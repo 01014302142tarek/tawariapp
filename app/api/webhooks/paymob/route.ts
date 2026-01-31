@@ -41,7 +41,6 @@ export async function POST(request: NextRequest) {
         const paymobTransactionId = obj.id.toString();
         const paymobOrderId = obj.order?.id?.toString() || "";
         const success = obj.success && !obj.error_occured;
-        const amountCents = obj.amount_cents;
         const paymentMethod = obj.source_data?.type || "card";
 
         // Log webhook receipt (transaction ID only, no sensitive data)

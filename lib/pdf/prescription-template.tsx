@@ -6,7 +6,6 @@ import {
     View,
     StyleSheet,
     Image,
-    Font,
 } from "@react-pdf/renderer";
 import type { DocumentProps } from "@react-pdf/renderer";
 
@@ -244,16 +243,6 @@ function formatDate(dateString: string): string {
     });
 }
 
-// Format date in Arabic
-function formatDateArabic(dateString: string): string {
-    const date = new Date(dateString);
-    return date.toLocaleDateString("ar-EG", {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-    });
-}
-
 // The PDF Document Component
 export function PrescriptionPdf({ data, logoBase64 }: PrescriptionPdfProps): React.ReactElement<DocumentProps> {
     const referenceNumber = `RX-${data.id.slice(0, 8).toUpperCase()}`;
@@ -264,6 +253,8 @@ export function PrescriptionPdf({ data, logoBase64 }: PrescriptionPdfProps): Rea
                 {/* Header with Logo and Title */}
                 <View style={styles.header}>
                     {logoBase64 && (
+                        // react-pdf Image doesn't support alt text.
+                        // eslint-disable-next-line jsx-a11y/alt-text
                         <Image
                             style={styles.logo}
                             src={`data:image/png;base64,${logoBase64}`}

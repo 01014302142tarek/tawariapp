@@ -40,7 +40,6 @@ function PaymentSuccessContent() {
 
     const transactionId = searchParams.get("transaction");
 
-    const [loading, setLoading] = useState(true);
     const [amount, setAmount] = useState<number | null>(null);
 
     // Trigger confetti on mount
@@ -61,7 +60,6 @@ function PaymentSuccessContent() {
                     setAmount(result.amount);
                 }
             }
-            setLoading(false);
         }
 
         fetchStatus();

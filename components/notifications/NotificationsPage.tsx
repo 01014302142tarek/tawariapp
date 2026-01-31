@@ -137,10 +137,10 @@ export default function NotificationsPage({ isDark, dashboardType }: Notificatio
     const LIMIT = 20;
 
     // Fetch notifications
-    const fetchNotifications = useCallback(async (reset = false) => {
+    const fetchNotifications = useCallback(async ({ reset = false, page: pageOverride = 0 }: { reset?: boolean; page?: number } = {}) => {
         setLoading(true);
         try {
-            const offset = reset ? 0 : page * LIMIT;
+            const offset = reset ? 0 : pageOverride * LIMIT;
             const result = await getNotifications({
                 limit: LIMIT,
                 offset,
@@ -161,18 +161,18 @@ export default function NotificationsPage({ isDark, dashboardType }: Notificatio
         } finally {
             setLoading(false);
         }
-    }, [page, filter]);
+    }, [filter]);
 
     // Initial fetch and filter change
     useEffect(() => {
         setPage(0);
-        fetchNotifications(true);
-    }, [filter]);
+        fetchNotifications({ reset: true, page: 0 });
+    }, [filter, fetchNotifications]);
 
     // Load more
     useEffect(() => {
         if (page > 0) {
-            fetchNotifications();
+            fetchNotifications({ page });
         }
     }, [page, fetchNotifications]);
 

@@ -104,7 +104,6 @@ export default function AppointmentsPage({
 
     useEffect(() => {
         if (!initialLoaded) {
-            // eslint-disable-next-line react-hooks/set-state-in-effect -- Initial data load on mount is valid
             loadAppointments();
         }
     }, [initialLoaded, loadAppointments]);

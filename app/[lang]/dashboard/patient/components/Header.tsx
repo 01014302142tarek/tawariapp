@@ -353,7 +353,7 @@ const UserDropdown = ({
 
 export default function Header({ onMenuClick }: { onMenuClick?: () => void }) {
     const { theme, themeMode, setThemeMode } = useTheme();
-    const { t, isRTL, language } = useI18n();
+    const { isRTL, language } = useI18n();
     const { profile, signOut, isLoading } = useAuth();
     const router = useRouter();
     const isDark = theme === "dark";
@@ -375,7 +375,6 @@ export default function Header({ onMenuClick }: { onMenuClick?: () => void }) {
     const [currentDate, setCurrentDate] = useState("");
 
     useEffect(() => {
-        // eslint-disable-next-line react-hooks/set-state-in-effect -- Required to avoid hydration mismatch (server/client timezone)
         setCurrentDate(new Date().toLocaleDateString(isRTL ? "ar-EG" : "en-US", {
             weekday: "long",
             year: "numeric",

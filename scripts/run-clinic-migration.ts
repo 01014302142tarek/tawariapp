@@ -63,7 +63,7 @@ async function runMigration() {
       } else {
         console.log(`  ✓ Executed: ${sql.substring(0, 60)}...`);
       }
-    } catch (err) {
+    } catch {
       console.log(`  Could not execute via RPC: ${sql.substring(0, 50)}...`);
     }
   }

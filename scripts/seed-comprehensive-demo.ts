@@ -718,6 +718,7 @@ async function runSqlSeedFile() {
     }
   }
 
+  console.log(`  Executed ${successCount} statements with ${errorCount} errors`);
   console.log(`  Processed ${statements.length} SQL statements`);
   console.log(`  Note: Run the SQL file directly in Supabase SQL Editor for best results\n`);
 }

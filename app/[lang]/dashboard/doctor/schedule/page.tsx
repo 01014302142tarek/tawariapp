@@ -68,8 +68,9 @@ export default function SchedulePage() {
 
     // Cleanup timers on unmount
     useEffect(() => {
+        const timers = savedTimersRef.current;
         return () => {
-            savedTimersRef.current.forEach(timer => clearTimeout(timer));
+            timers.forEach(timer => clearTimeout(timer));
         };
     }, []);
 
@@ -132,7 +133,6 @@ export default function SchedulePage() {
             slots: [],
             isActive: true,
         }));
-        // eslint-disable-next-line react-hooks/set-state-in-effect -- Initialize schedule once on mount
         setSchedule(initSchedule);
         loadData();
     }, [loadData]);

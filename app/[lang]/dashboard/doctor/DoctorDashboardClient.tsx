@@ -183,7 +183,6 @@ export default function Doctor2Dashboard({
     
     // State for dashboard data
     const [dashboardData, setDashboardData] = useState<DoctorDashboardData | null>(initialData);
-    const [_isLoading, setIsLoading] = useState(!initialData);
     const [hasFetched, setHasFetched] = useState(Boolean(initialData));
 
     // Handle hydration - only compute time-based values after mount
@@ -196,12 +195,10 @@ export default function Doctor2Dashboard({
         if (hasFetched) return;
 
         async function fetchDashboardData() {
-            setIsLoading(true);
             const result = await getDoctorDashboardData();
             if (result.data) {
                 setDashboardData(result.data);
             }
-            setIsLoading(false);
             setHasFetched(true);
         }
 
@@ -259,7 +256,6 @@ export default function Doctor2Dashboard({
 
     // Helper function to format relative time (defined before use)
     const formatRelativeTime = (timestamp: string): string => {
-        // eslint-disable-next-line react-hooks/purity -- Relative time formatting inherently needs current time
         const now = Date.now();
         const then = new Date(timestamp).getTime();
         const diffMinutes = Math.floor((now - then) / (1000 * 60));

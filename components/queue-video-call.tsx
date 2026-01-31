@@ -90,6 +90,58 @@ export function QueueVideoCall({
     const [createdAppointmentId, setCreatedAppointmentId] = useState<string | null>(null);
     const [patientProfileId, setPatientProfileId] = useState<string | null>(null);
 
+    // Handle call ended
+    const handleCallEnded = useCallback(() => {
+        if (onCallEnded) {
+            onCallEnded();
+        } else {
+            // Default navigation based on role
+            const basePath = userRole === "doctor"
+                ? `/${language}/dashboard/doctor/urgent-care`
+                : `/${language}/dashboard/patient/urgent-care`;
+            router.push(basePath);
+        }
+    }, [userRole, language, router, onCallEnded]);
+
+    // Check consultation status (for patients to detect when doctor ends the call)
+    const checkConsultationStatus = useCallback(async () => {
+        if (!isMountedRef.current || consultationEnded) return;
+
+        try {
+            const result = await getQueueEntryForCall(queueEntryId);
+            if (!isMountedRef.current) return;
+
+            if (result.success && result.entry) {
+                console.log("[VideoCall] Status check:", result.entry.status);
+                if (result.entry.status === "completed") {
+                    console.log("[VideoCall] Consultation completed");
+                    setConsultationEnded(true);
+
+                    // Clean up call
+                    if (callFrameRef.current) {
+                        try {
+                            await callFrameRef.current.leave();
+                        } catch (e) {
+                            console.warn("[VideoCall] Error leaving after consultation ended:", e);
+                        }
+                    }
+
+                    // If appointment ID is available, show review modal
+                    if (result.entry.appointment_id) {
+                        console.log("[VideoCall] Appointment ID found, showing review modal:", result.entry.appointment_id);
+                        setCreatedAppointmentId(result.entry.appointment_id);
+                        setPostCallPhase("review_prompt");
+                    } else {
+                        // No appointment ID, just redirect
+                        handleCallEnded();
+                    }
+                }
+            }
+        } catch (err) {
+            console.error("[VideoCall] Error checking consultation status:", err);
+        }
+    }, [queueEntryId, consultationEnded, handleCallEnded]);
+
     // Fetch token and join call
     const initializeCall = useCallback(async () => {
         // Prevent multiple simultaneous initializations
@@ -344,20 +396,7 @@ export function QueueVideoCall({
         } finally {
             isInitializingRef.current = false;
         }
-    }, [queueEntryId]);
-
-    // Handle call ended
-    const handleCallEnded = useCallback(() => {
-        if (onCallEnded) {
-            onCallEnded();
-        } else {
-            // Default navigation based on role
-            const basePath = userRole === "doctor"
-                ? `/${language}/dashboard/doctor/urgent-care`
-                : `/${language}/dashboard/patient/urgent-care`;
-            router.push(basePath);
-        }
-    }, [userRole, language, router, onCallEnded]);
+    }, [queueEntryId, callState, checkConsultationStatus, handleCallEnded, userRole]);
 
     // End call (doctor only)
     const handleEndCall = useCallback(async () => {
@@ -466,45 +505,6 @@ export function QueueVideoCall({
             }
         }
     }, [handleCallEnded, userRole, queueEntryId]);
-
-    // Check consultation status (for patients to detect when doctor ends the call)
-    const checkConsultationStatus = useCallback(async () => {
-        if (!isMountedRef.current || consultationEnded) return;
-
-        try {
-            const result = await getQueueEntryForCall(queueEntryId);
-            if (!isMountedRef.current) return;
-
-            if (result.success && result.entry) {
-                console.log("[VideoCall] Status check:", result.entry.status);
-                if (result.entry.status === "completed") {
-                    console.log("[VideoCall] Consultation completed");
-                    setConsultationEnded(true);
-
-                    // Clean up call
-                    if (callFrameRef.current) {
-                        try {
-                            await callFrameRef.current.leave();
-                        } catch (e) {
-                            console.warn("[VideoCall] Error leaving after consultation ended:", e);
-                        }
-                    }
-
-                    // If appointment ID is available, show review modal
-                    if (result.entry.appointment_id) {
-                        console.log("[VideoCall] Appointment ID found, showing review modal:", result.entry.appointment_id);
-                        setCreatedAppointmentId(result.entry.appointment_id);
-                        setPostCallPhase("review_prompt");
-                    } else {
-                        // No appointment ID, just redirect
-                        handleCallEnded();
-                    }
-                }
-            }
-        } catch (err) {
-            console.error("[VideoCall] Error checking consultation status:", err);
-        }
-    }, [queueEntryId, consultationEnded, handleCallEnded]);
 
     // Initialize on mount - only run once
     useEffect(() => {

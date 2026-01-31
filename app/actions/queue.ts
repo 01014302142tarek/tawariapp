@@ -670,8 +670,28 @@ export async function getOnlineDoctors(): Promise<{
         return { doctors: [], error: error.message };
     }
 
+    type OnlineDoctorRow = {
+        id: string;
+        profile_id: string;
+        consultation_fee: number | string | null;
+        rating_average: number | string | null;
+        rating_count: number | null;
+        is_online: boolean;
+        current_queue_entry_id: string | null;
+        average_consultation_minutes: number | null;
+        profiles: {
+            full_name: string;
+            avatar_url: string | null;
+        };
+        doctor_specializations: Array<{
+            specializations?: { name_en?: string | null } | null;
+        }> | null;
+    };
+
+    const doctorRows = (data as OnlineDoctorRow[] | null) || [];
+
     // Get queue counts for each doctor
-    const doctorIds = (data || []).map((d: { id: string }) => d.id);
+    const doctorIds = doctorRows.map((d) => d.id);
 
     const { data: queueData } = await supabase
         .from("consultation_queue")
@@ -686,12 +706,10 @@ export async function getOnlineDoctors(): Promise<{
     });
 
     // Transform data
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const doctors: OnlineDoctor[] = (data || []).map((doc: any) => {
+    const doctors: OnlineDoctor[] = doctorRows.map((doc) => {
         const queueLength = queueCounts[doc.id] || 0;
         const avgMinutes = doc.average_consultation_minutes || 15;
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const specialties = (doc.doctor_specializations || [])
             .map((ds: { specializations?: { name_en?: string } }) => ds.specializations?.name_en)
             .filter(Boolean);

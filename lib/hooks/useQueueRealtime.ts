@@ -108,7 +108,6 @@ export function useDoctorQueue(doctorProfileId: string | null) {
         const supabase = createClient();
 
         // Initial fetch
-        // eslint-disable-next-line react-hooks/set-state-in-effect -- Initial data load on mount is valid
         refreshQueue();
 
         // Subscribe to changes

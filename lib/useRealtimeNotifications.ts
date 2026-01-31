@@ -80,6 +80,65 @@ export function useRealtimeNotifications(
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [enabled]); // Only depend on enabled, not fetchNotifications
 
+    // Realtime subscription for new notifications
+    useEffect(() => {
+        if (!enabled || !profileId) return;
+
+        const supabase = supabaseRef.current;
+        const channel = supabase
+            .channel(`notifications:${profileId}`)
+            .on(
+                "postgres_changes",
+                {
+                    event: "INSERT",
+                    schema: "public",
+                    table: "notifications",
+                    filter: `profile_id=eq.${profileId}`,
+                },
+                (payload) => {
+                    const newNotification = payload.new as Notification;
+                    setNotifications((prev) => {
+                        const exists = prev.some((n) => n.id === newNotification.id);
+                        return exists ? prev : [newNotification, ...prev];
+                    });
+                    if (!newNotification.is_read) {
+                        setUnreadCount((prev) => prev + 1);
+                    }
+                    onNewNotification?.(newNotification);
+                }
+            )
+            .on(
+                "postgres_changes",
+                {
+                    event: "UPDATE",
+                    schema: "public",
+                    table: "notifications",
+                    filter: `profile_id=eq.${profileId}`,
+                },
+                (payload) => {
+                    const updated = payload.new as Notification;
+                    setNotifications((prev) =>
+                        prev.map((n) => (n.id === updated.id ? updated : n))
+                    );
+                }
+            )
+            .subscribe((status) => {
+                if (status === "SUBSCRIBED") {
+                    setIsConnected(true);
+                }
+            });
+
+        channelRef.current = channel;
+
+        return () => {
+            if (channelRef.current) {
+                supabase.removeChannel(channelRef.current);
+                channelRef.current = null;
+            }
+            setIsConnected(false);
+        };
+    }, [enabled, profileId, onNewNotification]);
+
     // Mark a single notification as read
     const markAsRead = useCallback(
         async (notificationId: string) => {

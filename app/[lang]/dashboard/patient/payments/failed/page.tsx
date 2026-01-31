@@ -1,7 +1,7 @@
 "use client";
 
 import React, { Suspense } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useI18n } from "@/app/i18n";
@@ -32,11 +32,8 @@ const Icons = {
 };
 
 function PaymentFailedContent() {
-    const searchParams = useSearchParams();
     const router = useRouter();
     const { isRTL, language } = useI18n();
-
-    const orderId = searchParams.get("order");
 
     // Common failure reasons
     const failureReasons = isRTL

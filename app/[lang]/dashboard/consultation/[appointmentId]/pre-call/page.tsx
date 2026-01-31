@@ -128,7 +128,6 @@ export default function PreCallPage() {
     }, []);
 
     useEffect(() => {
-        // eslint-disable-next-line react-hooks/set-state-in-effect -- Device check on mount is required for setup
         checkDevices();
 
         return () => {

@@ -225,7 +225,6 @@ export function AnimatedActionButtonCompact({
     icon,
     label,
     variant = "primary",
-    isDark = true,
     className,
     disabled = false,
     isLoading = false,
@@ -235,7 +234,6 @@ export function AnimatedActionButtonCompact({
     icon?: React.ReactNode;
     label: string;
     variant?: "primary" | "urgent";
-    isDark?: boolean;
     className?: string;
     disabled?: boolean;
     isLoading?: boolean;

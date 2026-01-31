@@ -483,9 +483,12 @@ export function QueueChat({
                                                                                 rel="noopener noreferrer"
                                                                                 className="block"
                                                                             >
-                                                                                <img
+                                                                                <Image
                                                                                     src={attachmentUrls[msg.id]}
-                                                                                    alt="Attachment"
+                                                                                    alt={isRTL ? "مرفق" : "Attachment"}
+                                                                                    width={480}
+                                                                                    height={320}
+                                                                                    sizes="(max-width: 768px) 80vw, 480px"
                                                                                     className="max-w-full rounded-lg max-h-40 object-cover cursor-pointer hover:opacity-90 transition-opacity"
                                                                                 />
                                                                             </a>
@@ -584,10 +587,13 @@ export function QueueChat({
                                                     )}
                                                 >
                                                     {filePreview ? (
-                                                        <img
+                                                        <Image
                                                             src={filePreview}
-                                                            alt="Preview"
+                                                            alt={isRTL ? "معاينة" : "Preview"}
+                                                            width={48}
+                                                            height={48}
                                                             className="w-12 h-12 object-cover rounded"
+                                                            unoptimized
                                                         />
                                                     ) : (
                                                         <div className={cn(

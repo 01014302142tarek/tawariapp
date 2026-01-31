@@ -94,7 +94,6 @@ export default function AppointmentsPage({
 
     useEffect(() => {
         if (!initialLoaded) {
-            // eslint-disable-next-line react-hooks/set-state-in-effect -- Initial data load on mount is valid
             loadAppointments();
         }
     }, [initialLoaded, loadAppointments]);
@@ -375,7 +374,7 @@ export default function AppointmentsPage({
                 </GlowingCard>
             ) : (
                 <div className="grid gap-3 md:gap-4">
-                    {filteredAppointments.map((apt, idx) => (
+                    {filteredAppointments.map((apt) => (
                         <motion.div
                             key={apt.id}
                             initial={false}

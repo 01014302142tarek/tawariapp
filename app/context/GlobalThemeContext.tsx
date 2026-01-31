@@ -35,12 +35,10 @@ export function GlobalThemeProvider({ children }: { children: React.ReactNode })
         const savedMode = localStorage.getItem(THEME_STORAGE_KEY) as ThemeMode;
         if (savedMode && ["system", "light", "dark"].includes(savedMode)) {
             const initialTheme = savedMode === "system" ? getSystemTheme() : savedMode;
-            // eslint-disable-next-line react-hooks/set-state-in-effect -- Theme initialization on mount
             setThemeModeState(savedMode);
             setTheme(initialTheme);
         } else {
             // Default to dark theme
-            // eslint-disable-next-line react-hooks/set-state-in-effect -- Theme initialization on mount
             setThemeModeState("dark");
             setTheme("dark");
         }
@@ -64,7 +62,6 @@ export function GlobalThemeProvider({ children }: { children: React.ReactNode })
             // Only update if the system theme differs from current
             const systemTheme = getSystemTheme();
             if (theme !== systemTheme) {
-                // eslint-disable-next-line react-hooks/set-state-in-effect -- Syncing with system theme
                 setTheme(systemTheme);
             }
             mediaQuery.addEventListener("change", handleChange);

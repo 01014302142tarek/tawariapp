@@ -180,7 +180,7 @@ async function testFetchNotifications() {
     const { patientProfile } = await getTestUsers();
 
     // Fetch all notifications
-    const { data: allNotifications, error: allError, count } = await supabase
+    const { error: allError, count } = await supabase
         .from("notifications")
         .select("*", { count: "exact" })
         .eq("profile_id", patientProfile.id)

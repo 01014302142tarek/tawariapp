@@ -166,7 +166,7 @@ function InputField({
 function LoginPageContent() {
     const { isRTL, language } = useI18n();
     const { theme } = useGlobalTheme();
-    const { signIn, signInWithGoogle, isLoading: authLoading, user } = useAuth();
+    const { signIn, signInWithGoogle, isLoading: authLoading } = useAuth();
     const router = useRouter();
     const searchParams = useSearchParams();
     // Use explicit redirect param, or let middleware determine based on user role

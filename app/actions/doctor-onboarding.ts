@@ -2,7 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { uploadAvatar, uploadCredential, saveCredentialRecord } from "@/lib/supabase/storage";
-import { professionalDetailsSchema, practiceInfoSchema, doctorBioSchema, validateInput } from "@/lib/validations";
+import { professionalDetailsSchema, validateInput } from "@/lib/validations";
 
 interface DoctorOnboardingData {
     // Step 1 - Account creation (handled separately via signUp)

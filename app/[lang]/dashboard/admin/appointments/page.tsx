@@ -146,7 +146,6 @@ export default function AdminAppointmentsPage() {
     }, []);
 
     useEffect(() => {
-        // eslint-disable-next-line react-hooks/set-state-in-effect -- Initial data load on dependency change is valid
         loadAppointments(currentPage, debouncedSearch, statusFilter);
     }, [currentPage, debouncedSearch, statusFilter, loadAppointments]);
 

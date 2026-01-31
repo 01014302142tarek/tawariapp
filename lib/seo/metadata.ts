@@ -212,8 +212,7 @@ export function generateRegisterMetadata(lang: Locale): Metadata {
  * Generate metadata for dashboard pages (noindex)
  */
 export function generateDashboardMetadata(
-    title: string,
-    lang: Locale
+    title: string
 ): Metadata {
     return {
         title,

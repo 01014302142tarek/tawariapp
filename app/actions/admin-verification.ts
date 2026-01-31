@@ -647,8 +647,7 @@ export async function getRecentActivity(): Promise<AdminActivityItem[]> {
         .order("created_at", { ascending: false })
         .limit(5);
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (recentAppointments as any[] || []).forEach((apt) => {
+    (recentAppointments as AppointmentRecord[] || []).forEach((apt) => {
         const patientName = apt.patient_profiles?.profiles?.full_name || "Patient";
         activities.push({
             id: `apt-${apt.id}`,
@@ -680,8 +679,7 @@ export async function getRecentActivity(): Promise<AdminActivityItem[]> {
         .order("verified_at", { ascending: false })
         .limit(5);
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (recentApprovals as any[] || []).forEach((approval) => {
+    (recentApprovals as ApprovalRecord[] || []).forEach((approval) => {
         const doctorName = approval.profiles?.full_name || "Doctor";
         activities.push({
             id: `apv-${approval.id}`,
