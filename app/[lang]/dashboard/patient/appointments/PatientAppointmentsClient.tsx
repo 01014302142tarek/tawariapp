@@ -377,9 +377,7 @@ export default function AppointmentsPage({
                     {filteredAppointments.map((apt, idx) => (
                         <motion.div
                             key={apt.id}
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: idx * 0.1 }}
+                            initial={false}
                         >
                             <GlowingCard glowColor="teal" className="p-3 md:p-5" isDark={isDark}>
                                 <div className="flex flex-col sm:flex-row sm:items-center gap-3 md:gap-4">

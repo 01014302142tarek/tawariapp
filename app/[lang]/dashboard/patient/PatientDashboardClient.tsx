@@ -530,9 +530,8 @@ export default function PatientDashboard({
                                     {recentActivity.map((activity, idx) => (
                                         <motion.div
                                             key={idx}
-                                            initial={{ opacity: 0, x: -10 }}
+                                            initial={false}
                                             animate={{ opacity: 1, x: 0 }}
-                                            transition={{ delay: idx * 0.1 }}
                                             className="flex items-start gap-3"
                                         >
                                             <div className="w-9 h-9 rounded-lg bg-teal-500/10 flex items-center justify-center text-teal-500 flex-shrink-0">
@@ -572,9 +571,7 @@ export default function PatientDashboard({
                         {quickActions.map((action, idx) => (
                             <motion.div
                                 key={idx}
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: idx * 0.1 }}
+                                initial={false}
                                 whileHover={{ y: -4 }}
                             >
                                 <Link href={action.href}>

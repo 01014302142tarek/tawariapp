@@ -377,9 +377,10 @@ export function QueueVideoCall({
             // If doctor, mark consultation as completed and get appointment ID
             if (userRole === "doctor") {
                 const result = await endQueueConsultation(queueEntryId);
-                if (result.success && result.appointmentId) {
+                if (result.success) {
                     // Store IDs for prescription creation
-                    setCreatedAppointmentId(result.appointmentId);
+                    // Show prescription prompt even if no appointmentId (rare case)
+                    setCreatedAppointmentId(result.appointmentId || null);
                     setPatientProfileId(result.patientProfileId || null);
                     // Show prescription prompt instead of navigating away
                     setPostCallPhase("prescription_prompt");

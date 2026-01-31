@@ -332,9 +332,7 @@ export default function AppointmentsPage({
                             {todayAppointments.map((apt, idx) => (
                                 <motion.div
                                     key={apt.id}
-                                    initial={{ opacity: 0, x: -20 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    transition={{ delay: idx * 0.05 }}
+                                    initial={false}
                                     className={cn(
                                         "flex flex-col md:grid md:grid-cols-12 gap-3 md:gap-4 p-4 transition-colors items-start md:items-center",
                                         cardHover,
@@ -502,9 +500,7 @@ export default function AppointmentsPage({
                             {upcomingAppointments.map((apt, idx) => (
                                 <motion.div
                                     key={apt.id}
-                                    initial={{ opacity: 0, x: -20 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    transition={{ delay: idx * 0.05 }}
+                                    initial={false}
                                     className={cn("flex flex-col md:grid md:grid-cols-12 gap-3 md:gap-4 p-4 transition-colors items-start md:items-center", cardHover)}
                                 >
                                     {/* Date/Time */}

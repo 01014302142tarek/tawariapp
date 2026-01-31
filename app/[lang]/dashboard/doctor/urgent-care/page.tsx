@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
@@ -365,6 +365,10 @@ export default function DoctorUrgentCarePage() {
     const [waitingPatients, setWaitingPatients] = useState<Array<QueueEntry & { patient_name: string; patient_avatar?: string; patient_messaging_profile_id?: string }>>([]);
     const [todayStats, setTodayStats] = useState({ completed: 0, earnings: 0 });
 
+    // Refs to prevent double-clicks
+    const isStartingCallRef = useRef(false);
+    const isCallingNextRef = useRef(false);
+
     // Real-time hooks
     const { isOnline: realtimeOnline, currentQueueEntryId, isConnected } = useDoctorOnlineStatus(doctorProfileId);
     const { queue } = useDoctorQueue(doctorProfileId);
@@ -507,6 +511,10 @@ export default function DoctorUrgentCarePage() {
     const handleCallNext = async () => {
         if (waitingPatients.length === 0) return;
 
+        // Prevent double-clicks using ref for immediate blocking
+        if (isCallingNextRef.current) return;
+        isCallingNextRef.current = true;
+
         setCalling(true);
         setError(null);
 
@@ -523,12 +531,17 @@ export default function DoctorUrgentCarePage() {
             setError(isRTL ? "حدث خطأ" : "An error occurred");
         } finally {
             setCalling(false);
+            isCallingNextRef.current = false;
         }
     };
 
     // Handle start video call
     const handleStartCall = async () => {
         if (!currentPatient) return;
+
+        // Prevent double-clicks using ref for immediate blocking
+        if (isStartingCallRef.current) return;
+        isStartingCallRef.current = true;
 
         setStartingCall(true);
         setError(null);
@@ -540,12 +553,15 @@ export default function DoctorUrgentCarePage() {
                 router.push(`/${language}/dashboard/doctor/urgent-care/call/${currentPatient.id}`);
             } else {
                 setError(result.error || (isRTL ? "حدث خطأ" : "An error occurred"));
+                isStartingCallRef.current = false;
             }
         } catch (err) {
             console.error("Error starting consultation:", err);
             setError(isRTL ? "حدث خطأ" : "An error occurred");
+            isStartingCallRef.current = false;
         } finally {
             setStartingCall(false);
+            // Note: Don't reset ref here on success - page navigates away
         }
     };
 

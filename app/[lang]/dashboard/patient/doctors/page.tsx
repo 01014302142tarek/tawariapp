@@ -301,8 +301,7 @@ export default function DoctorsPage() {
                 {viewMode === "list" ? (
                     <motion.div
                         key="list"
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
+                        initial={false}
                         exit={{ opacity: 0, x: 20 }}
                     >
                         {/* Header */}
@@ -514,9 +513,7 @@ export default function DoctorsPage() {
                                 {doctors.map((doctor, idx) => (
                                     <motion.div
                                         key={doctor.id}
-                                        initial={{ opacity: 0, y: 20 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        transition={{ delay: idx * 0.05 }}
+                                        initial={false}
                                     >
                                         <GlowingCard isDark={isDark} glowColor="teal" className="p-4 h-full flex flex-col">
                                             <div className="flex items-start gap-4 mb-4">
@@ -603,8 +600,7 @@ export default function DoctorsPage() {
                 ) : (
                     <motion.div
                         key="booking"
-                        initial={{ opacity: 0, x: 20 }}
-                        animate={{ opacity: 1, x: 0 }}
+                        initial={false}
                         exit={{ opacity: 0, x: -20 }}
                     >
                         {/* Back Button */}

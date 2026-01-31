@@ -555,24 +555,9 @@ export async function endQueueConsultation(
     const endedAt = new Date();
     const durationMinutes = Math.round((endedAt.getTime() - startedAt.getTime()) / 60000);
 
-    // Update queue entry
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { error: updateError } = await (supabase as any)
-        .from("consultation_queue")
-        .update({
-            status: "completed",
-            consultation_ended_at: endedAt.toISOString(),
-            consultation_duration_minutes: durationMinutes,
-        })
-        .eq("id", queueEntryId);
-
-    if (updateError) {
-        console.error("Error ending consultation:", updateError);
-        return { success: false, error: updateError.message };
-    }
-
-    // Create an appointment record for this urgent care consultation
+    // Create an appointment record FIRST for this urgent care consultation
     // This enables reviews, prescription linking, and consultation history
+    // We do this BEFORE updating status so patient polling gets appointment_id with "completed" status
     let appointmentId: string | null = null;
     try {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -600,16 +585,27 @@ export async function endQueueConsultation(
         } else {
             appointmentId = (appointmentData as { id: string })?.id;
             console.log("Created appointment for urgent care:", appointmentId);
-
-            // Update queue entry with the appointment ID so patient can find it
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            await (supabase as any)
-                .from("consultation_queue")
-                .update({ appointment_id: appointmentId })
-                .eq("id", queueEntryId);
         }
     } catch (err) {
         console.error("Exception creating appointment for urgent care:", err);
+    }
+
+    // Update queue entry with status AND appointment_id together to avoid race condition
+    // Patient polling will see both "completed" status and appointment_id at the same time
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error: updateError } = await (supabase as any)
+        .from("consultation_queue")
+        .update({
+            status: "completed",
+            consultation_ended_at: endedAt.toISOString(),
+            consultation_duration_minutes: durationMinutes,
+            appointment_id: appointmentId, // Include appointment_id in same update
+        })
+        .eq("id", queueEntryId);
+
+    if (updateError) {
+        console.error("Error ending consultation:", updateError);
+        return { success: false, error: updateError.message };
     }
 
     // Clear doctor's current queue entry

@@ -5,8 +5,9 @@ import { useParams, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useI18n } from "@/app/i18n";
-import { getConsultationSession, endConsultation, getConsultationUserInfo } from "@/app/actions/appointments";
+import { getConsultationSession, endConsultation, getConsultationUserInfo, getAppointmentById } from "@/app/actions/appointments";
 import DailyIframe, { DailyCall } from "@daily-co/daily-js";
+import { PrescriptionPromptModal, QuickPrescriptionForm, ReviewPromptModal } from "@/components/post-consultation";
 
 export default function ConsultationPage() {
     const params = useParams();
@@ -23,8 +24,17 @@ export default function ConsultationPage() {
     const [callJoined, setCallJoined] = useState(false);
     const [isDark, setIsDark] = useState(false);
 
+    // Post-call flow state
+    const [postCallPhase, setPostCallPhase] = useState<"none" | "prescription_prompt" | "prescription_form" | "review_prompt">("none");
+    const [patientProfileId, setPatientProfileId] = useState<string | null>(null);
+    const [patientName, setPatientName] = useState<string | null>(null);
+    const [doctorName, setDoctorName] = useState<string | null>(null);
+    const [consultationEnded, setConsultationEnded] = useState(false);
+
     const callFrameRef = useRef<DailyCall | null>(null);
     const containerRef = useRef<HTMLDivElement>(null);
+    const statusPollRef = useRef<NodeJS.Timeout | null>(null);
+    const isMountedRef = useRef(true);
 
     // Detect dark mode
     useEffect(() => {
@@ -192,8 +202,19 @@ export default function ConsultationPage() {
 
             const result = await endConsultation(appointmentId);
             if (result.success) {
-                // Redirect to notes page so doctor can write consultation notes
-                router.push(`/${language}/dashboard/consultation/${appointmentId}/notes`);
+                setShowEndModal(false);
+                setIsEnding(false);
+
+                // For doctors, show prescription prompt instead of navigating
+                if (userInfo?.role === "doctor") {
+                    setPatientProfileId(result.patientProfileId || null);
+                    setPatientName(result.patientName || null);
+                    setPostCallPhase("prescription_prompt");
+                    return; // Don't navigate yet
+                }
+
+                // For patients, navigate to appointments
+                router.push(`/${language}/dashboard/patient/appointments`);
             } else {
                 setError(result.error || "Failed to end consultation");
             }
@@ -203,7 +224,7 @@ export default function ConsultationPage() {
             setIsEnding(false);
             setShowEndModal(false);
         }
-    }, [appointmentId, router, language]);
+    }, [appointmentId, router, language, userInfo?.role]);
 
     // Handle leave without ending (for patients)
     const handleLeave = useCallback(async () => {
@@ -214,6 +235,104 @@ export default function ConsultationPage() {
         }
         router.push(`/${language}/dashboard/patient/appointments`);
     }, [router, language]);
+
+    // Post-call handlers for doctors
+    const handleAddPrescription = useCallback(() => {
+        setPostCallPhase("prescription_form");
+    }, []);
+
+    const handleSkipPrescription = useCallback(() => {
+        // Navigate to notes page when skipping prescription
+        router.push(`/${language}/dashboard/consultation/${appointmentId}/notes`);
+    }, [router, language, appointmentId]);
+
+    const handlePrescriptionSaved = useCallback(() => {
+        // Navigate to notes page after saving prescription
+        router.push(`/${language}/dashboard/consultation/${appointmentId}/notes`);
+    }, [router, language, appointmentId]);
+
+    const handlePrescriptionCancelled = useCallback(() => {
+        // Go back to prompt
+        setPostCallPhase("prescription_prompt");
+    }, []);
+
+    // Post-call handlers for patients
+    const handleReviewSubmitted = useCallback(() => {
+        router.push(`/${language}/dashboard/patient/appointments`);
+    }, [router, language]);
+
+    const handleSkipReview = useCallback(() => {
+        router.push(`/${language}/dashboard/patient/appointments`);
+    }, [router, language]);
+
+    // Check consultation status (for patients to detect when doctor ends the call)
+    const checkConsultationStatus = useCallback(async () => {
+        if (!isMountedRef.current || consultationEnded) return;
+
+        try {
+            const result = await getAppointmentById(appointmentId);
+            if (!isMountedRef.current) return;
+
+            if (result.appointment?.status === "completed") {
+                console.log("[Consultation] Consultation completed by doctor");
+                setConsultationEnded(true);
+
+                // Stop polling
+                if (statusPollRef.current) {
+                    clearInterval(statusPollRef.current);
+                    statusPollRef.current = null;
+                }
+
+                // Clean up call
+                if (callFrameRef.current) {
+                    try {
+                        await callFrameRef.current.leave();
+                        callFrameRef.current.destroy();
+                        callFrameRef.current = null;
+                    } catch (e) {
+                        console.warn("[Consultation] Error leaving after consultation ended:", e);
+                    }
+                }
+
+                // Get doctor name for review modal
+                const doctorFullName = result.appointment?.doctor?.full_name;
+                setDoctorName(doctorFullName || null);
+
+                // Show review modal for patient
+                setPostCallPhase("review_prompt");
+            }
+        } catch (err) {
+            console.error("[Consultation] Error checking status:", err);
+        }
+    }, [appointmentId, consultationEnded]);
+
+    // Poll for consultation status changes (for patients to detect when doctor ends the call)
+    useEffect(() => {
+        isMountedRef.current = true;
+
+        if (userInfo?.role !== "patient" || consultationEnded) return;
+
+        // Start polling after joining the call
+        const startPolling = () => {
+            statusPollRef.current = setInterval(() => {
+                if (isMountedRef.current && !consultationEnded) {
+                    checkConsultationStatus();
+                }
+            }, 5000); // Check every 5 seconds
+        };
+
+        // Wait a bit before starting to poll
+        const timeoutId = setTimeout(startPolling, 3000);
+
+        return () => {
+            isMountedRef.current = false;
+            clearTimeout(timeoutId);
+            if (statusPollRef.current) {
+                clearInterval(statusPollRef.current);
+                statusPollRef.current = null;
+            }
+        };
+    }, [userInfo?.role, consultationEnded, checkConsultationStatus]);
 
     // Loading state
     if (loading) {
@@ -321,8 +440,8 @@ export default function ConsultationPage() {
                                         onClick={handleLeave}
                                         className={cn(
                                             "flex-1 px-4 py-2.5 rounded-xl transition-colors",
-                                            isDark 
-                                                ? "bg-slate-800 text-white hover:bg-slate-700" 
+                                            isDark
+                                                ? "bg-slate-800 text-white hover:bg-slate-700"
                                                 : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                                         )}
                                     >
@@ -348,6 +467,47 @@ export default function ConsultationPage() {
                     </motion.div>
                 )}
             </AnimatePresence>
+
+            {/* Post-Consultation Modals */}
+
+            {/* Doctor: Prescription Prompt */}
+            {userInfo?.role === "doctor" && (
+                <PrescriptionPromptModal
+                    isOpen={postCallPhase === "prescription_prompt"}
+                    patientName={patientName || (isRTL ? "المريض" : "Patient")}
+                    isDark={isDark}
+                    isRTL={isRTL}
+                    onAddPrescription={handleAddPrescription}
+                    onSkip={handleSkipPrescription}
+                />
+            )}
+
+            {/* Doctor: Prescription Form */}
+            {userInfo?.role === "doctor" && patientProfileId && (
+                <QuickPrescriptionForm
+                    isOpen={postCallPhase === "prescription_form"}
+                    patientProfileId={patientProfileId}
+                    patientName={patientName || (isRTL ? "المريض" : "Patient")}
+                    appointmentId={appointmentId}
+                    isDark={isDark}
+                    isRTL={isRTL}
+                    onSuccess={handlePrescriptionSaved}
+                    onCancel={handlePrescriptionCancelled}
+                />
+            )}
+
+            {/* Patient: Review Modal */}
+            {userInfo?.role === "patient" && consultationEnded && (
+                <ReviewPromptModal
+                    isOpen={postCallPhase === "review_prompt"}
+                    doctorName={doctorName || (isRTL ? "الطبيب" : "Doctor")}
+                    appointmentId={appointmentId}
+                    isDark={isDark}
+                    isRTL={isRTL}
+                    onSuccess={handleReviewSubmitted}
+                    onSkip={handleSkipReview}
+                />
+            )}
         </div>
     );
 }

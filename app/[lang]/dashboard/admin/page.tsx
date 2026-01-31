@@ -362,9 +362,7 @@ export default function AdminDashboard() {
                                 ) : pendingApprovals.map((item, idx) => (
                                     <motion.div
                                         key={item.id}
-                                        initial={{ opacity: 0, y: 10 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        transition={{ delay: idx * 0.1 }}
+                                        initial={false}
                                         className={cn(
                                             "flex items-center gap-3 p-3 rounded-xl border transition-all",
                                             isDark ? "bg-white/[0.02] border-white/5 hover:border-teal-500/20" : "bg-gray-50 border-gray-200 hover:border-teal-500/30"
@@ -461,9 +459,7 @@ export default function AdminDashboard() {
                                 ) : recentActivity.map((activity, idx) => (
                                     <motion.div
                                         key={activity.id}
-                                        initial={{ opacity: 0, x: -10 }}
-                                        animate={{ opacity: 1, x: 0 }}
-                                        transition={{ delay: idx * 0.1 }}
+                                        initial={false}
                                         className="flex items-start gap-3"
                                     >
                                         <div className={cn(

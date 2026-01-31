@@ -395,9 +395,7 @@ export default function Doctor2Dashboard({
                                 {appointments.map((apt, idx) => (
                                     <motion.div
                                         key={apt.id}
-                                        initial={{ opacity: 0, x: -20 }}
-                                        animate={{ opacity: 1, x: 0 }}
-                                        transition={{ delay: idx * 0.1 }}
+                                        initial={false}
                                         className={cn(
                                             "flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 p-3 md:p-4 rounded-xl border transition-all cursor-pointer hover:scale-[1.01]",
                                             apt.status === "in-progress"
@@ -454,9 +452,7 @@ export default function Doctor2Dashboard({
                                 {recentMessages.map((msg, idx) => (
                                     <motion.div
                                         key={msg.id}
-                                        initial={{ opacity: 0, y: 10 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        transition={{ delay: idx * 0.1 }}
+                                        initial={false}
                                         className={cn(
                                             "flex items-start gap-3 p-3 rounded-xl border transition-all cursor-pointer hover:scale-[1.01]",
                                             msg.unread
@@ -506,9 +502,7 @@ export default function Doctor2Dashboard({
                                 {healthTips.map((tip, idx) => (
                                     <motion.div
                                         key={tip.id}
-                                        initial={{ opacity: 0, y: 10 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        transition={{ delay: idx * 0.1 }}
+                                        initial={false}
                                         className={cn(
                                             "p-3 rounded-xl border transition-all",
                                             isDark
@@ -616,9 +610,7 @@ export default function Doctor2Dashboard({
                                 {pendingTasks.map((task, idx) => (
                                     <motion.div
                                         key={task.id}
-                                        initial={{ opacity: 0, x: -10 }}
-                                        animate={{ opacity: 1, x: 0 }}
-                                        transition={{ delay: idx * 0.05 }}
+                                        initial={false}
                                         className={cn(
                                             "flex items-center gap-3 p-3 rounded-xl border transition-all cursor-pointer hover:scale-[1.01]",
                                             isDark
@@ -677,9 +669,7 @@ export default function Doctor2Dashboard({
                         {quickActions.map((action, idx) => (
                             <motion.div
                                 key={idx}
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: idx * 0.1 }}
+                                initial={false}
                                 whileHover={{ y: -4 }}
                             >
                                 <Link href={action.href}>

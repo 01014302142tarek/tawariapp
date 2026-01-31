@@ -911,7 +911,7 @@ export async function resetAppointmentToScheduled(
  */
 export async function endConsultation(
     appointmentId: string
-): Promise<{ success: boolean; error?: string }> {
+): Promise<{ success: boolean; patientProfileId?: string; patientName?: string; error?: string }> {
     const supabase = await createClient();
 
     const { data: { user } } = await supabase.auth.getUser();
@@ -941,6 +941,25 @@ export async function endConsultation(
         return { success: false, error: "Doctor profile not found" };
     }
 
+    // Get appointment details including patient info for post-call flow
+    const { data: appointmentData } = await supabase
+        .from("appointments")
+        .select(`
+            patient_profile_id,
+            patient_profiles!appointments_patient_profile_id_fkey (
+                profiles!patient_profiles_profile_id_fkey (
+                    full_name
+                )
+            )
+        `)
+        .eq("id", appointmentId)
+        .single();
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const appointment = appointmentData as any;
+    const patientProfileId = appointment?.patient_profile_id;
+    const patientName = appointment?.patient_profiles?.profiles?.full_name;
+
     // Update appointment status
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { error: updateError } = await (supabase as any)
@@ -968,7 +987,7 @@ export async function endConsultation(
     const { doctorUserId, patientUserId } = await getUserIdsForAppointment(supabase, appointmentId);
     revalidateAppointmentCaches([doctorUserId || user.id, patientUserId]);
 
-    return { success: true };
+    return { success: true, patientProfileId, patientName };
 }
 
 /**
