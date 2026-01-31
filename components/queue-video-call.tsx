@@ -599,14 +599,14 @@ export function QueueVideoCall({
                         >
                             <h3 className={cn("text-xl font-semibold mb-2", isDark ? "text-white" : "text-slate-900")}>
                                 {userRole === "doctor"
-                                    ? (isRTL ? "إنهاء الاستشارة؟" : "End Consultation?")
+                                    ? (isRTL ? "إكمال الاستشارة؟" : "Complete Consultation?")
                                     : (isRTL ? "مغادرة المكالمة؟" : "Leave Call?")}
                             </h3>
                             <p className={cn("mb-6", isDark ? "text-slate-400" : "text-slate-600")}>
                                 {userRole === "doctor"
                                     ? (isRTL
-                                        ? "سيتم إنهاء الاستشارة وتحديث حالة المريض."
-                                        : "This will end the consultation and update the patient's status.")
+                                        ? "سيتم إكمال الاستشارة وتحديث حالة المريض."
+                                        : "This will complete the consultation and update the patient's status.")
                                     : (isRTL
                                         ? "هل أنت متأكد من رغبتك في مغادرة المكالمة؟"
                                         : "Are you sure you want to leave the call?")}
@@ -635,12 +635,12 @@ export function QueueVideoCall({
                                                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                                                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                                             </svg>
-                                            <span>{isRTL ? "جاري..." : "Ending..."}</span>
+                                            <span>{isRTL ? "جاري..." : "Completing..."}</span>
                                         </>
                                     ) : (
                                         <span>
                                             {userRole === "doctor"
-                                                ? (isRTL ? "إنهاء" : "End")
+                                                ? (isRTL ? "إكمال" : "Complete")
                                                 : (isRTL ? "مغادرة" : "Leave")}
                                         </span>
                                     )}
@@ -689,7 +689,7 @@ export function QueueVideoCall({
                         {Icons.endCall}
                         <span className="hidden sm:inline">
                             {userRole === "doctor"
-                                ? (isRTL ? "إنهاء الاستشارة" : "End Consultation")
+                                ? (isRTL ? "إكمال الاستشارة" : "Complete Consultation")
                                 : (isRTL ? "مغادرة" : "Leave")}
                         </span>
                     </button>

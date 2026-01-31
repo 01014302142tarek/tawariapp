@@ -1,6 +1,6 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createServiceRoleClient } from "@/lib/supabase/server";
 
 // ============================================
 // Types
@@ -518,6 +518,7 @@ export async function endQueueConsultation(
     queueEntryId: string
 ): Promise<{ success: boolean; appointmentId?: string; patientProfileId?: string; error?: string }> {
     const supabase = await createClient();
+    const adminSupabase = await createServiceRoleClient();
 
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
@@ -571,7 +572,7 @@ export async function endQueueConsultation(
     let appointmentId: string | null = null;
     try {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { data: appointmentData, error: appointmentError } = await (supabase as any)
+        const { data: appointmentData, error: appointmentError } = await (adminSupabase as any)
             .from("appointments")
             .insert({
                 patient_profile_id: queueEntry.patient_profile_id,
@@ -603,7 +604,7 @@ export async function endQueueConsultation(
     // Update queue entry with status AND appointment_id together to avoid race condition
     // Patient polling will see both "completed" status and appointment_id at the same time
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { error: updateError } = await (supabase as any)
+    const { error: updateError } = await (adminSupabase as any)
         .from("consultation_queue")
         .update({
             status: "completed",
@@ -620,14 +621,14 @@ export async function endQueueConsultation(
 
     // Clear doctor's current queue entry
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await (supabase as any)
+    await (adminSupabase as any)
         .from("doctor_profiles")
         .update({ current_queue_entry_id: null })
         .eq("id", doctor.id);
 
     // Recalculate queue positions
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await (supabase as any).rpc("recalculate_queue_positions", { p_doctor_profile_id: doctor.id });
+    await (adminSupabase as any).rpc("recalculate_queue_positions", { p_doctor_profile_id: doctor.id });
 
     return {
         success: true,
