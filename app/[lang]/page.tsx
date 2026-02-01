@@ -338,12 +338,11 @@ function LandingPageContent() {
 
           <div className="grid md:grid-cols-3 gap-8">
             {[
-              { step: "01", title: t.howItWorks.step1Title, desc: t.howItWorks.step1Desc, icon: Icons.search, color: "from-teal-500 to-teal-600" },
-              { step: "02", title: t.howItWorks.step2Title, desc: t.howItWorks.step2Desc, icon: Icons.calendar, color: "from-amber-500 to-amber-600" },
-              { step: "03", title: t.howItWorks.step3Title, desc: t.howItWorks.step3Desc, icon: Icons.video, color: "from-purple-500 to-purple-600" },
+              { title: t.howItWorks.step1Title, desc: t.howItWorks.step1Desc, icon: Icons.search, color: "from-teal-500 to-teal-600" },
+              { title: t.howItWorks.step2Title, desc: t.howItWorks.step2Desc, icon: Icons.calendar, color: "from-amber-500 to-amber-600" },
+              { title: t.howItWorks.step3Title, desc: t.howItWorks.step3Desc, icon: Icons.video, color: "from-purple-500 to-purple-600" },
             ].map((item, idx) => (
               <div key={idx} className={`group relative rounded-3xl p-8 transition-all ${glowCardClass}`}>
-                <div className={`absolute -top-4 left-8 px-3 py-1 rounded-full border ${isDark ? 'bg-[#0F172A] border-white/10' : 'bg-white border-slate-200 shadow-sm'}`}><span className={`${textMuted} text-sm font-mono`}>{item.step}</span></div>
                 <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${item.color} flex items-center justify-center text-white mb-6 group-hover:scale-110 transition-transform`}>{item.icon}</div>
                 <h3 className={`text-xl font-bold mb-3 ${textPrimary}`}>{item.title}</h3>
                 <p className={`${textSecondary} leading-relaxed`}>{item.desc}</p>
@@ -554,7 +553,6 @@ function LandingPageContent() {
               <div className="flex flex-col gap-3">
                 <Link href={`/${language}/doctor-onboarding`} className={`${textSecondary} text-sm hover:text-teal-500 transition-colors`}>{t.footer.joinAsDoctor}</Link>
                 <Link href={`/${language}/faq`} className={`${textSecondary} text-sm hover:text-teal-500 transition-colors`}>{t.footer.doctorFaq}</Link>
-                <span className={`${textSecondary} text-sm hover:text-teal-500 transition-colors cursor-default`}>{t.footer.pricing}</span>
               </div>
             </div>
             <div>
