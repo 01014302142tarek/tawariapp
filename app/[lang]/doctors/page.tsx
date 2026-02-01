@@ -495,7 +495,7 @@ function DoctorsPageContent() {
                                     <div className="text-center">
                                         <div className="flex items-center justify-center gap-1 mb-1">
                                             <h3 className={`font-bold ${textPrimary}`}>
-                                                Dr. {doctor.full_name}
+                                                {doctor.full_name.toLowerCase().startsWith('dr') ? doctor.full_name : `Dr. ${doctor.full_name}`}
                                             </h3>
                                             {Icons.verified}
                                         </div>

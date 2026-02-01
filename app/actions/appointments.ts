@@ -1502,6 +1502,7 @@ export async function getDoctorById(
     const supabase = await createClient();
 
     // Get doctor profile with all details - use explicit FK to avoid ambiguity
+    // Note: only selecting columns that exist in the current database schema
     const { data, error } = await supabase
         .from("doctor_profiles")
         .select(`
@@ -1513,9 +1514,6 @@ export async function getDoctorById(
             rating_average,
             rating_count,
             is_available_now,
-            languages,
-            education,
-            hospital,
             profiles!doctor_profiles_profile_id_fkey (
                 id,
                 full_name,
@@ -1589,9 +1587,9 @@ export async function getDoctorById(
             rating_count: doc.rating_count,
             is_available_now: doc.is_available_now,
             specializations,
-            languages: doc.languages || [],
-            education: doc.education,
-            hospital: doc.hospital,
+            languages: [], // column doesn't exist in current schema
+            education: undefined, // column doesn't exist in current schema
+            hospital: undefined, // column doesn't exist in current schema
             reviews_preview: reviews,
         },
     };

@@ -56,9 +56,17 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function DoctorProfilePage({ params }: Props) {
     const { lang, id } = await params;
+
+    // Debug: log the doctor ID being requested
+    console.log("[DoctorProfile] Fetching doctor with ID:", id);
+
     const { doctor, error } = await getDoctorById(id);
 
+    // Debug: log the result
+    console.log("[DoctorProfile] Result:", { doctor: doctor?.full_name, error });
+
     if (error || !doctor) {
+        console.error("[DoctorProfile] Doctor not found or error:", error);
         notFound();
     }
 
