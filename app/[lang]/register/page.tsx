@@ -133,6 +133,8 @@ function InputField({
     isDark = true,
     onFocus,
     onBlur,
+    error,
+    errorMessage,
 }: {
     icon: React.ReactNode;
     type: string;
@@ -146,6 +148,8 @@ function InputField({
     isDark?: boolean;
     onFocus?: () => void;
     onBlur?: () => void;
+    error?: boolean;
+    errorMessage?: string;
 }) {
     // Browsers enforce LTR for type="tel" and type="email", so we use type="text" in RTL mode
     const inputType = showPasswordToggle
@@ -154,32 +158,41 @@ function InputField({
 
     return (
         <div className="relative">
-            <span className={`absolute top-1/2 -translate-y-1/2 ${isDark ? 'text-gray-400' : 'text-gray-500'} ${isRTL ? 'right-4' : 'left-4'}`}>
-                {icon}
-            </span>
-            <input
-                type={inputType}
-                placeholder={placeholder}
-                value={value}
-                onChange={onChange}
-                onFocus={onFocus}
-                onBlur={onBlur}
-                dir={isRTL ? "rtl" : "ltr"}
-                style={isRTL ? { textAlign: 'right' } : undefined}
-                className={`w-full py-3.5 border rounded-xl placeholder-gray-500 focus:ring-2 focus:ring-teal-500/20 transition-all outline-none ${isRTL ? 'pr-12 pl-12' : 'pl-12 pr-12'
-                    } ${isDark
-                        ? "bg-slate-800/50 border-white/10 text-white focus:border-teal-500/50"
-                        : "bg-white border-gray-200 text-gray-900 focus:border-teal-500"
-                    }`}
-            />
-            {showPasswordToggle && (
-                <button
-                    type="button"
-                    onClick={onTogglePassword}
-                    className={`absolute top-1/2 -translate-y-1/2 ${isDark ? 'text-gray-400 hover:text-gray-300' : 'text-gray-500 hover:text-gray-700'} transition-colors ${isRTL ? 'left-4' : 'right-4'}`}
-                >
-                    {showPassword ? Icons.eyeOff : Icons.eye}
-                </button>
+            <div className="relative">
+                <span className={`absolute top-1/2 -translate-y-1/2 ${error ? 'text-red-400' : isDark ? 'text-gray-400' : 'text-gray-500'} ${isRTL ? 'right-4' : 'left-4'}`}>
+                    {icon}
+                </span>
+                <input
+                    type={inputType}
+                    placeholder={placeholder}
+                    value={value}
+                    onChange={onChange}
+                    onFocus={onFocus}
+                    onBlur={onBlur}
+                    dir={isRTL ? "rtl" : "ltr"}
+                    style={isRTL ? { textAlign: 'right' } : undefined}
+                    className={`w-full py-3.5 border rounded-xl placeholder-gray-500 focus:ring-2 transition-all outline-none ${isRTL ? 'pr-12 pl-12' : 'pl-12 pr-12'
+                        } ${error
+                            ? "border-red-500 focus:border-red-500 focus:ring-red-500/20 bg-red-500/5 text-red-400"
+                            : isDark
+                                ? "bg-slate-800/50 border-white/10 text-white focus:border-teal-500/50 focus:ring-teal-500/20"
+                                : "bg-white border-gray-200 text-gray-900 focus:border-teal-500 focus:ring-teal-500/20"
+                        }`}
+                />
+                {showPasswordToggle && (
+                    <button
+                        type="button"
+                        onClick={onTogglePassword}
+                        className={`absolute top-1/2 -translate-y-1/2 ${isDark ? 'text-gray-400 hover:text-gray-300' : 'text-gray-500 hover:text-gray-700'} transition-colors ${isRTL ? 'left-4' : 'right-4'}`}
+                    >
+                        {showPassword ? Icons.eyeOff : Icons.eye}
+                    </button>
+                )}
+            </div>
+            {error && errorMessage && (
+                <p className={`text-xs text-red-400 mt-1 ${isRTL ? 'text-right' : 'text-left'}`}>
+                    {errorMessage}
+                </p>
             )}
         </div>
     );
@@ -194,6 +207,8 @@ export default function RegisterPage() {
     const isDark = theme === "dark";
     const [showPassword, setShowPassword] = useState(false);
     const [passwordFocused, setPasswordFocused] = useState(false);
+    const [emailFocused, setEmailFocused] = useState(false);
+    const [emailTouched, setEmailTouched] = useState(false);
     const [formData, setFormData] = useState({
         fullName: "",
         email: "",
@@ -203,6 +218,32 @@ export default function RegisterPage() {
     const [agreedToTerms, setAgreedToTerms] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
+
+    // Field touched state for validation
+    const [touched, setTouched] = useState({
+        fullName: false,
+        email: false,
+        phone: false,
+        password: false,
+    });
+
+    // Email validation
+    const validateEmail = (email: string) => {
+        // RFC 5322 compliant email regex (simplified but robust)
+        const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
+
+        const checks = {
+            hasText: email.length > 0,
+            hasAtSign: email.includes('@'),
+            hasValidFormat: emailRegex.test(email),
+            isNotTooLong: email.length <= 254, // RFC 5321 max length
+        };
+
+        return {
+            ...checks,
+            isValid: checks.hasValidFormat && checks.isNotTooLong,
+        };
+    };
 
     // Password validation - moderate: 8+ chars + at least 2 of: uppercase, lowercase, number, special
     const validatePassword = (password: string) => {
@@ -221,13 +262,55 @@ export default function RegisterPage() {
         };
     };
 
+    // Validation functions for all fields
+    const validateFullName = (name: string) => {
+        return {
+            isNotEmpty: name.trim().length > 0,
+            isValid: name.trim().length > 0,
+        };
+    };
+
+    const validatePhone = (phone: string) => {
+        return {
+            isNotEmpty: phone.trim().length > 0,
+            isValid: phone.trim().length > 0,
+        };
+    };
+
+    const emailValidation = validateEmail(formData.email);
     const passwordValidation = validatePassword(formData.password);
+    const fullNameValidation = validateFullName(formData.fullName);
+    const phoneValidation = validatePhone(formData.phone);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError(null);
 
-        // Check password validity
+        // Mark all fields as touched when submitting
+        setTouched({
+            fullName: true,
+            email: true,
+            phone: true,
+            password: true,
+        });
+        setEmailTouched(true);
+
+        // Check all required fields
+        if (!fullNameValidation.isValid) {
+            setError(language === "ar" ? "الاسم الكامل مطلوب" : "Full Name is required");
+            return;
+        }
+
+        if (!emailValidation.isValid) {
+            setError(text.emailError);
+            return;
+        }
+
+        if (!phoneValidation.isValid) {
+            setError(language === "ar" ? "رقم الهاتف مطلوب" : "Phone number is required");
+            return;
+        }
+
         if (!passwordValidation.isValid) {
             setError(text.passwordError);
             return;
@@ -285,6 +368,8 @@ export default function RegisterPage() {
                 special: "Special character (!@#$%...)",
             },
             passwordError: "Please create a stronger password",
+            emailError: "Please enter a valid email address",
+            emailInvalid: "Invalid email format",
         },
         ar: {
             title: "إنشاء حسابك",
@@ -312,6 +397,8 @@ export default function RegisterPage() {
                 special: "رمز خاص (!@#$%...)",
             },
             passwordError: "يرجى إنشاء كلمة مرور أقوى",
+            emailError: "يرجى إدخال عنوان بريد إلكتروني صالح",
+            emailInvalid: "تنسيق البريد الإلكتروني غير صحيح",
         },
     };
 
@@ -376,19 +463,49 @@ export default function RegisterPage() {
                             placeholder={text.fullName}
                             value={formData.fullName}
                             onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+                            onBlur={() => setTouched({ ...touched, fullName: true })}
                             isRTL={isRTL}
                             isDark={isDark}
+                            error={touched.fullName && !fullNameValidation.isValid}
+                            errorMessage={language === "ar" ? "الاسم الكامل مطلوب" : "Full Name is required"}
                         />
 
-                        <InputField
-                            icon={Icons.email}
-                            type="email"
-                            placeholder={text.email}
-                            value={formData.email}
-                            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                            isRTL={isRTL}
-                            isDark={isDark}
-                        />
+                        <div>
+                            <InputField
+                                icon={Icons.email}
+                                type="email"
+                                placeholder={text.email}
+                                value={formData.email}
+                                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                                isRTL={isRTL}
+                                isDark={isDark}
+                                onFocus={() => setEmailFocused(true)}
+                                onBlur={() => {
+                                    setEmailFocused(false);
+                                    setEmailTouched(true);
+                                    setTouched({ ...touched, email: true });
+                                }}
+                                error={touched.email && !emailValidation.isValid}
+                                errorMessage={language === "ar" ? "البريد الإلكتروني غير صالح" : "Invalid email address"}
+                            />
+                            {/* Email Validation Feedback */}
+                            {emailTouched && formData.email.length > 0 && !emailValidation.isValid && (
+                                <div className="mt-1.5 flex items-center gap-1.5 text-xs text-red-400">
+                                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clipRule="evenodd" />
+                                    </svg>
+                                    <span>{text.emailInvalid}</span>
+                                </div>
+                            )}
+                            {emailValidation.isValid && formData.email.length > 0 && (
+                                <div className="mt-1.5 flex items-center gap-1.5 text-xs text-teal-400">
+                                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clipRule="evenodd" />
+                                    </svg>
+                                    <span>{language === 'ar' ? 'البريد الإلكتروني صالح' : 'Valid email'}</span>
+                                </div>
+                            )}
+                        </div>
 
                         <InputField
                             icon={Icons.phone}
@@ -396,8 +513,11 @@ export default function RegisterPage() {
                             placeholder={text.phone}
                             value={formData.phone}
                             onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                            onBlur={() => setTouched({ ...touched, phone: true })}
                             isRTL={isRTL}
                             isDark={isDark}
+                            error={touched.phone && !phoneValidation.isValid}
+                            errorMessage={language === "ar" ? "رقم الهاتف مطلوب" : "Phone number is required"}
                         />
 
                         <div>
@@ -413,7 +533,12 @@ export default function RegisterPage() {
                                 isRTL={isRTL}
                                 isDark={isDark}
                                 onFocus={() => setPasswordFocused(true)}
-                                onBlur={() => setPasswordFocused(false)}
+                                onBlur={() => {
+                                    setPasswordFocused(false);
+                                    setTouched({ ...touched, password: true });
+                                }}
+                                error={touched.password && !passwordValidation.isValid}
+                                errorMessage={language === "ar" ? "كلمة المرور غير صالحة" : "Password does not meet requirements"}
                             />
 
                             {/* Password Requirements */}
@@ -500,11 +625,24 @@ export default function RegisterPage() {
                         {/* Submit Button */}
                         <button
                             type="submit"
-                            disabled={!agreedToTerms || isSubmitting}
-                            className={`w-full py-3.5 rounded-xl font-semibold text-white transition-all ${agreedToTerms && !isSubmitting
-                                ? "bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-400 hover:to-teal-500 shadow-lg shadow-teal-500/25"
-                                : "bg-gray-400 cursor-not-allowed"
-                                }`}
+                            disabled={
+                                !agreedToTerms ||
+                                isSubmitting ||
+                                !fullNameValidation.isValid ||
+                                !emailValidation.isValid ||
+                                !phoneValidation.isValid ||
+                                !passwordValidation.isValid
+                            }
+                            className={`w-full py-3.5 rounded-xl font-semibold text-white transition-all ${
+                                agreedToTerms &&
+                                !isSubmitting &&
+                                fullNameValidation.isValid &&
+                                emailValidation.isValid &&
+                                phoneValidation.isValid &&
+                                passwordValidation.isValid
+                                    ? "bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-400 hover:to-teal-500 shadow-lg shadow-teal-500/25"
+                                    : "bg-gray-400 cursor-not-allowed"
+                            }`}
                         >
                             {isSubmitting ? (
                                 <span className="flex items-center justify-center gap-2">

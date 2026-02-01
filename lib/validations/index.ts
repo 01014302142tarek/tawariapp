@@ -29,10 +29,6 @@ export const professionalDetailsSchema = z.object({
         .string()
         .min(2, "Specialty must be at least 2 characters")
         .max(100, "Specialty must be less than 100 characters"),
-    certifications: z
-        .string()
-        .max(1000, "Certifications must be less than 1000 characters")
-        .optional(),
 });
 
 export const practiceInfoSchema = z.object({

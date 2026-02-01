@@ -12,6 +12,9 @@ const protectedRoutes = ['/dashboard']
 // Public routes that don't require auth (auth pages themselves)
 const authRoutes = ['/login', '/register', '/get-started', '/forgot-password', '/reset-password', '/verify-email', '/doctor-onboarding']
 
+// Routes that authenticated users can still access (e.g., to complete onboarding)
+const allowAuthenticatedAccess = ['/verify-email', '/doctor-onboarding']
+
 function getLocale(request: NextRequest): Locale {
     // 1. Check URL query parameter (for sharing/explicit language links)
     const urlLocale = request.nextUrl.searchParams.get('lang')
@@ -135,11 +138,17 @@ export async function middleware(request: NextRequest) {
     }
 
     // Redirect authenticated users away from auth pages to dashboard
+    // EXCEPT for pages where they need to complete onboarding/verification
     if (isAuthRoute(pathname) && user) {
-        // Use database role (secure)
-        const role = user.role
-        const dashboardUrl = new URL(`/${currentLocale}/dashboard/${role}`, request.url)
-        return NextResponse.redirect(dashboardUrl)
+        const pathWithoutLocale = pathname.replace(/^\/(en|ar)/, '')
+        const shouldAllowAccess = allowAuthenticatedAccess.some(route => pathWithoutLocale.startsWith(route))
+
+        if (!shouldAllowAccess) {
+            // Use database role (secure)
+            const role = user.role
+            const dashboardUrl = new URL(`/${currentLocale}/dashboard/${role}`, request.url)
+            return NextResponse.redirect(dashboardUrl)
+        }
     }
 
     // Sync locale cookie

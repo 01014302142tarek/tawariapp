@@ -13,7 +13,6 @@ interface DoctorOnboardingData {
     specialty: string;
     experience: string;
     licenseNumber: string;
-    certifications: string;
 
     // Step 3 - Practice info
     clinicName: string;
@@ -34,7 +33,6 @@ export async function saveProfessionalDetails(data: {
     licenseNumber: string;
     yearsOfExperience: number;
     specialty: string;
-    certifications?: string;
 }): Promise<{ success: boolean; error?: string }> {
     // Validate input
     const validation = validateInput(professionalDetailsSchema, data);
@@ -241,98 +239,211 @@ export async function saveBioAndSubmit(data: {
  * This is the main function called when the doctor completes the onboarding flow
  */
 export async function completeOnboarding(data: DoctorOnboardingData): Promise<{ success: boolean; error?: string }> {
-    const supabase = await createClient();
+    try {
+        console.log("Starting completeOnboarding with data:", {
+            hasFullName: !!data.fullName,
+            hasPhone: !!data.phone,
+            hasSpecialty: !!data.specialty,
+            hasExperience: !!data.experience,
+            hasLicenseNumber: !!data.licenseNumber,
+            hasClinicName: !!data.clinicName,
+            hasAddress: !!data.address,
+            hasAvailableDays: !!data.availableDays,
+            hasWorkingHours: !!data.workingHours,
+            hasConsultationFee: !!data.consultationFee,
+            hasBio: !!data.bio,
+        });
 
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-        return { success: false, error: "Not authenticated" };
-    }
+        const supabase = await createClient();
 
-    // Get profile
-    const { data: profileData } = await supabase
-        .from("profiles")
-        .select("id, role, full_name")
-        .eq("user_id", user.id)
-        .single();
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+            console.error("completeOnboarding: Not authenticated");
+            return { success: false, error: "Not authenticated" };
+        }
 
-    const profile = profileData as { id: string; role: string; full_name: string } | null;
-    if (!profile || profile.role !== "doctor") {
-        return { success: false, error: "Not a doctor profile" };
-    }
+        console.log("completeOnboarding: User authenticated:", user.id);
 
-    // Update base profile if name changed
-    if (data.fullName && data.fullName !== profile.full_name) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        await (supabase as any)
+        // Get profile
+        const { data: profileData, error: profileError } = await supabase
             .from("profiles")
-            .update({ full_name: data.fullName })
-            .eq("id", profile.id);
-    }
+            .select("id, role, full_name")
+            .eq("user_id", user.id)
+            .single();
 
-    // Parse consultation fee
-    const consultationFee = data.consultationFee ? parseFloat(data.consultationFee) : null;
-    const yearsExperience = data.experience ? parseInt(data.experience, 10) : 0;
+        if (profileError) {
+            console.error("completeOnboarding: Error fetching profile:", profileError);
+            return { success: false, error: "Failed to fetch profile: " + profileError.message };
+        }
 
-    // Update doctor_profile with all data
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { error: doctorError } = await (supabase as any)
-        .from("doctor_profiles")
-        .update({
+        const profile = profileData as { id: string; role: string; full_name: string } | null;
+        if (!profile || profile.role !== "doctor") {
+            console.error("completeOnboarding: Not a doctor profile", { profile });
+            return { success: false, error: "Not a doctor profile" };
+        }
+
+        console.log("completeOnboarding: Doctor profile found:", profile.id);
+
+        // Update base profile if name changed
+        if (data.fullName && data.fullName !== profile.full_name) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            await (supabase as any)
+                .from("profiles")
+                .update({ full_name: data.fullName })
+                .eq("id", profile.id);
+        }
+
+        // Parse consultation fee
+        const consultationFee = data.consultationFee ? parseFloat(data.consultationFee) : null;
+        const yearsExperience = data.experience ? parseInt(data.experience, 10) : 0;
+
+        // Update doctor_profile with all data
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { error: doctorError } = await (supabase as any)
+            .from("doctor_profiles")
+            .update({
             license_number: data.licenseNumber || null,
             years_of_experience: yearsExperience,
             bio: data.bio || null,
             consultation_fee: consultationFee,
+            clinic_name: data.clinicName || null,
+            clinic_address: data.address || null,
             verification_status: "pending",
         })
-        .eq("profile_id", profile.id);
+            .eq("profile_id", profile.id);
 
-    if (doctorError) {
-        // Error completing onboarding - returned to caller
-        return { success: false, error: doctorError.message };
-    }
+        if (doctorError) {
+            // Error completing onboarding - returned to caller
+            return { success: false, error: doctorError.message };
+        }
 
-    // Save specialty if provided
-    if (data.specialty) {
-        // Use maybeSingle() to avoid throwing errors when no match is found
-        const { data: specDataRaw } = await supabase
-            .from("specializations")
-            .select("id")
-            .or(`name_en.eq.${data.specialty},name_ar.eq.${data.specialty}`)
-            .maybeSingle();
-
-        const specData = specDataRaw as { id: string } | null;
-        if (specData) {
-            const { data: doctorProfileRaw } = await supabase
-                .from("doctor_profiles")
+        // Save specialty if provided
+        if (data.specialty) {
+            // Use maybeSingle() to avoid throwing errors when no match is found
+            const { data: specDataRaw } = await supabase
+                .from("specializations")
                 .select("id")
-                .eq("profile_id", profile.id)
+                .or(`name_en.eq.${data.specialty},name_ar.eq.${data.specialty}`)
                 .maybeSingle();
 
-            const doctorProfile = doctorProfileRaw as { id: string } | null;
-            if (doctorProfile) {
-                // Check if already exists (use maybeSingle to avoid error on no match)
-                const { data: existing } = await supabase
-                    .from("doctor_specializations")
+            const specData = specDataRaw as { id: string } | null;
+            if (specData) {
+                const { data: doctorProfileRaw } = await supabase
+                    .from("doctor_profiles")
                     .select("id")
-                    .eq("doctor_profile_id", doctorProfile.id)
-                    .eq("specialization_id", specData.id)
+                    .eq("profile_id", profile.id)
                     .maybeSingle();
 
-                if (!existing) {
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    await (supabase as any)
+                const doctorProfile = doctorProfileRaw as { id: string } | null;
+                if (doctorProfile) {
+                    // Check if already exists (use maybeSingle to avoid error on no match)
+                    const { data: existing } = await supabase
                         .from("doctor_specializations")
-                        .insert({
-                            doctor_profile_id: doctorProfile.id,
-                            specialization_id: specData.id,
-                            is_primary: true,
-                        });
+                        .select("id")
+                        .eq("doctor_profile_id", doctorProfile.id)
+                        .eq("specialization_id", specData.id)
+                        .maybeSingle();
+
+                    if (!existing) {
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        await (supabase as any)
+                            .from("doctor_specializations")
+                            .insert({
+                                doctor_profile_id: doctorProfile.id,
+                                specialization_id: specData.id,
+                                is_primary: true,
+                            });
+                    }
                 }
             }
         }
-    }
 
-    return { success: true };
+        // Save availability if provided (wrapped in try-catch to prevent blocking onboarding)
+        try {
+            if (data.availableDays && data.availableDays.trim() && data.workingHours && data.workingHours.trim()) {
+                // Get doctor_profile id
+                const { data: doctorProfileRaw } = await supabase
+                    .from("doctor_profiles")
+                    .select("id")
+                    .eq("profile_id", profile.id)
+                    .maybeSingle();
+
+                const doctorProfile = doctorProfileRaw as { id: string } | null;
+                    if (doctorProfile) {
+                        // Parse available days (e.g., "monday, tuesday, friday")
+                        const daysArray = data.availableDays.split(",").map((d: string) => d.trim().toLowerCase());
+
+                        // Map day names to day_of_week integers (0 = Sunday, 6 = Saturday)
+                        const dayMapping: Record<string, number> = {
+                            sunday: 0,
+                            monday: 1,
+                            tuesday: 2,
+                            wednesday: 3,
+                            thursday: 4,
+                            friday: 5,
+                            saturday: 6,
+                        };
+
+                        // Parse working hours (e.g., "9:00 AM - 5:00 PM")
+                        const parseTime = (timeStr: string): string => {
+                            const match = timeStr.match(/(\d+):(\d+)\s*(AM|PM)/i);
+                            if (!match) return "09:00:00";
+
+                            let hours = parseInt(match[1], 10);
+                            const minutes = match[2];
+                            const meridiem = match[3].toUpperCase();
+
+                            if (meridiem === "PM" && hours !== 12) hours += 12;
+                            if (meridiem === "AM" && hours === 12) hours = 0;
+
+                            return `${hours.toString().padStart(2, "0")}:${minutes}:00`;
+                        };
+
+                        const timeParts = data.workingHours.split("-").map((t: string) => t.trim());
+                        const startTime = timeParts[0] ? parseTime(timeParts[0]) : "09:00:00";
+                        const endTime = timeParts[1] ? parseTime(timeParts[1]) : "17:00:00";
+
+                        // Delete existing availability for this doctor
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        await (supabase as any)
+                            .from("doctor_availability")
+                            .delete()
+                            .eq("doctor_profile_id", doctorProfile.id);
+
+                        // Insert new availability records
+                        const availabilityRecords = daysArray
+                            .filter((day: string) => dayMapping[day] !== undefined)
+                            .map((day: string) => ({
+                                doctor_profile_id: doctorProfile.id,
+                                day_of_week: dayMapping[day],
+                                start_time: startTime,
+                                end_time: endTime,
+                                is_active: true,
+                            }));
+
+                        if (availabilityRecords.length > 0) {
+                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                            await (supabase as any)
+                                .from("doctor_availability")
+                                .insert(availabilityRecords);
+                        }
+                    }
+                }
+        } catch (availabilityError) {
+            // Log but don't fail the entire onboarding if availability saving fails
+            console.error("Error saving availability:", availabilityError);
+            // Continue with onboarding completion
+        }
+
+        console.log("completeOnboarding: Successfully completed onboarding");
+        return { success: true };
+    } catch (error) {
+        console.error("completeOnboarding: Fatal error:", error);
+        return {
+            success: false,
+            error: error instanceof Error ? error.message : "An unexpected error occurred during onboarding"
+        };
+    }
 }
 
 /**

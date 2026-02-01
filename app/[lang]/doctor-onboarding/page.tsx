@@ -8,6 +8,7 @@ import { useGlobalTheme } from "@/app/context/GlobalThemeContext";
 import { GlowingCard } from "@/components/ui/glowing-card";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { MultiSelectDays } from "@/components/ui/multi-select-days";
 import { useI18n } from "@/app/i18n";
 import { useAuth } from "@/app/context/AuthContext";
 import { completeOnboarding, getDoctorOnboardingStatus, uploadDoctorAvatar, uploadDoctorCredentials } from "@/app/actions/doctor-onboarding";
@@ -194,9 +195,7 @@ const onboardingTranslations = {
             specialty: "Medical Specialty",
             experience: "Years of Experience",
             license: "License Number",
-            licensePlaceholder: "ML-12345-EG",
-            certifications: "Certifications",
-            certPlaceholder: "Board certifications..."
+            licensePlaceholder: "ML-12345-EG"
         },
         step3: {
             title: "Practice Information",
@@ -210,7 +209,16 @@ const onboardingTranslations = {
             days: "Available Days",
             daysPlaceholder: "Sun - Thu",
             hours: "Working Hours",
-            hoursPlaceholder: "9 AM - 5 PM"
+            hoursPlaceholder: "9 AM - 5 PM",
+            weekdays: {
+                sunday: "Sunday",
+                monday: "Monday",
+                tuesday: "Tuesday",
+                wednesday: "Wednesday",
+                thursday: "Thursday",
+                friday: "Friday",
+                saturday: "Saturday"
+            }
         },
         step4: {
             title: "Verification",
@@ -286,9 +294,7 @@ const onboardingTranslations = {
             specialty: "التخصص الطبي",
             experience: "سنوات الخبرة",
             license: "رقم الترخيص",
-            licensePlaceholder: "ML-12345-EG",
-            certifications: "الشهادات",
-            certPlaceholder: "شهادات البورد..."
+            licensePlaceholder: "ML-12345-EG"
         },
         step3: {
             title: "معلومات العيادة",
@@ -302,7 +308,16 @@ const onboardingTranslations = {
             days: "أيام العمل",
             daysPlaceholder: "الأحد - الخميس",
             hours: "ساعات العمل",
-            hoursPlaceholder: "٩ ص - ٥ م"
+            hoursPlaceholder: "٩ ص - ٥ م",
+            weekdays: {
+                sunday: "الأحد",
+                monday: "الإثنين",
+                tuesday: "الثلاثاء",
+                wednesday: "الأربعاء",
+                thursday: "الخميس",
+                friday: "الجمعة",
+                saturday: "السبت"
+            }
         },
         step4: {
             title: "التحقق",
@@ -1182,16 +1197,139 @@ const Step2Professional = ({ formData, setFormData, isDark, text, specialties }:
                 isDark={isDark}
                 required
             />
-            <Input
-                label={text.step2.certifications}
-                placeholder={text.step2.certPlaceholder}
-                value={formData.certifications}
-                onChange={(val) => setFormData({ ...formData, certifications: val })}
-                isDark={isDark}
-            />
         </div>
     </div>
 );
+
+// Working Hours Dropdown Component
+const WorkingHoursDropdown = ({ formData, setFormData, isDark, text }: { formData: FormData; setFormData: (data: FormData) => void; isDark: boolean; text: OnboardingText }) => {
+    const [isHoursOpen, setIsHoursOpen] = useState(false);
+
+    // Generate all possible working hours (6 AM to 11 PM with various end times)
+    const workingHoursPresets = [
+        // Early morning shifts
+        "6:00 AM - 12:00 PM",
+        "6:00 AM - 2:00 PM",
+        "6:00 AM - 4:00 PM",
+        "7:00 AM - 1:00 PM",
+        "7:00 AM - 3:00 PM",
+        "7:00 AM - 5:00 PM",
+        // Standard morning shifts
+        "8:00 AM - 12:00 PM",
+        "8:00 AM - 2:00 PM",
+        "8:00 AM - 4:00 PM",
+        "8:00 AM - 6:00 PM",
+        "8:00 AM - 8:00 PM",
+        // Mid-morning shifts
+        "9:00 AM - 1:00 PM",
+        "9:00 AM - 3:00 PM",
+        "9:00 AM - 5:00 PM",
+        "9:00 AM - 7:00 PM",
+        "9:00 AM - 9:00 PM",
+        // Late morning shifts
+        "10:00 AM - 2:00 PM",
+        "10:00 AM - 4:00 PM",
+        "10:00 AM - 6:00 PM",
+        "10:00 AM - 8:00 PM",
+        "10:00 AM - 10:00 PM",
+        // Afternoon shifts
+        "12:00 PM - 4:00 PM",
+        "12:00 PM - 6:00 PM",
+        "12:00 PM - 8:00 PM",
+        "12:00 PM - 10:00 PM",
+        "1:00 PM - 5:00 PM",
+        "1:00 PM - 7:00 PM",
+        "1:00 PM - 9:00 PM",
+        "1:00 PM - 11:00 PM",
+        // Evening shifts
+        "2:00 PM - 6:00 PM",
+        "2:00 PM - 8:00 PM",
+        "2:00 PM - 10:00 PM",
+        "3:00 PM - 7:00 PM",
+        "3:00 PM - 9:00 PM",
+        "3:00 PM - 11:00 PM",
+        "4:00 PM - 8:00 PM",
+        "4:00 PM - 10:00 PM",
+        "4:00 PM - 12:00 AM",
+        // Night shifts
+        "5:00 PM - 9:00 PM",
+        "5:00 PM - 11:00 PM",
+        "5:00 PM - 1:00 AM",
+        "6:00 PM - 10:00 PM",
+        "6:00 PM - 12:00 AM",
+        "6:00 PM - 2:00 AM",
+        // Extended hours
+        "24/7 Available",
+        "On-Call"
+    ];
+
+    return (
+        <div className="relative">
+            <label className={cn("block text-sm font-medium mb-1.5", isDark ? "text-gray-300" : "text-gray-700")}>
+                {text.step3.hours}
+            </label>
+                <button
+                    type="button"
+                    onClick={() => setIsHoursOpen(!isHoursOpen)}
+                    className={cn(
+                        "w-full px-3 py-2 rounded-lg border text-left flex items-center justify-between transition-all",
+                        isDark
+                            ? "bg-slate-800/50 border-slate-700 text-gray-200 hover:border-slate-600"
+                            : "bg-white border-gray-300 text-gray-900 hover:border-gray-400",
+                        isHoursOpen && "ring-2 ring-teal-500/50"
+                    )}
+                >
+                    <span className={cn("text-sm", !formData.workingHours && (isDark ? "text-gray-500" : "text-gray-400"))}>
+                        {formData.workingHours || text.step3.hoursPlaceholder}
+                    </span>
+                    <svg
+                        className={cn("w-4 h-4 transition-transform", isHoursOpen && "rotate-180")}
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                    >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                </button>
+
+                {/* Dropdown Menu for Working Hours */}
+                {isHoursOpen && (
+                    <>
+                        {/* Backdrop */}
+                        <div className="fixed inset-0 z-[90]" onClick={() => setIsHoursOpen(false)} />
+
+                        {/* Dropdown content */}
+                        <div
+                            className={cn(
+                                "absolute z-[100] w-full mt-1 rounded-lg border shadow-xl max-h-64 overflow-y-auto",
+                                isDark ? "bg-slate-800 border-slate-700" : "bg-white border-gray-300"
+                            )}
+                            style={{ position: 'absolute' }}
+                        >
+                            {workingHoursPresets.map((preset) => (
+                                <div
+                                    key={preset}
+                                    onClick={() => {
+                                        setFormData({ ...formData, workingHours: preset });
+                                        setIsHoursOpen(false);
+                                    }}
+                                    className={cn(
+                                        "px-3 py-2.5 cursor-pointer transition-colors text-sm",
+                                        isDark
+                                            ? "hover:bg-slate-700/50 text-gray-200"
+                                            : "hover:bg-gray-50 text-gray-700",
+                                        formData.workingHours === preset && (isDark ? "bg-teal-500/10" : "bg-teal-50")
+                                    )}
+                                >
+                                    {preset}
+                                </div>
+                            ))}
+                        </div>
+                    </>
+                )}
+        </div>
+    );
+};
 
 // Step 3: Practice Information
 const Step3Practice = ({ formData, setFormData, isDark, text }: { formData: FormData; setFormData: (data: FormData) => void; isDark: boolean; text: OnboardingText }) => (
@@ -1232,20 +1370,24 @@ const Step3Practice = ({ formData, setFormData, isDark, text }: { formData: Form
             onChange={(val) => setFormData({ ...formData, address: val })}
             isDark={isDark}
         />
-        <div className="grid grid-cols-2 gap-3">
-            <Input
-                label={text.step3.days}
-                placeholder={text.step3.daysPlaceholder}
+
+        {/* Available Days & Working Hours - Side by Side */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {/* Available Days Multi-Select */}
+            <MultiSelectDays
                 value={formData.availableDays}
-                onChange={(val) => setFormData({ ...formData, availableDays: val })}
+                onChange={(days) => setFormData({ ...formData, availableDays: days })}
+                placeholder={text.step3.daysPlaceholder}
                 isDark={isDark}
+                label={text.step3.days}
             />
-            <Input
-                label={text.step3.hours}
-                placeholder={text.step3.hoursPlaceholder}
-                value={formData.workingHours}
-                onChange={(val) => setFormData({ ...formData, workingHours: val })}
+
+            {/* Working Hours Dropdown */}
+            <WorkingHoursDropdown
+                formData={formData}
+                setFormData={setFormData}
                 isDark={isDark}
+                text={text}
             />
         </div>
     </div>
@@ -1475,11 +1617,10 @@ interface FormData {
     specialty: string;
     experience: string;
     licenseNumber: string;
-    certifications: string;
     // Step 3
     clinicName: string;
     address: string;
-    availableDays: string;
+    availableDays: string[];
     workingHours: string;
     consultationFee: string;
     // Step 4
@@ -1498,10 +1639,9 @@ const initialFormData: FormData = {
     specialty: "",
     experience: "",
     licenseNumber: "",
-    certifications: "",
     clinicName: "",
     address: "",
-    availableDays: "",
+    availableDays: [],
     workingHours: "",
     consultationFee: "",
     licenseDocument: "",
@@ -1641,10 +1781,11 @@ export default function DoctorOnboarding() {
             return hasSpecialty && hasExperience && hasLicense;
         }
         if (currentStep === 3) {
-            // Require clinic name and consultation fee
+            // Require clinic name, consultation fee, and at least one available day
             const hasClinicName = formData.clinicName.trim().length > 0;
             const hasFee = formData.consultationFee.length > 0 && parseInt(formData.consultationFee) > 0;
-            return hasClinicName && hasFee;
+            const hasAvailableDays = formData.availableDays.length > 0;
+            return hasClinicName && hasFee && hasAvailableDays;
         }
         if (currentStep === 4) {
             // Require terms acceptance on verification step
@@ -1741,10 +1882,9 @@ export default function DoctorOnboarding() {
                     specialty: formData.specialty,
                     experience: formData.experience,
                     licenseNumber: formData.licenseNumber,
-                    certifications: formData.certifications,
                     clinicName: formData.clinicName,
                     address: formData.address,
-                    availableDays: formData.availableDays,
+                    availableDays: formData.availableDays.join(", "),
                     workingHours: formData.workingHours,
                     consultationFee: formData.consultationFee,
                     bio: formData.bio,
@@ -1754,8 +1894,9 @@ export default function DoctorOnboarding() {
                     setIsSubmitting(false);
                     return;
                 }
-            } catch {
-                setSubmitError("Failed to submit application");
+            } catch (err) {
+                console.error("Error submitting application:", err);
+                setSubmitError(err instanceof Error ? err.message : "Failed to submit application");
                 setIsSubmitting(false);
                 return;
             }
