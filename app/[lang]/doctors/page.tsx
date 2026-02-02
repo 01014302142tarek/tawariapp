@@ -7,6 +7,7 @@ import { useSearchParams } from "next/navigation";
 import { useI18n } from "../../i18n";
 import { useGlobalTheme } from "@/app/context/GlobalThemeContext";
 import { getAvailableDoctors, getSpecializations, type DoctorForBooking } from "@/app/actions/appointments";
+import { generateDoctorSlug } from "@/lib/utils";
 
 // Custom Logo Component
 const LogoFull = ({ className = "", isDark = true }: { className?: string; isDark?: boolean }) => (
@@ -532,7 +533,7 @@ function DoctorsPageContent() {
                                             </p>
                                             <div className="flex gap-2">
                                                 <Link
-                                                    href={`/${language}/doctors/${doctor.id}`}
+                                                    href={`/${language}/doctors/${generateDoctorSlug(doctor.full_name, doctor.id)}`}
                                                     className={`flex-1 py-2 rounded-xl text-sm font-medium text-center transition-all ${
                                                         isDark
                                                             ? 'bg-white/5 hover:bg-white/10 border border-white/10'
@@ -542,7 +543,7 @@ function DoctorsPageContent() {
                                                     {t.viewProfile}
                                                 </Link>
                                                 <Link
-                                                    href={`/${language}/login?redirect=/doctors/${doctor.id}`}
+                                                    href={`/${language}/login?redirect=/doctors/${generateDoctorSlug(doctor.full_name, doctor.id)}`}
                                                     className="flex-1 bg-teal-500 hover:bg-teal-400 text-white font-semibold text-sm py-2 rounded-xl transition-all text-center"
                                                 >
                                                     {t.bookNow}

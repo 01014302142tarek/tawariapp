@@ -22,12 +22,13 @@ export async function POST(request: NextRequest) {
         // Use admin client to bypass RLS
         const supabase = await createAdminClient();
 
-        // Update doctor status to offline
+        // Update doctor status to offline (both is_online and is_available_now)
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const { error } = await (supabase as any)
             .from("doctor_profiles")
             .update({
                 is_online: false,
+                is_available_now: false,
                 went_online_at: null,
             })
             .eq("id", doctorProfileId);

@@ -113,12 +113,13 @@ export async function toggleDoctorOnline(
         return { success: false, error: "Please set your consultation fee before going online" };
     }
 
-    // Update online status
+    // Update online status (both is_online and is_available_now)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { error } = await (supabase as any)
         .from("doctor_profiles")
         .update({
             is_online: goOnline,
+            is_available_now: goOnline,
             went_online_at: goOnline ? new Date().toISOString() : null,
             current_queue_entry_id: goOnline ? doctor.current_queue_entry_id : null,
         })

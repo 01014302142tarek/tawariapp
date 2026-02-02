@@ -50,11 +50,12 @@ async function resetAllDoctorsOffline() {
         console.log(`  - ${d.profiles?.full_name || 'Unknown'}`);
     });
 
-    // Reset all to offline
+    // Reset all to offline (both is_online and is_available_now)
     const { error } = await supabase
         .from('doctor_profiles')
         .update({
             is_online: false,
+            is_available_now: false,
             went_online_at: null
         })
         .eq('is_online', true);
