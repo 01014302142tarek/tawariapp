@@ -530,7 +530,7 @@ export default function DoctorProfileClient({ doctor, lang }: DoctorProfileClien
 
                                     {/* Book Button */}
                                     <Link
-                                        href={`/${language}/login?redirect=/doctors/${doctor.id}`}
+                                        href={`/${language}/login?redirect=/doctors/${doctor.slug}`}
                                         className="block w-full bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-400 hover:to-teal-500 text-white font-bold py-3 px-6 rounded-xl transition-all text-center shadow-lg shadow-teal-500/25"
                                     >
                                         {t.bookNow}

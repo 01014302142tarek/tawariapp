@@ -1119,6 +1119,7 @@ export async function getConsultationUserInfo(): Promise<{
 export interface DoctorForBooking {
     id: string;
     profile_id: string;
+    slug: string;
     full_name: string;
     avatar_url?: string;
     bio?: string;
@@ -1151,6 +1152,7 @@ export async function getAvailableDoctors(filters?: {
         .select(`
             id,
             profile_id,
+            slug,
             bio,
             years_of_experience,
             consultation_fee,
@@ -1227,6 +1229,7 @@ export async function getAvailableDoctors(filters?: {
         return {
         id: doc.id,
         profile_id: doc.profile_id,
+        slug: doc.slug,
         full_name: doc.profiles.full_name,
         avatar_url: doc.profiles.avatar_url,
         bio: doc.bio,
@@ -1497,9 +1500,13 @@ export interface DoctorProfileDetail extends DoctorForBooking {
  * Get detailed doctor profile for patients to view before booking
  */
 export async function getDoctorById(
-    doctorId: string
+    doctorIdOrSlug: string
 ): Promise<{ doctor: DoctorProfileDetail | null; error?: string }> {
     const supabase = await createClient();
+
+    // Determine if input is UUID or slug
+    const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(doctorIdOrSlug);
+    const filterField = isUUID ? "id" : "slug";
 
     // Get doctor profile with all details - use explicit FK to avoid ambiguity
     // Note: only selecting columns that exist in the current database schema
@@ -1508,6 +1515,7 @@ export async function getDoctorById(
         .select(`
             id,
             profile_id,
+            slug,
             bio,
             years_of_experience,
             consultation_fee,
@@ -1526,7 +1534,7 @@ export async function getDoctorById(
                 )
             )
         `)
-        .eq("id", doctorId)
+        .eq(filterField, doctorIdOrSlug)
         .eq("verification_status", "verified")
         .single();
 
@@ -1551,7 +1559,7 @@ export async function getDoctorById(
                 )
             )
         `)
-        .eq("doctor_profile_id", doctorId)
+        .eq("doctor_profile_id", doc.id)
         .eq("is_visible", true)
         .order("created_at", { ascending: false })
         .limit(5);
@@ -1578,6 +1586,7 @@ export async function getDoctorById(
         doctor: {
             id: doc.id,
             profile_id: doc.profile_id,
+            slug: doc.slug,
             full_name: doc.profiles?.full_name || "",
             avatar_url: doc.profiles?.avatar_url,
             bio: doc.bio,

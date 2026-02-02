@@ -10,6 +10,7 @@ import {
     signInWithPassword as serverSignIn,
     signUpWithPassword as serverSignUp,
     signUpDoctor as serverSignUpDoctor,
+    signOut as serverSignOut,
 } from "@/app/actions/auth";
 import {
     type FullProfile,
@@ -207,9 +208,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
 
     const signOut = async () => {
-        // Clear profile cache before signing out
-        cacheProfile(null);
-        await supabase.auth.signOut();
+        try {
+            // Use server action to sign out (handles doctor availability)
+            // This must happen BEFORE clearing the cache
+            const result = await serverSignOut();
+
+            if (!result.success) {
+                console.error("[AuthContext] Sign out failed:", result.error);
+            }
+
+            // Clear profile cache after signing out
+            cacheProfile(null);
+
+            // Refresh client session to trigger auth state change
+            await supabase.auth.getSession();
+        } catch (error) {
+            console.error("[AuthContext] Error during sign out:", error);
+            // Clear cache anyway
+            cacheProfile(null);
+            // Try to clear session anyway
+            await supabase.auth.getSession();
+        }
     };
 
     const updateUserRole = async (role: string) => {
