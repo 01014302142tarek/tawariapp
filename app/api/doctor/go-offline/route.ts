@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
             .from("profiles")
             .select("id, role")
             .eq("user_id", user.id)
-            .single();
+            .single<{ id: string; role: string }>();
 
         if (!profileData || profileData.role !== "doctor") {
             return NextResponse.json(
@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
             .from("doctor_profiles")
             .select("id")
             .eq("profile_id", profileData.id)
-            .single();
+            .single<{ id: string }>();
 
         if (!doctorData || doctorData.id !== doctorProfileId) {
             return NextResponse.json(
