@@ -36,11 +36,10 @@ export function Breadcrumbs({ items, className = "" }: BreadcrumbsProps) {
 
     return (
         <>
-            {/* JSON-LD Structured Data */}
+            {/* JSON-LD Structured Data - Safe: JSON.stringify escapes content */}
             <script
                 type="application/ld+json"
-                // nosemgrep: typescript.react.security.audit.react-dangerouslysetinnerhtml.react-dangerouslysetinnerhtml
-                // Safe: JSON.stringify escapes content, and this is for JSON-LD structured data (not executed)
+                // nosemgrep: react-dangerouslysetinnerhtml
                 dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
             />
 
