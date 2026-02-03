@@ -3,7 +3,6 @@ import { notFound } from "next/navigation";
 import { getDoctorById } from "@/app/actions/appointments";
 import { siteConfig } from "@/lib/seo/config";
 import { DoctorJsonLd } from "@/components/seo/JsonLd";
-import { extractDoctorIdFromSlug, generateDoctorSlug } from "@/lib/utils";
 import DoctorProfileClient from "./DoctorProfileClient";
 
 const BASE_URL = siteConfig.url;
@@ -14,8 +13,7 @@ type Props = {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const { lang, slug } = await params;
-    const doctorId = extractDoctorIdFromSlug(slug);
-    const { doctor } = await getDoctorById(doctorId);
+    const { doctor } = await getDoctorById(slug);
 
     if (!doctor) {
         return {
@@ -33,23 +31,22 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         ? `احجز استشارة فيديو مع د. ${doctor.full_name}، ${specialty} مع ${doctor.years_of_experience || 0} سنوات خبرة. تقييم ${doctor.rating_average?.toFixed(1) || "N/A"}/5 من ${doctor.rating_count || 0} مريض.`
         : `Book a video consultation with Dr. ${doctor.full_name}, ${specialty} with ${doctor.years_of_experience || 0} years of experience. Rated ${doctor.rating_average?.toFixed(1) || "N/A"}/5 by ${doctor.rating_count || 0} patients.`;
 
-    // Generate the canonical slug for this doctor
-    const canonicalSlug = generateDoctorSlug(doctor.full_name, doctor.id);
+    const doctorSlug = doctor.slug;
 
     return {
         title,
         description,
         alternates: {
-            canonical: `${BASE_URL}/${lang}/doctors/${canonicalSlug}`,
+            canonical: `${BASE_URL}/${lang}/doctors/${doctorSlug}`,
             languages: {
-                en: `${BASE_URL}/en/doctors/${canonicalSlug}`,
-                ar: `${BASE_URL}/ar/doctors/${canonicalSlug}`,
+                en: `${BASE_URL}/en/doctors/${doctorSlug}`,
+                ar: `${BASE_URL}/ar/doctors/${doctorSlug}`,
             },
         },
         openGraph: {
             title: `${title} | ${siteConfig.name}`,
             description,
-            url: `${BASE_URL}/${lang}/doctors/${canonicalSlug}`,
+            url: `${BASE_URL}/${lang}/doctors/${doctorSlug}`,
             locale: isArabic ? "ar_EG" : "en_US",
             type: "profile",
             images: doctor.avatar_url
@@ -62,13 +59,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function DoctorProfilePage({ params }: Props) {
     const { lang, slug } = await params;
 
-    // Extract the doctor ID from the slug
-    const doctorId = extractDoctorIdFromSlug(slug);
+    // Debug: log the doctor slug being requested
+    console.log("[DoctorProfile] Fetching doctor with slug:", slug);
 
-    // Debug: log the doctor ID being requested
-    console.log("[DoctorProfile] Fetching doctor with slug:", slug, "ID:", doctorId);
-
-    const { doctor, error } = await getDoctorById(doctorId);
+    const { doctor, error } = await getDoctorById(slug);
 
     // Debug: log the result
     console.log("[DoctorProfile] Result:", { doctor: doctor?.full_name, error });
@@ -79,7 +73,6 @@ export default async function DoctorProfilePage({ params }: Props) {
     }
 
     const specialty = doctor.specializations[0] || "General Practice";
-    const canonicalSlug = generateDoctorSlug(doctor.full_name, doctor.id);
 
     return (
         <>
@@ -90,7 +83,7 @@ export default async function DoctorProfilePage({ params }: Props) {
                 rating={doctor.rating_average || undefined}
                 reviewCount={doctor.rating_count || undefined}
                 description={doctor.bio || undefined}
-                url={`${BASE_URL}/${lang}/doctors/${canonicalSlug}`}
+                url={`${BASE_URL}/${lang}/doctors/${doctor.slug}`}
             />
             <DoctorProfileClient doctor={doctor} lang={lang} />
         </>

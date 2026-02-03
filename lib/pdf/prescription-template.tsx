@@ -33,6 +33,7 @@ const styles = StyleSheet.create({
     logo: {
         width: 80,
         height: 80,
+        borderWidth: 0,
     },
     headerTitle: {
         textAlign: "center",

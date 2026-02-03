@@ -218,19 +218,79 @@ export async function updatePassword(
 
 /**
  * Sign out the current user
+ * For doctors: automatically sets is_available_now to false
  */
 export async function signOut(): Promise<{ success: boolean; error?: string }> {
-    const supabase = await createClient();
-    const { error } = await supabase.auth.signOut();
+    try {
+        const supabase = await createClient();
 
-    if (error) {
+        // Get current user before signing out
+        const { data: { user } } = await supabase.auth.getUser();
+
+        if (user) {
+            // Check if user is a doctor and set availability to false
+            const { data: profileData } = await supabase
+                .from("profiles")
+                .select("id, role")
+                .eq("user_id", user.id)
+                .single();
+
+            const profile = profileData as { id: string; role: string } | null;
+
+            if (profile && profile.role === "doctor") {
+                // Get doctor profile
+                const { data: doctorProfileData } = await supabase
+                    .from("doctor_profiles")
+                    .select("id")
+                    .eq("profile_id", profile.id)
+                    .single();
+
+                const doctorProfile = doctorProfileData as { id: string } | null;
+
+                if (doctorProfile) {
+                    // Set doctor as unavailable before logout
+                    console.log("[Auth] Setting doctor unavailable on logout:", doctorProfile.id);
+
+                    try {
+                        // Use regular client - the user is still authenticated at this point
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        const { error: updateError } = await (supabase as any)
+                            .from("doctor_profiles")
+                            .update({ is_available_now: false })
+                            .eq("id", doctorProfile.id);
+
+                        if (updateError) {
+                            console.error("[Auth] Error setting doctor unavailable:", updateError);
+                            // Continue with logout even if update fails
+                        } else {
+                            console.log("[Auth] Doctor set to unavailable successfully");
+                        }
+                    } catch (updateErr) {
+                        console.error("[Auth] Error updating doctor availability:", updateErr);
+                        // Continue with logout even if update fails
+                    }
+                }
+            }
+        }
+
+        // Proceed with sign out
+        const { error } = await supabase.auth.signOut();
+
+        if (error) {
+            return {
+                success: false,
+                error: error.message,
+            };
+        }
+
+        return { success: true };
+    } catch (error) {
+        console.error("[Auth] Unexpected error during signOut:", error);
         return {
             success: false,
-            error: error.message,
+            error: "An unexpected error occurred during sign out",
         };
     }
-
-    return { success: true };
 }
 
 /**

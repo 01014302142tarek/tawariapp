@@ -6,7 +6,6 @@ import Image from "next/image";
 import { useI18n } from "@/app/i18n";
 import { useGlobalTheme } from "@/app/context/GlobalThemeContext";
 import type { DoctorProfileDetail } from "@/app/actions/appointments";
-import { generateDoctorSlug } from "@/lib/utils";
 
 // Translations
 const translations = {
@@ -255,9 +254,6 @@ export default function DoctorProfileClient({ doctor, lang }: DoctorProfileClien
     const { isDark } = useGlobalTheme();
     const t = translations[language as keyof typeof translations] || translations.en;
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-
-    // Generate slug for this doctor
-    const doctorSlug = generateDoctorSlug(doctor.full_name, doctor.id);
 
     // Theme-aware class helpers
     const bgMain = isDark ? 'bg-[#0F172A]' : 'bg-[#F8FAFC]';
@@ -534,7 +530,7 @@ export default function DoctorProfileClient({ doctor, lang }: DoctorProfileClien
 
                                     {/* Book Button */}
                                     <Link
-                                        href={`/${language}/login?redirect=/doctors/${doctorSlug}`}
+                                        href={`/${language}/login?redirect=/doctors/${doctor.slug}`}
                                         className="block w-full bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-400 hover:to-teal-500 text-white font-bold py-3 px-6 rounded-xl transition-all text-center shadow-lg shadow-teal-500/25"
                                     >
                                         {t.bookNow}

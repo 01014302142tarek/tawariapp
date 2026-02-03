@@ -6,12 +6,11 @@ import { createClient } from "@/lib/supabase/client";
 import { getCurrentUserProfile } from "@/app/actions/profile";
 
 const PROFILE_CACHE_KEY = "tawari_profile_cache";
-const SESSION_ONLY_KEY = "tawari_session_only";
-const BROWSER_SESSION_KEY = "tawari_browser_session";
 import {
     signInWithPassword as serverSignIn,
     signUpWithPassword as serverSignUp,
     signUpDoctor as serverSignUpDoctor,
+    signOut as serverSignOut,
 } from "@/app/actions/auth";
 import {
     type FullProfile,
@@ -47,7 +46,7 @@ interface AuthContextType {
     isLoading: boolean;
     refreshProfile: () => Promise<void>;
     signUp: (email: string, password: string, metadata?: { fullName?: string; phone?: string; role?: string }) => Promise<AuthResult>;
-    signIn: (email: string, password: string, rememberMe?: boolean) => Promise<AuthResult>;
+    signIn: (email: string, password: string) => Promise<AuthResult>;
     signInWithGoogle: () => Promise<{ error: Error | null }>;
     signOut: () => Promise<void>;
     updateUserRole: (role: string) => Promise<{ error: Error | null }>;
@@ -116,32 +115,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // Get initial session and profile
         const getSession = async () => {
             const { data: { session } } = await supabase.auth.getSession();
-
-            // Check if this is a new browser session and user didn't want to be remembered
-            if (typeof window !== "undefined" && session?.user) {
-                const sessionOnly = localStorage.getItem(SESSION_ONLY_KEY);
-                const browserSessionActive = sessionStorage.getItem(BROWSER_SESSION_KEY);
-
-                // If session-only flag is set but browser session marker is missing,
-                // this is a new browser session - sign out the user
-                if (sessionOnly === "true" && !browserSessionActive) {
-                    console.log("Session-only login detected, new browser session - signing out");
-                    localStorage.removeItem(SESSION_ONLY_KEY);
-                    await supabase.auth.signOut();
-                    setSession(null);
-                    setUser(null);
-                    cacheProfile(null);
-                    setProfile(null);
-                    setIsLoading(false);
-                    return;
-                }
-
-                // Mark this browser session as active
-                if (sessionOnly === "true") {
-                    sessionStorage.setItem(BROWSER_SESSION_KEY, "active");
-                }
-            }
-
             setSession(session);
             setUser(session?.user ?? null);
 
@@ -206,7 +179,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return { error: null };
     };
 
-    const signIn = async (email: string, password: string, rememberMe: boolean = true): Promise<AuthResult> => {
+    const signIn = async (email: string, password: string): Promise<AuthResult> => {
         // Use rate-limited server action
         const result = await serverSignIn(email, password);
 
@@ -215,19 +188,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 error: new Error(result.error || "Sign in failed"),
                 retryAfter: result.retryAfter,
             };
-        }
-
-        // Handle "Remember Me" preference
-        if (typeof window !== "undefined") {
-            if (rememberMe) {
-                // Clear the session-only flag if user wants to be remembered
-                localStorage.removeItem(SESSION_ONLY_KEY);
-            } else {
-                // Set flag to indicate session should end when browser closes
-                localStorage.setItem(SESSION_ONLY_KEY, "true");
-                // Mark this browser session
-                sessionStorage.setItem(BROWSER_SESSION_KEY, "active");
-            }
         }
 
         // After successful server-side auth, refresh the client session
@@ -248,30 +208,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
 
     const signOut = async () => {
-        // If user is a doctor, set them offline before signing out
-        if (profile && isDoctorProfile(profile)) {
-            const doctorProfileId = profile.doctorProfile?.id;
-            if (doctorProfileId && typeof window !== "undefined") {
-                try {
-                    // Use fetch instead of beacon for synchronous call during signout
-                    await fetch("/api/doctor/go-offline", {
-                        method: "POST",
-                        body: JSON.stringify({ doctorProfileId }),
-                        headers: { "Content-Type": "application/json" },
-                    });
-                } catch (error) {
-                    console.error("Error setting doctor offline:", error);
-                }
-            }
-        }
+        try {
+            // Use server action to sign out (handles doctor availability)
+            // This must happen BEFORE clearing the cache
+            const result = await serverSignOut();
 
-        // Clear profile cache and session flags before signing out
-        cacheProfile(null);
-        if (typeof window !== "undefined") {
-            localStorage.removeItem(SESSION_ONLY_KEY);
-            sessionStorage.removeItem(BROWSER_SESSION_KEY);
+            if (!result.success) {
+                console.error("[AuthContext] Sign out failed:", result.error);
+            }
+
+            // Clear profile cache after signing out
+            cacheProfile(null);
+
+            // Refresh client session to trigger auth state change
+            await supabase.auth.getSession();
+        } catch (error) {
+            console.error("[AuthContext] Error during sign out:", error);
+            // Clear cache anyway
+            cacheProfile(null);
+            // Try to clear session anyway
+            await supabase.auth.getSession();
         }
-        await supabase.auth.signOut();
     };
 
     const updateUserRole = async (role: string) => {
