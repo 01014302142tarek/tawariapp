@@ -1,4 +1,4 @@
-# Security नीति / Security Policy
+# Security Policy
 
 ## Reporting a Vulnerability
 Please use GitHub Security Advisories for private reporting.
