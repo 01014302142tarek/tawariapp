@@ -1,6 +1,5 @@
 "use client";
 
-import React from "react";
 import Link from "next/link";
 import { useI18n } from "@/app/i18n";
 import { useGlobalTheme } from "@/app/context/GlobalThemeContext";
@@ -40,6 +39,8 @@ export function Breadcrumbs({ items, className = "" }: BreadcrumbsProps) {
             {/* JSON-LD Structured Data */}
             <script
                 type="application/ld+json"
+                // nosemgrep: typescript.react.security.audit.react-dangerouslysetinnerhtml.react-dangerouslysetinnerhtml
+                // Safe: JSON.stringify escapes content, and this is for JSON-LD structured data (not executed)
                 dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
             />
 
