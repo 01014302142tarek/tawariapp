@@ -187,7 +187,7 @@ function LoginPageContent() {
         setError(null);
         setIsSubmitting(true);
 
-        const { error } = await signIn(formData.email, formData.password);
+        const { error } = await signIn(formData.email, formData.password, rememberMe);
 
         if (error) {
             setError(language === 'ar' ? 'البريد الإلكتروني أو كلمة المرور غير صحيحة' : 'Invalid email or password');

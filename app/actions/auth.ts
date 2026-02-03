@@ -64,7 +64,8 @@ export async function signInWithPassword(
 }
 
 /**
- * Sign up with email and password
+ * Sign up with email and password (for patients - auto-confirms email)
+ * Uses admin API to bypass email confirmation for patients
  * Rate limited: 5 attempts per 15 minutes per IP
  */
 export async function signUpWithPassword(
@@ -85,27 +86,66 @@ export async function signUpWithPassword(
         };
     }
 
-    const supabase = await createClient();
-    const { error } = await supabase.auth.signUp({
-        email: email.toLowerCase().trim(),
-        password,
-        options: {
-            data: {
+    try {
+        const adminClient = await createAdminClient();
+        const normalizedEmail = email.toLowerCase().trim();
+
+        // Create user with admin API and auto-confirm email for patients
+        const { data, error: createError } = await adminClient.auth.admin.createUser({
+            email: normalizedEmail,
+            password,
+            email_confirm: true, // Auto-confirm for patients - no email verification needed
+            user_metadata: {
                 full_name: metadata?.fullName,
                 phone: metadata?.phone,
                 role: metadata?.role || "patient",
             },
-        },
-    });
+        });
 
-    if (error) {
+        if (createError) {
+            // Handle duplicate email error specifically
+            if (createError.message.includes("already been registered") ||
+                createError.message.includes("already exists")) {
+                return {
+                    success: false,
+                    error: "An account with this email already exists. Please sign in instead.",
+                };
+            }
+            return {
+                success: false,
+                error: createError.message,
+            };
+        }
+
+        if (!data.user) {
+            return {
+                success: false,
+                error: "Failed to create user account",
+            };
+        }
+
+        // Sign in the user to establish a session
+        const supabase = await createClient();
+        const { error: signInError } = await supabase.auth.signInWithPassword({
+            email: normalizedEmail,
+            password,
+        });
+
+        if (signInError) {
+            return {
+                success: false,
+                error: "Account created but sign-in failed. Please try logging in.",
+            };
+        }
+
+        return { success: true };
+    } catch (error) {
+        console.error("Patient signup error:", error);
         return {
             success: false,
-            error: error.message,
+            error: "An unexpected error occurred. Please try again.",
         };
     }
-
-    return { success: true };
 }
 
 /**
@@ -254,8 +294,9 @@ export async function signOut(): Promise<{ success: boolean; error?: string }> {
 }
 
 /**
- * Sign up a doctor with email and password (auto-confirms email)
- * Uses admin API to bypass email confirmation requirement for doctor onboarding
+ * Sign up a doctor with email and password (auto-confirms for onboarding flow)
+ * Uses admin API with email_confirm: true to auto-confirm, then signs in the user
+ * This allows doctors to proceed through the onboarding flow immediately
  * Rate limited: 5 attempts per 15 minutes per IP
  */
 export async function signUpDoctor(
@@ -280,12 +321,12 @@ export async function signUpDoctor(
         const adminClient = await createAdminClient();
         const normalizedEmail = email.toLowerCase().trim();
 
-        // Create user with admin API and auto-confirm email
-        // This allows doctors to complete onboarding immediately
+        // Create user with admin API and auto-confirm email for doctors
+        // This allows the onboarding flow to proceed immediately after signup
         const { data, error: createError } = await adminClient.auth.admin.createUser({
             email: normalizedEmail,
             password,
-            email_confirm: true, // Auto-confirm to allow immediate onboarding
+            email_confirm: true, // Auto-confirm for doctors - enables immediate onboarding
             user_metadata: {
                 full_name: metadata?.fullName,
                 phone: metadata?.phone,
@@ -315,7 +356,8 @@ export async function signUpDoctor(
             };
         }
 
-        // Now sign in the user to establish a session
+        // Sign in the user to establish a session
+        // This is required for the onboarding flow to proceed to steps 2-4
         const supabase = await createClient();
         const { error: signInError } = await supabase.auth.signInWithPassword({
             email: normalizedEmail,

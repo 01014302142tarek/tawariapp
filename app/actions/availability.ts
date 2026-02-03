@@ -509,7 +509,11 @@ export async function setDoctorOnlineStatus(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { error } = await (supabase as any)
         .from("doctor_profiles")
-        .update({ is_available_now: isOnline })
+        .update({
+            is_available_now: isOnline,
+            is_online: isOnline,
+            went_online_at: isOnline ? new Date().toISOString() : null,
+        })
         .eq("id", doctorProfile.id);
 
     if (error) {
