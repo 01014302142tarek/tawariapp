@@ -8,8 +8,16 @@ on:
 permissions:
   contents: read
 
+env:
+  # Placeholder values for build (actual secrets used in Vercel production)
+  NEXT_PUBLIC_SUPABASE_URL: "https://placeholder.supabase.co"
+  NEXT_PUBLIC_SUPABASE_ANON_KEY: "placeholder-anon-key"
+  SUPABASE_SERVICE_ROLE_KEY: "placeholder-service-role-key"
+  NEXT_PUBLIC_DAILY_DOMAIN: "placeholder.daily.co"
+  DAILY_API_KEY: "placeholder-daily-key"
+
 jobs:
-  build:
+  validate:
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
@@ -22,6 +30,15 @@ jobs:
         with:
           node-version: "20"
           cache: "npm"
+
+      - name: Cache Next.js build
+        uses: actions/cache@v5
+        with:
+          path: |
+            ${{ github.workspace }}/.next/cache
+          key: ${{ runner.os }}-nextjs-${{ hashFiles('**/package-lock.json') }}-${{ hashFiles('**/*.js', '**/*.jsx', '**/*.ts', '**/*.tsx') }}
+          restore-keys: |
+            ${{ runner.os }}-nextjs-${{ hashFiles('**/package-lock.json') }}-
 
       - name: Install dependencies
         run: npm ci
