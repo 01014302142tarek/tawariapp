@@ -24,10 +24,26 @@ jobs:
         with:
           python-version: "3.11"
 
+      - name: Cache pip packages
+        uses: actions/cache@v5
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-semgrep
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
       - name: Install Semgrep
         run: pip install semgrep
 
       - name: Run Semgrep
         env:
           SEMGREP_SEND_METRICS: "off"
-        run: semgrep --config p/ci --error --metrics=off
+        run: |
+          semgrep --config p/ci \
+                  --config p/javascript \
+                  --config p/typescript \
+                  --config p/nextjs \
+                  --config p/react \
+                  --config p/secrets \
+                  --error \
+                  --metrics=off

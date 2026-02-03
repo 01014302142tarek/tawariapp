@@ -9,8 +9,10 @@ interface JsonLdProps {
 
 export function JsonLd({ data }: JsonLdProps) {
     return (
+        // Safe: JSON.stringify escapes content, and JSON-LD script tags are not executed
         <script
             type="application/ld+json"
+            // nosemgrep: react-dangerouslysetinnerhtml
             dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }}
         />
     );
