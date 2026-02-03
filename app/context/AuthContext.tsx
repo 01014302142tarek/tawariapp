@@ -46,7 +46,7 @@ interface AuthContextType {
     isLoading: boolean;
     refreshProfile: () => Promise<void>;
     signUp: (email: string, password: string, metadata?: { fullName?: string; phone?: string; role?: string }) => Promise<AuthResult>;
-    signIn: (email: string, password: string) => Promise<AuthResult>;
+    signIn: (email: string, password: string, rememberMe?: boolean) => Promise<AuthResult>;
     signInWithGoogle: () => Promise<{ error: Error | null }>;
     signOut: () => Promise<void>;
     updateUserRole: (role: string) => Promise<{ error: Error | null }>;
@@ -179,8 +179,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return { error: null };
     };
 
-    const signIn = async (email: string, password: string): Promise<AuthResult> => {
+    const signIn = async (email: string, password: string, rememberMe?: boolean): Promise<AuthResult> => {
         // Use rate-limited server action
+        // Note: rememberMe is passed but session persistence is handled by Supabase defaults
         const result = await serverSignIn(email, password);
 
         if (!result.success) {
