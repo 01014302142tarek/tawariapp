@@ -1,8 +1,19 @@
-import { createAdminClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
     try {
+        // Get authenticated user
+        const supabase = await createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        if (!user) {
+            return NextResponse.json(
+                { error: "Not authenticated" },
+                { status: 401 }
+            );
+        }
+
         // Parse the beacon data
         const text = await request.text();
         let doctorProfileId: string | undefined;
@@ -19,8 +30,33 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: "Missing doctorProfileId" }, { status: 400 });
         }
 
-        // Use admin client to bypass RLS
-        const supabase = await createAdminClient();
+        // Get user's profile
+        const { data: profileData } = await supabase
+            .from("profiles")
+            .select("id, role")
+            .eq("user_id", user.id)
+            .single();
+
+        if (!profileData || profileData.role !== "doctor") {
+            return NextResponse.json(
+                { error: "Not authorized" },
+                { status: 403 }
+            );
+        }
+
+        // Get doctor's profile to verify ownership
+        const { data: doctorData } = await supabase
+            .from("doctor_profiles")
+            .select("id")
+            .eq("profile_id", profileData.id)
+            .single();
+
+        if (!doctorData || doctorData.id !== doctorProfileId) {
+            return NextResponse.json(
+                { error: "Not authorized to update this doctor profile" },
+                { status: 403 }
+            );
+        }
 
         // Update doctor status to offline (both is_online and is_available_now)
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
