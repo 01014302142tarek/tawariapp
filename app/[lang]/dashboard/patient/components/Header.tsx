@@ -101,6 +101,27 @@ const getInitials = (name: string): string => {
     return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
 };
 
+// Language Toggle Button Component
+const LanguageToggleButton = ({ isDark }: { isDark: boolean }) => {
+    const { language, setLanguage } = useI18n();
+
+    return (
+        <button
+            onClick={() => setLanguage(language === 'en' ? 'ar' : 'en')}
+            className={cn(
+                "flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors",
+                isDark
+                    ? "bg-white/5 hover:bg-white/10 border border-white/10 text-gray-300 hover:text-white"
+                    : "bg-gray-100 hover:bg-gray-200 border border-gray-200 text-gray-600 hover:text-gray-900"
+            )}
+            title={language === 'en' ? 'Switch to Arabic' : 'Switch to English'}
+        >
+            {Icons.globe}
+            <span>{language === 'en' ? 'العربية' : 'English'}</span>
+        </button>
+    );
+};
+
 // User Dropdown with Theme Appearance and Language submenu
 const UserDropdown = ({
     name,
@@ -408,6 +429,8 @@ export default function Header({ onMenuClick }: { onMenuClick?: () => void }) {
                         {Icons.calendar}
                         <span className="font-medium">{currentDate}</span>
                     </div>
+                    {/* Language Toggle */}
+                    <LanguageToggleButton isDark={isDark} />
                 </div>
 
                 {/* Right: Actions */}

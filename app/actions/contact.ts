@@ -1,6 +1,8 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { contactLimiter } from "@/lib/rate-limit";
+import { headers } from "next/headers";
 
 // ============================================
 // Types
@@ -18,6 +20,19 @@ export interface ContactSubmissionResult {
     error?: string;
 }
 
+async function getClientIP(): Promise<string> {
+    const headersList = await headers();
+    const forwardedFor = headersList.get("x-forwarded-for");
+    if (forwardedFor) {
+        return forwardedFor.split(",")[0].trim();
+    }
+    const realIP = headersList.get("x-real-ip");
+    if (realIP) {
+        return realIP;
+    }
+    return "unknown";
+}
+
 // ============================================
 // Contact Form Actions
 // ============================================
@@ -30,6 +45,15 @@ export interface ContactSubmissionResult {
 export async function submitContactForm(
     data: ContactFormData
 ): Promise<ContactSubmissionResult> {
+    const clientIP = await getClientIP();
+    const rateLimit = await contactLimiter.check(`contact:${clientIP}`);
+    if (!rateLimit.allowed) {
+        return {
+            success: false,
+            error: "Too many messages sent. Please wait before submitting again."
+        };
+    }
+
     // Validate input
     if (!data.name || data.name.trim().length < 2) {
         return { success: false, error: "Name must be at least 2 characters" };

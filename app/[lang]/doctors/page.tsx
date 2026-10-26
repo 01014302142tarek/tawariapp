@@ -603,7 +603,6 @@ function DoctorsPageContent() {
                             <div className="flex flex-col gap-3.5">
                                 <Link href={`/${language}/doctor-onboarding`} className={`${textSecondary} text-sm hover:text-teal-500 hover:${isRTL ? 'mr' : 'ml'}-1 transition-all`}>{t.footerJoinAsDoctor}</Link>
                                 <Link href={`/${language}/faq`} className={`${textSecondary} text-sm hover:text-teal-500 hover:${isRTL ? 'mr' : 'ml'}-1 transition-all`}>{t.footerDoctorFaq}</Link>
-                                <span className={`${textSecondary} text-sm cursor-default`}>{t.footerPricing}</span>
                             </div>
                         </div>
 

@@ -56,7 +56,7 @@ function isAuthRoute(pathname: string): boolean {
     return authRoutes.some(route => pathWithoutLocale.startsWith(route))
 }
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
     const pathname = request.nextUrl.pathname
 
     // Skip auth callback route

@@ -254,6 +254,17 @@ export const otpLimiter = new RateLimiter({
 });
 
 /**
+ * Contact form submission rate limiter
+ * 5 submissions per 15 minutes per IP
+ * Prevents contact form spam / DoS
+ */
+export const contactLimiter = new RateLimiter({
+    interval: 15 * 60, // 15 minutes
+    maxRequests: 5,
+    prefix: "rl:contact",
+});
+
+/**
  * Message sending rate limiter
  * 30 messages per minute per user
  * Prevents spam

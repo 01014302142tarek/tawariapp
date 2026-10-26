@@ -28,11 +28,10 @@ SELECT
     p.id as profile_id,
     p.user_id,
     p.full_name,
-    p.email,
     pp.id as patient_profile_id,
     CASE 
-        WHEN pp.id IS NULL THEN '❌ MISSING'
-        ELSE '✅ EXISTS'
+        WHEN pp.id IS NULL THEN 'MISSING'
+        ELSE 'EXISTS'
     END as status
 FROM profiles p
 LEFT JOIN patient_profiles pp ON pp.profile_id = p.id

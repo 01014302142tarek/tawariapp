@@ -67,6 +67,30 @@ export async function POST(request: NextRequest) {
             amount: number;
         };
 
+        // Security check: Verify payment amount and currency match the recorded transaction
+        const expectedAmountCents = Math.round(transaction.amount * 100);
+        const isAmountValid = obj.amount_cents === expectedAmountCents && obj.currency === "EGP";
+
+        if (success && !isAmountValid) {
+            console.error("SECURITY ALERT: Paymob payment amount or currency mismatch:", {
+                expectedCents: expectedAmountCents,
+                receivedCents: obj.amount_cents,
+                currency: obj.currency,
+                transactionId: transaction.id,
+            });
+
+            await supabase
+                .from("transactions")
+                .update({
+                    paymob_transaction_id: paymobTransactionId,
+                    status: "failed",
+                    payment_method: paymentMethod,
+                })
+                .eq("id", transaction.id);
+
+            return NextResponse.json({ received: true, error: "Amount or currency mismatch" }, { status: 400 });
+        }
+
         const newStatus = success ? "completed" : "failed";
 
         // Update transaction

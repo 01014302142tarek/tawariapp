@@ -351,7 +351,24 @@ export async function sendMessage(data: {
 
     const senderName = (senderData as { full_name: string } | null)?.full_name || "Someone";
 
-    // Use admin client to bypass RLS since we've already verified the user
+    // Security check: Verify that if conversation already exists, caller and recipient are participants
+    const { data: existingConv } = await supabase
+        .from("messages")
+        .select("sender_profile_id, recipient_profile_id")
+        .eq("conversation_id", data.conversationId)
+        .limit(1);
+
+    if (existingConv && existingConv.length > 0) {
+        const conv = existingConv[0] as { sender_profile_id: string; recipient_profile_id: string };
+        const isParticipant = conv.sender_profile_id === profile.id || conv.recipient_profile_id === profile.id;
+        const recipientMatches = conv.sender_profile_id === data.recipientProfileId || conv.recipient_profile_id === data.recipientProfileId;
+
+        if (!isParticipant || !recipientMatches) {
+            return { message: null, error: "Unauthorized: You are not a participant in this conversation" };
+        }
+    }
+
+    // Insert message
     const adminSupabase = await createAdminClient();
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

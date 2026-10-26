@@ -33,6 +33,11 @@ yarn-error.log*
 # env files
 .env*
 !.env.example
+!.env.local.template
+
+# Supabase CLI link cache (may point at someone's project — keep local only)
+supabase/.temp/
+supabase/.branches/
 
 # vercel
 .vercel

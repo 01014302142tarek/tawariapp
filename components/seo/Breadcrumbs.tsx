@@ -36,11 +36,10 @@ export function Breadcrumbs({ items, className = "" }: BreadcrumbsProps) {
 
     return (
         <>
-            {/* JSON-LD Structured Data - Safe: JSON.stringify escapes content */}
+            {/* JSON-LD Structured Data - Sanitized against script breakout */}
             <script
                 type="application/ld+json"
-                // nosemgrep: react-dangerouslysetinnerhtml
-                dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData).replace(/</g, "\\u003c") }}
             />
 
             {/* Visual Breadcrumbs */}

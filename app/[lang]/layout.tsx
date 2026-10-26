@@ -118,8 +118,12 @@ export default async function RootLayout({
             </I18nProvider>
           </ThemeProviderWrapper>
         </AuthProvider>
-        <Analytics />
-        <SpeedInsights />
+        {process.env.NODE_ENV === "production" && (
+          <>
+            <Analytics />
+            <SpeedInsights />
+          </>
+        )}
       </body>
     </html>
   );

@@ -71,7 +71,7 @@ export async function signInWithPassword(
 export async function signUpWithPassword(
     email: string,
     password: string,
-    metadata?: { fullName?: string; phone?: string; role?: string }
+    metadata?: { fullName?: string; phone?: string }
 ): Promise<{ success: boolean; error?: string; retryAfter?: number }> {
     const clientIP = await getClientIP();
     const rateLimitKey = `signup:${clientIP}`;
@@ -98,7 +98,7 @@ export async function signUpWithPassword(
             user_metadata: {
                 full_name: metadata?.fullName,
                 phone: metadata?.phone,
-                role: metadata?.role || "patient",
+                role: "patient", // Enforce patient role strictly - never accept role from client input
             },
         });
 

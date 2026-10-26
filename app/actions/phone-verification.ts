@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { otpLimiter } from "@/lib/rate-limit";
 
 // ============================================
 // Phone Number Validation
@@ -91,6 +92,15 @@ export async function sendPhoneOTP(phone: string): Promise<{ success: boolean; e
         return { success: false, error: validationError };
     }
 
+    // Rate limiting: Prevent SMS toll fraud / spamming
+    const rateLimit = await otpLimiter.check(`send_otp:${normalized}`);
+    if (!rateLimit.allowed) {
+        return {
+            success: false,
+            error: `Too many verification requests. Please wait ${rateLimit.retryAfter || 60} seconds before requesting a new code.`
+        };
+    }
+
     const supabase = await createClient();
 
     try {
@@ -142,6 +152,15 @@ export async function verifyPhoneOTP(phone: string, code: string): Promise<{ suc
 
     if (!code || code.length !== 6) {
         return { success: false, error: "Please enter a valid 6-digit code" };
+    }
+
+    // Rate limiting: Prevent OTP brute force
+    const rateLimit = await otpLimiter.check(`verify_otp:${normalized}`);
+    if (!rateLimit.allowed) {
+        return {
+            success: false,
+            error: "Too many verification attempts. Please wait before trying again."
+        };
     }
 
     const supabase = await createClient();

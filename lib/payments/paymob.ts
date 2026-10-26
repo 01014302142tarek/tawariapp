@@ -376,7 +376,14 @@ export function verifyWebhookSignature(
             .update(concatenatedString)
             .digest("hex");
 
-        return calculatedHmac === receivedHmac;
+        const calculatedBuf = Buffer.from(calculatedHmac, "hex");
+        const receivedBuf = Buffer.from(receivedHmac, "hex");
+
+        if (calculatedBuf.length !== receivedBuf.length || calculatedBuf.length === 0) {
+            return false;
+        }
+
+        return crypto.timingSafeEqual(calculatedBuf, receivedBuf);
     } catch (error) {
         console.error("HMAC verification error:", error);
         return false;

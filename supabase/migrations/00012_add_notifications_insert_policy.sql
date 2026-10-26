@@ -16,6 +16,7 @@
 
 -- Users can create notifications (needed for message notifications, etc.)
 -- This allows the server to create notifications for any user
+DROP POLICY IF EXISTS "Authenticated users can create notifications" ON notifications;
 CREATE POLICY "Authenticated users can create notifications"
     ON notifications FOR INSERT
     WITH CHECK (true);
@@ -26,4 +27,3 @@ CREATE POLICY "Authenticated users can create notifications"
 -- 3. Users can only READ notifications that belong to them (existing SELECT policy)
 -- 4. This is safe because inserting a notification for someone else just means
 --    they'll see a notification - it doesn't expose any sensitive data
-

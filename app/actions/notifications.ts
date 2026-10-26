@@ -1,6 +1,6 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createAdminClient } from "@/lib/supabase/server";
 
 // ============================================
 // Types
@@ -278,10 +278,10 @@ export async function createNotification(data: {
     notificationType: NotificationType;
     data?: Record<string, unknown>;
 }): Promise<{ success: boolean; notificationId?: string; error?: string }> {
-    const supabase = await createClient();
+    const adminSupabase = await createAdminClient();
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: notification, error } = await (supabase as any)
+    const { data: notification, error } = await (adminSupabase as any)
         .from("notifications")
         .insert({
             profile_id: data.profileId,

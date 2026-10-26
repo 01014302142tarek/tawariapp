@@ -33,7 +33,6 @@ const styles = StyleSheet.create({
     logo: {
         width: 80,
         height: 80,
-        borderWidth: 0,
     },
     headerTitle: {
         textAlign: "center",
@@ -137,11 +136,12 @@ const styles = StyleSheet.create({
     medicationDetails: {
         flexDirection: "row",
         flexWrap: "wrap",
-        gap: 15,
         marginBottom: 8,
     },
     medicationDetail: {
         minWidth: 100,
+        marginRight: 15,
+        marginBottom: 4,
     },
     medicationDetailLabel: {
         fontSize: 9,

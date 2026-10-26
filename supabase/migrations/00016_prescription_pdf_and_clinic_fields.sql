@@ -48,7 +48,8 @@ CREATE INDEX IF NOT EXISTS idx_appointments_type ON appointments(type);
 -- ============================================
 
 -- Doctors can update their own clinic info
-CREATE POLICY IF NOT EXISTS "doctors_can_update_clinic_info"
+DROP POLICY IF EXISTS "doctors_can_update_clinic_info" ON doctor_profiles;
+CREATE POLICY "doctors_can_update_clinic_info"
 ON doctor_profiles
 FOR UPDATE
 USING (

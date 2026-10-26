@@ -35,6 +35,7 @@ $$ LANGUAGE plpgsql SECURITY DEFINER STABLE;
 -- Add policy for doctors to read patient profiles
 -- ============================================================================
 
+DROP POLICY IF EXISTS "Doctors can read patient profiles for appointments" ON profiles;
 CREATE POLICY "Doctors can read patient profiles for appointments"
     ON profiles FOR SELECT
     USING (
@@ -66,6 +67,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER STABLE;
 
+DROP POLICY IF EXISTS "Assistants can read patient profiles for appointments" ON profiles;
 CREATE POLICY "Assistants can read patient profiles for appointments"
     ON profiles FOR SELECT
     USING (

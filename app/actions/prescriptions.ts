@@ -1455,6 +1455,51 @@ export async function updatePrescriptionPdfPath(
         return { success: false, error: "Not authenticated" };
     }
 
+    // Get user's profile
+    const { data: profileData } = await supabase
+        .from("profiles")
+        .select("id, role")
+        .eq("user_id", user.id)
+        .single();
+
+    const profile = profileData as { id: string; role: string } | null;
+    if (!profile) {
+        return { success: false, error: "Profile not found" };
+    }
+
+    // Verify user is authorized for this prescription
+    const { data: rxData } = await supabase
+        .from("prescriptions")
+        .select("doctor_profile_id, patient_profile_id")
+        .eq("id", prescriptionId)
+        .single();
+
+    const rx = rxData as { doctor_profile_id: string; patient_profile_id: string } | null;
+    if (!rx) {
+        return { success: false, error: "Prescription not found" };
+    }
+
+    let isAuthorized = false;
+    if (profile.role === "doctor") {
+        const { data: doc } = await supabase
+            .from("doctor_profiles")
+            .select("id")
+            .eq("profile_id", profile.id)
+            .single();
+        isAuthorized = (doc as { id: string } | null)?.id === rx.doctor_profile_id;
+    } else if (profile.role === "patient") {
+        const { data: pat } = await supabase
+            .from("patient_profiles")
+            .select("id")
+            .eq("profile_id", profile.id)
+            .single();
+        isAuthorized = (pat as { id: string } | null)?.id === rx.patient_profile_id;
+    }
+
+    if (!isAuthorized) {
+        return { success: false, error: "Unauthorized to update this prescription" };
+    }
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { error } = await (supabase as any)
         .from("prescriptions")

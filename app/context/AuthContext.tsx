@@ -163,7 +163,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const isDoctor = metadata?.role === "doctor";
         const result = isDoctor
             ? await serverSignUpDoctor(email, password, { fullName: metadata?.fullName, phone: metadata?.phone })
-            : await serverSignUp(email, password, metadata);
+            : await serverSignUp(email, password, { fullName: metadata?.fullName, phone: metadata?.phone });
 
         if (!result.success) {
             return {

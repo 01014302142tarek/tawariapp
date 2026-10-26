@@ -8,12 +8,13 @@ interface JsonLdProps {
 }
 
 export function JsonLd({ data }: JsonLdProps) {
+    // Sanitize JSON-LD to prevent script tag breakout XSS (e.g. </script><script>...)
+    const sanitizedJson = JSON.stringify(data).replace(/</g, "\\u003c");
+
     return (
-        // Safe: JSON.stringify escapes content, and JSON-LD script tags are not executed
         <script
             type="application/ld+json"
-            // nosemgrep: react-dangerouslysetinnerhtml
-            dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }}
+            dangerouslySetInnerHTML={{ __html: sanitizedJson }}
         />
     );
 }
