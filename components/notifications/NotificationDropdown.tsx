@@ -300,8 +300,8 @@ export default function NotificationDropdown({ isDark, dashboardType }: Notifica
                         exit={{ opacity: 0, y: 10, scale: 0.95 }}
                         transition={{ duration: 0.15 }}
                         className={cn(
-                            "absolute top-full mt-2 w-80 md:w-96 rounded-2xl shadow-2xl overflow-hidden z-[100] border backdrop-blur-xl",
-                            isRTL ? "left-0" : "right-0",
+                            "fixed inset-x-3 top-16 sm:absolute sm:inset-x-auto sm:top-full sm:mt-2 sm:w-96 rounded-2xl shadow-2xl overflow-hidden z-[100] border backdrop-blur-xl",
+                            isRTL ? "sm:left-0 sm:right-auto" : "sm:right-0 sm:left-auto",
                             isDark
                                 ? "bg-slate-900/95 border-white/10"
                                 : "bg-white/95 border-gray-200"
