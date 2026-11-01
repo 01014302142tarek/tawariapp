@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { notifyPaymentSuccess } from "./notifications";
 import {
     getAuthToken,
     createOrder,
@@ -185,6 +186,13 @@ export async function initiateAppointmentPayment(
                 net_amount: netAmount,
                 status: "available",
             });
+
+        // Notify patient of payment confirmation
+        notifyPaymentSuccess(
+            profile.id,
+            appointment.consultation_fee,
+            transaction.id
+        ).catch(err => console.error("Failed to notify patient of payment success:", err));
 
         return {
             success: true,
@@ -524,6 +532,13 @@ export async function processPaymentCallback(
 
         // Generate invoice
         await generateInvoice(transaction.id, transaction.patient_profile_id);
+
+        // Notify patient of successful payment
+        notifyPaymentSuccess(
+            transaction.patient_profile_id,
+            transaction.amount,
+            transaction.id
+        ).catch(err => console.error("Failed to notify patient of payment success:", err));
     }
 
     return { success: true };

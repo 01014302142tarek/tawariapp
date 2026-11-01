@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { notifyVerificationStatus } from "./notifications";
 import {
     sendEmail,
     getDoctorApprovalEmailHtml,
@@ -401,6 +402,12 @@ export async function approveDoctor(doctorProfileId: string): Promise<{ success:
         }
     }
 
+    // In-app notification for doctor approval
+    notifyVerificationStatus(
+        doctorProfile.profile_id,
+        true
+    ).catch(err => console.error("Failed to send in-app verification approval notification:", err));
+
     return { success: true };
 }
 
@@ -488,6 +495,13 @@ export async function rejectDoctor(
             });
         }
     }
+
+    // In-app notification for doctor rejection
+    notifyVerificationStatus(
+        doctorProfile.profile_id,
+        false,
+        reason
+    ).catch(err => console.error("Failed to send in-app verification rejection notification:", err));
 
     return { success: true };
 }

@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient, createServiceRoleClient } from "@/lib/supabase/server";
+import { createNotification } from "./notifications";
 
 // ============================================
 // Types
@@ -409,6 +410,38 @@ export async function callNextPatient(): Promise<{
         .from("doctor_profiles")
         .update({ current_queue_entry_id: queueEntry.id })
         .eq("id", doctor.id);
+
+    // Notify patient that doctor is calling them into consultation
+    try {
+        const { data: patientProfileData } = await adminSupabase
+            .from("patient_profiles")
+            .select("profile_id")
+            .eq("id", queueEntry.patient_profile_id)
+            .single();
+
+        if (patientProfileData?.profile_id) {
+            const { data: doctorUserData } = await adminSupabase
+                .from("profiles")
+                .select("full_name")
+                .eq("id", profile.id)
+                .single();
+            const doctorName = (doctorUserData as { full_name?: string } | null)?.full_name || "الطبيب";
+
+            createNotification({
+                profileId: patientProfileData.profile_id,
+                title: "حان دورك في الكشف العاجل!",
+                body: `${doctorName} بانتظارك الآن في غرفة الكشف. اضغط للدخول إلى مكالمة الفيديو.`,
+                notificationType: "system",
+                data: {
+                    queueEntryId: queueEntry.id,
+                    roomUrl,
+                    action: "urgent_call",
+                },
+            }).catch(err => console.error("Failed to notify patient of urgent call:", err));
+        }
+    } catch (e) {
+        console.error("Error sending urgent call notification:", e);
+    }
 
     return {
         success: true,
@@ -977,6 +1010,47 @@ export async function joinDoctorQueue(data: {
         if (insertError) {
             console.error("Error joining queue:", insertError);
             return { success: false, error: insertError.message };
+        }
+
+        // Notify doctor of new patient joining urgent queue
+        try {
+            const { data: docRecord } = await (adminSupabase as any)
+                .from("doctor_profiles")
+                .select("profile_id")
+                .eq("id", data.doctorProfileId)
+                .single();
+
+            if (docRecord?.profile_id) {
+                let patientName = "مريض";
+                if (patientProfileId) {
+                    const { data: pRec } = await (adminSupabase as any)
+                        .from("patient_profiles")
+                        .select("profile_id")
+                        .eq("id", patientProfileId)
+                        .single();
+                    if (pRec?.profile_id) {
+                        const { data: pUser } = await (adminSupabase as any)
+                            .from("profiles")
+                            .select("full_name")
+                            .eq("id", pRec.profile_id)
+                            .single();
+                        if (pUser?.full_name) patientName = pUser.full_name;
+                    }
+                }
+
+                createNotification({
+                    profileId: docRecord.profile_id,
+                    title: "مريض جديد في قائمة الانتظار",
+                    body: `انضم ${patientName} إلى قائمة انتظارك (الترتيب: #${position}).`,
+                    notificationType: "new_appointment",
+                    data: {
+                        queueEntryId: insertData.id,
+                        position,
+                    },
+                }).catch(err => console.error("Failed to notify doctor of queue join:", err));
+            }
+        } catch (e) {
+            console.error("Error sending queue join notification to doctor:", e);
         }
 
         return {

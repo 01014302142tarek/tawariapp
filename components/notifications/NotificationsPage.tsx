@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useI18n } from "@/app/i18n";
@@ -134,6 +135,7 @@ export default function NotificationsPage({ isDark, dashboardType }: Notificatio
     const [deletingId, setDeletingId] = useState<string | null>(null);
     const [markingAllRead, setMarkingAllRead] = useState(false);
     const { isRTL, language } = useI18n();
+    const router = useRouter();
     const LIMIT = 20;
 
     // Fetch notifications
@@ -215,6 +217,18 @@ export default function NotificationsPage({ isDark, dashboardType }: Notificatio
         await handleMarkAsRead(notification);
 
         const data = notification.data as Record<string, string>;
+
+        // Direct routing for urgent care queue notifications
+        if (data?.queueEntryId || data?.action === "urgent_call") {
+            if (dashboardType === "patient" && data?.queueEntryId) {
+                router.push(`/${language}/dashboard/patient/urgent-care/waiting/${data.queueEntryId}`);
+                return;
+            } else if (dashboardType === "doctor") {
+                router.push(`/${language}/dashboard/doctor/queue`);
+                return;
+            }
+        }
+
         let href = `/${language}/dashboard/${dashboardType}`;
 
         switch (notification.notification_type) {

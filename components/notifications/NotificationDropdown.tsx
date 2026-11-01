@@ -6,7 +6,8 @@ import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useI18n } from "@/app/i18n";
-import { useRealtimeNotifications } from "@/lib/useRealtimeNotifications";
+import { useRealtimeNotifications, playNotificationSound } from "@/lib/useRealtimeNotifications";
+import { useToast } from "@/components/ui/toast";
 import { type Notification, type NotificationType } from "@/app/actions/notifications";
 
 // Icons for notification types
@@ -129,6 +130,7 @@ export default function NotificationDropdown({ isDark, dashboardType }: Notifica
     const dropdownRef = useRef<HTMLDivElement>(null);
     const { isRTL, language } = useI18n();
     const router = useRouter();
+    const { showInfo } = useToast();
 
     // Use realtime notifications hook for live updates
     const {
@@ -142,12 +144,22 @@ export default function NotificationDropdown({ isDark, dashboardType }: Notifica
     } = useRealtimeNotifications({
         enabled: true,
         onNewNotification: (notification) => {
-            // Show browser notification for new notifications if permission granted
+            // Play chime tone
+            playNotificationSound();
+
+            // Visual in-app toast alert
+            try {
+                showInfo(`${notification.title}: ${notification.body}`, 6000);
+            } catch {}
+
+            // Native browser notification
             if (typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted") {
-                new Notification(notification.title, {
-                    body: notification.body,
-                    icon: "/icon.png",
-                });
+                try {
+                    new Notification(notification.title, {
+                        body: notification.body,
+                        icon: "/icon.png",
+                    });
+                } catch {}
             }
         },
     });
@@ -187,6 +199,19 @@ export default function NotificationDropdown({ isDark, dashboardType }: Notifica
 
         // Navigate based on notification type
         const data = notification.data as Record<string, string>;
+
+        // Direct routing for urgent care queue notifications
+        if (data?.queueEntryId || data?.action === "urgent_call") {
+            if (dashboardType === "patient" && data?.queueEntryId) {
+                setIsOpen(false);
+                router.push(`/${language}/dashboard/patient/urgent-care/waiting/${data.queueEntryId}`);
+                return;
+            } else if (dashboardType === "doctor") {
+                setIsOpen(false);
+                router.push(`/${language}/dashboard/doctor/queue`);
+                return;
+            }
+        }
         let href = `/${language}/dashboard/${dashboardType}`;
 
         switch (notification.notification_type) {
@@ -244,7 +269,12 @@ export default function NotificationDropdown({ isDark, dashboardType }: Notifica
         <div ref={dropdownRef} className="relative z-[100]">
             {/* Bell Button */}
             <button
-                onClick={() => setIsOpen(!isOpen)}
+                onClick={() => {
+                if (!isOpen && typeof window !== "undefined" && "Notification" in window && Notification.permission === "default") {
+                    Notification.requestPermission().catch(() => {});
+                }
+                setIsOpen(!isOpen);
+            }}
                 className={cn(
                     "relative p-1.5 md:p-2 rounded-xl transition-colors",
                     isDark

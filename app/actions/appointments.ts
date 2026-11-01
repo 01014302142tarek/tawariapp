@@ -6,7 +6,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/supabase/types";
 import { appointmentLimiter } from "@/lib/rate-limit";
 import { appointmentSchema, validateInput } from "@/lib/validations";
-import { notifyNewAppointment, notifyAppointmentCancelled } from "./notifications";
+import { notifyNewAppointment, notifyAppointmentCancelled, notifyAppointmentConfirmed, createNotification } from "./notifications";
 import { revalidateTag } from "next/cache";
 
 // ============================================
@@ -260,6 +260,26 @@ export async function bookAppointment(data: {
             appointmentDate,
             insertedData.id
         ).catch(err => console.error("Failed to send appointment notification:", err));
+
+        // Send confirmation notification to patient
+        (async () => {
+            try {
+                const { data: docUserData } = await (supabase as any)
+                    .from("profiles")
+                    .select("full_name")
+                    .eq("id", doctor.profile_id)
+                    .single();
+                const doctorName = (docUserData as { full_name?: string } | null)?.full_name || "Doctor";
+                await notifyAppointmentConfirmed(
+                    profile.id,
+                    doctorName,
+                    appointmentDate,
+                    insertedData.id
+                );
+            } catch (err) {
+                console.error("Failed to send patient appointment confirmation:", err);
+            }
+        })();
     }
 
     const doctorUserId = doctor?.profile_id
@@ -650,6 +670,43 @@ export async function cancelAppointmentAsDoctor(
     if (error) {
         console.error("Error cancelling appointment:", error);
         return { success: false, error: error.message };
+    }
+
+    // Notify patient about cancellation by doctor
+    try {
+        const { data: apptInfo } = await (supabase as any)
+            .from("appointments")
+            .select("scheduled_start, patient_profile_id")
+            .eq("id", appointmentId)
+            .single();
+
+        if (apptInfo?.patient_profile_id) {
+            const { data: patientProfileRec } = await (supabase as any)
+                .from("patient_profiles")
+                .select("profile_id")
+                .eq("id", apptInfo.patient_profile_id)
+                .single();
+
+            if (patientProfileRec?.profile_id) {
+                const { data: docUserData } = await supabase
+                    .from("profiles")
+                    .select("full_name")
+                    .eq("id", profile.id)
+                    .single();
+                const docName = (docUserData as { full_name?: string } | null)?.full_name || "Doctor";
+                const dateStr = new Date(apptInfo.scheduled_start).toLocaleString();
+
+                notifyAppointmentCancelled(
+                    patientProfileRec.profile_id,
+                    docName,
+                    dateStr,
+                    appointmentId,
+                    true
+                ).catch(err => console.error("Failed to send patient cancellation notification:", err));
+            }
+        }
+    } catch (e) {
+        console.error("Error notifying patient of doctor cancellation:", e);
     }
 
     const { doctorUserId, patientUserId } = await getUserIdsForAppointment(supabase, appointmentId);
@@ -1437,6 +1494,52 @@ export async function rescheduleAppointment(data: {
 
     const { doctorUserId, patientUserId } = await getUserIdsForAppointment(supabase, data.appointmentId);
     revalidateAppointmentCaches([doctorUserId, patientUserId]);
+
+    // Send reschedule notification to the other party
+    try {
+        const newDateStr = new Date(data.newScheduledStart).toLocaleString();
+        if (profile.role === "doctor") {
+            // Doctor rescheduled -> notify patient
+            const { data: patRec } = await (supabase as any)
+                .from("patient_profiles")
+                .select("profile_id")
+                .eq("id", appointment.patient_profile_id)
+                .single();
+            if (patRec?.profile_id) {
+                createNotification({
+                    profileId: patRec.profile_id,
+                    title: "تم تغيير موعد الكشف",
+                    body: `قام الطبيب بتعديل موعد استشارتك إلى: ${newDateStr}.`,
+                    notificationType: "appointment_rescheduled",
+                    data: {
+                        appointmentId: data.appointmentId,
+                        newStart: data.newScheduledStart,
+                    },
+                }).catch(err => console.error("Failed to notify patient of reschedule:", err));
+            }
+        } else {
+            // Patient rescheduled -> notify doctor
+            const { data: docRec } = await (supabase as any)
+                .from("doctor_profiles")
+                .select("profile_id")
+                .eq("id", appointment.doctor_profile_id)
+                .single();
+            if (docRec?.profile_id) {
+                createNotification({
+                    profileId: docRec.profile_id,
+                    title: "تم تغيير موعد الكشف من قبل المريض",
+                    body: `قام المريض بتعديل موعد الاستشارة إلى: ${newDateStr}.`,
+                    notificationType: "appointment_rescheduled",
+                    data: {
+                        appointmentId: data.appointmentId,
+                        newStart: data.newScheduledStart,
+                    },
+                }).catch(err => console.error("Failed to notify doctor of reschedule:", err));
+            }
+        }
+    } catch (e) {
+        console.error("Error sending reschedule notification:", e);
+    }
 
     return { success: true };
 }

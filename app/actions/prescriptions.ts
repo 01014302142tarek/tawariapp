@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import type { DashboardUserContext } from "@/lib/supabase/context";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/supabase/types";
-import { notifyPrescriptionIssued } from "./notifications";
+import { notifyPrescriptionIssued, notifyRenewalRequest, notifyRenewalResponse } from "./notifications";
 import { revalidateTag } from "next/cache";
 
 // ============================================
@@ -799,7 +799,7 @@ export async function requestPrescriptionRenewal(
 
     // Create renewal request
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { error } = await (supabase as any)
+    const { data: insertedReq, error } = await (supabase as any)
         .from("prescription_renewal_requests")
         .insert({
             original_prescription_id: prescriptionId,
@@ -807,11 +807,47 @@ export async function requestPrescriptionRenewal(
             doctor_profile_id: prescription.doctor_profile_id,
             request_notes: notes || null,
             status: "pending",
-        });
+        })
+        .select("id")
+        .single();
 
     if (error) {
         console.error("Error requesting renewal:", error);
         return { success: false, error: error.message };
+    }
+
+    // Notify doctor about renewal request
+    try {
+        const { data: docData } = await (supabase as any)
+            .from("doctor_profiles")
+            .select("profile_id")
+            .eq("id", prescription.doctor_profile_id)
+            .single();
+
+        if (docData?.profile_id) {
+            const { data: patientUser } = await (supabase as any)
+                .from("profiles")
+                .select("full_name")
+                .eq("id", profile.id)
+                .single();
+            const patName = (patientUser as { full_name?: string } | null)?.full_name || "Patient";
+
+            const { data: rxData } = await (supabase as any)
+                .from("prescriptions")
+                .select("medication_name")
+                .eq("id", prescriptionId)
+                .single();
+            const medName = (rxData as { medication_name?: string } | null)?.medication_name || "Medication";
+
+            notifyRenewalRequest(
+                docData.profile_id,
+                patName,
+                medName,
+                insertedReq?.id || prescriptionId
+            ).catch(err => console.error("Failed to notify doctor of renewal request:", err));
+        }
+    } catch (e) {
+        console.error("Error sending renewal request notification:", e);
     }
 
     const doctorUserId = await getUserIdByDoctorProfileId(supabase, prescription.doctor_profile_id);
@@ -1029,6 +1065,27 @@ export async function respondToRenewalRequest(
         ? await getUserIdByPatientProfileId(supabase, request.patient_profile_id)
         : null;
     revalidatePrescriptionCaches([user.id, patientUserId || undefined]);
+
+    // Notify patient of renewal decision
+    try {
+        const { data: patientProfileRec } = await (supabase as any)
+            .from("patient_profiles")
+            .select("profile_id")
+            .eq("id", request.patient_profile_id)
+            .single();
+
+        if (patientProfileRec?.profile_id) {
+            const medName = request.prescriptions?.medication_name || "Medication";
+            notifyRenewalResponse(
+                patientProfileRec.profile_id,
+                medName,
+                approved,
+                newPrescriptionId
+            ).catch(err => console.error("Failed to notify patient of renewal response:", err));
+        }
+    } catch (e) {
+        console.error("Error sending renewal response notification:", e);
+    }
 
     return { success: true, newPrescriptionId };
 }
