@@ -28,11 +28,11 @@ const faqDataEn = [
         answer: "Absolutely. We take privacy very seriously. All your medical information is encrypted and stored securely. We comply with all health data protection regulations and never share your information without your consent.",
     },
     {
-        question: "Are the doctors on TawariApp licensed?",
+        question: "Are the doctors on Tabibi licensed?",
         answer: "Yes, all doctors on our platform are fully licensed medical professionals registered with the Egyptian Medical Syndicate. We verify each doctor's credentials before they can offer consultations.",
     },
     {
-        question: "How do I register as a doctor on TawariApp?",
+        question: "How do I register as a doctor on Tabibi?",
         answer: "Click on 'Register as Doctor' and complete our onboarding process. You'll need to provide your medical license, specialization certificates, and identification documents. Our team will verify your credentials within 2-3 business days.",
     },
 ];
@@ -55,11 +55,11 @@ const faqDataAr = [
         answer: "بالتأكيد. نحن نأخذ الخصوصية على محمل الجد. جميع معلوماتك الطبية مشفرة ومخزنة بشكل آمن. نحن نلتزم بجميع لوائح حماية البيانات الصحية ولا نشارك معلوماتك دون موافقتك.",
     },
     {
-        question: "هل الأطباء في تواري مرخصون؟",
+        question: "هل الأطباء في طبيبي مرخصون؟",
         answer: "نعم، جميع الأطباء على منصتنا هم أطباء مرخصون ومسجلون في نقابة الأطباء المصرية. نتحقق من أوراق اعتماد كل طبيب قبل السماح له بتقديم الاستشارات.",
     },
     {
-        question: "كيف أسجل كطبيب في تواري؟",
+        question: "كيف أسجل كطبيب في طبيبي؟",
         answer: "انقر على 'التسجيل كطبيب' وأكمل عملية التسجيل. ستحتاج إلى تقديم رخصتك الطبية وشهادات التخصص ووثائق الهوية. سيتحقق فريقنا من بياناتك خلال 2-3 أيام عمل.",
     },
 ];
@@ -70,8 +70,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
     const title = isArabic ? "الأسئلة الشائعة" : "Frequently Asked Questions";
     const description = isArabic
-        ? "اعثر على إجابات للأسئلة الشائعة حول تواري - كيفية حجز المواعيد، طرق الدفع، الوصفات الطبية، والمزيد."
-        : "Find answers to common questions about TawariApp - how to book appointments, payment methods, prescriptions, and more.";
+        ? "اعثر على إجابات للأسئلة الشائعة حول طبيبي - كيفية حجز المواعيد، طرق الدفع، الوصفات الطبية، والمزيد."
+        : "Find answers to common questions about Tabibi - how to book appointments, payment methods, prescriptions, and more.";
 
     return {
         title,

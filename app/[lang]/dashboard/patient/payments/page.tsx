@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useI18n } from "@/app/i18n";
+import { useGlobalTheme } from "@/app/context/GlobalThemeContext";
 import { GlowingCard } from "@/components/ui/glowing-card";
 import { getPatientTransactions, TransactionRecord } from "@/app/actions/payments";
 
@@ -60,6 +61,7 @@ const Icons = {
 export default function PaymentHistoryPage() {
     const router = useRouter();
     const { isRTL, language } = useI18n();
+    const { isDark } = useGlobalTheme();
 
     const [loading, setLoading] = useState(true);
     const [transactions, setTransactions] = useState<TransactionRecord[]>([]);
@@ -86,8 +88,8 @@ export default function PaymentHistoryPage() {
         switch (status) {
             case "completed":
                 return {
-                    color: "text-teal-400",
-                    bg: "bg-teal-500/20",
+                    color: "text-amber-400",
+                    bg: "bg-amber-500/20",
                     icon: Icons.check,
                     label: isRTL ? "مكتمل" : "Completed",
                 };
@@ -156,10 +158,10 @@ export default function PaymentHistoryPage() {
     // Loading state
     if (loading) {
         return (
-            <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+            <div className={cn("min-h-screen flex items-center justify-center", isDark ? "bg-slate-950 text-white" : "bg-gray-50 text-slate-900")}>
                 <div className="text-center">
-                    <div className="w-16 h-16 border-4 border-teal-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-                    <p className="text-white text-lg">
+                    <div className="w-16 h-16 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+                    <p className={cn("text-lg", isDark ? "text-white" : "text-slate-900")}>
                         {isRTL ? "جاري التحميل..." : "Loading..."}
                     </p>
                 </div>
@@ -168,48 +170,48 @@ export default function PaymentHistoryPage() {
     }
 
     return (
-        <div className={cn("min-h-screen bg-slate-950 py-8 px-4", isRTL && "rtl")}>
+        <div className={cn("min-h-screen py-8 px-4", isDark ? "bg-slate-950" : "bg-gray-50", isRTL && "rtl")}>
             <div className="max-w-2xl mx-auto">
                 {/* Header */}
                 <div className="mb-6">
                     <button
                         onClick={() => router.push(`/${language}/dashboard/patient`)}
-                        className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors mb-4"
+                        className={cn("flex items-center gap-2 transition-colors mb-4", isDark ? "text-gray-400 hover:text-white" : "text-gray-600 hover:text-slate-900")}
                     >
                         <span className={isRTL ? "rotate-180" : ""}>{Icons.back}</span>
                         <span>{isRTL ? "العودة" : "Back"}</span>
                     </button>
-                    <h1 className="text-2xl font-bold text-white">
+                    <h1 className={cn("text-2xl font-bold", isDark ? "text-white" : "text-slate-900")}>
                         {isRTL ? "سجل المدفوعات" : "Payment History"}
                     </h1>
-                    <p className="text-gray-400 mt-1">
+                    <p className={cn("mt-1 text-sm sm:text-base", isDark ? "text-gray-400" : "text-gray-600")}>
                         {isRTL ? "عرض جميع معاملاتك المالية" : "View all your financial transactions"}
                     </p>
                 </div>
 
                 {/* Summary Card */}
-                <GlowingCard glowColor="teal" className="p-5 mb-6" isDark>
+                <GlowingCard glowColor="amber" className="p-5 mb-6" isDark={isDark}>
                     <div className="flex items-center justify-between">
                         <div>
-                            <p className="text-gray-400 text-sm">
+                            <p className={cn("text-sm", isDark ? "text-gray-400" : "text-gray-600")}>
                                 {isRTL ? "إجمالي المدفوعات" : "Total Paid"}
                             </p>
-                            <p className="text-2xl font-bold text-white mt-1">
+                            <p className={cn("text-2xl font-bold mt-1", isDark ? "text-white" : "text-slate-900")}>
                                 {totalPaid.toFixed(2)} {isRTL ? "ج.م" : "EGP"}
                             </p>
                         </div>
-                        <div className="w-14 h-14 rounded-full bg-teal-500/20 flex items-center justify-center">
-                            <span className="text-teal-400">{Icons.receipt}</span>
+                        <div className="w-14 h-14 rounded-full bg-amber-500/20 flex items-center justify-center">
+                            <span className="text-amber-500">{Icons.receipt}</span>
                         </div>
                     </div>
-                    <div className="mt-4 pt-4 border-t border-white/10 flex gap-4 text-sm">
+                    <div className={cn("mt-4 pt-4 border-t flex gap-4 text-sm", isDark ? "border-white/10" : "border-slate-200")}>
                         <div>
-                            <span className="text-gray-400">{isRTL ? "عدد المعاملات" : "Transactions"}</span>
-                            <span className="text-white font-medium ms-2">{transactions.length}</span>
+                            <span className={isDark ? "text-gray-400" : "text-gray-600"}>{isRTL ? "عدد المعاملات" : "Transactions"}</span>
+                            <span className={cn("font-medium ms-2", isDark ? "text-white" : "text-slate-900")}>{transactions.length}</span>
                         </div>
                         <div>
-                            <span className="text-gray-400">{isRTL ? "مكتملة" : "Completed"}</span>
-                            <span className="text-teal-400 font-medium ms-2">
+                            <span className={isDark ? "text-gray-400" : "text-gray-600"}>{isRTL ? "مكتملة" : "Completed"}</span>
+                            <span className="text-amber-500 font-medium ms-2">
                                 {transactions.filter((t) => t.status === "completed").length}
                             </span>
                         </div>
@@ -218,19 +220,19 @@ export default function PaymentHistoryPage() {
 
                 {/* Error State */}
                 {error && (
-                    <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400">
+                    <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-red-500">
                         {error}
                     </div>
                 )}
 
                 {/* Empty State */}
                 {transactions.length === 0 && !error && (
-                    <GlowingCard glowColor="blue" className="p-8 text-center" isDark>
-                        <span className="text-gray-600 mx-auto block mb-4">{Icons.empty}</span>
-                        <h3 className="text-lg font-medium text-white mb-2">
+                    <GlowingCard glowColor="blue" className="p-8 text-center" isDark={isDark}>
+                        <span className={cn("mx-auto block mb-4", isDark ? "text-gray-600" : "text-gray-400")}>{Icons.empty}</span>
+                        <h3 className={cn("text-lg font-medium mb-2", isDark ? "text-white" : "text-slate-900")}>
                             {isRTL ? "لا توجد معاملات" : "No Transactions"}
                         </h3>
-                        <p className="text-gray-400">
+                        <p className={isDark ? "text-gray-400" : "text-gray-600"}>
                             {isRTL
                                 ? "لم تقم بأي معاملات مالية بعد"
                                 : "You haven't made any transactions yet"}
@@ -252,14 +254,14 @@ export default function PaymentHistoryPage() {
                                     transition={{ delay: index * 0.05 }}
                                 >
                                     <GlowingCard
-                                        glowColor={transaction.status === "completed" ? "teal" : "blue"}
+                                        glowColor={transaction.status === "completed" ? "amber" : "blue"}
                                         className="p-4"
-                                        isDark
+                                        isDark={isDark}
                                     >
                                         <div className="flex items-start justify-between">
                                             <div className="flex items-start gap-3">
                                                 <div className={cn(
-                                                    "w-10 h-10 rounded-full flex items-center justify-center",
+                                                    "w-10 h-10 rounded-full flex items-center justify-center shrink-0",
                                                     statusDisplay.bg
                                                 )}>
                                                     <span className={statusDisplay.color}>
@@ -269,15 +271,15 @@ export default function PaymentHistoryPage() {
                                                     </span>
                                                 </div>
                                                 <div>
-                                                    <p className="text-white font-medium">
+                                                    <p className={cn("font-medium", isDark ? "text-white" : "text-slate-900")}>
                                                         {getTypeLabel(transaction.transactionType)}
                                                     </p>
                                                     {transaction.doctorName && (
-                                                        <p className="text-gray-400 text-sm">
+                                                        <p className={cn("text-sm", isDark ? "text-gray-400" : "text-gray-600")}>
                                                             {transaction.doctorName}
                                                         </p>
                                                     )}
-                                                    <p className="text-gray-500 text-xs mt-1">
+                                                    <p className={cn("text-xs mt-1", isDark ? "text-gray-500" : "text-gray-500")}>
                                                         {formatDate(transaction.createdAt)}
                                                     </p>
                                                 </div>
@@ -286,13 +288,13 @@ export default function PaymentHistoryPage() {
                                                 <p className={cn(
                                                     "font-bold",
                                                     transaction.status === "completed"
-                                                        ? "text-white"
+                                                        ? isDark ? "text-white" : "text-slate-900"
                                                         : "text-gray-400"
                                                 )}>
                                                     {transaction.amount.toFixed(2)} {isRTL ? "ج.م" : "EGP"}
                                                 </p>
                                                 <span className={cn(
-                                                    "inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full mt-1",
+                                                    "inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full mt-1 font-medium",
                                                     statusDisplay.bg,
                                                     statusDisplay.color
                                                 )}>

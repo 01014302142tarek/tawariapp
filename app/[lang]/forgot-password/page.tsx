@@ -5,41 +5,7 @@ import Link from "next/link";
 import { useI18n } from "../../i18n";
 import { useGlobalTheme } from "@/app/context/GlobalThemeContext";
 import { requestPasswordReset } from "@/app/actions/auth";
-
-// Logo Component
-const LogoFull = ({ className = "", isDark = true }: { className?: string; isDark?: boolean }) => (
-    <div className={`flex items-center gap-2 ${className}`}>
-        <svg className="h-10 w-10 flex-shrink-0" viewBox="0 0 100 90" fill="none">
-            <defs>
-                <linearGradient id="heartGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#2DD4BF" />
-                    <stop offset="50%" stopColor="#14B8A6" />
-                    <stop offset="100%" stopColor="#0D9488" />
-                </linearGradient>
-            </defs>
-            <path
-                d="M50 85 C50 85 10 55 10 30 C10 15 22 5 35 5 C42 5 48 10 50 15 C52 10 58 5 65 5 C78 5 90 15 90 30 C90 55 50 85 50 85Z"
-                fill="none"
-                stroke="url(#heartGradient)"
-                strokeWidth="6"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-            />
-            <path
-                d="M5 45 L25 45 L35 25 L50 65 L65 35 L75 45 L95 45"
-                fill="none"
-                stroke="#F59E0B"
-                strokeWidth="5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-            />
-        </svg>
-        <span className="text-xl font-bold tracking-tight">
-            <span className={isDark ? "text-white" : "text-slate-900"}>Tawari</span>
-            <span className={isDark ? "text-gray-400" : "text-gray-500"}>App</span>
-        </span>
-    </div>
-);
+import { Logo } from "@/components/ui/Logo";
 
 // Icons
 const Icons = {
@@ -143,20 +109,20 @@ export default function ForgotPasswordPage() {
     };
 
     return (
-        <div className={`min-h-screen overflow-x-hidden ${isRTL ? 'font-cairo' : ''} ${isDark ? 'bg-[#0F172A] text-white' : 'bg-gray-50 text-slate-900'}`} dir={isRTL ? 'rtl' : 'ltr'}>
+        <div className={`min-h-screen overflow-x-hidden ${isRTL ? 'font-cairo' : ''} ${isDark ? 'bg-[#060B18] text-white' : 'bg-gray-50 text-slate-900'}`} dir={isRTL ? 'rtl' : 'ltr'}>
             {/* Background Effects */}
             <div className="fixed inset-0 overflow-hidden pointer-events-none">
-                <div className={`absolute inset-0 ${isDark ? 'bg-gradient-to-br from-teal-900/20 via-[#0F172A] to-[#0F172A]' : 'bg-gradient-to-br from-teal-50 via-white to-white'}`} />
-                <div className={`absolute top-1/4 -right-1/4 w-[600px] h-[600px] rounded-full blur-3xl ${isDark ? 'bg-teal-500/10' : 'bg-teal-500/5'}`} />
-                <div className={`absolute bottom-1/4 -left-1/4 w-[400px] h-[400px] rounded-full blur-3xl ${isDark ? 'bg-teal-500/5' : 'bg-teal-500/5'}`} />
+                <div className={`absolute inset-0 ${isDark ? 'bg-gradient-to-br from-[#0B1528] via-[#060B18] to-[#060B18]' : 'bg-gradient-to-br from-amber-50 via-white to-white'}`} />
+                <div className={`absolute top-1/4 -right-1/4 w-[600px] h-[600px] rounded-full blur-3xl ${isDark ? 'bg-blue-500/15 border border-blue-500/25' : 'bg-amber-500/5'}`} />
+                <div className={`absolute bottom-1/4 -left-1/4 w-[400px] h-[400px] rounded-full blur-3xl ${isDark ? 'bg-blue-600/10' : 'bg-blue-500/5'}`} />
             </div>
 
             {/* Navigation */}
-            <nav className={`relative z-50 backdrop-blur-xl border-b ${isDark ? 'bg-[#0F172A]/80 border-white/5' : 'bg-white/80 border-gray-200'}`}>
+            <nav className={`relative z-50 backdrop-blur-xl border-b ${isDark ? 'bg-[#060B18]/80 border-white/5' : 'bg-white/80 border-gray-200'}`}>
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex items-center justify-between h-16 lg:h-20">
                         <Link href={`/${language}`} className="group hover:opacity-90 transition-opacity">
-                            <LogoFull isDark={isDark} />
+                            <Logo isDark={isDark} />
                         </Link>
                         <div className="flex items-center gap-3">
                             <LanguageToggle isDark={isDark} />
@@ -171,7 +137,7 @@ export default function ForgotPasswordPage() {
                     {isSuccess ? (
                         // Success State
                         <div className="text-center">
-                            <div className="w-20 h-20 rounded-full bg-teal-500/10 flex items-center justify-center mx-auto mb-6 text-teal-500">
+                            <div className="w-20 h-20 rounded-full bg-blue-500/15 border border-blue-500/25 flex items-center justify-center mx-auto mb-6 text-amber-500">
                                 {Icons.check}
                             </div>
                             <h1 className={`text-2xl sm:text-3xl font-bold mb-3 ${isDark ? 'text-white' : 'text-slate-900'}`}>
@@ -182,7 +148,7 @@ export default function ForgotPasswordPage() {
                             </p>
                             <Link
                                 href={`/${language}/login`}
-                                className="inline-flex items-center gap-2 text-teal-400 hover:text-teal-300 font-medium transition-colors"
+                                className={`inline-flex items-center gap-2 ${isDark ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-700'} font-medium transition-colors`}
                             >
                                 {isRTL ? null : Icons.arrowLeft}
                                 {text.backToLogin}
@@ -219,8 +185,8 @@ export default function ForgotPasswordPage() {
                                         onChange={(e) => setEmail(e.target.value)}
                                         required
                                         className={`w-full py-3.5 border rounded-xl transition-all outline-none ${isDark
-                                            ? "bg-slate-800/50 border-white/10 text-white placeholder-gray-500 focus:border-teal-500/50 focus:ring-2 focus:ring-teal-500/20"
-                                            : "bg-white border-gray-200 text-slate-900 placeholder-gray-400 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20"
+                                            ? "bg-[#0B1528] border-blue-500/30 text-white placeholder-gray-400 focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20"
+                                            : "bg-white border-gray-200 text-slate-900 placeholder-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
                                             } ${isRTL ? 'pr-12 pl-4' : 'pl-12 pr-4'}`}
                                     />
                                 </div>
@@ -228,7 +194,7 @@ export default function ForgotPasswordPage() {
                                 <button
                                     type="submit"
                                     disabled={isSubmitting || !email}
-                                    className="w-full py-3.5 rounded-xl font-semibold text-white bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-400 hover:to-teal-500 shadow-lg shadow-teal-500/25 transition-all disabled:opacity-70 disabled:cursor-not-allowed"
+                                    className="w-full py-3.5 rounded-xl font-bold text-white bg-gradient-to-r from-blue-600 via-blue-500 to-blue-600 hover:from-blue-500 shadow-lg shadow-blue-500/25 transition-all disabled:opacity-70 disabled:cursor-not-allowed"
                                 >
                                     {isSubmitting ? (
                                         <span className="flex items-center justify-center gap-2">
@@ -244,7 +210,7 @@ export default function ForgotPasswordPage() {
                             <div className="text-center mt-6">
                                 <Link
                                     href={`/${language}/login`}
-                                    className="inline-flex items-center gap-2 text-teal-400 hover:text-teal-300 font-medium text-sm transition-colors"
+                                    className={`inline-flex items-center gap-2 ${isDark ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-700'} font-medium text-sm transition-colors`}
                                 >
                                     {isRTL ? null : Icons.arrowLeft}
                                     {text.backToLogin}

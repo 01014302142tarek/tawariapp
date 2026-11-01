@@ -83,10 +83,10 @@ const NotificationIcons: Record<NotificationType, React.ReactNode> = {
     ),
 };
 
-// Get icon background color based on notification type - All using main teal color
+// Get icon background color based on notification type - All using main amber color
 const getIconBgColor = (type: NotificationType, isDark: boolean): string => {
-    // Unified teal color for all notification types
-    return isDark ? "bg-teal-500/20 text-teal-400" : "bg-teal-100 text-teal-600";
+    // Unified amber color for all notification types
+    return isDark ? "bg-amber-500/20 text-amber-400" : "bg-amber-100 text-amber-600";
 };
 
 // Format relative time
@@ -311,8 +311,8 @@ export default function NotificationsPage({ isDark, dashboardType }: Notificatio
                         className={cn(
                             "px-4 py-2 text-sm font-medium rounded-xl transition-all duration-200",
                             isDark
-                                ? "bg-teal-500/20 text-teal-400 hover:bg-teal-500/30 border border-teal-500/30"
-                                : "bg-teal-50 text-teal-700 hover:bg-teal-100 border border-teal-200",
+                                ? "bg-amber-500/20 text-amber-400 hover:bg-amber-500/30 border border-amber-500/30"
+                                : "bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200",
                             markingAllRead && "opacity-50 cursor-not-allowed"
                         )}
                     >
@@ -332,8 +332,8 @@ export default function NotificationsPage({ isDark, dashboardType }: Notificatio
                             "px-4 py-2 text-sm font-medium rounded-xl transition-all duration-200",
                             filter === option.value
                                 ? isDark
-                                    ? "bg-teal-500 text-white shadow-lg shadow-teal-500/30"
-                                    : "bg-teal-500 text-white shadow-lg shadow-teal-500/20"
+                                    ? "bg-amber-500 text-white shadow-lg shadow-amber-500/30"
+                                    : "bg-amber-500 text-white shadow-lg shadow-amber-500/20"
                                 : isDark
                                     ? "bg-slate-800/50 text-gray-400 hover:bg-slate-800 hover:text-white border border-white/5"
                                     : "bg-white text-gray-600 hover:bg-gray-50 hover:text-gray-900 border border-gray-200"
@@ -352,8 +352,8 @@ export default function NotificationsPage({ isDark, dashboardType }: Notificatio
                         <div className={cn(
                             "animate-spin w-8 h-8 border-2 rounded-full mx-auto mb-4",
                             isDark
-                                ? "border-gray-600 border-t-teal-400"
-                                : "border-gray-300 border-t-teal-600"
+                                ? "border-gray-600 border-t-amber-400"
+                                : "border-gray-300 border-t-amber-600"
                         )} />
                         <p className={cn(
                             "text-sm",
@@ -403,7 +403,7 @@ export default function NotificationsPage({ isDark, dashboardType }: Notificatio
                                         isDark
                                             ? "border-white/5 hover:bg-white/5"
                                             : "border-gray-100 hover:bg-gray-50/80",
-                                        !notification.is_read && (isDark ? "bg-teal-500/5 border-teal-500/10" : "bg-teal-50/50 border-teal-200/50")
+                                        !notification.is_read && (isDark ? "bg-amber-500/5 border-amber-500/10" : "bg-amber-50/50 border-amber-200/50")
                                     )}
                                     onClick={() => handleNotificationClick(notification)}
                                 >
@@ -434,7 +434,7 @@ export default function NotificationsPage({ isDark, dashboardType }: Notificatio
                                                 </p>
                                             </div>
                                             {!notification.is_read && (
-                                                <div className="w-2.5 h-2.5 rounded-full bg-teal-500 flex-shrink-0 mt-2" />
+                                                <div className="w-2.5 h-2.5 rounded-full bg-amber-500 flex-shrink-0 mt-2" />
                                             )}
                                         </div>
                                         <div className="flex items-center justify-between mt-3">

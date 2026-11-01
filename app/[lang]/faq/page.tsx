@@ -7,41 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useGlobalTheme } from "@/app/context/GlobalThemeContext";
 import Footer from "@/components/landing/Footer";
 import { GlowingCard } from "@/components/ui/glowing-card";
-
-// Logo Component
-const LogoFull = ({ className = "", isDark = true }: { className?: string; isDark?: boolean }) => (
-    <div className={`flex items-center gap-2 ${className}`}>
-        <svg className="h-10 w-10 flex-shrink-0" viewBox="0 0 100 90" fill="none">
-            <defs>
-                <linearGradient id="heartGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#2DD4BF" />
-                    <stop offset="50%" stopColor="#14B8A6" />
-                    <stop offset="100%" stopColor="#0D9488" />
-                </linearGradient>
-            </defs>
-            <path
-                d="M50 85 C50 85 10 55 10 30 C10 15 22 5 35 5 C42 5 48 10 50 15 C52 10 58 5 65 5 C78 5 90 15 90 30 C90 55 50 85 50 85Z"
-                fill="none"
-                stroke="url(#heartGradient)"
-                strokeWidth="6"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-            />
-            <path
-                d="M5 45 L25 45 L35 25 L50 65 L65 35 L75 45 L95 45"
-                fill="none"
-                stroke="#F59E0B"
-                strokeWidth="5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-            />
-        </svg>
-        <span className="text-xl font-bold tracking-tight">
-            <span className={isDark ? "text-white" : "text-slate-900"}>Tawari</span>
-            <span className={isDark ? "text-gray-400" : "text-gray-500"}>App</span>
-        </span>
-    </div>
-);
+import { Logo } from "@/components/ui/Logo";
 
 // Icons
 const Icons = {
@@ -87,7 +53,7 @@ function LanguageToggle({ isDark = true }: { isDark?: boolean }) {
     return (
         <button
             onClick={() => setLanguage(language === 'en' ? 'ar' : 'en')}
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-full border text-sm font-medium transition-colors ${isDark ? "bg-white/5 hover:bg-white/10 border-white/10" : "bg-gray-100 hover:bg-gray-200 border-gray-200 text-gray-700"}`}
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-full border text-sm font-medium transition-colors ${isDark ? "bg-white/5 hover:bg-white/10 border-white/10 text-gray-200" : "bg-gray-100 hover:bg-gray-200 border-gray-200 text-gray-700"}`}
         >
             {Icons.language}
             <span>{language === 'en' ? 'العربية' : 'English'}</span>
@@ -106,7 +72,7 @@ function FAQItem({ question, answer, isOpen, onClick, isDark = true }: {
     return (
         <GlowingCard
             isDark={isDark}
-            glowColor="teal"
+            glowColor="blue"
             className="overflow-hidden transition-all hover:scale-[1.01] p-5"
         >
             <button
@@ -118,7 +84,7 @@ function FAQItem({ question, answer, isOpen, onClick, isDark = true }: {
                     <motion.span
                         animate={{ rotate: isOpen ? 180 : 0 }}
                         transition={{ duration: 0.2 }}
-                        className="text-teal-400 flex-shrink-0"
+                        className="text-blue-400 group-hover:text-blue-400 flex-shrink-0"
                     >
                         {Icons.chevron}
                     </motion.span>
@@ -161,7 +127,7 @@ export default function FAQPage() {
     const translations = {
         en: {
             title: "Frequently Asked Questions",
-            subtitle: "Find answers to common questions about TawariApp",
+            subtitle: "Find answers to common questions about Tabibi",
             patientSection: "For Patients",
             doctorSection: "For Doctors",
             patientFaqs: [
@@ -186,17 +152,17 @@ export default function FAQPage() {
                     answer: "You can cancel or reschedule your appointment up to 2 hours before the scheduled time through your dashboard. Cancellations made with less than 2 hours notice may be subject to a small fee."
                 },
                 {
-                    question: "Are the doctors on TawariApp licensed?",
+                    question: "Are the doctors on Tabibi licensed?",
                     answer: "Yes, all doctors on our platform are fully licensed medical professionals registered with the Egyptian Medical Syndicate. We verify each doctor's credentials before they can offer consultations."
                 }
             ],
             doctorFaqs: [
                 {
-                    question: "How do I register as a doctor on TawariApp?",
+                    question: "How do I register as a doctor on Tabibi?",
                     answer: "Click on 'Register as Doctor' and complete our onboarding process. You'll need to provide your medical license, specialization certificates, and identification documents. Our team will verify your credentials within 2-3 business days."
                 },
                 {
-                    question: "What commission does TawariApp charge?",
+                    question: "What commission does Tabibi charge?",
                     answer: "We charge a competitive commission on each consultation. The exact rate depends on your specialization and consultation volume. Contact our support team for detailed pricing information."
                 },
                 {
@@ -221,7 +187,7 @@ export default function FAQPage() {
         },
         ar: {
             title: "الأسئلة الشائعة",
-            subtitle: "اعثر على إجابات للأسئلة الشائعة حول طوارئ",
+            subtitle: "اعثر على إجابات للأسئلة الشائعة حول طبيبي",
             patientSection: "للمرضى",
             doctorSection: "للأطباء",
             patientFaqs: [
@@ -246,17 +212,17 @@ export default function FAQPage() {
                     answer: "يمكنك إلغاء أو إعادة جدولة موعدك حتى ساعتين قبل الموعد المحدد من خلال لوحة التحكم. الإلغاءات التي تتم بأقل من ساعتين قد تخضع لرسوم بسيطة."
                 },
                 {
-                    question: "هل الأطباء في طوارئ مرخصون؟",
+                    question: "هل الأطباء في طبيبي مرخصون؟",
                     answer: "نعم، جميع الأطباء على منصتنا هم أطباء مرخصون ومسجلون في نقابة الأطباء المصرية. نتحقق من أوراق اعتماد كل طبيب قبل السماح له بتقديم الاستشارات."
                 }
             ],
             doctorFaqs: [
                 {
-                    question: "كيف أسجل كطبيب في طوارئ؟",
+                    question: "كيف أسجل كطبيب في طبيبي؟",
                     answer: "انقر على 'التسجيل كطبيب' وأكمل عملية التسجيل. ستحتاج إلى تقديم رخصتك الطبية وشهادات التخصص ووثائق الهوية. سيتحقق فريقنا من بياناتك خلال 2-3 أيام عمل."
                 },
                 {
-                    question: "ما هي العمولة التي تأخذها طوارئ؟",
+                    question: "ما هي العمولة التي تأخذها طبيبي؟",
                     answer: "نحن نفرض عمولة تنافسية على كل استشارة. يعتمد المعدل الدقيق على تخصصك وحجم الاستشارات. تواصل مع فريق الدعم للحصول على معلومات تفصيلية."
                 },
                 {
@@ -284,20 +250,20 @@ export default function FAQPage() {
     const text = translations[language as keyof typeof translations] || translations.en;
 
     return (
-        <div className={`min-h-screen overflow-x-hidden ${isRTL ? 'font-cairo' : ''} ${isDark ? 'bg-[#0F172A] text-white' : 'bg-gray-50 text-slate-900'}`} dir={isRTL ? 'rtl' : 'ltr'}>
+        <div className={`min-h-screen overflow-x-hidden ${isRTL ? 'font-cairo' : ''} ${isDark ? 'bg-[#060B18] text-white' : 'bg-gray-50 text-slate-900'}`} dir={isRTL ? 'rtl' : 'ltr'}>
             {/* Background Effects */}
             <div className="fixed inset-0 overflow-hidden pointer-events-none">
-                <div className={`absolute inset-0 ${isDark ? 'bg-gradient-to-br from-teal-900/20 via-[#0F172A] to-[#0F172A]' : 'bg-gradient-to-br from-teal-50 via-white to-white'}`} />
-                <div className={`absolute top-1/4 -right-1/4 w-[600px] h-[600px] rounded-full blur-3xl ${isDark ? 'bg-teal-500/10' : 'bg-teal-500/5'}`} />
+                <div className={`absolute inset-0 ${isDark ? 'bg-gradient-to-br from-[#0B1528] via-[#060B18] to-[#060B18]' : 'bg-gradient-to-br from-amber-50/50 via-white to-white'}`} />
+                <div className={`absolute top-1/4 -right-1/4 w-[600px] h-[600px] rounded-full blur-3xl ${isDark ? 'bg-amber-500/5' : 'bg-amber-500/5'}`} />
                 <div className={`absolute bottom-1/4 -left-1/4 w-[400px] h-[400px] rounded-full blur-3xl ${isDark ? 'bg-amber-500/5' : 'bg-amber-500/5'}`} />
             </div>
 
             {/* Navigation */}
-            <nav className={`relative z-50 backdrop-blur-xl border-b ${isDark ? 'bg-[#0F172A]/80 border-white/5' : 'bg-white/80 border-gray-200'}`}>
+            <nav className={`relative z-50 backdrop-blur-xl border-b ${isDark ? 'bg-[#060B18]/85 border-blue-500/20' : 'bg-white/80 border-gray-200'}`}>
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex items-center justify-between h-16 lg:h-20">
                         <Link href={`/${language}`} className="group hover:opacity-90 transition-opacity">
-                            <LogoFull isDark={isDark} />
+                            <Logo isDark={isDark} />
                         </Link>
 
                         {/* Desktop Navigation */}
@@ -311,7 +277,7 @@ export default function FAQPage() {
                             </Link>
                             <Link
                                 href={`/${language}/get-started`}
-                                className="bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-400 hover:to-teal-500 text-white font-semibold px-5 py-2 rounded-full text-sm transition-all"
+                                className="bg-gradient-to-r from-blue-600 via-blue-500 to-blue-600 hover:from-blue-500 text-white font-bold px-5 py-2 rounded-full text-sm transition-all shadow-lg shadow-blue-500/25"
                             >
                                 {t.nav.getStarted}
                             </Link>
@@ -328,11 +294,11 @@ export default function FAQPage() {
 
                     {/* Mobile Menu */}
                     {mobileMenuOpen && (
-                        <div className="lg:hidden py-4">
+                        <div className="lg:hidden py-4 border-t border-white/5">
                             <div className="flex flex-col gap-3 items-start">
                                 <Link
                                     href={`/${language}/login`}
-                                    className={`py-2 font-medium ${isDark ? 'text-gray-300 hover:text-teal-400' : 'text-gray-600 hover:text-teal-600'}`}
+                                    className={`py-2 font-medium ${isDark ? 'text-gray-300 hover:text-blue-400' : 'text-gray-600 hover:text-blue-600'}`}
                                     onClick={() => setMobileMenuOpen(false)}
                                 >
                                     {t.nav.login}
@@ -340,7 +306,7 @@ export default function FAQPage() {
                                 <LanguageToggle isDark={isDark} />
                                 <Link
                                     href={`/${language}/get-started`}
-                                    className="bg-teal-500 hover:bg-teal-400 text-white font-semibold px-5 py-2.5 rounded-full text-center"
+                                    className="bg-gradient-to-r from-blue-600 via-blue-500 to-blue-600 hover:from-blue-500 text-white font-bold px-5 py-2.5 rounded-full text-center"
                                     onClick={() => setMobileMenuOpen(false)}
                                 >
                                     {t.nav.getStarted}
@@ -356,7 +322,11 @@ export default function FAQPage() {
                 {/* Header */}
                 <div className="text-center mb-12 md:mb-16">
                     <h1 className="text-3xl sm:text-4xl md:text-5xl font-black leading-tight tracking-tight mb-4">
-                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-400 to-teal-300">
+                        <span className={`text-transparent bg-clip-text ${
+                            isDark
+                                ? "bg-gradient-to-r from-white via-blue-100 to-blue-400"
+                                : "bg-gradient-to-r from-slate-900 via-blue-800 to-blue-600"
+                        }`}>
                             {text.title}
                         </span>
                     </h1>
@@ -368,7 +338,7 @@ export default function FAQPage() {
                 {/* Patient FAQs */}
                 <div className="mb-12">
                     <div className="flex items-center gap-3 mb-6">
-                        <div className="w-10 h-10 rounded-xl bg-teal-500/20 flex items-center justify-center text-teal-400">
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#38BDF8] to-[#0284C7] flex items-center justify-center text-white shadow-[0_0_15px_rgba(14,165,233,0.5)] border border-sky-300/40">
                             {Icons.patient}
                         </div>
                         <h2 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>{text.patientSection}</h2>
@@ -390,7 +360,7 @@ export default function FAQPage() {
                 {/* Doctor FAQs */}
                 <div className="mb-12">
                     <div className="flex items-center gap-3 mb-6">
-                        <div className="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center text-amber-400">
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#38BDF8] to-[#0284C7] flex items-center justify-center text-white shadow-[0_0_15px_rgba(14,165,233,0.5)] border border-sky-300/40">
                             {Icons.doctor}
                         </div>
                         <h2 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>{text.doctorSection}</h2>
@@ -410,11 +380,11 @@ export default function FAQPage() {
                 </div>
 
                 {/* Contact CTA */}
-                <GlowingCard isDark={isDark} glowColor="teal" className="text-center p-8">
+                <GlowingCard isDark={isDark} glowColor="blue" className="text-center p-8">
                     <p className={`mb-4 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>{text.stillHaveQuestions}</p>
                     <Link
                         href={`/${language}/contact`}
-                        className="inline-flex items-center gap-2 bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-400 hover:to-teal-500 text-white font-semibold px-6 py-3 rounded-full transition-all"
+                        className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-600 via-blue-500 to-blue-600 hover:from-blue-500 text-white font-bold px-6 py-3 rounded-full transition-all shadow-lg shadow-blue-500/25"
                     >
                         {text.contactUs}
                     </Link>

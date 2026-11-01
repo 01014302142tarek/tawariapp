@@ -103,7 +103,7 @@ export default function PatientsPage() {
         return (
             <div className="p-4 md:p-6 lg:p-8 flex items-center justify-center min-h-[400px]">
                 <div className="text-center">
-                    <div className="text-teal-500 mb-4">{Icons.spinner}</div>
+                    <div className="text-amber-500 mb-4">{Icons.spinner}</div>
                     <p className={textMuted}>{t.common.loading || "Loading..."}</p>
                 </div>
             </div>
@@ -130,7 +130,7 @@ export default function PatientsPage() {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 md:mb-8">
                 <div>
                     <h1 className={cn("text-xl md:text-2xl font-bold flex items-center gap-2 md:gap-3", textPrimary)}>
-                        <span className="w-8 h-8 md:w-10 md:h-10 rounded-lg md:rounded-xl bg-teal-500/10 flex items-center justify-center text-teal-500">
+                        <span className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-br from-[#38BDF8] to-[#0284C7] flex items-center justify-center text-white shadow-[0_0_15px_rgba(14,165,233,0.5)] border border-sky-300/40">
                             {Icons.users}
                         </span>
                         {t.doctorDashboard.patientsPage.title}
@@ -179,9 +179,9 @@ export default function PatientsPage() {
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: idx * 0.05 }}
                         >
-                            <GlowingCard isDark={isDark} glowColor="teal" className="p-4 md:p-5">
+                            <GlowingCard isDark={isDark} glowColor="amber" className="p-4 md:p-5">
                                 <div className="flex items-start gap-3 md:gap-4 mb-3 md:mb-4">
-                                    <div className="relative w-12 h-12 md:w-14 md:h-14 rounded-full overflow-hidden border-2 border-teal-500/30">
+                                    <div className="relative w-12 h-12 md:w-14 md:h-14 rounded-full overflow-hidden border-2 border-amber-500/30">
                                         {patient.avatar_url ? (
                                             <Image
                                                 src={patient.avatar_url}
@@ -244,7 +244,7 @@ export default function PatientsPage() {
                     ))}
                 </div>
             ) : (
-                <GlowingCard isDark={isDark} glowColor="teal" className="p-0 overflow-hidden">
+                <GlowingCard isDark={isDark} glowColor="amber" className="p-0 overflow-hidden">
                     <div className={divider}>
                         {filteredPatients.map((patient, idx) => (
                             <motion.div
@@ -254,7 +254,7 @@ export default function PatientsPage() {
                                 transition={{ delay: idx * 0.05 }}
                                 className={cn("flex items-center gap-3 md:gap-4 p-3 md:p-4 transition-colors cursor-pointer", cardHover)}
                             >
-                                <div className="relative w-10 h-10 md:w-12 md:h-12 rounded-full overflow-hidden border-2 border-teal-500/30">
+                                <div className="relative w-10 h-10 md:w-12 md:h-12 rounded-full overflow-hidden border-2 border-amber-500/30">
                                     {patient.avatar_url ? (
                                         <Image
                                             src={patient.avatar_url}

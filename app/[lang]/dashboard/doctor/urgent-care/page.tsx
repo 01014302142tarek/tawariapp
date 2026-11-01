@@ -130,7 +130,7 @@ const QueuePatientCard: React.FC<QueuePatientCardProps> = ({
             className={cn(
                 "p-4 rounded-xl border transition-all",
                 isNext
-                    ? "bg-teal-500/10 border-teal-500/30"
+                    ? "bg-amber-500/10 border-amber-500/30"
                     : isDark
                         ? "bg-white/[0.02] border-white/5"
                         : "bg-gray-50 border-gray-200"
@@ -141,7 +141,7 @@ const QueuePatientCard: React.FC<QueuePatientCardProps> = ({
                 <div className={cn(
                     "w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg",
                     isNext
-                        ? "bg-teal-500 text-white"
+                        ? "bg-amber-500 text-white"
                         : isDark
                             ? "bg-slate-700 text-slate-300"
                             : "bg-gray-200 text-gray-600"
@@ -161,7 +161,7 @@ const QueuePatientCard: React.FC<QueuePatientCardProps> = ({
                                 className="w-10 h-10 rounded-full object-cover"
                             />
                         ) : (
-                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-teal-500 to-cyan-500 flex items-center justify-center text-white font-medium">
+                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-500 to-amber-600 flex items-center justify-center text-white font-medium">
                                 {getInitials(entry.patient_name)}
                             </div>
                         )}
@@ -220,7 +220,7 @@ const QueuePatientCard: React.FC<QueuePatientCardProps> = ({
                     <button
                         onClick={onCall}
                         disabled={calling}
-                        className="px-4 py-2 bg-teal-500 text-white rounded-lg font-medium hover:bg-teal-600 transition-colors flex items-center gap-2 disabled:opacity-50"
+                        className="px-4 py-2 bg-amber-500 text-white rounded-lg font-medium hover:bg-amber-600 transition-colors flex items-center gap-2 disabled:opacity-50"
                     >
                         {calling ? (
                             <>
@@ -263,17 +263,17 @@ const CurrentConsultationCard: React.FC<CurrentConsultationProps> = ({
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             className={cn(
-                "p-6 rounded-2xl border-2 border-teal-500",
-                isDark ? "bg-teal-500/10" : "bg-teal-50"
+                "p-6 rounded-2xl border-2 border-amber-500",
+                isDark ? "bg-amber-500/10" : "bg-amber-50"
             )}
         >
             <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
                     <span className="relative flex h-3 w-3">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-teal-400 opacity-75" />
-                        <span className="relative inline-flex rounded-full h-3 w-3 bg-teal-500" />
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75" />
+                        <span className="relative inline-flex rounded-full h-3 w-3 bg-amber-500" />
                     </span>
-                    <span className="text-teal-500 font-semibold">
+                    <span className="text-amber-500 font-semibold">
                         {entry.status === "called"
                             ? (isRTL ? "المريض مستدعى" : "Patient Called")
                             : (isRTL ? "استشارة جارية" : "Consultation In Progress")}
@@ -287,7 +287,7 @@ const CurrentConsultationCard: React.FC<CurrentConsultationProps> = ({
             </div>
 
             <div className="flex items-center gap-4 mb-6">
-                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-teal-500 to-cyan-500 flex items-center justify-center text-white font-bold text-2xl">
+                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-amber-500 to-amber-600 flex items-center justify-center text-white font-bold text-2xl">
                     {Icons.user}
                 </div>
                 <div>
@@ -317,7 +317,7 @@ const CurrentConsultationCard: React.FC<CurrentConsultationProps> = ({
             <button
                 onClick={onStartCall}
                 disabled={starting}
-                className="w-full py-4 bg-teal-500 text-white rounded-xl font-semibold text-lg hover:bg-teal-600 transition-colors flex items-center justify-center gap-3 disabled:opacity-50"
+                className="w-full py-4 bg-amber-500 text-white rounded-xl font-semibold text-lg hover:bg-amber-600 transition-colors flex items-center justify-center gap-3 disabled:opacity-50"
             >
                 {starting ? (
                     <>
@@ -572,7 +572,7 @@ export default function DoctorUrgentCarePage() {
         return (
             <div className={cn("min-h-screen p-6 flex items-center justify-center", isRTL && "rtl")}>
                 <div className="text-center">
-                    <div className="w-12 h-12 border-4 border-teal-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+                    <div className="w-12 h-12 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
                     <p className={cn(isDark ? "text-slate-400" : "text-slate-600")}>
                         {isRTL ? "جاري التحميل..." : "Loading..."}
                     </p>
@@ -582,15 +582,15 @@ export default function DoctorUrgentCarePage() {
     }
 
     return (
-        <div className={cn("min-h-screen p-6", isRTL && "rtl")}>
+        <div className={cn("min-h-screen p-3.5 sm:p-6 max-w-full overflow-x-hidden", isRTL && "rtl")}>
             {/* Header */}
             <div className="mb-8">
                 <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-4">
                         {/* Doctor Avatar */}
-                        <div className="relative w-14 h-14 rounded-full overflow-hidden border-2 border-teal-500/30 flex items-center justify-center bg-teal-500/10">
+                        <div className="relative w-14 h-14 rounded-full overflow-hidden border-2 border-amber-500/30 flex items-center justify-center bg-amber-500/10">
                             {profileLoading ? (
-                                <div className="w-6 h-6 border-2 border-teal-500 border-t-transparent rounded-full animate-spin" />
+                                <div className="w-6 h-6 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" />
                             ) : doctorAvatar ? (
                                 <Image
                                     src={doctorAvatar}
@@ -600,7 +600,7 @@ export default function DoctorUrgentCarePage() {
                                     sizes="56px"
                                 />
                             ) : (
-                                <span className="text-xl font-semibold text-teal-500">
+                                <span className="text-xl font-semibold text-amber-500">
                                     {getInitials(doctorName)}
                                 </span>
                             )}
@@ -632,12 +632,12 @@ export default function DoctorUrgentCarePage() {
                     onClick={handleToggleOnline}
                     disabled={toggling}
                     className={cn(
-                        "w-full p-6 rounded-2xl border-2 transition-all flex items-center justify-between",
+                        "w-full p-4 sm:p-6 rounded-2xl border-2 transition-all flex items-center justify-between gap-3",
                         isOnline
-                            ? "bg-teal-500/10 border-teal-500 hover:bg-teal-500/20"
+                            ? "bg-amber-500/10 border-amber-500 hover:bg-amber-500/20"
                             : isDark
-                                ? "bg-slate-800/50 border-slate-700 hover:border-teal-500/50"
-                                : "bg-white border-gray-200 hover:border-teal-500/50"
+                                ? "bg-slate-800/50 border-slate-700 hover:border-amber-500/50"
+                                : "bg-white border-gray-200 hover:border-amber-500/50"
                     )}
                     whileTap={{ scale: 0.98 }}
                 >
@@ -645,7 +645,7 @@ export default function DoctorUrgentCarePage() {
                         <div className={cn(
                             "w-14 h-14 rounded-xl flex items-center justify-center transition-colors",
                             isOnline
-                                ? "bg-teal-500 text-white"
+                                ? "bg-amber-500 text-white"
                                 : isDark
                                     ? "bg-slate-700 text-slate-400"
                                     : "bg-gray-100 text-gray-400"
@@ -669,11 +669,11 @@ export default function DoctorUrgentCarePage() {
                     <motion.div
                         className={cn(
                             "w-16 h-8 rounded-full relative",
-                            isOnline ? "bg-teal-500" : isDark ? "bg-slate-600" : "bg-gray-300"
+                            isOnline ? "bg-amber-500" : isDark ? "bg-slate-600" : "bg-gray-300"
                         )}
                         animate={{
                             backgroundColor: isOnline
-                                ? "rgb(20, 184, 166)"
+                                ? "rgb(245, 158, 11)"
                                 : isDark
                                     ? "rgb(71, 85, 105)"
                                     : "rgb(209, 213, 219)"
@@ -712,8 +712,8 @@ export default function DoctorUrgentCarePage() {
             </AnimatePresence>
 
             {/* Stats Row */}
-            {isOnline && (
-                <div className="grid grid-cols-3 gap-4 mb-8">
+            {(isOnline || waitingPatients.length > 0) && (
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-6 sm:mb-8">
                     <div className={cn(
                         "p-4 rounded-xl border",
                         isDark ? "bg-slate-800/50 border-white/5" : "bg-white border-gray-200"
@@ -721,7 +721,7 @@ export default function DoctorUrgentCarePage() {
                         <div className="flex items-center gap-3">
                             <div className={cn(
                                 "w-10 h-10 rounded-lg flex items-center justify-center",
-                                isDark ? "bg-teal-500/10 text-teal-400" : "bg-teal-50 text-teal-600"
+                                isDark ? "bg-amber-500/10 text-amber-400" : "bg-amber-50 text-amber-600"
                             )}>
                                 {Icons.users}
                             </div>
@@ -809,7 +809,7 @@ export default function DoctorUrgentCarePage() {
                             <button
                                 onClick={handleCallNext}
                                 disabled={calling}
-                                className="px-4 py-2 bg-teal-500 text-white rounded-lg font-medium hover:bg-teal-600 transition-colors flex items-center gap-2 disabled:opacity-50"
+                                className="px-4 py-2 bg-amber-500 text-white rounded-lg font-medium hover:bg-amber-600 transition-colors flex items-center gap-2 disabled:opacity-50"
                             >
                                 {calling ? Icons.loading : Icons.phone}
                                 <span>{isRTL ? "استدعاء التالي" : "Call Next"}</span>

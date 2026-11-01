@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createServiceRoleClient } from "@/lib/supabase/server";
 
 /**
  * POST /api/daily/token
@@ -136,13 +136,34 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        // Generate Daily.co meeting token
+        // Generate Daily.co meeting token (or WebRTC fallback)
         const dailyApiKey = process.env.DAILY_API_KEY;
-        if (!dailyApiKey) {
-            return NextResponse.json(
-                { error: "Video service not configured" },
-                { status: 500 }
-            );
+
+        const jitsiDomain = process.env.NEXT_PUBLIC_JITSI_DOMAIN || "fairmeeting.net";
+        let roomUrl = queueEntry.daily_room_url;
+        if (roomUrl?.includes("meet.jit.si")) {
+            roomUrl = roomUrl.replace("meet.jit.si", jitsiDomain);
+            try {
+                const adminSupabase: any = createServiceRoleClient();
+                adminSupabase
+                    .from("consultation_queue")
+                    .update({ daily_room_url: roomUrl })
+                    .eq("id", queueEntry.id)
+                    .then(() => {});
+            } catch (err) {
+                console.warn("[Token API] Failed to update room url in background:", err);
+            }
+        }
+
+        const isWebRtcRoom = !dailyApiKey || !roomUrl?.includes("daily.co");
+        if (isWebRtcRoom) {
+            return NextResponse.json({
+                token: "webrtc_direct_token",
+                roomUrl,
+                roomName: queueEntry.daily_room_name,
+                isOwner,
+                userName,
+            });
         }
 
         // CRITICAL: Verify the room still exists on Daily.co before generating token

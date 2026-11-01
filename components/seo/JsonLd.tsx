@@ -26,10 +26,10 @@ export function OrganizationJsonLd() {
     const data = {
         "@context": "https://schema.org",
         "@type": "MedicalOrganization",
-        name: "TawariApp",
-        alternateName: "تواري",
-        url: "https://www.tawariapp.com",
-        logo: "https://www.tawariapp.com/logo.png",
+        name: "Tabibi",
+        alternateName: "طبيبي",
+        url: "https://www.tabibi.com",
+        logo: "https://www.tabibi.com/logo.png",
         description:
             "Connect with licensed doctors in Egypt for video consultations. Get medical advice, prescriptions, and follow-up care from the comfort of your home.",
         address: {
@@ -53,10 +53,10 @@ export function MedicalServiceJsonLd() {
     const data = {
         "@context": "https://schema.org",
         "@type": "MedicalBusiness",
-        name: "TawariApp",
+        name: "Tabibi",
         description:
             "Telemedicine platform connecting patients with licensed doctors in Egypt for online video consultations.",
-        url: "https://www.tawariapp.com",
+        url: "https://www.tabibi.com",
         priceRange: "$$",
         medicalSpecialty: [
             "GeneralPractice",
@@ -87,14 +87,14 @@ export function WebsiteJsonLd() {
     const data = {
         "@context": "https://schema.org",
         "@type": "WebSite",
-        name: "TawariApp",
-        url: "https://www.tawariapp.com",
+        name: "Tabibi",
+        url: "https://www.tabibi.com",
         potentialAction: {
             "@type": "SearchAction",
             target: {
                 "@type": "EntryPoint",
                 urlTemplate:
-                    "https://www.tawariapp.com/en/dashboard/patient/doctors?search={search_term_string}",
+                    "https://www.tabibi.com/en/dashboard/patient/doctors?search={search_term_string}",
             },
             "query-input": "required name=search_term_string",
         },
@@ -206,14 +206,14 @@ export function LocalBusinessJsonLd() {
     const data = {
         "@context": "https://schema.org",
         "@type": "MedicalBusiness",
-        "@id": "https://www.tawariapp.com/#organization",
-        name: "TawariApp",
-        alternateName: "تواري",
+        "@id": "https://www.tabibi.com/#organization",
+        name: "Tabibi",
+        alternateName: "طبيبي",
         description:
             "Egypt's leading telemedicine platform connecting patients with licensed doctors for video consultations.",
-        url: "https://www.tawariapp.com",
-        logo: "https://www.tawariapp.com/logo.png",
-        image: "https://www.tawariapp.com/og-image.png",
+        url: "https://www.tabibi.com",
+        logo: "https://www.tabibi.com/logo.png",
+        image: "https://www.tabibi.com/og-image.png",
         priceRange: "$$",
         currenciesAccepted: "EGP",
         paymentAccepted: "Credit Card, Debit Card, Vodafone Cash",
@@ -256,9 +256,9 @@ export function LocalBusinessJsonLd() {
         ],
         sameAs: [
             // Add social media URLs when available
-            // "https://facebook.com/tawariapp",
-            // "https://twitter.com/tawariapp",
-            // "https://instagram.com/tawariapp",
+            // "https://facebook.com/tabibiapp",
+            // "https://twitter.com/tabibiapp",
+            // "https://instagram.com/tabibiapp",
         ],
         hasOfferCatalog: {
             "@type": "OfferCatalog",

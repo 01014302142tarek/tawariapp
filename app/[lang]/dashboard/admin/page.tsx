@@ -63,7 +63,7 @@ const Icons = {
         </svg>
     ),
     hand: (
-        <svg className="w-8 h-8 text-teal-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg className="w-8 h-8 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 00-3 0m-6-3V11m0-5.5v-1a1.5 1.5 0 013 0v1m0 0V11m0-5.5a1.5 1.5 0 013 0v3m0 0V11" />
         </svg>
     ),
@@ -101,7 +101,7 @@ const ProgressBar = ({ value, max, isDark = true }: { value: number; max: number
                 initial={{ width: 0 }}
                 animate={{ width: `${percentage}%` }}
                 transition={{ duration: 1, ease: "easeOut" }}
-                className="h-full rounded-full bg-gradient-to-r from-teal-500 to-teal-400"
+                className="h-full rounded-full bg-gradient-to-r from-amber-500 to-amber-400"
             />
         </div>
     );
@@ -114,11 +114,11 @@ const ProgressBar = ({ value, max, isDark = true }: { value: number; max: number
 export default function AdminDashboard() {
     const { theme } = useTheme();
     const { t, isRTL, formatNumber } = useI18n();
-    const { profile } = useAuth();
+    const { profile, user } = useAuth();
     const isDark = theme === "dark";
 
-    // Get admin's first name from profile
-    const adminName = profile?.profile.full_name?.split(' ')[0] || "";
+    // Get admin's first name from profile or user metadata
+    const adminName = profile?.profile?.full_name?.split(' ')[0] || (user?.user_metadata?.full_name as string)?.split(' ')[0] || (user?.user_metadata?.name as string)?.split(' ')[0] || "";
 
     // Use state for time-based greeting to avoid hydration mismatch
     const [greetingKey, setGreetingKey] = useState<"morning" | "afternoon" | "evening">("morning");
@@ -268,12 +268,12 @@ export default function AdminDashboard() {
                     minSize={0.4}
                     maxSize={1}
                     particleDensity={isDark ? 25 : 15}
-                    particleColor={isDark ? "20, 184, 166" : "13, 148, 136"}
+                    particleColor={isDark ? "245, 158, 11" : "217, 119, 6"}
                 />
                 {isDark && (
                     <>
-                        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-teal-500/5 rounded-full blur-3xl" />
-                        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-teal-500/5 rounded-full blur-3xl" />
+                        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-amber-500/5 rounded-full blur-3xl" />
+                        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-amber-500/5 rounded-full blur-3xl" />
                     </>
                 )}
             </div>
@@ -283,7 +283,7 @@ export default function AdminDashboard() {
                 {/* Greeting */}
                 <section className="mb-6 md:mb-8">
                     <h2 className={cn("text-2xl md:text-3xl font-bold mb-2 flex items-center gap-3", isDark ? "text-white" : "text-slate-900")}>
-                        {greeting}, {adminName} {Icons.hand}
+                        {adminName ? (isRTL ? `${greeting}، ${adminName}` : `${greeting}, ${adminName}`) : greeting} {Icons.hand}
                     </h2>
                     <p className={cn("text-base md:text-lg", isDark ? "text-gray-400" : "text-gray-600")}>
                         {t.adminDashboard.greeting.subtitle}
@@ -294,14 +294,14 @@ export default function AdminDashboard() {
                 <section className="mb-6 md:mb-8">
                     <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
                         {[
-                            { label: t.adminDashboard.stats.totalUsers, value: dashboardStats.totalUsers, change: "+12%", icon: Icons.users, color: "teal" },
+                            { label: t.adminDashboard.stats.totalUsers, value: dashboardStats.totalUsers, change: "+12%", icon: Icons.users, color: "amber" },
                             { label: t.adminDashboard.stats.totalDoctors, value: dashboardStats.totalDoctors, change: "+5%", icon: Icons.doctor, color: "emerald" },
                             { label: t.adminDashboard.stats.totalPatients, value: dashboardStats.totalPatients, change: "+18%", icon: Icons.patient, color: "blue" },
                             { label: t.adminDashboard.stats.totalRevenue, value: dashboardStats.totalRevenue, suffix: isRTL ? " ج.م" : " EGP", change: "+23%", icon: Icons.money, color: "amber" },
                         ].map((stat, idx) => (
-                            <GlowingCard key={idx} glowColor="teal" className="p-3 md:p-5" isDark={isDark}>
+                            <GlowingCard key={idx} glowColor="amber" className="p-3 md:p-5" isDark={isDark}>
                                 <div className="flex items-start justify-between mb-2 md:mb-4">
-                                    <div className="w-9 h-9 md:w-12 md:h-12 rounded-lg md:rounded-xl flex items-center justify-center bg-teal-500/10 text-teal-500">
+                                    <div className="w-9 h-9 md:w-12 md:h-12 rounded-full flex items-center justify-center bg-gradient-to-br from-[#38BDF8] to-[#0284C7] text-white shadow-[0_0_15px_rgba(14,165,233,0.5)] border border-sky-300/40">
                                         <span className="[&>svg]:w-4 [&>svg]:h-4 md:[&>svg]:w-5 md:[&>svg]:h-5">
                                             {stat.icon}
                                         </span>
@@ -331,10 +331,10 @@ export default function AdminDashboard() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-4 md:gap-6 mb-6 md:mb-8">
                     {/* Pending Approvals - Wide */}
                     <div className="md:col-span-1 lg:col-span-5">
-                        <GlowingCard glowColor="teal" className="p-4 md:p-6 h-full" isDark={isDark}>
+                        <GlowingCard glowColor="amber" className="p-4 md:p-6 h-full" isDark={isDark}>
                             <div className="flex items-center justify-between mb-6">
                                 <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-xl bg-teal-500/10 flex items-center justify-center text-teal-500">
+                                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#38BDF8] to-[#0284C7] flex items-center justify-center text-white shadow-[0_0_15px_rgba(14,165,233,0.4)] border border-sky-300/30">
                                         {Icons.clock}
                                     </div>
                                     <div>
@@ -342,7 +342,7 @@ export default function AdminDashboard() {
                                         <p className={cn("text-sm", isDark ? "text-gray-500" : "text-gray-600")}>{formatNumber(stats.pending)} {t.adminDashboard.stats.awaitingReview}</p>
                                     </div>
                                 </div>
-                                <Link href="/dashboard/admin/doctors" className="text-teal-500 hover:text-teal-400 text-sm font-medium">
+                                <Link href="/dashboard/admin/doctors" className="text-amber-500 hover:text-amber-400 text-sm font-medium">
                                     {t.common.viewAll} {isRTL ? "←" : "→"}
                                 </Link>
                             </div>
@@ -350,7 +350,7 @@ export default function AdminDashboard() {
                             <div className="space-y-3">
                                 {isLoading ? (
                                     <div className={cn("p-8 text-center rounded-xl border", isDark ? "border-white/5" : "border-gray-200")}>
-                                        <div className="animate-spin w-6 h-6 border-2 border-teal-500 border-t-transparent rounded-full mx-auto mb-2" />
+                                        <div className="animate-spin w-6 h-6 border-2 border-amber-500 border-t-transparent rounded-full mx-auto mb-2" />
                                         <p className={cn("text-sm", isDark ? "text-gray-500" : "text-gray-600")}>{t.common.loading || (isRTL ? "جاري التحميل..." : "Loading...")}</p>
                                     </div>
                                 ) : pendingApprovals.length === 0 ? (
@@ -365,10 +365,10 @@ export default function AdminDashboard() {
                                         initial={false}
                                         className={cn(
                                             "flex items-center gap-3 p-3 rounded-xl border transition-all",
-                                            isDark ? "bg-white/[0.02] border-white/5 hover:border-teal-500/20" : "bg-gray-50 border-gray-200 hover:border-teal-500/30"
+                                            isDark ? "bg-white/[0.02] border-white/5 hover:border-amber-500/20" : "bg-gray-50 border-gray-200 hover:border-amber-500/30"
                                         )}
                                     >
-                                        <div className="relative w-10 h-10 rounded-full overflow-hidden border-2 border-teal-500/30 flex-shrink-0">
+                                        <div className="relative w-10 h-10 rounded-full overflow-hidden border-2 border-amber-500/30 flex-shrink-0">
                                             <Image src={item.image} alt={item.name} fill className="object-cover" sizes="40px" />
                                         </div>
                                         <div className="flex-1 min-w-0">
@@ -397,9 +397,9 @@ export default function AdminDashboard() {
 
                     {/* System Status & Performance */}
                     <div className="md:col-span-1 lg:col-span-4">
-                        <GlowingCard glowColor="teal" className="p-4 md:p-6 h-full" isDark={isDark}>
+                        <GlowingCard glowColor="amber" className="p-4 md:p-6 h-full" isDark={isDark}>
                             <div className="flex items-center gap-3 mb-6">
-                                <div className="w-10 h-10 rounded-xl bg-teal-500/10 flex items-center justify-center text-teal-500">
+                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#38BDF8] to-[#0284C7] flex items-center justify-center text-white shadow-[0_0_15px_rgba(14,165,233,0.4)] border border-sky-300/30">
                                     {Icons.server}
                                 </div>
                                 <h3 className={cn("font-semibold", isDark ? "text-white" : "text-slate-900")}>{t.adminDashboard.sections.systemOverview}</h3>
@@ -423,7 +423,7 @@ export default function AdminDashboard() {
                             <div className="space-y-4">
                                 {[
                                     { label: t.adminDashboard.system.uptime, current: systemMetrics.uptime_percentage, max: 100, color: "emerald" },
-                                    { label: t.adminDashboard.system.satisfaction, current: systemMetrics.satisfaction_percentage, max: 100, color: "teal" },
+                                    { label: t.adminDashboard.system.satisfaction, current: systemMetrics.satisfaction_percentage, max: 100, color: "amber" },
                                     { label: t.adminDashboard.system.sessions, current: systemMetrics.active_sessions, max: systemMetrics.total_sessions_capacity, color: "blue" },
                                 ].map((metric, idx) => {
                                     const percentage = Math.round((metric.current / metric.max) * 100);
@@ -443,9 +443,9 @@ export default function AdminDashboard() {
 
                     {/* Recent Activity */}
                     <div className="md:col-span-2 lg:col-span-3">
-                        <GlowingCard glowColor="teal" className="p-4 md:p-6 h-full" isDark={isDark}>
+                        <GlowingCard glowColor="amber" className="p-4 md:p-6 h-full" isDark={isDark}>
                             <div className="flex items-center gap-3 mb-6">
-                                <div className="w-10 h-10 rounded-xl bg-teal-500/10 flex items-center justify-center text-teal-500">
+                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#38BDF8] to-[#0284C7] flex items-center justify-center text-white shadow-[0_0_15px_rgba(14,165,233,0.4)] border border-sky-300/30">
                                     {Icons.activity}
                                 </div>
                                 <h3 className={cn("font-semibold", isDark ? "text-white" : "text-slate-900")}>{t.adminDashboard.sections.recentActivity}</h3>
@@ -464,7 +464,7 @@ export default function AdminDashboard() {
                                     >
                                         <div className={cn(
                                             "w-2 h-2 rounded-full mt-2 flex-shrink-0",
-                                            activity.actionType === "registration" ? "bg-teal-500" :
+                                            activity.actionType === "registration" ? "bg-amber-500" :
                                                 activity.actionType === "payment" ? "bg-emerald-500" :
                                                     activity.actionType === "approval" ? "bg-blue-500" : "bg-amber-500"
                                         )} />
@@ -498,13 +498,13 @@ export default function AdminDashboard() {
                                     whileHover={{ y: -4 }}
                                     whileTap={{ scale: 0.98 }}
                                 >
-                                    <GlowingCard glowColor="teal" className="p-3 md:p-4 cursor-pointer group h-full" isDark={isDark}>
-                                        <div className="w-8 h-8 md:w-10 md:h-10 rounded-lg md:rounded-xl bg-teal-500/10 flex items-center justify-center text-teal-500 mb-2 md:mb-3 group-hover:bg-teal-500 group-hover:text-white transition-all">
+                                    <GlowingCard glowColor="amber" className="p-3 md:p-4 cursor-pointer group h-full" isDark={isDark}>
+                                        <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-br from-[#38BDF8] to-[#0284C7] flex items-center justify-center text-white shadow-[0_0_12px_rgba(14,165,233,0.4)] border border-sky-300/30 mb-2 md:mb-3 group-hover:scale-110 transition-transform">
                                             <span className="[&>svg]:w-4 [&>svg]:h-4 md:[&>svg]:w-5 md:[&>svg]:h-5">
                                                 {action.icon}
                                             </span>
                                         </div>
-                                        <h4 className={cn("font-medium text-xs md:text-sm group-hover:text-teal-500 transition-colors truncate", isDark ? "text-white" : "text-slate-900")}>
+                                        <h4 className={cn("font-medium text-xs md:text-sm group-hover:text-amber-500 transition-colors truncate", isDark ? "text-white" : "text-slate-900")}>
                                             {action.title}
                                         </h4>
                                         <p className={cn("text-[10px] md:text-xs mt-0.5 truncate", isDark ? "text-gray-500" : "text-gray-600")}>{action.description}</p>

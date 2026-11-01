@@ -12,39 +12,39 @@ interface GlowingCardProps {
 }
 
 const glowColorsDark = {
-    teal: "from-teal-500/20 via-teal-400/10 to-transparent",
-    amber: "from-amber-500/20 via-amber-400/10 to-transparent",
+    teal: "from-cyan-500/25 via-blue-500/15 to-transparent",
+    amber: "from-amber-500/25 via-amber-400/15 to-transparent",
     purple: "from-purple-500/20 via-purple-400/10 to-transparent",
-    blue: "from-blue-500/20 via-blue-400/10 to-transparent",
+    blue: "from-blue-600/30 via-blue-500/15 to-transparent",
     pink: "from-pink-500/20 via-pink-400/10 to-transparent",
-    green: "from-green-500/20 via-green-400/10 to-transparent",
+    green: "from-emerald-500/20 via-emerald-400/10 to-transparent",
 };
 
 const glowColorsLight = {
-    teal: "from-teal-100/60 via-teal-50/30 to-transparent",
-    amber: "from-amber-100/60 via-amber-50/30 to-transparent",
+    teal: "from-cyan-100/70 via-blue-50/40 to-transparent",
+    amber: "from-amber-100/70 via-amber-50/40 to-transparent",
     purple: "from-purple-100/60 via-purple-50/30 to-transparent",
     blue: "from-blue-100/60 via-blue-50/30 to-transparent",
     pink: "from-pink-100/60 via-pink-50/30 to-transparent",
-    green: "from-green-100/60 via-green-50/30 to-transparent",
+    green: "from-emerald-100/60 via-emerald-50/30 to-transparent",
 };
 
 const borderColorsDark = {
-    teal: "border-teal-500/20 hover:border-teal-500/40",
-    amber: "border-amber-500/20 hover:border-amber-500/40",
-    purple: "border-purple-500/20 hover:border-purple-500/40",
-    blue: "border-blue-500/20 hover:border-blue-500/40",
-    pink: "border-pink-500/20 hover:border-pink-500/40",
-    green: "border-green-500/20 hover:border-green-500/40",
+    teal: "border-cyan-500/25 hover:border-cyan-400/60",
+    amber: "border-amber-500/30 hover:border-amber-400/60 shadow-[0_0_15px_rgba(245,158,11,0.15)]",
+    purple: "border-purple-500/20 hover:border-purple-400/40",
+    blue: "border-blue-500/30 hover:border-blue-400/70 shadow-[0_0_15px_rgba(37,99,235,0.18)]",
+    pink: "border-pink-500/20 hover:border-pink-400/40",
+    green: "border-emerald-500/20 hover:border-emerald-400/40",
 };
 
 const borderColorsLight = {
-    teal: "border-teal-200/80 hover:border-teal-400 shadow-sm hover:shadow-md hover:shadow-teal-100/50",
+    teal: "border-cyan-200/80 hover:border-cyan-400 shadow-sm hover:shadow-md hover:shadow-cyan-100/50",
     amber: "border-amber-200/80 hover:border-amber-400 shadow-sm hover:shadow-md hover:shadow-amber-100/50",
     purple: "border-purple-200/80 hover:border-purple-400 shadow-sm hover:shadow-md hover:shadow-purple-100/50",
     blue: "border-blue-200/80 hover:border-blue-400 shadow-sm hover:shadow-md hover:shadow-blue-100/50",
     pink: "border-pink-200/80 hover:border-pink-400 shadow-sm hover:shadow-md hover:shadow-pink-100/50",
-    green: "border-green-200/80 hover:border-green-400 shadow-sm hover:shadow-md hover:shadow-green-100/50",
+    green: "border-emerald-200/80 hover:border-emerald-400 shadow-sm hover:shadow-md hover:shadow-emerald-100/50",
 };
 
 // Helper function to resolve theme from localStorage
@@ -86,7 +86,7 @@ function resolveThemeFromStorage(): boolean {
     return false;
 }
 
-export function GlowingCard({ children, className, glowColor = "teal", isDark }: GlowingCardProps) {
+export function GlowingCard({ children, className, glowColor = "blue", isDark }: GlowingCardProps) {
     const [autoDetectedDark, setAutoDetectedDark] = React.useState(false);
 
     React.useEffect(() => {
@@ -139,7 +139,7 @@ export function GlowingCard({ children, className, glowColor = "teal", isDark }:
                 "relative rounded-2xl border backdrop-blur-sm group transition-all duration-300",
                 !hasOverflowClass && "overflow-hidden",
                 resolvedIsDark
-                    ? "bg-slate-900/50 shadow-lg shadow-black/5"
+                    ? "bg-[#0B152B]/85 shadow-lg shadow-black/20"
                     : "bg-white shadow-lg",
                 borderColors[glowColor],
                 className

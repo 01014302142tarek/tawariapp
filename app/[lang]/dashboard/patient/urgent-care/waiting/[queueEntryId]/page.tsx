@@ -6,6 +6,7 @@ import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useI18n } from "@/app/i18n";
+import { useGlobalTheme } from "@/app/context/GlobalThemeContext";
 import { leaveQueue, getQueueEntryForCall } from "@/app/actions/queue";
 import { useMyQueuePosition } from "@/lib/hooks/useQueueRealtime";
 import { QueueChat } from "@/components/queue-chat";
@@ -80,7 +81,7 @@ const AnimatedPosition: React.FC<{ position: number }> = ({ position }) => {
             key={position}
             initial={{ scale: 1.5, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="text-8xl font-bold bg-gradient-to-br from-teal-400 to-cyan-400 bg-clip-text text-transparent"
+            className="text-5xl sm:text-7xl font-bold bg-gradient-to-br from-amber-400 to-amber-300 bg-clip-text text-transparent my-2"
         >
             #{position}
         </motion.div>
@@ -90,7 +91,7 @@ const AnimatedPosition: React.FC<{ position: number }> = ({ position }) => {
 // ============================================
 // Pulsing Dot Animation
 // ============================================
-const PulsingDot: React.FC<{ color?: string }> = ({ color = "bg-teal-500" }) => {
+const PulsingDot: React.FC<{ color?: string }> = ({ color = "bg-amber-500" }) => {
     return (
         <span className="relative flex h-3 w-3">
             <span className={cn(
@@ -112,6 +113,7 @@ export default function WaitingRoomPage() {
     const router = useRouter();
     const params = useParams();
     const { isRTL, language } = useI18n();
+    const { isDark } = useGlobalTheme();
 
     const queueEntryId = params.queueEntryId as string;
 
@@ -180,7 +182,7 @@ export default function WaitingRoomPage() {
 
         if (entry) {
             console.log("[Waiting Room] Entry status:", entry.status, "Room URL:", entry.daily_room_url);
-            if (entry.status === "in_consultation" && entry.daily_room_url) {
+            if ((entry.status === "in_consultation" || entry.status === "called") && entry.daily_room_url) {
                 // Room is ready - redirect to video call
                 console.log("[Waiting Room] Redirecting to call page...");
                 hasRedirectedRef.current = true; // Mark as redirected to prevent loops
@@ -224,7 +226,7 @@ export default function WaitingRoomPage() {
 
                 if (result.success && result.entry) {
                     console.log("[Waiting Room] Poll result:", result.entry.status, result.entry.daily_room_url);
-                    if (result.entry.status === "in_consultation" && result.entry.daily_room_url) {
+                    if ((result.entry.status === "in_consultation" || result.entry.status === "called") && result.entry.daily_room_url) {
                         console.log("[Waiting Room] Redirecting via poll...");
                         hasRedirectedRef.current = true;
                         // Clear interval immediately to stop further polls
@@ -298,10 +300,10 @@ export default function WaitingRoomPage() {
     // Loading state
     if (loading) {
         return (
-            <div className={cn("min-h-screen p-6 flex items-center justify-center", isRTL && "rtl")}>
+            <div className={cn("min-h-screen p-4 sm:p-6 flex items-center justify-center", isRTL && "rtl")}>
                 <div className="text-center">
-                    <div className="w-12 h-12 border-4 border-teal-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-                    <p className="text-slate-400">
+                    <div className="w-12 h-12 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+                    <p className={isDark ? "text-slate-400" : "text-slate-600"}>
                         {isRTL ? "جاري التحميل..." : "Loading..."}
                     </p>
                 </div>
@@ -312,10 +314,13 @@ export default function WaitingRoomPage() {
     // Error state
     if (error || !entry) {
         return (
-            <div className={cn("min-h-screen p-6", isRTL && "rtl")}>
+            <div className={cn("min-h-screen p-4 sm:p-6 max-w-full overflow-x-hidden", isRTL && "rtl")}>
                 <button
                     onClick={handleBack}
-                    className="flex items-center gap-2 text-slate-400 hover:text-white mb-8 transition-colors"
+                    className={cn(
+                        "flex items-center gap-2 mb-8 transition-colors",
+                        isDark ? "text-slate-400 hover:text-white" : "text-slate-600 hover:text-slate-900"
+                    )}
                 >
                     <span className={cn(isRTL && "rotate-180")}>{Icons.back}</span>
                     <span>{isRTL ? "العودة" : "Back"}</span>
@@ -323,19 +328,19 @@ export default function WaitingRoomPage() {
 
                 <div className="max-w-md mx-auto text-center py-20">
                     <div className="w-20 h-20 rounded-full bg-red-500/10 flex items-center justify-center mx-auto mb-4">
-                        <svg className="w-10 h-10 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-10 h-10 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
                         </svg>
                     </div>
-                    <h2 className="text-xl font-semibold text-white mb-2">
+                    <h2 className={cn("text-xl font-semibold mb-2", isDark ? "text-white" : "text-slate-900")}>
                         {isRTL ? "لم يتم العثور على الطلب" : "Queue Entry Not Found"}
                     </h2>
-                    <p className="text-slate-400 mb-6">
+                    <p className={cn("mb-6", isDark ? "text-slate-400" : "text-slate-600")}>
                         {error || (isRTL ? "ربما انتهت صلاحية الطلب" : "This queue entry may have expired")}
                     </p>
                     <button
                         onClick={handleBack}
-                        className="px-6 py-2 bg-teal-500 text-white rounded-lg font-medium hover:bg-teal-600 transition-colors"
+                        className="px-6 py-2 bg-amber-500 text-white rounded-lg font-medium hover:bg-amber-600 transition-colors shadow-sm"
                     >
                         {isRTL ? "العودة للأطباء المتاحين" : "Back to Available Doctors"}
                     </button>
@@ -345,7 +350,7 @@ export default function WaitingRoomPage() {
     }
 
     return (
-        <div className={cn("min-h-screen p-6", isRTL && "rtl")}>
+        <div className={cn("min-h-screen p-4 sm:p-6", isRTL && "rtl")}>
             {/* Leave Queue Confirmation Modal */}
             <AnimatePresence>
                 {showLeaveConfirm && (
@@ -360,13 +365,16 @@ export default function WaitingRoomPage() {
                             initial={{ scale: 0.9, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
                             exit={{ scale: 0.9, opacity: 0 }}
-                            className="bg-slate-800 rounded-2xl p-6 max-w-sm w-full"
+                            className={cn(
+                                "rounded-2xl p-6 max-w-sm w-full border shadow-xl",
+                                isDark ? "bg-slate-800 border-white/10" : "bg-white border-slate-200"
+                            )}
                             onClick={(e) => e.stopPropagation()}
                         >
-                            <h3 className="text-xl font-semibold text-white mb-2">
+                            <h3 className={cn("text-xl font-semibold mb-2", isDark ? "text-white" : "text-slate-900")}>
                                 {isRTL ? "مغادرة القائمة؟" : "Leave Queue?"}
                             </h3>
-                            <p className="text-slate-400 mb-6">
+                            <p className={cn("mb-6 text-sm sm:text-base", isDark ? "text-slate-400" : "text-slate-600")}>
                                 {isRTL
                                     ? "هل أنت متأكد من رغبتك في مغادرة قائمة الانتظار؟ ستفقد موقعك الحالي."
                                     : "Are you sure you want to leave the queue? You will lose your current position."}
@@ -375,14 +383,17 @@ export default function WaitingRoomPage() {
                                 <button
                                     onClick={() => setShowLeaveConfirm(false)}
                                     disabled={leaving}
-                                    className="flex-1 px-4 py-2 bg-slate-700 text-white rounded-lg font-medium hover:bg-slate-600 transition-colors"
+                                    className={cn(
+                                        "flex-1 px-4 py-2 rounded-lg font-medium transition-colors text-sm",
+                                        isDark ? "bg-slate-700 text-white hover:bg-slate-600" : "bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200"
+                                    )}
                                 >
                                     {isRTL ? "إلغاء" : "Cancel"}
                                 </button>
                                 <button
                                     onClick={handleLeaveQueue}
                                     disabled={leaving}
-                                    className="flex-1 px-4 py-2 bg-red-500 text-white rounded-lg font-medium hover:bg-red-600 transition-colors flex items-center justify-center gap-2"
+                                    className="flex-1 px-4 py-2 bg-red-500 text-white rounded-lg font-medium hover:bg-red-600 transition-colors flex items-center justify-center gap-2 text-sm shadow-sm"
                                 >
                                     {leaving ? (
                                         <>
@@ -402,12 +413,12 @@ export default function WaitingRoomPage() {
             <div className="max-w-xl mx-auto">
                 {/* Header with Connection Status */}
                 <div className="flex items-center justify-between mb-8">
-                    <h1 className="text-xl font-semibold text-white">
+                    <h1 className={cn("text-xl font-semibold", isDark ? "text-white" : "text-slate-900")}>
                         {isRTL ? "غرفة الانتظار" : "Waiting Room"}
                     </h1>
                     <div className="flex items-center gap-2 text-sm">
                         <PulsingDot color={isConnected ? "bg-green-500" : "bg-amber-500"} />
-                        <span className="text-slate-400">
+                        <span className={isDark ? "text-slate-400" : "text-slate-600"}>
                             {isConnected ? (isRTL ? "متصل" : "Connected") : (isRTL ? "جاري الاتصال..." : "Connecting...")}
                         </span>
                     </div>
@@ -417,18 +428,21 @@ export default function WaitingRoomPage() {
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="bg-slate-800/50 border border-white/10 rounded-2xl p-8 text-center mb-6"
+                    className={cn(
+                        "rounded-2xl p-4 sm:p-8 text-center mb-6 border",
+                        isDark ? "bg-slate-800/50 border-white/10" : "bg-white border-slate-200 shadow-sm"
+                    )}
                 >
                     {/* Position Display */}
                     <div className="mb-6">
-                        <p className="text-slate-400 mb-2">
+                        <p className={cn("mb-2 text-sm sm:text-base font-medium", isDark ? "text-slate-400" : "text-slate-600")}>
                             {isRTL ? "موقعك في القائمة" : "Your position in queue"}
                         </p>
                         <AnimatedPosition position={entry.position} />
                     </div>
 
                     {/* Wait Time */}
-                    <div className="flex items-center justify-center gap-2 text-slate-300 mb-8">
+                    <div className={cn("flex items-center justify-center gap-2 mb-8 text-sm sm:text-base font-medium", isDark ? "text-slate-300" : "text-slate-700")}>
                         {Icons.clock}
                         <span>
                             {entry.position === 1
@@ -439,7 +453,7 @@ export default function WaitingRoomPage() {
 
                     {/* Doctor Info */}
                     {doctorInfo && (
-                        <div className="bg-slate-900/50 rounded-xl p-4 flex items-center gap-4">
+                        <div className={cn("rounded-xl p-4 flex items-center gap-4 border", isDark ? "bg-slate-900/50 border-white/5" : "bg-slate-50 border-slate-200")}>
                             {doctorInfo.avatar_url ? (
                                 <Image
                                     src={doctorInfo.avatar_url}
@@ -449,13 +463,13 @@ export default function WaitingRoomPage() {
                                     className="w-12 h-12 rounded-full object-cover"
                                 />
                             ) : (
-                                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-teal-500 to-cyan-500 flex items-center justify-center text-white font-semibold">
+                                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-500 to-amber-600 flex items-center justify-center text-white font-semibold">
                                     {getInitials(doctorInfo.full_name)}
                                 </div>
                             )}
-                            <div className="text-start">
-                                <p className="text-white font-medium">{doctorInfo.full_name}</p>
-                                <p className="text-slate-400 text-sm">
+                            <div className="text-start min-w-0 flex-1">
+                                <p className={cn("font-medium truncate", isDark ? "text-white" : "text-slate-900")}>{doctorInfo.full_name}</p>
+                                <p className={cn("text-sm truncate", isDark ? "text-slate-400" : "text-slate-600")}>
                                     {doctorInfo.specialty.length > 0 ? doctorInfo.specialty.join(", ") : "General Practice"}
                                 </p>
                             </div>
@@ -468,19 +482,22 @@ export default function WaitingRoomPage() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.1 }}
-                    className="bg-slate-800/30 border border-white/5 rounded-xl p-4 mb-6"
+                    className={cn(
+                        "rounded-xl p-4 mb-6 border",
+                        isDark ? "bg-slate-800/30 border-white/5" : "bg-white border-slate-200 shadow-xs"
+                    )}
                 >
                     <div className="flex items-start gap-3">
-                        <div className="text-teal-400 mt-0.5">
+                        <div className="text-amber-500 mt-0.5 shrink-0">
                             {entry.position === 1 ? Icons.phone : Icons.clock}
                         </div>
                         <div>
-                            <p className="text-white font-medium">
+                            <p className={cn("font-medium", isDark ? "text-white" : "text-slate-900")}>
                                 {entry.position === 1
                                     ? (isRTL ? "أنت التالي!" : "You're next!")
                                     : (isRTL ? "في الانتظار..." : "Waiting...")}
                             </p>
-                            <p className="text-slate-400 text-sm">
+                            <p className={cn("text-sm", isDark ? "text-slate-400" : "text-slate-600")}>
                                 {entry.position === 1
                                     ? (isRTL ? "استعد للاستشارة. الطبيب سيتصل بك في أي لحظة." : "Get ready for your consultation. The doctor will call you any moment.")
                                     : (isRTL ? `هناك ${entry.position - 1} مريض قبلك. سيتم إعلامك عند اقتراب دورك.` : `There are ${entry.position - 1} patient${entry.position - 1 !== 1 ? "s" : ""} ahead of you. You'll be notified when it's almost your turn.`)}
@@ -494,22 +511,25 @@ export default function WaitingRoomPage() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.2 }}
-                    className="bg-teal-500/10 border border-teal-500/20 rounded-xl p-4 mb-8"
+                    className={cn(
+                        "rounded-xl p-4 mb-8 border",
+                        isDark ? "bg-amber-500/10 border-amber-500/20 text-slate-300" : "bg-amber-50/80 border-amber-200 text-amber-950"
+                    )}
                 >
-                    <h4 className="text-teal-400 font-medium mb-2">
+                    <h4 className={cn("font-semibold mb-2", isDark ? "text-amber-400" : "text-amber-900")}>
                         {isRTL ? "نصائح للاستشارة" : "Tips for your consultation"}
                     </h4>
-                    <ul className="text-slate-400 text-sm space-y-2">
+                    <ul className={cn("text-sm space-y-2", isDark ? "text-slate-400" : "text-slate-700")}>
                         <li className="flex items-start gap-2">
-                            <span className="text-teal-400 mt-0.5">{Icons.check}</span>
+                            <span className="text-amber-500 mt-0.5 shrink-0">{Icons.check}</span>
                             <span>{isRTL ? "تأكد من أن الكاميرا والميكروفون يعملان" : "Make sure your camera and microphone are working"}</span>
                         </li>
                         <li className="flex items-start gap-2">
-                            <span className="text-teal-400 mt-0.5">{Icons.check}</span>
+                            <span className="text-amber-500 mt-0.5 shrink-0">{Icons.check}</span>
                             <span>{isRTL ? "اختر مكاناً هادئاً وذا إضاءة جيدة" : "Choose a quiet, well-lit location"}</span>
                         </li>
                         <li className="flex items-start gap-2">
-                            <span className="text-teal-400 mt-0.5">{Icons.check}</span>
+                            <span className="text-amber-500 mt-0.5 shrink-0">{Icons.check}</span>
                             <span>{isRTL ? "جهز أي تقارير طبية أو أدوية للمناقشة" : "Have any medical reports or medications ready to discuss"}</span>
                         </li>
                     </ul>
@@ -521,14 +541,19 @@ export default function WaitingRoomPage() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.3 }}
                     onClick={() => setShowLeaveConfirm(true)}
-                    className="w-full px-6 py-3 bg-slate-800 text-slate-400 rounded-xl font-medium hover:bg-slate-700 hover:text-white transition-colors flex items-center justify-center gap-2"
+                    className={cn(
+                        "w-full px-6 py-3 rounded-xl font-medium transition-colors flex items-center justify-center gap-2 border",
+                        isDark
+                            ? "bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-white border-white/5"
+                            : "bg-white text-slate-700 hover:bg-slate-50 border-slate-200 shadow-xs"
+                    )}
                 >
                     {Icons.logout}
                     <span>{isRTL ? "مغادرة القائمة" : "Leave Queue"}</span>
                 </motion.button>
 
                 {/* Refund Note */}
-                <p className="text-center text-slate-500 text-sm mt-4">
+                <p className={cn("text-center text-sm mt-4", isDark ? "text-slate-500" : "text-slate-500")}>
                     {isRTL
                         ? "ملاحظة: في حال المغادرة، سيتم استرداد المبلغ المدفوع (قريباً)"
                         : "Note: If you leave, your payment will be refunded (coming soon)"}
@@ -541,7 +566,7 @@ export default function WaitingRoomPage() {
                     recipientProfileId={doctorInfo.messaging_profile_id}
                     recipientName={doctorInfo.full_name}
                     recipientAvatar={doctorInfo.avatar_url}
-                    isDark={true}
+                    isDark={isDark}
                     isRTL={isRTL}
                     currentProfileId={userMessagingProfileId}
                 />

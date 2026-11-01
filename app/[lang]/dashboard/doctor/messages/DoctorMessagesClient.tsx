@@ -363,7 +363,7 @@ export default function MessagesPage({
     if (loading && conversations.length === 0) {
         return (
             <div className="flex items-center justify-center min-h-[60vh]">
-                <div className="animate-spin w-8 h-8 border-2 border-teal-500 border-t-transparent rounded-full" />
+                <div className="animate-spin w-8 h-8 border-2 border-amber-500 border-t-transparent rounded-full" />
             </div>
         );
     }
@@ -375,7 +375,7 @@ export default function MessagesPage({
                 <button
                     onClick={() => setShowConversations(!showConversations)}
                     className={cn(
-                        "fixed bottom-4 z-50 md:hidden w-14 h-14 rounded-full bg-teal-500 text-white shadow-lg shadow-teal-500/30 flex items-center justify-center",
+                        "fixed bottom-4 z-50 md:hidden w-14 h-14 rounded-full bg-amber-500 text-white shadow-lg shadow-amber-500/30 flex items-center justify-center",
                         isRTL ? "left-4" : "right-4",
                         showConversations && "rotate-180"
                     )}
@@ -400,7 +400,7 @@ export default function MessagesPage({
                 <div className={cn("p-3 md:p-4 border-b", border)}>
                     <div className="flex items-center justify-between mb-3 md:mb-4">
                         <h1 className={cn("text-lg md:text-xl font-bold flex items-center gap-2", textPrimary)}>
-                            <span className="w-7 h-7 md:w-8 md:h-8 rounded-lg bg-teal-500/10 flex items-center justify-center text-teal-500">
+                            <span className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-gradient-to-br from-[#38BDF8] to-[#0284C7] flex items-center justify-center text-white shadow-[0_0_15px_rgba(14,165,233,0.5)] border border-sky-300/40">
                                 {Icons.message}
                             </span>
                             {t.doctorDashboard.messagesPage.sidebarTitle}
@@ -408,7 +408,7 @@ export default function MessagesPage({
                         <div className="flex items-center gap-2">
                             <button
                                 onClick={() => setShowNewChat(true)}
-                                className="p-2 rounded-lg bg-teal-500/10 text-teal-500 hover:bg-teal-500 hover:text-white transition-colors"
+                                className="p-2 rounded-lg bg-amber-500/10 text-amber-500 hover:bg-amber-500 hover:text-white transition-colors"
                             >
                                 {Icons.plus}
                             </button>
@@ -461,12 +461,12 @@ export default function MessagesPage({
                                     "flex items-center gap-3 p-3 md:p-4 cursor-pointer transition-colors",
                                     isRTL ? "border-r-2" : "border-l-2",
                                     selectedConversation?.id === conv.id
-                                        ? "bg-teal-500/5 border-teal-500"
+                                        ? "bg-amber-500/5 border-amber-500"
                                         : cn("border-transparent", isDark ? "hover:bg-white/[0.02]" : "hover:bg-gray-50")
                                 )}
                             >
                                 <div className="relative">
-                                    <div className="w-10 h-10 md:w-12 md:h-12 rounded-full overflow-hidden border-2 border-teal-500/30">
+                                    <div className="w-10 h-10 md:w-12 md:h-12 rounded-full overflow-hidden border-2 border-amber-500/30">
                                         {conv.participant_avatar ? (
                                             <Image
                                                 src={conv.participant_avatar}
@@ -476,13 +476,13 @@ export default function MessagesPage({
                                                 sizes="(max-width: 768px) 40px, 48px"
                                             />
                                         ) : (
-                                            <div className={cn("w-full h-full flex items-center justify-center text-sm font-bold", isDark ? "bg-teal-500/10 text-teal-400" : "bg-teal-50 text-teal-600")}>
+                                            <div className={cn("w-full h-full flex items-center justify-center text-sm font-bold", isDark ? "bg-amber-500/10 text-amber-400" : "bg-amber-50 text-amber-600")}>
                                                 {conv.participant_name.charAt(0)}
                                             </div>
                                         )}
                                     </div>
                                     {conv.unread_count > 0 && (
-                                        <span className="absolute -top-1 -right-1 w-4 h-4 md:w-5 md:h-5 bg-teal-500 text-white text-[10px] md:text-xs font-bold rounded-full flex items-center justify-center">
+                                        <span className="absolute -top-1 -right-1 w-4 h-4 md:w-5 md:h-5 bg-amber-500 text-white text-[10px] md:text-xs font-bold rounded-full flex items-center justify-center">
                                             {conv.unread_count}
                                         </span>
                                     )}
@@ -523,7 +523,7 @@ export default function MessagesPage({
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
                                     </svg>
                                 </button>
-                                <div className="relative w-8 h-8 md:w-10 md:h-10 rounded-full overflow-hidden border-2 border-teal-500/30">
+                                <div className="relative w-8 h-8 md:w-10 md:h-10 rounded-full overflow-hidden border-2 border-amber-500/30">
                                     {selectedConversation.participant_avatar ? (
                                         <Image
                                             src={selectedConversation.participant_avatar}
@@ -533,7 +533,7 @@ export default function MessagesPage({
                                             sizes="(max-width: 768px) 32px, 40px"
                                         />
                                     ) : (
-                                        <div className={cn("w-full h-full flex items-center justify-center text-sm font-bold", isDark ? "bg-teal-500/10 text-teal-400" : "bg-teal-50 text-teal-600")}>
+                                        <div className={cn("w-full h-full flex items-center justify-center text-sm font-bold", isDark ? "bg-amber-500/10 text-amber-400" : "bg-amber-50 text-amber-600")}>
                                             {selectedConversation.participant_name.charAt(0)}
                                         </div>
                                     )}
@@ -552,7 +552,7 @@ export default function MessagesPage({
                             {loadingMessages ? (
                                 <div className="flex items-center justify-center h-full">
                                     <div className="text-center space-y-3">
-                                        <div className="animate-spin w-8 h-8 md:w-10 md:h-10 border-2 border-teal-500 border-t-transparent rounded-full mx-auto" />
+                                        <div className="animate-spin w-8 h-8 md:w-10 md:h-10 border-2 border-amber-500 border-t-transparent rounded-full mx-auto" />
                                         <p className={cn("text-xs md:text-sm", textMuted)}>
                                             {isRTL ? "جاري تحميل الرسائل..." : "Loading messages..."}
                                         </p>
@@ -586,7 +586,7 @@ export default function MessagesPage({
                                                 className={cn(
                                                     "max-w-[85%] md:max-w-[70%] rounded-2xl px-3 md:px-4 py-2 md:py-3",
                                                     isOwnMessage
-                                                        ? "bg-teal-500 text-white rounded-br-md"
+                                                        ? "bg-amber-500 text-white rounded-br-md"
                                                         : isDark
                                                             ? "bg-slate-800 text-white rounded-bl-md"
                                                             : "bg-gray-200 text-slate-900 rounded-bl-md"
@@ -615,7 +615,7 @@ export default function MessagesPage({
                                                             ) : (
                                                                 <div className={cn(
                                                                     "w-full h-24 rounded-lg flex items-center justify-center",
-                                                                    isOwnMessage ? "bg-teal-600" : isDark ? "bg-slate-700" : "bg-gray-300"
+                                                                    isOwnMessage ? "bg-amber-600" : isDark ? "bg-slate-700" : "bg-gray-300"
                                                                 )}>
                                                                     <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin opacity-50" />
                                                                 </div>
@@ -628,7 +628,7 @@ export default function MessagesPage({
                                                                 className={cn(
                                                                     "flex items-center gap-2 p-2 rounded-lg transition-colors",
                                                                     isOwnMessage
-                                                                        ? "bg-teal-600 hover:bg-teal-700"
+                                                                        ? "bg-amber-600 hover:bg-amber-700"
                                                                         : isDark
                                                                             ? "bg-slate-700 hover:bg-slate-600"
                                                                             : "bg-gray-300 hover:bg-gray-400",
@@ -637,7 +637,7 @@ export default function MessagesPage({
                                                             >
                                                                 <div className={cn(
                                                                     "w-8 h-8 rounded flex items-center justify-center flex-shrink-0",
-                                                                    isOwnMessage ? "bg-teal-700" : isDark ? "bg-slate-600" : "bg-gray-400"
+                                                                    isOwnMessage ? "bg-amber-700" : isDark ? "bg-slate-600" : "bg-gray-400"
                                                                 )}>
                                                                     {Icons.document}
                                                                 </div>
@@ -662,7 +662,7 @@ export default function MessagesPage({
                                                 )}
                                                 <p className={cn(
                                                     "text-[10px] md:text-xs mt-1",
-                                                    isOwnMessage ? "text-teal-100" : textMuted
+                                                    isOwnMessage ? "text-amber-100" : textMuted
                                                 )}>{formatMessageTime(msg.created_at)}</p>
                                             </div>
                                         </motion.div>
@@ -766,8 +766,8 @@ export default function MessagesPage({
                                     className={cn(
                                         "p-2 md:p-3 rounded-xl transition-colors flex-shrink-0",
                                         isDark
-                                            ? "hover:bg-slate-700 text-slate-400 hover:text-teal-400"
-                                            : "hover:bg-gray-100 text-gray-500 hover:text-teal-500",
+                                            ? "hover:bg-slate-700 text-slate-400 hover:text-amber-400"
+                                            : "hover:bg-gray-100 text-gray-500 hover:text-amber-500",
                                         "disabled:opacity-50 disabled:cursor-not-allowed"
                                     )}
                                     title={isRTL ? "إرفاق ملف" : "Attach file"}
@@ -787,9 +787,9 @@ export default function MessagesPage({
                                     type="submit"
                                     disabled={(!newMessage.trim() && !selectedFile) || sending || uploading}
                                     className={cn(
-                                        "px-4 md:px-5 py-2.5 md:py-3 bg-gradient-to-r from-teal-500 to-teal-600 text-white rounded-xl transition-all shadow-lg shadow-teal-500/20",
+                                        "px-4 md:px-5 py-2.5 md:py-3 bg-gradient-to-r from-amber-500 to-amber-600 text-white rounded-xl transition-all shadow-lg shadow-amber-500/20",
                                         (newMessage.trim() || selectedFile) && !sending && !uploading
-                                            ? "hover:from-teal-400 hover:to-teal-500"
+                                            ? "hover:from-amber-400 hover:to-amber-500"
                                             : "opacity-50 cursor-not-allowed"
                                     )}
                                 >
@@ -849,11 +849,11 @@ export default function MessagesPage({
                                             isDark ? "hover:bg-white/5" : "hover:bg-gray-50"
                                         )}
                                     >
-                                        <div className="w-10 h-10 rounded-full overflow-hidden border border-teal-500/20">
+                                        <div className="w-10 h-10 rounded-full overflow-hidden border border-amber-500/20">
                                             {contact.avatar_url ? (
                                                 <Image src={contact.avatar_url} alt={contact.full_name} width={40} height={40} className="object-cover" />
                                             ) : (
-                                                <div className={cn("w-full h-full flex items-center justify-center text-sm font-bold", isDark ? "bg-teal-500/10 text-teal-400" : "bg-teal-50 text-teal-600")}>
+                                                <div className={cn("w-full h-full flex items-center justify-center text-sm font-bold", isDark ? "bg-amber-500/10 text-amber-400" : "bg-amber-50 text-amber-600")}>
                                                     {contact.full_name.charAt(0)}
                                                 </div>
                                             )}

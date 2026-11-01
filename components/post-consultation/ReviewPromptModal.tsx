@@ -124,7 +124,7 @@ export function ReviewPromptModal({
                                     initial={{ scale: 0 }}
                                     animate={{ scale: 1 }}
                                     transition={{ type: "spring", damping: 15 }}
-                                    className="text-teal-400 mx-auto mb-4"
+                                    className="text-amber-400 mx-auto mb-4"
                                 >
                                     {Icons.success}
                                 </motion.div>
@@ -216,9 +216,9 @@ export function ReviewPromptModal({
                                             className={cn(
                                                 "w-full px-4 py-3 rounded-xl border transition-colors resize-none",
                                                 isDark
-                                                    ? "bg-slate-700 border-slate-600 text-white placeholder-slate-500 focus:border-teal-500"
-                                                    : "bg-white border-gray-300 text-gray-900 placeholder-gray-400 focus:border-teal-500",
-                                                "focus:outline-none focus:ring-2 focus:ring-teal-500/20"
+                                                    ? "bg-slate-700 border-slate-600 text-white placeholder-slate-500 focus:border-amber-500"
+                                                    : "bg-white border-gray-300 text-gray-900 placeholder-gray-400 focus:border-amber-500",
+                                                "focus:outline-none focus:ring-2 focus:ring-amber-500/20"
                                             )}
                                         />
                                     </div>
@@ -253,12 +253,12 @@ export function ReviewPromptModal({
                                         disabled={submitting || rating === 0}
                                         className={cn(
                                             "px-6 py-2 rounded-xl font-medium transition-all",
-                                            "bg-teal-500 text-white",
+                                            "bg-amber-500 text-white",
                                             "flex items-center gap-2",
-                                            "shadow-lg shadow-teal-500/20",
+                                            "shadow-lg shadow-amber-500/20",
                                             (submitting || rating === 0)
                                                 ? "opacity-50 cursor-not-allowed"
-                                                : "hover:bg-teal-600 hover:shadow-teal-500/30"
+                                                : "hover:bg-amber-600 hover:shadow-amber-500/30"
                                         )}
                                     >
                                         {submitting ? Icons.loading : Icons.send}

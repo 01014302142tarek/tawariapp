@@ -6,63 +6,19 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { useI18n } from "../i18n";
 import { useGlobalTheme } from "@/app/context/GlobalThemeContext";
+import DoctorsCarousel from "@/components/landing/DoctorsCarousel";
+import { Logo } from "@/components/ui/Logo";
 
-// Custom Logo Component with Heart, Pulse and Text
+// Tabibi Sapphire & Gold Logo Component (Delegated to central Logo)
 const LogoFull = ({ className = "", isDark = true }: { className?: string; isDark?: boolean }) => (
-  <div className={`flex items-center gap-2 ${className}`}>
-    {/* Heart with Pulse Icon */}
-    <svg className="h-10 w-10 flex-shrink-0" viewBox="0 0 100 90" fill="none">
-      {/* Heart outline - Teal with 3D effect */}
-      <defs>
-        <linearGradient id="heartGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#2DD4BF" />
-          <stop offset="50%" stopColor="#14B8A6" />
-          <stop offset="100%" stopColor="#0D9488" />
-        </linearGradient>
-        <linearGradient id="heartShadow" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#0F766E" />
-          <stop offset="100%" stopColor="#134E4A" />
-        </linearGradient>
-      </defs>
-      {/* Heart shadow for 3D effect */}
-      <path
-        d="M50 85 C50 85 10 55 10 30 C10 15 22 5 35 5 C42 5 48 10 50 15 C52 10 58 5 65 5 C78 5 90 15 90 30 C90 55 50 85 50 85Z"
-        fill="url(#heartShadow)"
-        transform="translate(2, 2)"
-        opacity="0.3"
-      />
-      {/* Main heart */}
-      <path
-        d="M50 85 C50 85 10 55 10 30 C10 15 22 5 35 5 C42 5 48 10 50 15 C52 10 58 5 65 5 C78 5 90 15 90 30 C90 55 50 85 50 85Z"
-        fill="none"
-        stroke="url(#heartGradient)"
-        strokeWidth="6"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      {/* Pulse/ECG line - Amber/Gold */}
-      <path
-        d="M5 45 L25 45 L35 25 L50 65 L65 35 L75 45 L95 45"
-        fill="none"
-        stroke="#F59E0B"
-        strokeWidth="5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-    {/* TawariApp Text */}
-    <span className="text-xl font-bold tracking-tight">
-      <span className={isDark ? "text-white" : "text-slate-800"}>Tawari</span>
-      <span className={isDark ? "text-gray-400" : "text-slate-500"}>App</span>
-    </span>
-  </div>
+  <Logo className={className} isDark={isDark} />
 );
 
 // Professional SVG Icons
 const Icons = {
   menu: <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>,
   close: <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>,
-  check: <svg className="w-5 h-5 text-teal-400" fill="currentColor" viewBox="0 0 24 24"><path fillRule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm13.36-1.814a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z" clipRule="evenodd" /></svg>,
+  check: <svg className="w-5 h-5 text-amber-400" fill="currentColor" viewBox="0 0 24 24"><path fillRule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm13.36-1.814a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z" clipRule="evenodd" /></svg>,
   star: <svg className="w-4 h-4 text-amber-400" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" /></svg>,
   starEmpty: <svg className="w-4 h-4 text-gray-600" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" /></svg>,
   play: <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>,
@@ -86,14 +42,36 @@ const Icons = {
 
 // Specialty Icons Map
 const SpecialtyIcons: Record<string, React.ReactNode> = {
-  general: <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4.26 10.147a60.436 60.436 0 00-.491 6.347A48.627 48.627 0 0112 20.904a48.627 48.627 0 018.232-4.41 60.46 60.46 0 00-.491-6.347m-15.482 0a50.57 50.57 0 00-2.658-.813A59.905 59.905 0 0112 3.493a59.902 59.902 0 0110.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.697 50.697 0 0112 13.489a50.702 50.702 0 017.74-3.342M6.75 15a.75.75 0 100-1.5.75.75 0 000 1.5zm0 0v-3.675A55.378 55.378 0 0112 8.443m-7.007 11.55A5.981 5.981 0 006.75 15.75v-1.5" /></svg>,
-  pediatrics: <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15.182 15.182a4.5 4.5 0 01-6.364 0M21 12a9 9 0 11-18 0 9 9 0 0118 0zM9.75 9.75c0 .414-.168.75-.375.75S9 10.164 9 9.75 9.168 9 9.375 9s.375.336.375.75zm-.375 0h.008v.015h-.008V9.75zm5.625 0c0 .414-.168.75-.375.75s-.375-.336-.375-.75.168-.75.375-.75.375.336.375.75zm-.375 0h.008v.015h-.008V9.75z" /></svg>,
-  obgyn: <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" /></svg>,
-  internal: <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" /></svg>,
-  dermatology: <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7.864 4.243A7.5 7.5 0 0119.5 10.5c0 2.92-.556 5.709-1.568 8.268M5.742 6.364A7.465 7.465 0 004.5 10.5a7.464 7.464 0 01-1.15 3.993m1.989 3.559A11.209 11.209 0 008.25 10.5a3.75 3.75 0 117.5 0c0 .527-.021 1.049-.064 1.565M12 10.5a14.94 14.94 0 01-3.6 9.75m6.633-4.596a18.666 18.666 0 01-2.485 5.33" /></svg>,
-  mental: <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z" /></svg>,
-  cardiology: <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" /></svg>,
-  orthopedics: <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" /></svg>,
+  general: (
+    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M4.5 12.75l6 6 9-13.5M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3" />
+    </svg>
+  ),
+  cardiology: (
+    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
+    </svg>
+  ),
+  pediatrics: (
+    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M15.182 15.182a4.5 4.5 0 01-6.364 0M21 12a9 9 0 11-18 0 9 9 0 0118 0zM9.75 9.75c0 .414-.168.75-.375.75S9 10.164 9 9.75 9.168 9 9.375 9s.375.336.375.75zm5.625 0c0 .414-.168.75-.375.75s-.375-.336-.375-.75.168-.75.375-.75.375.336.375.75z" />
+    </svg>
+  ),
+  mental: (
+    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M12 18v-5.25m0 0a6.01 6.01 0 001.5-.189m-1.5.189a6.01 6.01 0 01-1.5-.189m3.75 7.478a12.06 12.06 0 01-4.5 0m3.75 2.383a14.406 14.406 0 01-3 0M14.25 18v-.192c0-.983.658-1.823 1.508-2.316a7.5 7.5 0 10-7.516 0c.85.493 1.508 1.333 1.508 2.316V18" />
+    </svg>
+  ),
+  dermatology: (
+    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
+    </svg>
+  ),
+  nutrition: (
+    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M12 3v2.25m0 0a4.5 4.5 0 00-4.5 4.5v1.5a4.5 4.5 0 009 0v-1.5a4.5 4.5 0 00-4.5-4.5zM3.75 13.5A8.25 8.25 0 0012 21.75a8.25 8.25 0 008.25-8.25" />
+    </svg>
+  ),
 };
 
 // Stats icons
@@ -102,19 +80,111 @@ const statsIcons = [Icons.doctor, Icons.patients, Icons.consultation, Icons.rati
 // Why Us icons
 const whyUsIcons = [Icons.verified, Icons.prescription, Icons.payment, Icons.globe];
 
-// Doctor data
+// Doctor data - 8 distinguished doctors with diverse specialties
 const doctors = [
-  { name: "Dr. Ahmed Hassan", nameAr: "د. أحمد حسن", specialty: "Cardiologist", specialtyAr: "قلب", experience: "15", rating: 4.9, reviews: 234, fee: 300, image: "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=200&h=200&fit=crop&crop=face", available: true },
-  { name: "Dr. Sara Mahmoud", nameAr: "د. سارة محمود", specialty: "Pediatrician", specialtyAr: "أطفال", experience: "8", rating: 5.0, reviews: 189, fee: 250, image: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=200&h=200&fit=crop&crop=face", available: true },
-  { name: "Dr. Omar Khaled", nameAr: "د. عمر خالد", specialty: "Dermatologist", specialtyAr: "جلدية", experience: "12", rating: 4.8, reviews: 156, fee: 280, image: "https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=200&h=200&fit=crop&crop=face", available: false },
-  { name: "Dr. Mariam Nabil", nameAr: "د. مريم نبيل", specialty: "OB/GYN", specialtyAr: "نساء", experience: "10", rating: 4.9, reviews: 312, fee: 320, image: "https://images.unsplash.com/photo-1594824476967-48c8b964273f?w=200&h=200&fit=crop&crop=face", available: true },
+  {
+    name: "Dr. Aisha Khan",
+    nameAr: "د. عائشة خان",
+    specialty: "Cardiology",
+    specialtyAr: "أمراض القلب والأوعية الدموية",
+    experience: "12",
+    rating: 5.0,
+    reviews: 248,
+    fee: 350,
+    image: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=400&h=400&fit=crop&crop=face",
+    available: true
+  },
+  {
+    name: "Dr. Omar Al-Fayed",
+    nameAr: "د. عمر الفايد",
+    specialty: "General Physician",
+    specialtyAr: "طب عام واستشارات طوارئ",
+    experience: "15",
+    rating: 5.0,
+    reviews: 312,
+    fee: 300,
+    image: "https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=400&h=400&fit=crop&crop=face",
+    available: true
+  },
+  {
+    name: "Dr. Layla Ahmed",
+    nameAr: "د. ليلى أحمد",
+    specialty: "Pediatrics",
+    specialtyAr: "طب الأطفال وحديثي الولادة",
+    experience: "10",
+    rating: 5.0,
+    reviews: 195,
+    fee: 280,
+    image: "https://images.unsplash.com/photo-1594824476967-48c8b964273f?w=400&h=400&fit=crop&crop=face",
+    available: true
+  },
+  {
+    name: "Dr. Mohamed Ibrahim",
+    nameAr: "د. محمد إبراهيم",
+    specialty: "Dermatology",
+    specialtyAr: "جلدية وتجميل وعلاج بالليزر",
+    experience: "14",
+    rating: 5.0,
+    reviews: 280,
+    fee: 320,
+    image: "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=400&h=400&fit=crop&crop=face",
+    available: true
+  },
+  {
+    name: "Dr. Sarah Mansour",
+    nameAr: "د. سارة منصور",
+    specialty: "Neurology & Mental Health",
+    specialtyAr: "مخ وأعصاب واستشارات نفسية",
+    experience: "11",
+    rating: 5.0,
+    reviews: 215,
+    fee: 380,
+    image: "https://images.unsplash.com/photo-1551836022-deb4988cc6c0?w=400&h=400&fit=crop&crop=face",
+    available: true
+  },
+  {
+    name: "Dr. Tarek El-Kady",
+    nameAr: "د. طارق القاضي",
+    specialty: "Orthopedic Surgery",
+    specialtyAr: "جراحة العظام والمفاصل",
+    experience: "16",
+    rating: 5.0,
+    reviews: 340,
+    fee: 340,
+    image: "https://images.unsplash.com/photo-1537368910025-700350fe46c7?w=400&h=400&fit=crop&crop=face",
+    available: true
+  },
+  {
+    name: "Dr. Reem Hassan",
+    nameAr: "د. ريم حسن",
+    specialty: "Clinical Nutrition",
+    specialtyAr: "التغذية العلاجية وإدارة الوزن",
+    experience: "9",
+    rating: 5.0,
+    reviews: 178,
+    fee: 260,
+    image: "https://images.unsplash.com/photo-1527613426441-4da17471b66d?w=400&h=400&fit=crop&crop=face",
+    available: true
+  },
+  {
+    name: "Dr. Khaled Mostafa",
+    nameAr: "د. خالد مصطفى",
+    specialty: "Ophthalmology",
+    specialtyAr: "طب وجراحة العيون والليزر",
+    experience: "18",
+    rating: 5.0,
+    reviews: 410,
+    fee: 360,
+    image: "https://images.unsplash.com/photo-1582750433449-648ed127bb54?w=400&h=400&fit=crop&crop=face",
+    available: true
+  }
 ];
 
 // Testimonial data
 const testimonials = [
   { name: "Nour E.", nameAr: "نور", location: "Cairo", locationAr: "القاهرة", rating: 5, text: "Saved me a trip to the hospital late at night. The pediatrician was very professional and calming.", textAr: "وفرت عليّ رحلة للمستشفى في وقت متأخر من الليل. كان طبيب الأطفال محترفًا جدًا ومطمئنًا.", image: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&crop=face" },
   { name: "Karim M.", nameAr: "كريم", location: "Alexandria", locationAr: "الإسكندرية", rating: 5, text: "The app is so easy to use. I got my prescription immediately after the call.", textAr: "التطبيق سهل الاستخدام جدًا. حصلت على الوصفة الطبية مباشرة بعد المكالمة.", image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face" },
-  { name: "Fatma H.", nameAr: "فاطمة", location: "Giza", locationAr: "الجيزة", rating: 5, text: "As a working mother, TawariApp is a lifesaver. I can consult a doctor during my lunch break.", textAr: "كأم عاملة، تواري منقذ للحياة. يمكنني استشارة طبيب أثناء استراحة الغداء.", image: "https://images.unsplash.com/photo-1489424731084-a5d8b219a5bb?w=100&h=100&fit=crop&crop=face" },
+  { name: "Fatma H.", nameAr: "فاطمة", location: "Giza", locationAr: "الجيزة", rating: 5, text: "As a working mother, Tabibi is a lifesaver. I can consult a doctor during my lunch break.", textAr: "كأم عاملة، طبيبي منقذ للحياة. يمكنني استشارة طبيب أثناء استراحة الغداء.", image: "https://images.unsplash.com/photo-1489424731084-a5d8b219a5bb?w=100&h=100&fit=crop&crop=face" },
 ];
 
 // Animated counter
@@ -147,7 +217,7 @@ function ThemeToggle() {
       onClick={toggleTheme}
       className={`flex items-center justify-center w-10 h-10 rounded-full transition-all duration-300 ${isDark
         ? 'bg-white/5 hover:bg-white/10 border border-white/10 text-white hover:text-amber-300'
-        : 'bg-teal-500 hover:bg-teal-600 border border-teal-500 text-slate-600 hover:text-slate-800'
+        : 'bg-amber-500 hover:bg-amber-400 border border-amber-500 text-black hover:text-black'
         }`}
       aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
     >
@@ -191,21 +261,29 @@ function LandingPageContent() {
   const { t, isRTL, language } = useI18n();
   const { isDark } = useGlobalTheme();
   const specialtyKeys = ['general', 'pediatrics', 'obgyn', 'internal', 'dermatology', 'mental', 'cardiology', 'orthopedics'] as const;
+  const mainSpecialties = [
+    { key: 'general', nameEn: 'General Medicine', nameAr: 'طب عام', icon: SpecialtyIcons.general },
+    { key: 'cardiology', nameEn: 'Cardiology', nameAr: 'أمراض القلب', icon: SpecialtyIcons.cardiology },
+    { key: 'pediatrics', nameEn: 'Pediatrics', nameAr: 'طب الأطفال', icon: SpecialtyIcons.pediatrics },
+    { key: 'mental', nameEn: 'Mental Health', nameAr: 'الصحة النفسية', icon: SpecialtyIcons.mental },
+    { key: 'dermatology', nameEn: 'Dermatology', nameAr: 'جلدية وتجميل', icon: SpecialtyIcons.dermatology },
+    { key: 'nutrition', nameEn: 'Nutrition', nameAr: 'التغذية العلاجية', icon: SpecialtyIcons.nutrition },
+  ];
 
-  // Theme-aware class helpers
-  const bgMain = isDark ? 'bg-[#0F172A]' : 'bg-[#F8FAFC]';
-  const bgSection = isDark ? 'bg-[#0F172A]' : 'bg-white';
-  const bgSectionAlt = isDark ? 'bg-gradient-to-b from-[#0F172A] to-[#1E293B]/30' : 'bg-gradient-to-b from-[#F8FAFC] to-[#F1F5F9]';
-  const textPrimary = isDark ? 'text-white' : 'text-slate-900';
-  const textSecondary = isDark ? 'text-gray-400' : 'text-slate-600';
-  const textMuted = isDark ? 'text-gray-500' : 'text-slate-500';
-  const borderColor = isDark ? 'border-white/5' : 'border-slate-200';
-  const navBg = isDark ? 'bg-[#0F172A]/80' : 'bg-white/90';
+  // Theme-aware class helpers - Ocean Sapphire & Gold Theme
+  const bgMain = isDark ? 'bg-[#060B18]' : 'bg-[#F0F7FF]';
+  const bgSection = isDark ? 'bg-[#060B18]' : 'bg-white';
+  const bgSectionAlt = isDark ? 'bg-gradient-to-b from-[#060B18] via-[#09132E] to-[#060B18]' : 'bg-gradient-to-b from-[#F0F7FF] to-[#E0EFFF]';
+  const textPrimary = isDark ? 'text-white' : 'text-[#0F172A]';
+  const textSecondary = isDark ? 'text-[#94A3B8]' : 'text-[#475569]';
+  const textMuted = isDark ? 'text-[#64748B]' : 'text-[#64748B]';
+  const borderColor = isDark ? 'border-blue-900/40' : 'border-blue-200';
+  const navBg = isDark ? 'bg-[#060B18]/90' : 'bg-[#F0F7FF]/92';
 
-  // Glowing card styles for light mode - using teal borders
+  // Glowing card styles - sapphire ocean & gold
   const glowCardClass = isDark
-    ? 'bg-[#1E293B]/50 border border-white/5 hover:border-teal-500/30 hover:bg-[#1E293B]'
-    : 'bg-white border-2 border-teal-200 shadow-lg shadow-teal-100/50 hover:shadow-xl hover:shadow-teal-200/60 hover:border-teal-400';
+    ? 'bg-[#0B152B]/85 border border-blue-500/35 hover:border-blue-400 hover:shadow-[0_0_20px_rgba(37,99,235,0.3)] hover:bg-[#0E1D3C]'
+    : 'bg-white border-2 border-blue-200 shadow-lg shadow-blue-100/50 hover:shadow-xl hover:shadow-blue-200/60 hover:border-blue-500';
 
   return (
     <div className={`min-h-screen ${bgMain} ${textPrimary} overflow-x-hidden transition-colors duration-300 ${isRTL ? 'font-cairo' : ''}`} dir={isRTL ? 'rtl' : 'ltr'}>
@@ -228,7 +306,7 @@ function LandingPageContent() {
               <ThemeToggle />
               <LanguageToggle />
               <Link href={`/${language}/login`} className={`${textSecondary} hover:${textPrimary} font-medium text-sm px-4 py-2 transition-colors`}>{t.nav.login}</Link>
-              <Link href={`/${language}/get-started`} className="bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-400 hover:to-teal-500 text-white font-semibold px-5 py-2.5 rounded-full transition-all shadow-lg shadow-teal-500/25">{t.nav.getStarted}</Link>
+              <Link href={`/${language}/get-started`} className="bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white font-semibold px-5 py-2.5 rounded-full transition-all shadow-lg shadow-blue-500/30">{t.nav.getStarted}</Link>
             </div>
 
             <div className="flex lg:hidden items-center gap-2">
@@ -242,16 +320,16 @@ function LandingPageContent() {
           {mobileMenuOpen && (
             <div className={`lg:hidden py-4 border-t ${borderColor}`}>
               <div className="flex flex-col gap-4">
-                <Link href="#how-it-works" className={`${textSecondary} hover:text-teal-500 py-2`}>{t.nav.howItWorks}</Link>
-                <Link href="#specialties" className={`${textSecondary} hover:text-teal-500 py-2`}>{t.nav.specialties}</Link>
-                <Link href="#doctors" className={`${textSecondary} hover:text-teal-500 py-2`}>{t.nav.doctors}</Link>
-                <Link href="#for-doctors" className={`${textSecondary} hover:text-teal-500 py-2`}>{t.nav.forDoctors}</Link>
+                <Link href="#how-it-works" onClick={() => setMobileMenuOpen(false)} className={`${textSecondary} hover:text-blue-400 py-2`}>{t.nav.howItWorks}</Link>
+                <Link href="#specialties" onClick={() => setMobileMenuOpen(false)} className={`${textSecondary} hover:text-blue-400 py-2`}>{t.nav.specialties}</Link>
+                <Link href="#doctors" onClick={() => setMobileMenuOpen(false)} className={`${textSecondary} hover:text-blue-400 py-2`}>{t.nav.doctors}</Link>
+                <Link href="#for-doctors" onClick={() => setMobileMenuOpen(false)} className={`${textSecondary} hover:text-blue-400 py-2`}>{t.nav.forDoctors}</Link>
                 <div className={`flex flex-col gap-3 pt-4 border-t ${borderColor}`}>
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
                     <LanguageToggle />
-                    <Link href={`/${language}/login`} className={`${textSecondary} hover:${textPrimary} font-medium text-sm px-4 py-2 transition-colors`}>{t.nav.login}</Link>
+                    <Link href={`/${language}/login`} onClick={() => setMobileMenuOpen(false)} className={`${textSecondary} hover:${textPrimary} font-medium text-sm px-4 py-2 transition-colors`}>{t.nav.login}</Link>
                   </div>
-                  <Link href={`/${language}/get-started`} className="bg-teal-500 hover:bg-teal-400 text-white font-semibold px-5 py-2 rounded-full text-center">{t.nav.getStarted}</Link>
+                  <Link href={`/${language}/get-started`} onClick={() => setMobileMenuOpen(false)} className="bg-blue-600 hover:bg-blue-500 text-white font-semibold px-5 py-2 rounded-full text-center">{t.nav.getStarted}</Link>
                 </div>
               </div>
             </div>
@@ -260,33 +338,63 @@ function LandingPageContent() {
       </nav>
 
       {/* Hero Section */}
-      <section className="relative min-h-screen flex items-center pt-20">
-        <div className="absolute inset-0 overflow-hidden">
-          <div className={`absolute inset-0 ${isDark ? 'bg-gradient-to-br from-teal-900/20 via-[#0F172A] to-[#0F172A]' : 'bg-gradient-to-br from-teal-50 via-white to-white'}`} />
-          <div className={`absolute top-1/4 -right-1/4 w-[800px] h-[800px] ${isDark ? 'bg-teal-500/10' : 'bg-teal-200/30'} rounded-full blur-3xl`} />
-          {!isDark && <div className="absolute bottom-1/4 -left-1/4 w-[600px] h-[600px] bg-teal-100/40 rounded-full blur-3xl" />}
+      <section className="relative min-h-screen flex items-center pt-20 overflow-hidden">
+        {/* Background & Sapphire/Gold Light Waves */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className={`absolute inset-0 ${isDark ? 'bg-gradient-to-br from-[#0B1528] via-[#060B18] to-[#040813]' : 'bg-gradient-to-br from-blue-50 via-white to-white'}`} />
+          <div className={`absolute top-1/4 -right-1/4 w-[800px] h-[800px] ${isDark ? 'bg-blue-600/15' : 'bg-blue-200/30'} rounded-full blur-3xl`} />
+          <div className="absolute bottom-10 left-10 w-[500px] h-[500px] bg-blue-500/10 rounded-full blur-3xl" />
+          <div className="absolute top-1/3 left-1/4 w-[350px] h-[350px] bg-amber-500/10 rounded-full blur-3xl" />
+
+          {/* Sweeping Light Ribbon Wave */}
+          <svg className="absolute top-10 left-0 w-full h-[650px] opacity-35" viewBox="0 0 1440 650" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M-100 280C300 120 700 500 1150 220C1320 110 1520 300 1600 240" stroke="url(#heroBlueStreak1)" strokeWidth="3" />
+            <path d="M-100 290C320 140 720 520 1170 240C1340 130 1540 320 1600 260" stroke="url(#heroBlueStreak2)" strokeWidth="1.5" strokeOpacity="0.6" />
+            <defs>
+              <linearGradient id="heroBlueStreak1" x1="0" y1="0" x2="1440" y2="400" gradientUnits="userSpaceOnUse">
+                <stop stopColor="#3B82F6" stopOpacity="0" />
+                <stop offset="0.3" stopColor="#60A5FA" stopOpacity="0.9" />
+                <stop offset="0.6" stopColor="#2563EB" stopOpacity="0.95" />
+                <stop offset="1" stopColor="#1E3A8A" stopOpacity="0" />
+              </linearGradient>
+              <linearGradient id="heroBlueStreak2" x1="0" y1="0" x2="1440" y2="400" gradientUnits="userSpaceOnUse">
+                <stop stopColor="#F59E0B" stopOpacity="0" />
+                <stop offset="0.5" stopColor="#FBBF24" stopOpacity="0.8" />
+                <stop offset="1" stopColor="#D97706" stopOpacity="0" />
+              </linearGradient>
+            </defs>
+          </svg>
         </div>
 
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-24">
           <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
             <div className={`text-center ${isRTL ? 'lg:text-right' : 'lg:text-left'}`}>
-              <div className={`inline-flex items-center gap-2 ${isDark ? 'bg-teal-500/10 border-teal-500/20' : 'bg-teal-50 border-teal-200'} border px-4 py-2 rounded-full mb-6`}>
-                <span className="relative flex h-2 w-2"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-teal-400 opacity-75"></span><span className="relative inline-flex rounded-full h-2 w-2 bg-teal-500"></span></span>
-                <span className={`${isDark ? 'text-teal-400' : 'text-teal-600'} text-sm font-medium`}>{t.hero.badge}</span>
+              <div className={`inline-flex items-center gap-2 ${isDark ? 'bg-blue-500/10 border-blue-500/30' : 'bg-blue-50 border-blue-200'} border px-4 py-2 rounded-full mb-6`}>
+                <span className="relative flex h-2 w-2"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span><span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span></span>
+                <span className={`${isDark ? 'text-blue-400' : 'text-blue-600'} text-sm font-medium`}>{t.hero.badge}</span>
               </div>
 
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black leading-[1.1] tracking-tight mb-6">
-                {t.hero.headline} <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-500 to-teal-400">{t.hero.headlineHighlight}</span>
+              <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black leading-[1.15] tracking-tight mb-6">
+                <span className={isDark ? "text-white drop-shadow-[0_2px_20px_rgba(37,99,235,0.4)]" : "text-slate-900 drop-shadow-sm"}>
+                  {isRTL ? "استشر طبيبك من البيت" : "Consult Your Doctor from Home"}
+                </span>
               </h1>
 
-              <p className={`text-lg sm:text-xl ${textSecondary} mb-8 max-w-xl mx-auto lg:mx-0`}>{t.hero.subheadline}</p>
+              <p className={`text-base sm:text-lg ${isDark ? 'text-blue-100/75' : 'text-slate-600'} mb-8 max-w-xl mx-auto lg:mx-0 leading-relaxed font-normal`}>
+                {isRTL 
+                  ? "رعاية صحية موثوقة وفورية في أي وقت ومن أي مكان. طبيبي يمنحك وصولاً مباشراً لأفضل الاستشاريين المعتمدين." 
+                  : "Tabibi offers exclusive access to world-class medical specialists 24/7. Connect instantly via secure video consultations from the comfort of your home."}
+              </p>
 
               <div className={`flex flex-col sm:flex-row gap-4 justify-center ${isRTL ? 'lg:justify-end' : 'lg:justify-start'} mb-10`}>
-                <Link href={`/${language}/register`} className="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-400 hover:to-teal-500 text-white font-bold text-lg px-8 py-4 rounded-full transition-all transform hover:scale-105 shadow-xl shadow-teal-500/30">
-                  {t.hero.cta}
+                <Link 
+                  href={`/${language}/register`} 
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-8 sm:px-10 py-3.5 sm:py-4 rounded-2xl font-bold text-base sm:text-lg text-white bg-gradient-to-r from-blue-600 via-blue-500 to-blue-600 hover:from-blue-500 hover:to-blue-400 border border-blue-400/50 shadow-[0_0_30px_rgba(37,99,235,0.65)] hover:shadow-[0_0_45px_rgba(59,130,246,0.9)] hover:scale-105 transition-all duration-300"
+                >
+                  {isRTL ? "ابدأ الآن" : "Start Now"}
                   {isRTL ? Icons.arrowLeft : Icons.arrow}
                 </Link>
-                <Link href="#how-it-works" className={`inline-flex items-center justify-center gap-2 ${isDark ? 'bg-white/5 hover:bg-white/10 border-white/10 text-white' : 'bg-teal-50 hover:bg-teal-100 border-2 border-teal-200 text-teal-700'} border font-semibold text-lg px-8 py-4 rounded-full transition-colors`}>
+                <Link href="#how-it-works" className={`w-full sm:w-auto inline-flex items-center justify-center gap-2 ${isDark ? 'bg-blue-950/40 hover:bg-blue-900/50 border-blue-500/30 text-white' : 'bg-blue-50 hover:bg-blue-100 border-2 border-blue-200 text-blue-700'} border font-semibold text-base sm:text-lg px-6 sm:px-8 py-3.5 sm:py-4 rounded-2xl transition-colors`}>
                   {Icons.play}
                   {t.hero.ctaSecondary}
                 </Link>
@@ -301,10 +409,10 @@ function LandingPageContent() {
 
             <div className="relative hidden lg:block">
               <div className="relative w-full aspect-square max-w-lg mx-auto">
-                <div className={`absolute -top-4 -right-4 w-24 h-24 ${isDark ? 'bg-amber-500/20' : 'bg-teal-300/50'} rounded-2xl blur-xl`} />
-                <div className={`absolute -bottom-4 -left-4 w-32 h-32 ${isDark ? 'bg-teal-500/20' : 'bg-teal-200/60'} rounded-2xl blur-xl`} />
-                <div className={`relative w-full h-full rounded-3xl overflow-hidden border-2 ${isDark ? 'border-white/10' : 'border-teal-200 shadow-2xl shadow-teal-100/50'}`}>
-                  <Image src="/hero-doctor.png" alt="Doctor consultation" fill className="object-cover" priority />
+                <div className={`absolute -top-4 -right-4 w-24 h-24 ${isDark ? 'bg-blue-500/20' : 'bg-blue-300/30'} rounded-2xl blur-xl`} />
+                <div className={`absolute -bottom-4 -left-4 w-32 h-32 ${isDark ? 'bg-amber-500/15' : 'bg-blue-200/40'} rounded-2xl blur-xl`} />
+                <div className={`relative w-full h-full rounded-3xl overflow-hidden border-2 ${isDark ? 'border-blue-500/40 shadow-[0_0_35px_rgba(37,99,235,0.3)]' : 'border-blue-500/20 shadow-2xl shadow-blue-500/10'}`}>
+                  <Image src="/hero-doctor-telehealth.png" alt="Doctor consultation" fill className="object-cover" priority />
                 </div>
               </div>
             </div>
@@ -312,14 +420,83 @@ function LandingPageContent() {
         </div>
       </section>
 
+      {/* Top Doctors - Our Distinguished Doctors */}
+      <section id="doctors" className="py-12 lg:py-16 relative overflow-hidden">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Section Header with Golden Accent Bar */}
+          <div className="flex items-center justify-between gap-3 mb-6 sm:mb-8">
+            <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+              <span className="w-1.5 h-6 sm:h-7 bg-amber-400 rounded-full inline-block shrink-0 shadow-[0_0_10px_rgba(245,158,11,0.6)]" />
+              <h2 className={`text-xl sm:text-2xl lg:text-3xl font-bold ${textPrimary} tracking-wide truncate sm:whitespace-normal`}>
+                {isRTL ? "أطباؤنا المتميزون" : "Our Distinguished Doctors"}
+              </h2>
+            </div>
+            <Link href={`/${language}/doctors`} className={`text-xs sm:text-sm font-semibold flex items-center gap-1 transition-colors shrink-0 whitespace-nowrap ${isDark ? "text-blue-400 hover:text-blue-300" : "text-blue-600 hover:text-blue-700"}`}>
+              {isRTL ? "عرض الكل" : "View All"}
+              {Icons.chevron}
+            </Link>
+          </div>
+
+          {/* Dynamic Auto-Scrolling Doctors Carousel */}
+          <DoctorsCarousel doctors={doctors} isRTL={isRTL} language={language} />
+        </div>
+      </section>
+
+      {/* Specialties - Medical Specialties */}
+      <section id="specialties" className="py-12 lg:py-16 relative overflow-hidden">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Section Header with Golden Accent Bar */}
+          <div className="flex items-center justify-between gap-3 mb-6 sm:mb-8">
+            <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+              <span className="w-1.5 h-6 sm:h-7 bg-amber-400 rounded-full inline-block shrink-0 shadow-[0_0_10px_rgba(245,158,11,0.6)]" />
+              <h2 className={`text-xl sm:text-2xl lg:text-3xl font-bold ${textPrimary} tracking-wide truncate sm:whitespace-normal`}>
+                {isRTL ? "التخصصات الطبية" : "Medical Specialties"}
+              </h2>
+            </div>
+            <Link href={`/${language}/doctors`} className={`text-xs sm:text-sm font-semibold flex items-center gap-1 transition-colors shrink-0 whitespace-nowrap ${isDark ? "text-blue-400 hover:text-blue-300" : "text-blue-600 hover:text-blue-700"}`}>
+              {isRTL ? "عرض الكل" : "View All"}
+              {Icons.chevron}
+            </Link>
+          </div>
+
+          {/* Capsule/Pill Grid matching the user's mockup */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 sm:gap-4">
+            {mainSpecialties.map((spec) => (
+              <Link
+                key={spec.key}
+                href={`/${language}/doctors?specialty=${spec.key}`}
+                className={`flex items-center gap-2 sm:gap-3 p-2.5 sm:p-4 rounded-full transition-all group cursor-pointer hover:-translate-y-0.5 min-w-0 ${
+                  isDark
+                    ? "bg-[#0B1630]/90 hover:bg-[#0E1F45] border border-blue-500/50 hover:border-blue-400 shadow-[0_0_14px_rgba(37,99,235,0.25)] hover:shadow-[0_0_22px_rgba(59,130,246,0.45)]"
+                    : "bg-white hover:bg-blue-50/70 border border-blue-200 hover:border-blue-400 shadow-sm hover:shadow-md"
+                }`}
+              >
+                <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center shrink-0 transition-transform group-hover:scale-110 ${
+                  isDark
+                    ? "bg-blue-600/25 border border-blue-400/40 text-blue-300 group-hover:bg-blue-600 group-hover:text-white"
+                    : "bg-blue-50 border border-blue-200 text-blue-600 group-hover:bg-blue-600 group-hover:text-white"
+                }`}>
+                  {spec.icon}
+                </div>
+                <span className={`text-xs sm:text-sm font-semibold truncate ${isDark ? "text-white/95" : "text-slate-800"}`}>
+                  {isRTL ? spec.nameAr : spec.nameEn}
+                </span>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* Stats Section */}
       <section className={`py-16 border-y ${borderColor} ${bgSection} transition-colors duration-300`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-8">
             {[{ n: "500+", l: t.stats.doctors }, { n: "10,000+", l: t.stats.patients }, { n: "25,000+", l: t.stats.consultations }, { n: "4.9/5", l: t.stats.rating }].map((stat, idx) => (
               <div key={idx} className="text-center">
-                <div className="text-teal-500 flex justify-center mb-3">{statsIcons[idx]}</div>
-                <div className={`text-3xl sm:text-4xl font-black ${textPrimary} mb-1`}><AnimatedCounter target={stat.n} /></div>
+                <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-gradient-to-br from-[#38BDF8] to-[#0284C7] shadow-[0_0_18px_rgba(14,165,233,0.55)] border border-sky-300/40 flex items-center justify-center text-white mx-auto mb-3">
+                  {statsIcons[idx]}
+                </div>
+                <div className={`text-2xl sm:text-3xl lg:text-4xl font-black ${textPrimary} mb-1`}><AnimatedCounter target={stat.n} /></div>
                 <div className={textSecondary + " text-sm"}>{stat.l}</div>
               </div>
             ))}
@@ -331,19 +508,21 @@ function LandingPageContent() {
       <section id="how-it-works" className={`py-20 lg:py-28 ${bgSection} transition-colors duration-300`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <span className="text-teal-500 text-sm font-bold uppercase tracking-wider">{t.howItWorks.badge}</span>
-            <h2 className={`text-3xl sm:text-4xl lg:text-5xl font-bold mt-3 ${textPrimary}`}>{t.howItWorks.title} <span className="text-teal-500">{t.howItWorks.titleHighlight}</span></h2>
+            <span className="text-blue-400 text-sm font-bold uppercase tracking-wider">{t.howItWorks.badge}</span>
+            <h2 className={`text-3xl sm:text-4xl lg:text-5xl font-bold mt-3 ${textPrimary}`}>{t.howItWorks.title} <span className="text-blue-400">{t.howItWorks.titleHighlight}</span></h2>
             <p className={`${textSecondary} text-lg mt-4 max-w-2xl mx-auto`}>{t.howItWorks.subtitle}</p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-8">
             {[
-              { title: t.howItWorks.step1Title, desc: t.howItWorks.step1Desc, icon: Icons.search, color: "from-teal-500 to-teal-600" },
-              { title: t.howItWorks.step2Title, desc: t.howItWorks.step2Desc, icon: Icons.calendar, color: "from-amber-500 to-amber-600" },
-              { title: t.howItWorks.step3Title, desc: t.howItWorks.step3Desc, icon: Icons.video, color: "from-purple-500 to-purple-600" },
+              { title: t.howItWorks.step1Title, desc: t.howItWorks.step1Desc, icon: Icons.search },
+              { title: t.howItWorks.step2Title, desc: t.howItWorks.step2Desc, icon: Icons.calendar },
+              { title: t.howItWorks.step3Title, desc: t.howItWorks.step3Desc, icon: Icons.video },
             ].map((item, idx) => (
               <div key={idx} className={`group relative rounded-3xl p-8 transition-all ${glowCardClass}`}>
-                <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${item.color} flex items-center justify-center text-white mb-6 group-hover:scale-110 transition-transform`}>{item.icon}</div>
+                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 shadow-[0_0_20px_rgba(37,99,235,0.55)] border border-blue-300/40 flex items-center justify-center text-white mb-6 group-hover:scale-110 transition-transform">
+                  {item.icon}
+                </div>
                 <h3 className={`text-xl font-bold mb-3 ${textPrimary}`}>{item.title}</h3>
                 <p className={`${textSecondary} leading-relaxed`}>{item.desc}</p>
               </div>
@@ -352,77 +531,12 @@ function LandingPageContent() {
         </div>
       </section>
 
-      {/* Specialties */}
-      <section id="specialties" className={`py-20 lg:py-28 ${bgSectionAlt} transition-colors duration-300`}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-12">
-            <div>
-              <span className="text-teal-500 text-sm font-bold uppercase tracking-wider">{t.specialties.badge}</span>
-              <h2 className={`text-3xl sm:text-4xl font-bold mt-2 ${textPrimary}`}>{t.specialties.title}</h2>
-            </div>
-            <Link href={`/${language}/doctors`} className="text-teal-500 font-semibold hover:text-teal-400 transition-colors flex items-center gap-1">{t.specialties.viewAll}{Icons.chevron}</Link>
-          </div>
-
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {specialtyKeys.map((key) => (
-              <Link key={key} href={`/${language}/doctors?specialty=${key}`} className={`group flex flex-col items-center justify-center gap-3 rounded-2xl p-6 cursor-pointer transition-all ${glowCardClass}`}>
-                <div className={`w-14 h-14 rounded-xl ${isDark ? 'bg-teal-500/10' : 'bg-teal-50'} flex items-center justify-center text-teal-500 group-hover:bg-teal-500 group-hover:text-white transition-all group-hover:scale-110`}>{SpecialtyIcons[key]}</div>
-                <p className={`font-semibold ${textPrimary} text-center`}>{t.specialties[key as keyof typeof t.specialties]}</p>
-              </Link>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Top Doctors */}
-      <section id="doctors" className={`py-20 lg:py-28 ${bgSection} transition-colors duration-300`}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-12">
-            <div>
-              <span className="text-teal-500 text-sm font-bold uppercase tracking-wider">{t.doctorsSection.badge}</span>
-              <h2 className={`text-3xl sm:text-4xl font-bold mt-2 ${textPrimary}`}>{t.doctorsSection.title}</h2>
-            </div>
-            <Link href={`/${language}/doctors`} className="text-teal-500 font-semibold hover:text-teal-400 transition-colors flex items-center gap-1">{t.doctorsSection.viewAll}{Icons.chevron}</Link>
-          </div>
-
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {doctors.map((doctor) => (
-              <div key={doctor.name} className={`group rounded-2xl p-5 transition-all ${glowCardClass}`}>
-                <div className="relative mb-4">
-                  <div className="relative w-20 h-20 mx-auto rounded-full overflow-hidden border-2 border-teal-500/50 group-hover:border-teal-500 transition-colors">
-                    <Image src={doctor.image} alt={isRTL ? doctor.nameAr : doctor.name} fill className="object-cover" unoptimized />
-                  </div>
-                  {doctor.available && (
-                    <div className="absolute bottom-0 right-1/2 translate-x-1/2 translate-y-1/2 flex items-center gap-1 bg-green-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
-                      <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />{t.doctorsSection.available}
-                    </div>
-                  )}
-                </div>
-                <div className="text-center">
-                  <h3 className={`font-bold ${textPrimary} mb-1`}>{isRTL ? doctor.nameAr : doctor.name}</h3>
-                  <p className="text-teal-500 text-sm font-medium mb-1">{isRTL ? doctor.specialtyAr : doctor.specialty}</p>
-                  <p className={`${textMuted} text-xs mb-3`}>{doctor.experience} {t.doctorsSection.experience}</p>
-                  <div className="flex items-center justify-center gap-1 mb-4">
-                    <div className="flex">{[1, 2, 3, 4, 5].map((star) => <span key={star}>{star <= Math.floor(doctor.rating) ? Icons.star : Icons.starEmpty}</span>)}</div>
-                    <span className={`text-sm ${textSecondary}`}>({doctor.reviews})</span>
-                  </div>
-                  <div className={`pt-4 border-t ${borderColor}`}>
-                    <p className={`${textPrimary} font-bold mb-3`}>{doctor.fee} {isRTL ? 'جنيه' : 'EGP'} <span className={`text-xs font-normal ${textMuted}`}>{t.doctorsSection.session}</span></p>
-                    <Link href={`/${language}/doctors`} className="block w-full bg-teal-500/10 hover:bg-teal-500 text-teal-500 hover:text-white font-semibold text-sm py-2.5 rounded-xl transition-all text-center">{t.doctorsSection.bookNow}</Link>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Why TawariApp */}
+      {/* Why Tabibi */}
       <section className={`py-20 lg:py-28 ${bgSectionAlt} transition-colors duration-300`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <span className="text-teal-500 text-sm font-bold uppercase tracking-wider">{t.whyUs.badge}</span>
-            <h2 className={`text-3xl sm:text-4xl lg:text-5xl font-bold mt-3 ${textPrimary}`}>{t.whyUs.title} <span className="text-teal-500">{t.whyUs.titleHighlight}</span></h2>
+            <span className="text-blue-400 text-sm font-bold uppercase tracking-wider">{t.whyUs.badge}</span>
+            <h2 className={`text-3xl sm:text-4xl lg:text-5xl font-bold mt-3 ${textPrimary}`}>{t.whyUs.title} <span className="text-blue-400">{t.whyUs.titleHighlight}</span></h2>
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -433,7 +547,9 @@ function LandingPageContent() {
               { title: t.whyUs.item4Title, desc: t.whyUs.item4Desc },
             ].map((item, idx) => (
               <div key={idx} className={`rounded-2xl p-6 text-center transition-all ${glowCardClass}`}>
-                <div className="text-teal-500 flex justify-center mb-4">{whyUsIcons[idx]}</div>
+                <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 shadow-[0_0_18px_rgba(37,99,235,0.55)] border border-blue-300/40 flex items-center justify-center text-white mx-auto mb-4">
+                  {whyUsIcons[idx]}
+                </div>
                 <h3 className={`text-lg font-bold mb-2 ${textPrimary}`}>{item.title}</h3>
                 <p className={`${textSecondary} text-sm leading-relaxed`}>{item.desc}</p>
               </div>
@@ -446,17 +562,17 @@ function LandingPageContent() {
       <section className={`py-20 lg:py-28 ${bgSection} transition-colors duration-300`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <span className="text-teal-500 text-sm font-bold uppercase tracking-wider">{t.testimonials.badge}</span>
+            <span className="text-blue-400 text-sm font-bold uppercase tracking-wider">{t.testimonials.badge}</span>
             <h2 className={`text-3xl sm:text-4xl font-bold mt-3 ${textPrimary}`}>{t.testimonials.title}</h2>
           </div>
 
           <div className="grid md:grid-cols-3 gap-6">
             {testimonials.map((testimonial, idx) => (
-              <div key={idx} className={`rounded-2xl p-6 transition-all ${isDark ? 'bg-gradient-to-br from-[#1E293B]/80 to-[#1E293B]/40 border border-white/5' : 'bg-white border-2 border-teal-200 shadow-lg shadow-teal-100/50 hover:shadow-xl hover:shadow-teal-200/60 hover:border-teal-400'}`}>
+              <div key={idx} className={`rounded-2xl p-6 transition-all ${isDark ? 'bg-gradient-to-br from-[#0B152B]/90 to-[#070D1E]/90 border border-blue-500/30' : 'bg-white border-2 border-blue-200 shadow-lg shadow-blue-100/50 hover:shadow-xl hover:shadow-blue-200/60 hover:border-blue-400'}`}>
                 <div className="flex gap-1 mb-4">{[1, 2, 3, 4, 5].map((star) => <span key={star}>{star <= testimonial.rating ? Icons.star : Icons.starEmpty}</span>)}</div>
-                <p className={`${isDark ? 'text-gray-300' : 'text-slate-600'} leading-relaxed mb-6`}>&ldquo;{isRTL ? testimonial.textAr : testimonial.text}&rdquo;</p>
-                <div className={`flex items-center gap-3 pt-4 border-t ${isDark ? 'border-white/5' : 'border-teal-100'}`}>
-                  <div className="relative w-12 h-12 rounded-full overflow-hidden"><Image src={testimonial.image} alt={isRTL ? testimonial.nameAr : testimonial.name} fill className="object-cover" unoptimized /></div>
+                <p className={`${isDark ? 'text-blue-100/80' : 'text-slate-600'} leading-relaxed mb-6`}>&ldquo;{isRTL ? testimonial.textAr : testimonial.text}&rdquo;</p>
+                <div className={`flex items-center gap-3 pt-4 border-t ${isDark ? 'border-blue-900/40' : 'border-blue-100'}`}>
+                  <div className="relative w-12 h-12 rounded-full overflow-hidden border border-amber-400/50"><Image src={testimonial.image} alt={isRTL ? testimonial.nameAr : testimonial.name} fill className="object-cover" unoptimized /></div>
                   <div>
                     <p className={`font-semibold ${textPrimary}`}>{isRTL ? testimonial.nameAr : testimonial.name}</p>
                     <p className={`text-sm ${textMuted}`}>{isRTL ? testimonial.locationAr : testimonial.location}</p>
@@ -469,40 +585,40 @@ function LandingPageContent() {
       </section>
 
       {/* For Doctors CTA */}
-      <section id="for-doctors" className={`py-20 lg:py-28 ${isDark ? 'bg-gradient-to-br from-[#1E293B] to-[#0F172A]' : 'bg-gradient-to-br from-slate-50 to-white'} transition-colors duration-300`}>
+      <section id="for-doctors" className={`py-20 lg:py-28 ${isDark ? 'bg-gradient-to-br from-[#060B18] to-[#0A132C]' : 'bg-gradient-to-br from-blue-50 to-white'} transition-colors duration-300`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div>
-              <span className="text-amber-500 text-sm font-bold uppercase tracking-wider">{t.forDoctors.badge}</span>
-              <h2 className={`text-3xl sm:text-4xl lg:text-5xl font-bold mt-3 mb-6 ${textPrimary}`}>{t.forDoctors.title} <span className="text-amber-500">{t.forDoctors.titleHighlight}</span></h2>
+              <span className="text-blue-400 text-sm font-bold uppercase tracking-wider">{t.forDoctors.badge}</span>
+              <h2 className={`text-3xl sm:text-4xl lg:text-5xl font-bold mt-3 mb-6 ${textPrimary}`}>{t.forDoctors.title} <span className="text-blue-400">{t.forDoctors.titleHighlight}</span></h2>
               <p className={`${textSecondary} text-lg mb-8`}>{t.forDoctors.subtitle}</p>
 
               <div className="space-y-4 mb-8">
                 {[t.forDoctors.benefit1, t.forDoctors.benefit2, t.forDoctors.benefit3, t.forDoctors.benefit4, t.forDoctors.benefit5].map((benefit, idx) => (
                   <div key={idx} className="flex items-center gap-3">
-                    <div className="w-6 h-6 rounded-full bg-amber-500/20 flex items-center justify-center flex-shrink-0">
-                      <svg className="w-4 h-4 text-amber-500" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
+                    <div className="w-6 h-6 rounded-full bg-blue-500/20 flex items-center justify-center flex-shrink-0">
+                      <svg className="w-4 h-4 text-blue-400" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
                     </div>
                     <span className={isDark ? 'text-gray-300' : 'text-slate-600'}>{benefit}</span>
                   </div>
                 ))}
               </div>
 
-              <Link href={`/${language}/doctor-onboarding`} className="inline-flex items-center gap-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-white font-bold px-8 py-4 rounded-full transition-all shadow-lg shadow-amber-500/25">
+              <Link href={`/${language}/doctor-onboarding`} className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white font-bold px-8 py-4 rounded-2xl transition-all shadow-lg shadow-blue-500/30">
                 {t.forDoctors.cta}
                 {isRTL ? Icons.arrowLeft : Icons.arrow}
               </Link>
             </div>
 
-            <div className="grid grid-cols-2 gap-6">
+            <div className="grid grid-cols-2 gap-3 sm:gap-6">
               {[
                 { number: "50+", label: t.forDoctors.stat1, sublabel: t.forDoctors.stat1Sub },
                 { number: "25K+", label: t.forDoctors.stat2, sublabel: t.forDoctors.stat2Sub },
                 { number: "4.9", label: t.forDoctors.stat3, sublabel: t.forDoctors.stat3Sub },
                 { number: isRTL ? "٥٠ ألف+" : "EGP 50K+", label: t.forDoctors.stat4, sublabel: t.forDoctors.stat4Sub },
               ].map((stat, idx) => (
-                <div key={idx} className={`rounded-2xl p-6 text-center transition-all ${isDark ? 'bg-[#0F172A]/50 border border-white/5' : 'bg-white border-2 border-amber-200 shadow-lg shadow-amber-100/50 hover:shadow-xl hover:shadow-amber-200/60 hover:border-amber-400'}`}>
-                  <div className="text-3xl font-black text-amber-500 mb-1">{stat.number}</div>
+                <div key={idx} className={`rounded-2xl p-4 sm:p-6 text-center transition-all ${isDark ? 'bg-[#0B152B]/85 border border-blue-500/30' : 'bg-white border-2 border-blue-200 shadow-lg shadow-blue-100/50 hover:shadow-xl hover:shadow-blue-200/60 hover:border-blue-400'}`}>
+                  <div className="text-2xl sm:text-3xl font-black text-amber-400 mb-1">{stat.number}</div>
                   <div className={`${textPrimary} font-medium text-sm`}>{stat.label}</div>
                   <div className={`${textMuted} text-xs`}>{stat.sublabel}</div>
                 </div>
@@ -515,23 +631,23 @@ function LandingPageContent() {
       {/* Final CTA */}
       <section className={`py-20 px-4 ${bgSection}`}>
         <div className="max-w-4xl mx-auto">
-          <div className="relative overflow-hidden bg-gradient-to-br from-teal-600 to-teal-800 rounded-3xl p-8 md:p-12 text-center shadow-2xl shadow-teal-500/20">
+          <div className="relative overflow-hidden bg-gradient-to-br from-blue-700 via-blue-800 to-slate-900 border border-blue-400/40 rounded-3xl p-8 md:p-12 text-center shadow-2xl shadow-blue-500/30">
             <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
             <div className="relative z-10">
               <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black mb-4 text-white">{t.cta.title}</h2>
-              <p className="text-teal-100 text-lg mb-8 max-w-xl mx-auto">{t.cta.subtitle}</p>
-              <Link href={`/${language}/register`} className="inline-flex items-center gap-2 bg-white text-teal-700 font-bold text-lg px-10 py-4 rounded-full transition-all transform hover:scale-105 shadow-xl">
+              <p className="text-blue-100 text-lg mb-8 max-w-xl mx-auto">{t.cta.subtitle}</p>
+              <Link href={`/${language}/register`} className="inline-flex items-center gap-2 bg-white text-blue-900 font-bold text-lg px-10 py-4 rounded-2xl transition-all transform hover:scale-105 shadow-xl hover:bg-blue-50">
                 {t.cta.button}
                 {isRTL ? Icons.arrowLeft : Icons.arrow}
               </Link>
-              <p className="text-teal-200 text-sm mt-4">{t.cta.note}</p>
+              <p className="text-amber-300 text-sm mt-4 font-medium">{t.cta.note}</p>
             </div>
           </div>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className={`${isDark ? 'bg-[#0a0f1a]' : 'bg-slate-50'} border-t ${borderColor} py-16 px-4 transition-colors duration-300`}>
+      <footer className={`${isDark ? 'bg-[#040813]' : 'bg-[#F0F7FF]'} border-t ${borderColor} py-16 px-4 transition-colors duration-300`}>
         <div className="max-w-7xl mx-auto">
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">
             <div className="lg:col-span-1">
@@ -543,25 +659,25 @@ function LandingPageContent() {
             <div>
               <h4 className={`font-bold mb-4 ${textPrimary}`}>{t.footer.forPatients}</h4>
               <div className="flex flex-col gap-3">
-                <Link href={`/${language}#doctors`} className={`${textSecondary} text-sm hover:text-teal-500 transition-colors`}>{t.footer.findDoctors}</Link>
-                <Link href={`/${language}#how-it-works`} className={`${textSecondary} text-sm hover:text-teal-500 transition-colors`}>{t.footer.howItWorks}</Link>
-                <Link href={`/${language}/faq`} className={`${textSecondary} text-sm hover:text-teal-500 transition-colors`}>{t.footer.faq}</Link>
+                <Link href={`/${language}#doctors`} className={`${textSecondary} text-sm hover:text-blue-400 transition-colors`}>{t.footer.findDoctors}</Link>
+                <Link href={`/${language}#how-it-works`} className={`${textSecondary} text-sm hover:text-blue-400 transition-colors`}>{t.footer.howItWorks}</Link>
+                <Link href={`/${language}/faq`} className={`${textSecondary} text-sm hover:text-blue-400 transition-colors`}>{t.footer.faq}</Link>
               </div>
             </div>
             <div>
               <h4 className={`font-bold mb-4 ${textPrimary}`}>{t.footer.forDoctorsTitle}</h4>
               <div className="flex flex-col gap-3">
-                <Link href={`/${language}/doctor-onboarding`} className={`${textSecondary} text-sm hover:text-teal-500 transition-colors`}>{t.footer.joinAsDoctor}</Link>
-                <Link href={`/${language}/faq`} className={`${textSecondary} text-sm hover:text-teal-500 transition-colors`}>{t.footer.doctorFaq}</Link>
+                <Link href={`/${language}/doctor-onboarding`} className={`${textSecondary} text-sm hover:text-blue-400 transition-colors`}>{t.footer.joinAsDoctor}</Link>
+                <Link href={`/${language}/faq`} className={`${textSecondary} text-sm hover:text-blue-400 transition-colors`}>{t.footer.doctorFaq}</Link>
               </div>
             </div>
             <div>
               <h4 className={`font-bold mb-4 ${textPrimary}`}>{t.footer.company}</h4>
               <div className="flex flex-col gap-3">
-                <Link href={`/${language}/about`} className={`${textSecondary} text-sm hover:text-teal-500 transition-colors`}>{t.footer.aboutUs}</Link>
-                <Link href={`/${language}/contact`} className={`${textSecondary} text-sm hover:text-teal-500 transition-colors`}>{t.footer.contact}</Link>
-                <Link href={`/${language}/privacy`} className={`${textSecondary} text-sm hover:text-teal-500 transition-colors`}>{t.footer.privacy}</Link>
-                <Link href={`/${language}/terms`} className={`${textSecondary} text-sm hover:text-teal-500 transition-colors`}>{t.footer.terms}</Link>
+                <Link href={`/${language}/about`} className={`${textSecondary} text-sm hover:text-blue-400 transition-colors`}>{t.footer.aboutUs}</Link>
+                <Link href={`/${language}/contact`} className={`${textSecondary} text-sm hover:text-blue-400 transition-colors`}>{t.footer.contact}</Link>
+                <Link href={`/${language}/privacy`} className={`${textSecondary} text-sm hover:text-blue-400 transition-colors`}>{t.footer.privacy}</Link>
+                <Link href={`/${language}/terms`} className={`${textSecondary} text-sm hover:text-blue-400 transition-colors`}>{t.footer.terms}</Link>
               </div>
             </div>
           </div>

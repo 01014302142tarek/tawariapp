@@ -4,41 +4,7 @@ import React from "react";
 import Link from "next/link";
 import { useI18n } from "../../i18n";
 import { useGlobalTheme } from "@/app/context/GlobalThemeContext";
-
-// Logo Component
-const LogoFull = ({ className = "", isDark = true }: { className?: string; isDark?: boolean }) => (
-    <div className={`flex items-center gap-2 ${className}`}>
-        <svg className="h-10 w-10 flex-shrink-0" viewBox="0 0 100 90" fill="none">
-            <defs>
-                <linearGradient id="heartGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#2DD4BF" />
-                    <stop offset="50%" stopColor="#14B8A6" />
-                    <stop offset="100%" stopColor="#0D9488" />
-                </linearGradient>
-            </defs>
-            <path
-                d="M50 85 C50 85 10 55 10 30 C10 15 22 5 35 5 C42 5 48 10 50 15 C52 10 58 5 65 5 C78 5 90 15 90 30 C90 55 50 85 50 85Z"
-                fill="none"
-                stroke="url(#heartGradient)"
-                strokeWidth="6"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-            />
-            <path
-                d="M5 45 L25 45 L35 25 L50 65 L65 35 L75 45 L95 45"
-                fill="none"
-                stroke="#F59E0B"
-                strokeWidth="5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-            />
-        </svg>
-        <span className="text-xl font-bold tracking-tight">
-            <span className={isDark ? "text-white" : "text-slate-900"}>Tawari</span>
-            <span className={isDark ? "text-gray-400" : "text-gray-500"}>App</span>
-        </span>
-    </div>
-);
+import { Logo } from "@/components/ui/Logo";
 
 // Icons
 const Icons = {
@@ -57,7 +23,7 @@ const Icons = {
         </svg>
     ),
     check: (
-        <svg className="w-5 h-5 text-teal-400" fill="currentColor" viewBox="0 0 24 24">
+        <svg className="w-5 h-5 text-amber-400" fill="currentColor" viewBox="0 0 24 24">
             <path fillRule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm13.36-1.814a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z" clipRule="evenodd" />
         </svg>
     ),
@@ -129,17 +95,17 @@ function UserTypeCard({
     isDark?: boolean;
 }) {
     return (
-        <div className={`group relative rounded-2xl p-6 md:p-8 transition-all duration-300 ${isDark
-                ? "bg-slate-800/50 border border-white/10 hover:border-teal-500/50 hover:bg-slate-800/80"
-                : "bg-white border border-gray-200 hover:border-teal-500/50 hover:shadow-xl shadow-lg"
+        <div className={`group relative rounded-3xl p-6 md:p-8 transition-all duration-300 ${isDark
+                ? "bg-[#0B152B]/85 border-2 border-blue-500/35 hover:border-blue-400 hover:shadow-[0_0_30px_rgba(37,99,235,0.3)]"
+                : "bg-white border-2 border-blue-200 hover:border-blue-400 hover:shadow-xl shadow-lg"
             }`}>
             {/* Glow effect on hover */}
-            <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-teal-500/0 to-teal-600/0 group-hover:from-teal-500/5 group-hover:to-teal-600/10 transition-all duration-300" />
+            <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-blue-500/0 to-blue-600/0 group-hover:from-blue-500/5 group-hover:to-blue-600/10 transition-all duration-300" />
 
             <div className="relative z-10">
                 {/* Icon */}
-                <div className={`w-16 h-16 md:w-20 md:h-20 rounded-2xl bg-gradient-to-br ${type === "patient" ? "from-teal-500/20 to-teal-600/10" : "from-amber-500/20 to-amber-600/10"} flex items-center justify-center mb-6 group-hover:scale-105 transition-transform duration-300`}>
-                    <span className={type === "patient" ? "text-teal-400" : "text-amber-400"}>
+                <div className="w-16 h-16 md:w-20 md:h-20 rounded-2xl bg-gradient-to-br from-blue-600 to-blue-700 shadow-[0_0_20px_rgba(37,99,235,0.4)] flex items-center justify-center mb-6 group-hover:scale-105 transition-transform duration-300">
+                    <span className="text-white">
                         {icon}
                     </span>
                 </div>
@@ -148,7 +114,7 @@ function UserTypeCard({
                 <h2 className={`text-2xl md:text-3xl font-bold mb-3 ${isDark ? "text-white" : "text-slate-900"}`}>{title}</h2>
 
                 {/* Description */}
-                <p className={`mb-6 leading-relaxed ${isDark ? "text-gray-400" : "text-gray-600"}`}>{description}</p>
+                <p className={`mb-6 leading-relaxed ${isDark ? "text-slate-300" : "text-gray-600"}`}>{description}</p>
 
                 {/* Features */}
                 <div className="space-y-3 mb-8">
@@ -160,10 +126,7 @@ function UserTypeCard({
                 {/* CTA Button */}
                 <Link
                     href={ctaLink}
-                    className={`w-full flex items-center justify-center gap-2 py-3.5 px-6 rounded-xl font-semibold text-white transition-all duration-300 shadow-lg ${type === "patient"
-                        ? "bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-400 hover:to-teal-500 shadow-teal-500/25"
-                        : "bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 shadow-amber-500/25"
-                        }`}
+                    className="w-full flex items-center justify-center gap-2 py-3.5 px-6 rounded-2xl font-bold text-white transition-all duration-300 shadow-lg bg-gradient-to-r from-blue-600 via-blue-500 to-blue-600 hover:from-blue-500 hover:to-blue-400 shadow-blue-500/30"
                 >
                     <span>{ctaText}</span>
                 </Link>
@@ -178,27 +141,27 @@ export default function GetStartedPage() {
     const isDark = theme === "dark";
 
     return (
-        <div className={`min-h-screen overflow-x-hidden ${isRTL ? 'font-cairo' : ''} ${isDark ? 'bg-[#0F172A] text-white' : 'bg-gray-50 text-slate-900'}`} dir={isRTL ? 'rtl' : 'ltr'}>
+        <div className={`min-h-screen overflow-x-hidden ${isRTL ? 'font-cairo' : ''} ${isDark ? 'bg-[#060B18] text-white' : 'bg-[#F0F7FF] text-slate-900'}`} dir={isRTL ? 'rtl' : 'ltr'}>
             {/* Background Effects */}
             <div className="fixed inset-0 overflow-hidden pointer-events-none">
-                <div className={`absolute inset-0 ${isDark ? 'bg-gradient-to-br from-teal-900/20 via-[#0F172A] to-[#0F172A]' : 'bg-gradient-to-br from-teal-50 via-white to-white'}`} />
-                <div className={`absolute top-1/4 -right-1/4 w-[600px] h-[600px] rounded-full blur-3xl ${isDark ? 'bg-teal-500/10' : 'bg-teal-500/5'}`} />
-                <div className={`absolute bottom-1/4 -left-1/4 w-[400px] h-[400px] rounded-full blur-3xl ${isDark ? 'bg-amber-500/5' : 'bg-amber-500/5'}`} />
+                <div className={`absolute inset-0 ${isDark ? 'bg-gradient-to-br from-[#0B1528] via-[#060B18] to-[#040813]' : 'bg-gradient-to-br from-blue-50 via-white to-white'}`} />
+                <div className={`absolute top-1/4 -right-1/4 w-[600px] h-[600px] rounded-full blur-3xl ${isDark ? 'bg-blue-600/15' : 'bg-blue-300/20'}`} />
+                <div className={`absolute bottom-1/4 -left-1/4 w-[400px] h-[400px] rounded-full blur-3xl ${isDark ? 'bg-amber-500/10' : 'bg-blue-200/20'}`} />
             </div>
 
             {/* Navigation */}
-            <nav className={`relative z-50 backdrop-blur-xl border-b ${isDark ? 'bg-[#0F172A]/80 border-white/5' : 'bg-white/80 border-gray-200'}`}>
+            <nav className={`relative z-50 backdrop-blur-xl border-b ${isDark ? 'bg-[#060B18]/85 border-blue-900/30' : 'bg-white/80 border-blue-100'}`}>
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex items-center justify-between h-16 lg:h-20">
                         <Link href={`/${language}`} className="group hover:opacity-90 transition-opacity">
-                            <LogoFull isDark={isDark} />
+                            <Logo isDark={isDark} />
                         </Link>
 
                         <div className="flex items-center gap-3">
                             <LanguageToggle isDark={isDark} />
                             <Link
                                 href={`/${language}/login`}
-                                className={`hidden sm:block font-medium text-sm px-4 py-2 transition-colors ${isDark ? 'text-gray-300 hover:text-white' : 'text-gray-600 hover:text-gray-900'}`}
+                                className={`hidden sm:block font-medium text-sm px-4 py-2 transition-colors ${isDark ? 'text-blue-300 hover:text-white' : 'text-blue-600 hover:text-blue-900'}`}
                             >
                                 {t.nav.login}
                             </Link>
@@ -212,11 +175,11 @@ export default function GetStartedPage() {
                 {/* Header */}
                 <div className="text-center mb-12 md:mb-16">
                     <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black leading-tight tracking-tight mb-4 md:mb-6">
-                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-400 to-teal-300">
+                        <span className={isDark ? "text-white drop-shadow-[0_2px_15px_rgba(37,99,235,0.4)]" : "text-slate-900 drop-shadow-sm"}>
                             {t.getStartedPage.title}
                         </span>
                     </h1>
-                    <p className={`text-base sm:text-lg md:text-xl max-w-2xl mx-auto ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                    <p className={`text-base sm:text-lg md:text-xl max-w-2xl mx-auto ${isDark ? 'text-slate-300' : 'text-gray-600'}`}>
                         {t.getStartedPage.subtitle}
                     </p>
                 </div>
@@ -256,11 +219,11 @@ export default function GetStartedPage() {
 
                 {/* Login Link */}
                 <div className="text-center">
-                    <p className={`text-sm md:text-base ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                    <p className={`text-sm md:text-base ${isDark ? 'text-slate-300' : 'text-gray-600'}`}>
                         {t.getStartedPage.alreadyHaveAccount}{" "}
                         <Link
                             href={`/${language}/login`}
-                            className="text-teal-400 hover:text-teal-300 font-medium transition-colors"
+                            className={`${isDark ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-700'} font-semibold transition-colors`}
                         >
                             {t.getStartedPage.loginHere}
                         </Link>

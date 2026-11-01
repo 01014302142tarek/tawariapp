@@ -14,14 +14,15 @@ interface UseRealtimeNotificationsReturn {
     notifications: Notification[];
     unreadCount: number;
     isConnected: boolean;
+    isLoading: boolean;
     markAsRead: (notificationId: string) => void;
     markAllAsRead: () => void;
     refresh: () => Promise<void>;
 }
 
 /**
- * Hook for realtime notification updates using Supabase Realtime
- * Subscribes to INSERT events on the notifications table for the current user
+ * Hook for realtime notification updates using Supabase Realtime + Smart Polling Fallback
+ * Subscribes to INSERT/UPDATE events on the notifications table for the current user
  */
 export function useRealtimeNotifications(
     options: UseRealtimeNotificationsOptions = {}
@@ -31,56 +32,85 @@ export function useRealtimeNotifications(
     const [notifications, setNotifications] = useState<Notification[]>([]);
     const [unreadCount, setUnreadCount] = useState(0);
     const [isConnected, setIsConnected] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
     const [profileId, setProfileId] = useState<string | null>(null);
 
     const channelRef = useRef<RealtimeChannel | null>(null);
     const supabaseRef = useRef(createClient());
 
-    // Fetch initial notifications
+    // Fetch initial notifications with robust error handling
     const fetchNotifications = useCallback(async () => {
-        const supabase = supabaseRef.current;
+        setIsLoading(true);
+        try {
+            const supabase = supabaseRef.current;
 
-        // Get the current user and their profile
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
+            // Get the current user and their profile
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) return;
 
-        const { data: profileData } = await supabase
-            .from("profiles")
-            .select("id")
-            .eq("user_id", user.id)
-            .single();
+            const { data: profileData } = await supabase
+                .from("profiles")
+                .select("id")
+                .eq("user_id", user.id)
+                .single();
 
-        const profile = profileData as { id: string } | null;
-        if (!profile) return;
+            const profile = profileData as { id: string } | null;
+            if (!profile) return;
 
-        setProfileId(profile.id);
+            setProfileId(profile.id);
 
-        // Fetch notifications
-        const { data: notificationsData } = await supabase
-            .from("notifications")
-            .select("*")
-            .eq("profile_id", profile.id)
-            .order("created_at", { ascending: false })
-            .limit(20);
+            // Fetch latest notifications
+            const { data: notificationsData, error } = await supabase
+                .from("notifications")
+                .select("*")
+                .eq("profile_id", profile.id)
+                .order("created_at", { ascending: false })
+                .limit(25);
 
-        if (notificationsData) {
-            setNotifications(notificationsData as Notification[]);
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const unread = (notificationsData as any[]).filter((n) => !n.is_read).length;
-            setUnreadCount(unread);
-            setIsConnected(true); // Set connected after initial fetch
+            if (error) {
+                console.error("Error fetching notifications:", error);
+            } else if (notificationsData) {
+                setNotifications(notificationsData as Notification[]);
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const unread = (notificationsData as any[]).filter((n) => !n.is_read).length;
+                setUnreadCount(unread);
+            }
+        } catch (err) {
+            console.error("Unexpected error in fetchNotifications:", err);
+        } finally {
+            setIsLoading(false);
         }
-    }, []); // Keep empty dependency array
+    }, []);
 
-    // Initial fetch on mount - only run once
+    // Initial fetch on mount
     useEffect(() => {
         if (enabled) {
             fetchNotifications();
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [enabled]); // Only depend on enabled, not fetchNotifications
+    }, [enabled, fetchNotifications]);
 
-    // Realtime subscription for new notifications
+    // Re-fetch when user returns to the tab
+    useEffect(() => {
+        if (!enabled) return;
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === "visible") {
+                fetchNotifications();
+            }
+        };
+        document.addEventListener("visibilitychange", handleVisibilityChange);
+        return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
+    }, [enabled, fetchNotifications]);
+
+    // Periodic polling fallback (every 25 seconds) to ensure notifications are never missed
+    useEffect(() => {
+        if (!enabled) return;
+        const interval = setInterval(() => {
+            fetchNotifications();
+        }, 25000);
+        return () => clearInterval(interval);
+    }, [enabled, fetchNotifications]);
+
+    // Realtime subscription for live notifications
     useEffect(() => {
         if (!enabled || !profileId) return;
 
@@ -120,11 +150,19 @@ export function useRealtimeNotifications(
                     setNotifications((prev) =>
                         prev.map((n) => (n.id === updated.id ? updated : n))
                     );
+                    // Recalculate unread count
+                    setNotifications((current) => {
+                        const unread = current.filter((n) => !n.is_read).length;
+                        setUnreadCount(unread);
+                        return current;
+                    });
                 }
             )
             .subscribe((status) => {
                 if (status === "SUBSCRIBED") {
                     setIsConnected(true);
+                } else if (status === "CLOSED" || status === "CHANNEL_ERROR") {
+                    setIsConnected(false);
                 }
             });
 
@@ -147,13 +185,13 @@ export function useRealtimeNotifications(
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const { error } = await (supabase as any)
                 .from("notifications")
-                .update({ is_read: true })
+                .update({ is_read: true, read_at: new Date().toISOString() })
                 .eq("id", notificationId);
 
             if (!error) {
                 setNotifications((prev) =>
                     prev.map((n) =>
-                        n.id === notificationId ? { ...n, is_read: true } : n
+                        n.id === notificationId ? { ...n, is_read: true, read_at: new Date().toISOString() } : n
                     )
                 );
                 setUnreadCount((prev) => Math.max(0, prev - 1));
@@ -171,13 +209,13 @@ export function useRealtimeNotifications(
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const { error } = await (supabase as any)
             .from("notifications")
-            .update({ is_read: true })
+            .update({ is_read: true, read_at: new Date().toISOString() })
             .eq("profile_id", profileId)
             .eq("is_read", false);
 
         if (!error) {
             setNotifications((prev) =>
-                prev.map((n) => ({ ...n, is_read: true }))
+                prev.map((n) => ({ ...n, is_read: true, read_at: new Date().toISOString() }))
             );
             setUnreadCount(0);
         }
@@ -187,6 +225,7 @@ export function useRealtimeNotifications(
         notifications,
         unreadCount,
         isConnected,
+        isLoading,
         markAsRead,
         markAllAsRead,
         refresh: fetchNotifications,

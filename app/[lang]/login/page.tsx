@@ -6,41 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useI18n } from "../../i18n";
 import { useGlobalTheme } from "@/app/context/GlobalThemeContext";
 import { useAuth } from "@/app/context/AuthContext";
-
-// Logo Component
-const LogoFull = ({ className = "", isDark = true }: { className?: string; isDark?: boolean }) => (
-    <div className={`flex items-center gap-2 ${className}`}>
-        <svg className="h-10 w-10 flex-shrink-0" viewBox="0 0 100 90" fill="none">
-            <defs>
-                <linearGradient id="heartGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#2DD4BF" />
-                    <stop offset="50%" stopColor="#14B8A6" />
-                    <stop offset="100%" stopColor="#0D9488" />
-                </linearGradient>
-            </defs>
-            <path
-                d="M50 85 C50 85 10 55 10 30 C10 15 22 5 35 5 C42 5 48 10 50 15 C52 10 58 5 65 5 C78 5 90 15 90 30 C90 55 50 85 50 85Z"
-                fill="none"
-                stroke="url(#heartGradient)"
-                strokeWidth="6"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-            />
-            <path
-                d="M5 45 L25 45 L35 25 L50 65 L65 35 L75 45 L95 45"
-                fill="none"
-                stroke="#F59E0B"
-                strokeWidth="5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-            />
-        </svg>
-        <span className="text-xl font-bold tracking-tight">
-            <span className={isDark ? "text-white" : "text-slate-900"}>Tawari</span>
-            <span className={isDark ? "text-gray-400" : "text-gray-500"}>App</span>
-        </span>
-    </div>
-);
+import { Logo } from "@/components/ui/Logo";
 
 // Icons
 const Icons = {
@@ -145,9 +111,9 @@ function InputField({
                 onChange={onChange}
                 dir={isRTL ? "rtl" : "ltr"}
                 style={isRTL ? { textAlign: 'right' } : undefined}
-                className={`w-full py-3.5 border rounded-xl transition-all outline-none ${isDark
-                        ? "bg-slate-800/50 border-white/10 text-white placeholder-gray-500 focus:border-teal-500/50 focus:ring-2 focus:ring-teal-500/20"
-                        : "bg-white border-gray-200 text-slate-900 placeholder-gray-400 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20"
+                className={`w-full py-3.5 border rounded-2xl transition-all outline-none ${isDark
+                        ? "bg-[#0B1630]/80 border-blue-500/30 text-white placeholder-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/25"
+                        : "bg-white border-blue-200 text-slate-900 placeholder-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
                     } ${isRTL ? 'pr-12 pl-12' : 'pl-12 pr-12'}`}
             />
             {showPasswordToggle && (
@@ -241,27 +207,27 @@ function LoginPageContent() {
 
     if (authLoading) {
         return (
-            <div className={`min-h-screen flex items-center justify-center ${isDark ? 'bg-[#0F172A]' : 'bg-gray-50'}`}>
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500"></div>
+            <div className={`min-h-screen flex items-center justify-center ${isDark ? 'bg-[#060B18]' : 'bg-[#F0F7FF]'}`}>
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
             </div>
         );
     }
 
     return (
-        <div className={`min-h-screen overflow-x-hidden ${isRTL ? 'font-cairo' : ''} ${isDark ? 'bg-[#0F172A] text-white' : 'bg-gray-50 text-slate-900'}`} dir={isRTL ? 'rtl' : 'ltr'}>
+        <div className={`min-h-screen overflow-x-hidden ${isRTL ? 'font-cairo' : ''} ${isDark ? 'bg-[#060B18] text-white' : 'bg-[#F0F7FF] text-slate-900'}`} dir={isRTL ? 'rtl' : 'ltr'}>
             {/* Background Effects */}
             <div className="fixed inset-0 overflow-hidden pointer-events-none">
-                <div className={`absolute inset-0 ${isDark ? 'bg-gradient-to-br from-teal-900/20 via-[#0F172A] to-[#0F172A]' : 'bg-gradient-to-br from-teal-50 via-white to-white'}`} />
-                <div className={`absolute top-1/4 -right-1/4 w-[600px] h-[600px] rounded-full blur-3xl ${isDark ? 'bg-teal-500/10' : 'bg-teal-500/5'}`} />
-                <div className={`absolute bottom-1/4 -left-1/4 w-[400px] h-[400px] rounded-full blur-3xl ${isDark ? 'bg-teal-500/5' : 'bg-teal-500/5'}`} />
+                <div className={`absolute inset-0 ${isDark ? 'bg-gradient-to-br from-[#0B1528] via-[#060B18] to-[#040813]' : 'bg-gradient-to-br from-blue-50 via-white to-white'}`} />
+                <div className={`absolute top-1/4 -right-1/4 w-[600px] h-[600px] rounded-full blur-3xl ${isDark ? 'bg-blue-600/15' : 'bg-blue-300/20'}`} />
+                <div className={`absolute bottom-1/4 -left-1/4 w-[400px] h-[400px] rounded-full blur-3xl ${isDark ? 'bg-amber-500/10' : 'bg-blue-200/20'}`} />
             </div>
 
             {/* Navigation */}
-            <nav className={`relative z-50 backdrop-blur-xl border-b ${isDark ? 'bg-[#0F172A]/80 border-white/5' : 'bg-white/80 border-gray-200'}`}>
+            <nav className={`relative z-50 backdrop-blur-xl border-b ${isDark ? 'bg-[#060B18]/85 border-blue-900/30' : 'bg-white/80 border-blue-100'}`}>
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex items-center justify-between h-16 lg:h-20">
                         <Link href={`/${language}`} className="group hover:opacity-90 transition-opacity">
-                            <LogoFull isDark={isDark} />
+                            <Logo isDark={isDark} />
                         </Link>
                         <div className="flex items-center gap-3">
                             <LanguageToggle isDark={isDark} />
@@ -278,7 +244,7 @@ function LoginPageContent() {
                         <h1 className={`text-2xl sm:text-3xl font-bold mb-2 ${isDark ? 'text-white' : 'text-slate-900'}`}>
                             {text.title}
                         </h1>
-                        <p className={`text-sm sm:text-base ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                        <p className={`text-sm sm:text-base ${isDark ? 'text-slate-300' : 'text-gray-600'}`}>
                             {text.subtitle}
                         </p>
                     </div>
@@ -322,11 +288,11 @@ function LoginPageContent() {
                                     type="checkbox"
                                     checked={rememberMe}
                                     onChange={(e) => setRememberMe(e.target.checked)}
-                                    className={`w-4 h-4 rounded text-teal-500 focus:ring-teal-500/20 focus:ring-offset-0 ${isDark ? 'border-gray-600 bg-slate-800' : 'border-gray-300 bg-white'}`}
+                                    className={`w-4 h-4 rounded text-blue-600 focus:ring-blue-500/20 focus:ring-offset-0 ${isDark ? 'border-blue-900 bg-[#0B1630]' : 'border-gray-300 bg-white'}`}
                                 />
-                                <span className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>{text.rememberMe}</span>
+                                <span className={`text-sm ${isDark ? 'text-slate-300' : 'text-gray-600'}`}>{text.rememberMe}</span>
                             </label>
-                            <Link href={`/${language}/forgot-password`} className="text-sm text-teal-400 hover:text-teal-300 transition-colors">
+                            <Link href={`/${language}/forgot-password`} className={`text-sm ${isDark ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-700'} font-medium transition-colors`}>
                                 {text.forgotPassword}
                             </Link>
                         </div>
@@ -335,7 +301,7 @@ function LoginPageContent() {
                         <button
                             type="submit"
                             disabled={isSubmitting}
-                            className="w-full py-3.5 rounded-xl font-semibold text-white bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-400 hover:to-teal-500 shadow-lg shadow-teal-500/25 transition-all disabled:opacity-70 disabled:cursor-not-allowed"
+                            className="w-full py-3.5 rounded-2xl font-bold text-white bg-gradient-to-r from-blue-600 via-blue-500 to-blue-600 hover:from-blue-500 hover:to-blue-400 shadow-lg shadow-blue-500/30 transition-all disabled:opacity-70 disabled:cursor-not-allowed"
                         >
                             {isSubmitting ? (
                                 <span className="flex items-center justify-center gap-2">
@@ -350,9 +316,9 @@ function LoginPageContent() {
 
                     {/* Divider */}
                     <div className="flex items-center gap-4 my-6">
-                        <div className={`flex-1 h-px ${isDark ? 'bg-white/10' : 'bg-gray-200'}`} />
-                        <span className={`text-sm ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>{text.orContinue}</span>
-                        <div className={`flex-1 h-px ${isDark ? 'bg-white/10' : 'bg-gray-200'}`} />
+                        <div className={`flex-1 h-px ${isDark ? 'bg-blue-900/30' : 'bg-gray-200'}`} />
+                        <span className={`text-sm ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>{text.orContinue}</span>
+                        <div className={`flex-1 h-px ${isDark ? 'bg-blue-900/30' : 'bg-gray-200'}`} />
                     </div>
 
                     {/* Social Login Buttons */}
@@ -360,20 +326,20 @@ function LoginPageContent() {
                         <button
                             type="button"
                             onClick={handleGoogleSignIn}
-                            className={`flex items-center justify-center gap-2 py-3 px-4 border rounded-xl transition-all ${isDark
-                                ? 'bg-slate-800/50 border-white/10 hover:bg-slate-800 hover:border-white/20'
-                                : 'bg-white border-gray-200 hover:bg-gray-50 hover:border-gray-300'
+                            className={`flex items-center justify-center gap-2 py-3 px-4 border rounded-2xl transition-all ${isDark
+                                ? 'bg-[#0B152B]/85 border-blue-500/30 hover:bg-[#0E1D3C] hover:border-blue-400'
+                                : 'bg-white border-blue-100 hover:bg-blue-50 hover:border-blue-200'
                             }`}
                         >
                             {Icons.google}
-                            <span className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Google</span>
+                            <span className={`text-sm font-medium ${isDark ? 'text-slate-200' : 'text-gray-700'}`}>Google</span>
                         </button>
                     </div>
 
                     {/* Register Link */}
-                    <p className={`text-center text-sm mt-6 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                    <p className={`text-center text-sm mt-6 ${isDark ? 'text-slate-300' : 'text-gray-600'}`}>
                         {text.noAccount}{" "}
-                        <Link href={`/${language}/get-started`} className="text-teal-400 hover:text-teal-300 font-medium">
+                        <Link href={`/${language}/get-started`} className={`${isDark ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-700'} font-semibold`}>
                             {text.registerLink}
                         </Link>
                     </p>
@@ -386,8 +352,8 @@ function LoginPageContent() {
 // Loading fallback component
 function LoginPageLoading() {
     return (
-        <div className="min-h-screen flex items-center justify-center bg-[#0F172A]">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500"></div>
+        <div className="min-h-screen flex items-center justify-center bg-[#060B18]">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
         </div>
     );
 }

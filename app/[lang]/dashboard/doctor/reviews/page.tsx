@@ -147,7 +147,7 @@ export default function DoctorReviewsPage() {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 md:mb-8">
                 <div>
                     <h1 className={cn("text-xl md:text-2xl font-bold flex items-center gap-2 md:gap-3", textPrimary)}>
-                        <span className="w-8 h-8 md:w-10 md:h-10 rounded-lg md:rounded-xl bg-teal-500/10 flex items-center justify-center text-teal-500">
+                        <span className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-br from-[#38BDF8] to-[#0284C7] flex items-center justify-center text-white shadow-[0_0_15px_rgba(14,165,233,0.5)] border border-sky-300/40">
                             {Icons.star}
                         </span>
                         {isRTL ? "تقييمات المرضى" : "Patient Reviews"}
@@ -161,9 +161,9 @@ export default function DoctorReviewsPage() {
             {/* Stats Cards */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-6 md:mb-8">
                 {/* Overall Rating */}
-                <GlowingCard glowColor="teal" className="p-4 md:p-5" isDark={isDark}>
+                <GlowingCard glowColor="amber" className="p-4 md:p-5" isDark={isDark}>
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-yellow-500/10 flex items-center justify-center text-yellow-500">
+                        <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-gradient-to-br from-[#38BDF8] to-[#0284C7] flex items-center justify-center text-white shadow-[0_0_15px_rgba(14,165,233,0.5)] border border-sky-300/40">
                             <svg className="w-5 h-5 md:w-6 md:h-6" fill="currentColor" viewBox="0 0 24 24">
                                 <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
                             </svg>
@@ -180,9 +180,9 @@ export default function DoctorReviewsPage() {
                 </GlowingCard>
 
                 {/* Total Reviews */}
-                <GlowingCard glowColor="teal" className="p-4 md:p-5" isDark={isDark}>
+                <GlowingCard glowColor="amber" className="p-4 md:p-5" isDark={isDark}>
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-teal-500/10 flex items-center justify-center text-teal-500">
+                        <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-gradient-to-br from-[#38BDF8] to-[#0284C7] flex items-center justify-center text-white shadow-[0_0_15px_rgba(14,165,233,0.5)] border border-sky-300/40">
                             {Icons.star}
                         </div>
                         <div>
@@ -197,7 +197,7 @@ export default function DoctorReviewsPage() {
                 </GlowingCard>
 
                 {/* Responded */}
-                <GlowingCard glowColor="teal" className="p-4 md:p-5" isDark={isDark}>
+                <GlowingCard glowColor="amber" className="p-4 md:p-5" isDark={isDark}>
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-500">
                             {Icons.check}
@@ -214,7 +214,7 @@ export default function DoctorReviewsPage() {
                 </GlowingCard>
 
                 {/* Pending Response */}
-                <GlowingCard glowColor="teal" className="p-4 md:p-5" isDark={isDark}>
+                <GlowingCard glowColor="amber" className="p-4 md:p-5" isDark={isDark}>
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-orange-500/10 flex items-center justify-center text-orange-500">
                             {Icons.reply}
@@ -232,7 +232,7 @@ export default function DoctorReviewsPage() {
             </div>
 
             {/* Rating Distribution */}
-            <GlowingCard glowColor="teal" className="p-4 md:p-6 mb-6 md:mb-8" isDark={isDark}>
+            <GlowingCard glowColor="amber" className="p-4 md:p-6 mb-6 md:mb-8" isDark={isDark}>
                 <h3 className={cn("font-semibold mb-4", textPrimary)}>
                     {isRTL ? "توزيع التقييمات" : "Rating Distribution"}
                 </h3>
@@ -339,8 +339,8 @@ export default function DoctorReviewsPage() {
                     ))}
                 </div>
             ) : reviews.length === 0 ? (
-                <GlowingCard glowColor="teal" className="p-12 text-center" isDark={isDark}>
-                    <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-teal-500/10 flex items-center justify-center text-teal-500">
+                <GlowingCard glowColor="amber" className="p-12 text-center" isDark={isDark}>
+                    <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-amber-500/10 flex items-center justify-center text-amber-500">
                         {Icons.star}
                     </div>
                     <h3 className={cn("text-lg font-semibold mb-2", textPrimary)}>

@@ -116,7 +116,7 @@ function PaymentFailedContent() {
                     >
                         <button
                             onClick={() => router.back()}
-                            className="w-full py-3 bg-teal-500 text-white rounded-xl font-medium hover:bg-teal-600 transition-colors flex items-center justify-center gap-2"
+                            className="w-full py-3 bg-amber-500 text-white rounded-xl font-medium hover:bg-amber-600 transition-colors flex items-center justify-center gap-2"
                         >
                             {Icons.refresh}
                             <span>{isRTL ? "حاول مرة أخرى" : "Try Again"}</span>

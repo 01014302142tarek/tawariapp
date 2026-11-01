@@ -141,9 +141,9 @@ export function QuickPrescriptionForm({
     const inputClasses = cn(
         "w-full px-3 py-2 rounded-lg border transition-colors text-sm",
         isDark
-            ? "bg-slate-700 border-slate-600 text-white placeholder-slate-400 focus:border-teal-500"
-            : "bg-white border-gray-300 text-gray-900 placeholder-gray-400 focus:border-teal-500",
-        "focus:outline-none focus:ring-2 focus:ring-teal-500/20"
+            ? "bg-slate-700 border-slate-600 text-white placeholder-slate-400 focus:border-amber-500"
+            : "bg-white border-gray-300 text-gray-900 placeholder-gray-400 focus:border-amber-500",
+        "focus:outline-none focus:ring-2 focus:ring-amber-500/20"
     );
 
     const labelClasses = cn(
@@ -224,7 +224,7 @@ export function QuickPrescriptionForm({
                                         <div className="flex items-center justify-between mb-3">
                                             <span className={cn(
                                                 "text-sm font-medium",
-                                                isDark ? "text-teal-400" : "text-teal-600"
+                                                isDark ? "text-amber-400" : "text-amber-600"
                                             )}>
                                                 {isRTL ? `الدواء ${index + 1}` : `Medication ${index + 1}`}
                                             </span>
@@ -320,8 +320,8 @@ export function QuickPrescriptionForm({
                                     "w-full mt-4 px-4 py-2 rounded-lg border-2 border-dashed transition-colors",
                                     "flex items-center justify-center gap-2 text-sm",
                                     isDark
-                                        ? "border-slate-600 text-slate-400 hover:border-teal-500 hover:text-teal-400"
-                                        : "border-gray-300 text-gray-500 hover:border-teal-500 hover:text-teal-600"
+                                        ? "border-slate-600 text-slate-400 hover:border-amber-500 hover:text-amber-400"
+                                        : "border-gray-300 text-gray-500 hover:border-amber-500 hover:text-amber-600"
                                 )}
                             >
                                 {Icons.add}
@@ -351,9 +351,9 @@ export function QuickPrescriptionForm({
                                 disabled={saving}
                                 className={cn(
                                     "px-6 py-2 rounded-lg font-medium transition-all",
-                                    "bg-teal-500 text-white hover:bg-teal-600",
+                                    "bg-amber-500 text-white hover:bg-amber-600",
                                     "flex items-center gap-2",
-                                    "shadow-lg shadow-teal-500/20",
+                                    "shadow-lg shadow-amber-500/20",
                                     saving && "opacity-50 cursor-not-allowed"
                                 )}
                             >

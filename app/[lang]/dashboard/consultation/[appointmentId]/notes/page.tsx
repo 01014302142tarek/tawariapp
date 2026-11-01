@@ -140,7 +140,7 @@ export default function ConsultationNotesPage() {
         return (
             <div className="min-h-screen bg-slate-950 flex items-center justify-center">
                 <div className="text-center">
-                    <div className="w-16 h-16 border-4 border-teal-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+                    <div className="w-16 h-16 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
                     <p className="text-white text-lg">{isRTL ? "جاري التحميل..." : "Loading..."}</p>
                 </div>
             </div>
@@ -165,7 +165,7 @@ export default function ConsultationNotesPage() {
                 <div className="flex items-center gap-2">
                     <button
                         onClick={handlePrescription}
-                        className="px-3 py-1.5 bg-teal-500/20 text-teal-400 border border-teal-500/30 rounded-lg hover:bg-teal-500/30 transition-colors text-sm font-medium flex items-center gap-1.5"
+                        className="px-3 py-1.5 bg-amber-500/20 text-amber-400 border border-amber-500/30 rounded-lg hover:bg-amber-500/30 transition-colors text-sm font-medium flex items-center gap-1.5"
                     >
                         {Icons.prescription}
                         <span className="hidden sm:inline">{isRTL ? "وصفة طبية" : "Prescription"}</span>
@@ -200,7 +200,7 @@ export default function ConsultationNotesPage() {
                 {/* SOAP Notes */}
                 <div className="space-y-4">
                     {/* Subjective */}
-                    <GlowingCard glowColor="teal" className="p-4" isDark>
+                    <GlowingCard glowColor="amber" className="p-4" isDark>
                         <label className="block">
                             <div className="flex items-center gap-2 mb-2">
                                 <span className="w-8 h-8 rounded-lg bg-blue-500/20 text-blue-400 flex items-center justify-center font-bold">S</span>
@@ -218,13 +218,13 @@ export default function ConsultationNotesPage() {
                                 onChange={(e) => handleChange("subjective", e.target.value)}
                                 rows={4}
                                 placeholder={isRTL ? "أدخل شكوى المريض..." : "Enter patient's complaints..."}
-                                className="w-full p-3 bg-slate-800/50 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:border-teal-500/50 focus:outline-none resize-none"
+                                className="w-full p-3 bg-slate-800/50 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:border-amber-500/50 focus:outline-none resize-none"
                             />
                         </label>
                     </GlowingCard>
 
                     {/* Objective */}
-                    <GlowingCard glowColor="teal" className="p-4" isDark>
+                    <GlowingCard glowColor="amber" className="p-4" isDark>
                         <label className="block">
                             <div className="flex items-center gap-2 mb-2">
                                 <span className="w-8 h-8 rounded-lg bg-green-500/20 text-green-400 flex items-center justify-center font-bold">O</span>
@@ -242,13 +242,13 @@ export default function ConsultationNotesPage() {
                                 onChange={(e) => handleChange("objective", e.target.value)}
                                 rows={4}
                                 placeholder={isRTL ? "أدخل نتائج الفحص..." : "Enter examination findings..."}
-                                className="w-full p-3 bg-slate-800/50 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:border-teal-500/50 focus:outline-none resize-none"
+                                className="w-full p-3 bg-slate-800/50 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:border-amber-500/50 focus:outline-none resize-none"
                             />
                         </label>
                     </GlowingCard>
 
                     {/* Assessment */}
-                    <GlowingCard glowColor="teal" className="p-4" isDark>
+                    <GlowingCard glowColor="amber" className="p-4" isDark>
                         <label className="block">
                             <div className="flex items-center gap-2 mb-2">
                                 <span className="w-8 h-8 rounded-lg bg-yellow-500/20 text-yellow-400 flex items-center justify-center font-bold">A</span>
@@ -266,13 +266,13 @@ export default function ConsultationNotesPage() {
                                 onChange={(e) => handleChange("assessment", e.target.value)}
                                 rows={4}
                                 placeholder={isRTL ? "أدخل التشخيص..." : "Enter diagnosis..."}
-                                className="w-full p-3 bg-slate-800/50 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:border-teal-500/50 focus:outline-none resize-none"
+                                className="w-full p-3 bg-slate-800/50 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:border-amber-500/50 focus:outline-none resize-none"
                             />
                         </label>
                     </GlowingCard>
 
                     {/* Plan */}
-                    <GlowingCard glowColor="teal" className="p-4" isDark>
+                    <GlowingCard glowColor="amber" className="p-4" isDark>
                         <label className="block">
                             <div className="flex items-center gap-2 mb-2">
                                 <span className="w-8 h-8 rounded-lg bg-purple-500/20 text-purple-400 flex items-center justify-center font-bold">P</span>
@@ -290,7 +290,7 @@ export default function ConsultationNotesPage() {
                                 onChange={(e) => handleChange("plan", e.target.value)}
                                 rows={4}
                                 placeholder={isRTL ? "أدخل خطة العلاج..." : "Enter treatment plan..."}
-                                className="w-full p-3 bg-slate-800/50 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:border-teal-500/50 focus:outline-none resize-none"
+                                className="w-full p-3 bg-slate-800/50 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:border-amber-500/50 focus:outline-none resize-none"
                             />
                         </label>
                     </GlowingCard>
@@ -327,10 +327,10 @@ export default function ConsultationNotesPage() {
                     </GlowingCard>
 
                     {/* Follow-up */}
-                    <GlowingCard glowColor="teal" className="p-4" isDark>
+                    <GlowingCard glowColor="amber" className="p-4" isDark>
                         <div className="flex items-center justify-between mb-4">
                             <div className="flex items-center gap-2">
-                                <svg className="w-5 h-5 text-teal-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg className="w-5 h-5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
                                 </svg>
                                 <span className="text-white font-medium">
@@ -342,7 +342,7 @@ export default function ConsultationNotesPage() {
                                     type="checkbox"
                                     checked={form.followUpRecommended}
                                     onChange={(e) => handleChange("followUpRecommended", e.target.checked)}
-                                    className="w-5 h-5 rounded border-white/20 bg-slate-800 text-teal-500 focus:ring-teal-500/50"
+                                    className="w-5 h-5 rounded border-white/20 bg-slate-800 text-amber-500 focus:ring-amber-500/50"
                                 />
                                 <span className="text-sm text-gray-400">
                                     {isRTL ? "يوصى بالمتابعة" : "Follow-up recommended"}
@@ -363,7 +363,7 @@ export default function ConsultationNotesPage() {
                                     <select
                                         value={form.followUpTimeframe}
                                         onChange={(e) => handleChange("followUpTimeframe", e.target.value)}
-                                        className="w-full p-3 bg-slate-800/50 border border-white/10 rounded-xl text-white focus:border-teal-500/50 focus:outline-none"
+                                        className="w-full p-3 bg-slate-800/50 border border-white/10 rounded-xl text-white focus:border-amber-500/50 focus:outline-none"
                                     >
                                         {followUpOptions.map((option) => (
                                             <option key={option.value} value={option.value}>
@@ -387,7 +387,7 @@ export default function ConsultationNotesPage() {
                         <button
                             onClick={handleSave}
                             disabled={saving}
-                            className="flex-1 py-3 px-4 bg-gradient-to-r from-teal-500 to-emerald-500 text-white rounded-xl hover:from-teal-600 hover:to-emerald-600 transition-colors font-medium flex items-center justify-center gap-2 disabled:opacity-50"
+                            className="flex-1 py-3 px-4 bg-gradient-to-r from-amber-500 to-emerald-500 text-white rounded-xl hover:from-amber-600 hover:to-emerald-600 transition-colors font-medium flex items-center justify-center gap-2 disabled:opacity-50"
                         >
                             {saving ? (
                                 <>

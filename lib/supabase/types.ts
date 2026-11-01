@@ -1,4 +1,4 @@
-// TawariApp Database Types
+// Tabibi Database Types
 // Generated from database schema (00001_initial_schema.sql)
 
 export type Json =

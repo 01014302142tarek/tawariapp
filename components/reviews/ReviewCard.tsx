@@ -260,14 +260,14 @@ export default function ReviewCard({
                 <div
                     className={cn(
                         "mt-4 p-3 rounded-lg",
-                        isDark ? "bg-teal-900/30" : "bg-teal-50"
+                        isDark ? "bg-amber-950/30 border border-amber-500/20" : "bg-amber-50/80 border border-amber-200"
                     )}
                 >
                     <div className="flex items-center gap-2 mb-2">
                         <svg
                             className={cn(
                                 "w-4 h-4",
-                                isDark ? "text-teal-400" : "text-teal-600"
+                                isDark ? "text-amber-400" : "text-amber-600"
                             )}
                             fill="none"
                             stroke="currentColor"
@@ -283,7 +283,7 @@ export default function ReviewCard({
                         <span
                             className={cn(
                                 "text-xs font-medium",
-                                isDark ? "text-teal-400" : "text-teal-700"
+                                isDark ? "text-amber-400" : "text-amber-700"
                             )}
                         >
                             {isRTL ? "رد الطبيب" : "Doctor's Response"}
@@ -317,8 +317,8 @@ export default function ReviewCard({
                     className={cn(
                         "mt-3 text-sm font-medium transition-colors",
                         isDark
-                            ? "text-teal-400 hover:text-teal-300"
-                            : "text-teal-600 hover:text-teal-700"
+                            ? "text-amber-400 hover:text-amber-300"
+                            : "text-amber-600 hover:text-amber-700"
                     )}
                 >
                     {isRTL ? "إضافة رد" : "Add Response"}
@@ -342,7 +342,7 @@ export default function ReviewCard({
                             isDark
                                 ? "bg-gray-700 border-gray-600 text-white placeholder-gray-400"
                                 : "bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-500",
-                            "focus:outline-none focus:ring-2 focus:ring-teal-500"
+                            "focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500"
                         )}
                     />
                     <div className="flex justify-end gap-2">
@@ -364,8 +364,8 @@ export default function ReviewCard({
                             onClick={handleSubmitResponse}
                             disabled={!response.trim() || isSubmitting}
                             className={cn(
-                                "px-4 py-1.5 text-sm font-medium rounded-lg transition-colors",
-                                "bg-teal-600 text-white hover:bg-teal-700",
+                                "px-4 py-1.5 text-sm font-semibold rounded-lg transition-all",
+                                "bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-black shadow-md shadow-amber-500/20",
                                 "disabled:opacity-50 disabled:cursor-not-allowed"
                             )}
                         >

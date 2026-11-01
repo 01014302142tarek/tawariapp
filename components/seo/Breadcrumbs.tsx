@@ -20,7 +20,7 @@ export function Breadcrumbs({ items, className = "" }: BreadcrumbsProps) {
     const { theme } = useGlobalTheme();
     const isDark = theme === "dark";
 
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.tawariapp.com";
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.tabibiapp.com";
 
     // Generate JSON-LD structured data
     const structuredData = {
@@ -80,7 +80,7 @@ export function Breadcrumbs({ items, className = "" }: BreadcrumbsProps) {
                                     <Link
                                         href={item.href}
                                         className={`hover:underline transition-colors ${
-                                            isDark ? "hover:text-teal-400" : "hover:text-teal-600"
+                                            isDark ? "hover:text-amber-400" : "hover:text-amber-600"
                                         }`}
                                     >
                                         {label}
@@ -102,7 +102,7 @@ export const breadcrumbConfigs = {
     ],
     about: (lang: string) => [
         { label: "Home", labelAr: "الرئيسية", href: `/${lang}` },
-        { label: "About", labelAr: "عن تواري" },
+        { label: "About", labelAr: "عن طبيبي" },
     ],
     contact: (lang: string) => [
         { label: "Home", labelAr: "الرئيسية", href: `/${lang}` },

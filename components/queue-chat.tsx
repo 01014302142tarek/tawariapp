@@ -383,7 +383,7 @@ export function QueueChat({
                                         className="w-8 h-8 rounded-full object-cover"
                                     />
                                 ) : (
-                                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-teal-500 to-cyan-500 flex items-center justify-center text-white text-sm font-medium">
+                                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-500 to-amber-600 flex items-center justify-center text-white text-sm font-medium">
                                         {getInitials(recipientName)}
                                     </div>
                                 )}
@@ -433,7 +433,7 @@ export function QueueChat({
                                     )}>
                                         {loading ? (
                                             <div className="flex items-center justify-center h-full">
-                                                <div className="w-6 h-6 border-2 border-teal-500 border-t-transparent rounded-full animate-spin" />
+                                                <div className="w-6 h-6 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" />
                                             </div>
                                         ) : messages.length === 0 ? (
                                             <div className="flex items-center justify-center h-full">
@@ -465,7 +465,7 @@ export function QueueChat({
                                                             className={cn(
                                                                 "max-w-[80%] rounded-xl px-3 py-2",
                                                                 isOwnMessage
-                                                                    ? "bg-teal-500 text-white rounded-br-sm"
+                                                                    ? "bg-amber-500 text-white rounded-br-sm"
                                                                     : isDark
                                                                         ? "bg-slate-800 text-white rounded-bl-sm"
                                                                         : "bg-gray-100 text-slate-900 rounded-bl-sm"
@@ -495,7 +495,7 @@ export function QueueChat({
                                                                         ) : (
                                                                             <div className={cn(
                                                                                 "w-full h-20 rounded-lg flex items-center justify-center",
-                                                                                isOwnMessage ? "bg-teal-600" : isDark ? "bg-slate-700" : "bg-gray-200"
+                                                                                isOwnMessage ? "bg-amber-600" : isDark ? "bg-slate-700" : "bg-gray-200"
                                                                             )}>
                                                                                 <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin opacity-50" />
                                                                             </div>
@@ -509,7 +509,7 @@ export function QueueChat({
                                                                             className={cn(
                                                                                 "flex items-center gap-2 p-2 rounded-lg transition-colors",
                                                                                 isOwnMessage
-                                                                                    ? "bg-teal-600 hover:bg-teal-700"
+                                                                                    ? "bg-amber-600 hover:bg-amber-700"
                                                                                     : isDark
                                                                                         ? "bg-slate-700 hover:bg-slate-600"
                                                                                         : "bg-gray-200 hover:bg-gray-300",
@@ -518,7 +518,7 @@ export function QueueChat({
                                                                         >
                                                                             <div className={cn(
                                                                                 "w-8 h-8 rounded flex items-center justify-center flex-shrink-0",
-                                                                                isOwnMessage ? "bg-teal-700" : isDark ? "bg-slate-600" : "bg-gray-300"
+                                                                                isOwnMessage ? "bg-amber-700" : isDark ? "bg-slate-600" : "bg-gray-300"
                                                                             )}>
                                                                                 {Icons.document}
                                                                             </div>
@@ -543,7 +543,7 @@ export function QueueChat({
                                                             )}
                                                             <p className={cn(
                                                                 "text-[10px] mt-1",
-                                                                isOwnMessage ? "text-teal-100" : isDark ? "text-slate-500" : "text-gray-400"
+                                                                isOwnMessage ? "text-amber-100" : isDark ? "text-slate-500" : "text-gray-400"
                                                             )}>
                                                                 {formatTime(msg.created_at)}
                                                             </p>
@@ -655,8 +655,8 @@ export function QueueChat({
                                                 className={cn(
                                                     "p-2 rounded-lg transition-colors flex-shrink-0",
                                                     isDark
-                                                        ? "hover:bg-slate-700 text-slate-400 hover:text-teal-400"
-                                                        : "hover:bg-gray-200 text-gray-500 hover:text-teal-500",
+                                                        ? "hover:bg-slate-700 text-slate-400 hover:text-amber-400"
+                                                        : "hover:bg-gray-200 text-gray-500 hover:text-amber-500",
                                                     "disabled:opacity-50 disabled:cursor-not-allowed"
                                                 )}
                                                 title={isRTL ? "إرفاق ملف" : "Attach file"}
@@ -679,15 +679,15 @@ export function QueueChat({
                                                 className={cn(
                                                     "flex-1 px-3 py-2 rounded-lg text-sm border transition-colors resize-none overflow-hidden",
                                                     isDark
-                                                        ? "bg-slate-800 border-slate-700 text-white placeholder:text-slate-500 focus:border-teal-500"
-                                                        : "bg-gray-50 border-gray-200 text-slate-900 placeholder:text-gray-400 focus:border-teal-500"
+                                                        ? "bg-slate-800 border-slate-700 text-white placeholder:text-slate-500 focus:border-amber-500"
+                                                        : "bg-gray-50 border-gray-200 text-slate-900 placeholder:text-gray-400 focus:border-amber-500"
                                                 )}
                                                 style={{ minHeight: "38px", maxHeight: "100px" }}
                                             />
                                             <button
                                                 type="submit"
                                                 disabled={(!newMessage.trim() && !selectedFile) || sending || uploading}
-                                                className="px-3 py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
+                                                className="px-3 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
                                             >
                                                 {sending || uploading ? (
                                                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -721,7 +721,7 @@ export function QueueChat({
                             "relative w-14 h-14 rounded-full text-white shadow-lg flex items-center justify-center transition-all",
                             unreadCount > 0
                                 ? "bg-gradient-to-br from-red-500 to-orange-500 shadow-red-500/40 hover:shadow-xl hover:shadow-red-500/50"
-                                : "bg-gradient-to-br from-teal-500 to-cyan-500 shadow-teal-500/30 hover:shadow-xl hover:shadow-teal-500/40"
+                                : "bg-gradient-to-br from-amber-500 to-amber-600 shadow-amber-500/30 hover:shadow-xl hover:shadow-amber-500/40"
                         )}
                     >
                         {/* Pulse ring when there are unread messages */}

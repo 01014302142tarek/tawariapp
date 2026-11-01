@@ -96,8 +96,8 @@ export default function PendingReviews({
                         className={cn(
                             "text-xs font-medium px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5",
                             isDark
-                                ? "text-teal-400 hover:bg-teal-900/30"
-                                : "text-teal-600 hover:bg-teal-50"
+                                ? "text-amber-400 hover:bg-amber-900/30"
+                                : "text-amber-600 hover:bg-amber-50"
                         )}
                     >
                         {showAll ? (
@@ -132,8 +132,8 @@ export default function PendingReviews({
                         className={cn(
                             "rounded-xl p-4 border",
                             isDark
-                                ? "bg-gradient-to-r from-teal-900/30 to-gray-800/50 border-teal-700/50"
-                                : "bg-gradient-to-r from-teal-50 to-white border-teal-200"
+                                ? "bg-gradient-to-r from-amber-950/30 to-zinc-900/60 border-amber-500/20"
+                                : "bg-gradient-to-r from-amber-50 to-white border-amber-200"
                         )}
                     >
                         {selectedAppointment?.id === appointment.id ? (
@@ -151,16 +151,16 @@ export default function PendingReviews({
                                         className={cn(
                                             "w-10 h-10 rounded-full flex items-center justify-center",
                                             isDark
-                                                ? "bg-teal-900/50"
-                                                : "bg-teal-100"
+                                                ? "bg-amber-900/50"
+                                                : "bg-amber-100"
                                         )}
                                     >
                                         <svg
                                             className={cn(
                                                 "w-5 h-5",
                                                 isDark
-                                                    ? "text-teal-400"
-                                                    : "text-teal-600"
+                                                    ? "text-amber-400"
+                                                    : "text-amber-600"
                                             )}
                                             fill="none"
                                             stroke="currentColor"
@@ -231,8 +231,8 @@ export default function PendingReviews({
                                             setSelectedAppointment(appointment)
                                         }
                                         className={cn(
-                                            "px-4 py-2 text-sm font-medium rounded-lg transition-colors",
-                                            "bg-teal-600 text-white hover:bg-teal-700"
+                                            "px-4 py-2 text-sm font-semibold rounded-lg transition-all",
+                                            "bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-black shadow-md shadow-amber-500/20"
                                         )}
                                     >
                                         {isRTL ? "أضف تقييم" : "Add Review"}

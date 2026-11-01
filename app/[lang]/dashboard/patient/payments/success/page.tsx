@@ -49,7 +49,7 @@ function PaymentSuccessContent() {
             particleCount: 100,
             spread: 70,
             origin: { y: 0.6 },
-            colors: ["#14b8a6", "#22d3ee", "#a855f7"],
+            colors: ["#f59e0b", "#22d3ee", "#a855f7"],
         });
 
         // Fetch payment status
@@ -73,15 +73,15 @@ function PaymentSuccessContent() {
                 transition={{ duration: 0.5 }}
                 className="max-w-md w-full"
             >
-                <GlowingCard glowColor="teal" className="p-8 text-center" isDark>
+                <GlowingCard glowColor="amber" className="p-8 text-center" isDark>
                     {/* Success Icon */}
                     <motion.div
                         initial={{ scale: 0 }}
                         animate={{ scale: 1 }}
                         transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
-                        className="w-20 h-20 rounded-full bg-teal-500/20 flex items-center justify-center mx-auto mb-6"
+                        className="w-20 h-20 rounded-full bg-amber-500/20 flex items-center justify-center mx-auto mb-6"
                     >
-                        <span className="text-teal-400">{Icons.check}</span>
+                        <span className="text-amber-400">{Icons.check}</span>
                     </motion.div>
 
                     {/* Success Message */}
@@ -112,7 +112,7 @@ function PaymentSuccessContent() {
                                 <span className="text-gray-400">
                                     {isRTL ? "المبلغ المدفوع" : "Amount Paid"}
                                 </span>
-                                <span className="text-teal-400 font-bold text-xl">
+                                <span className="text-amber-400 font-bold text-xl">
                                     {amount.toFixed(2)} {isRTL ? "ج.م" : "EGP"}
                                 </span>
                             </div>
@@ -138,7 +138,7 @@ function PaymentSuccessContent() {
                     >
                         <button
                             onClick={() => router.push(`/${language}/dashboard/patient/appointments`)}
-                            className="w-full py-3 bg-teal-500 text-white rounded-xl font-medium hover:bg-teal-600 transition-colors flex items-center justify-center gap-2"
+                            className="w-full py-3 bg-amber-500 text-white rounded-xl font-medium hover:bg-amber-600 transition-colors flex items-center justify-center gap-2"
                         >
                             {Icons.calendar}
                             <span>{isRTL ? "عرض مواعيدي" : "View My Appointments"}</span>
@@ -173,7 +173,7 @@ function PaymentSuccessContent() {
 function PaymentSuccessLoading() {
     return (
         <div className="min-h-screen bg-slate-950 flex items-center justify-center">
-            <div className="w-16 h-16 border-4 border-teal-500 border-t-transparent rounded-full animate-spin" />
+            <div className="w-16 h-16 border-4 border-amber-500 border-t-transparent rounded-full animate-spin" />
         </div>
     );
 }

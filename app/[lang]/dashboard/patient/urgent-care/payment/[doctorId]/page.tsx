@@ -6,6 +6,7 @@ import Image from "next/image";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useI18n } from "@/app/i18n";
+import { useGlobalTheme } from "@/app/context/GlobalThemeContext";
 import { getOnlineDoctors, joinDoctorQueue, type OnlineDoctor } from "@/app/actions/queue";
 
 // ============================================
@@ -81,6 +82,7 @@ export default function PaymentPage() {
     const router = useRouter();
     const params = useParams();
     const { isRTL, language } = useI18n();
+    const { isDark } = useGlobalTheme();
 
     const doctorId = params.doctorId as string;
 
@@ -127,22 +129,51 @@ export default function PaymentPage() {
         setError(null);
 
         try {
-            // Join the queue with mock payment
-            const result = await joinDoctorQueue({
-                doctorProfileId: doctor.id,
-                chiefComplaint: chiefComplaint.trim() || undefined,
-                paymentAmount: totalAmount,
-            });
+            let result: { success: boolean; queueEntryId?: string; error?: string } | null = null;
+            
+            // Try server action first
+            try {
+                result = await joinDoctorQueue({
+                    doctorProfileId: doctor.id,
+                    chiefComplaint: chiefComplaint.trim() || undefined,
+                    paymentAmount: totalAmount,
+                });
+            } catch (actionErr) {
+                console.warn("Server action failed, falling back to API route:", actionErr);
+            }
 
-            if (result.success && result.queueEntryId) {
+            // Fallback to API route if server action threw or returned failure
+            if (!result || !result.success) {
+                try {
+                    const res = await fetch("/api/queue/join", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            doctorProfileId: doctor.id,
+                            chiefComplaint: chiefComplaint.trim() || undefined,
+                            paymentAmount: totalAmount,
+                        }),
+                    });
+                    if (res.ok) {
+                        const apiResult = await res.json();
+                        if (apiResult && apiResult.success) {
+                            result = apiResult;
+                        }
+                    }
+                } catch (fetchErr) {
+                    console.error("API route fallback error:", fetchErr);
+                }
+            }
+
+            if (result && result.success && result.queueEntryId) {
                 // Redirect to waiting room
                 router.push(`/${language}/dashboard/patient/urgent-care/waiting/${result.queueEntryId}`);
             } else {
-                setError(result.error || (isRTL ? "حدث خطأ" : "An error occurred"));
+                setError(result?.error || (isRTL ? "حدث خطأ في معالجة الطلب، يرجى المحاولة مرة أخرى" : "An error occurred"));
             }
-        } catch (err) {
+        } catch (err: any) {
             console.error("Error completing payment:", err);
-            setError(isRTL ? "حدث خطأ في المعالجة" : "Error processing payment");
+            setError(err?.message || (isRTL ? "حدث خطأ في المعالجة" : "Error processing payment"));
         } finally {
             setProcessing(false);
         }
@@ -156,10 +187,10 @@ export default function PaymentPage() {
     // Loading state
     if (loading) {
         return (
-            <div className={cn("min-h-screen p-6 flex items-center justify-center", isRTL && "rtl")}>
+            <div className={cn("min-h-screen p-4 sm:p-6 flex items-center justify-center", isRTL && "rtl")}>
                 <div className="text-center">
-                    <div className="w-12 h-12 border-4 border-teal-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-                    <p className="text-slate-400">
+                    <div className="w-12 h-12 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+                    <p className={isDark ? "text-slate-400" : "text-slate-600"}>
                         {isRTL ? "جاري التحميل..." : "Loading..."}
                     </p>
                 </div>
@@ -170,10 +201,13 @@ export default function PaymentPage() {
     // Error state (doctor not found or offline)
     if (!doctor) {
         return (
-            <div className={cn("min-h-screen p-6", isRTL && "rtl")}>
+            <div className={cn("min-h-screen p-4 sm:p-6 max-w-full overflow-x-hidden", isRTL && "rtl")}>
                 <button
                     onClick={handleBack}
-                    className="flex items-center gap-2 text-slate-400 hover:text-white mb-8 transition-colors"
+                    className={cn(
+                        "flex items-center gap-2 mb-8 transition-colors",
+                        isDark ? "text-slate-400 hover:text-white" : "text-slate-600 hover:text-slate-900"
+                    )}
                 >
                     <span className={cn(isRTL && "rotate-180")}>{Icons.back}</span>
                     <span>{isRTL ? "العودة" : "Back"}</span>
@@ -181,19 +215,19 @@ export default function PaymentPage() {
 
                 <div className="max-w-md mx-auto text-center py-20">
                     <div className="w-20 h-20 rounded-full bg-red-500/10 flex items-center justify-center mx-auto mb-4">
-                        <svg className="w-10 h-10 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-10 h-10 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
                         </svg>
                     </div>
-                    <h2 className="text-xl font-semibold text-white mb-2">
+                    <h2 className={cn("text-xl font-semibold mb-2", isDark ? "text-white" : "text-slate-900")}>
                         {isRTL ? "الطبيب غير متاح" : "Doctor Not Available"}
                     </h2>
-                    <p className="text-slate-400 mb-6">
+                    <p className={cn("mb-6", isDark ? "text-slate-400" : "text-slate-600")}>
                         {error || (isRTL ? "الطبيب غير متصل حالياً" : "This doctor is currently offline")}
                     </p>
                     <button
                         onClick={handleBack}
-                        className="px-6 py-2 bg-teal-500 text-white rounded-lg font-medium hover:bg-teal-600 transition-colors"
+                        className="px-6 py-2 bg-amber-500 text-white rounded-lg font-medium hover:bg-amber-600 transition-colors shadow-sm"
                     >
                         {isRTL ? "اختر طبيباً آخر" : "Choose Another Doctor"}
                     </button>
@@ -203,11 +237,14 @@ export default function PaymentPage() {
     }
 
     return (
-        <div className={cn("min-h-screen p-6", isRTL && "rtl")}>
+        <div className={cn("min-h-screen p-4 sm:p-6", isRTL && "rtl")}>
             {/* Back Button */}
             <button
                 onClick={handleBack}
-                className="flex items-center gap-2 text-slate-400 hover:text-white mb-8 transition-colors"
+                className={cn(
+                    "flex items-center gap-2 mb-6 sm:mb-8 transition-colors",
+                    isDark ? "text-slate-400 hover:text-white" : "text-slate-600 hover:text-slate-900"
+                )}
             >
                 <span className={cn(isRTL && "rotate-180")}>{Icons.back}</span>
                 <span>{isRTL ? "العودة" : "Back"}</span>
@@ -216,10 +253,10 @@ export default function PaymentPage() {
             <div className="max-w-2xl mx-auto">
                 {/* Header */}
                 <div className="text-center mb-8">
-                    <h1 className="text-2xl font-bold text-white mb-2">
+                    <h1 className={cn("text-2xl sm:text-3xl font-bold mb-2", isDark ? "text-white" : "text-slate-900")}>
                         {isRTL ? "تأكيد الدفع" : "Confirm Payment"}
                     </h1>
-                    <p className="text-slate-400">
+                    <p className={cn("text-sm sm:text-base", isDark ? "text-slate-400" : "text-slate-600")}>
                         {isRTL ? "راجع التفاصيل قبل الانضمام للقائمة" : "Review details before joining the queue"}
                     </p>
                 </div>
@@ -228,7 +265,10 @@ export default function PaymentPage() {
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="bg-slate-800/50 border border-white/10 rounded-2xl p-6 mb-6"
+                    className={cn(
+                        "rounded-2xl p-4 sm:p-6 mb-6 border",
+                        isDark ? "bg-slate-800/50 border-white/10" : "bg-white border-slate-200 shadow-sm"
+                    )}
                 >
                     <div className="flex items-start gap-4">
                         {/* Avatar */}
@@ -239,37 +279,42 @@ export default function PaymentPage() {
                                     alt={doctor.full_name}
                                     width={72}
                                     height={72}
-                                    className="w-[72px] h-[72px] rounded-full object-cover"
+                                    className="w-14 h-14 sm:w-[72px] sm:h-[72px] rounded-full object-cover"
                                 />
                             ) : (
-                                <div className="w-[72px] h-[72px] rounded-full bg-gradient-to-br from-teal-500 to-cyan-500 flex items-center justify-center text-white font-semibold text-xl">
+                                <div className="w-14 h-14 sm:w-[72px] sm:h-[72px] rounded-full bg-gradient-to-br from-amber-500 to-amber-600 flex items-center justify-center text-white font-semibold text-lg sm:text-xl">
                                     {getInitials(doctor.full_name)}
                                 </div>
                             )}
                             {/* Online indicator */}
-                            <div className="absolute -bottom-0.5 -right-0.5 w-5 h-5 rounded-full border-2 border-slate-800 bg-green-500" />
+                            <div className={cn(
+                                "absolute -bottom-0.5 -right-0.5 w-4 h-4 sm:w-5 sm:h-5 rounded-full border-2 bg-green-500",
+                                isDark ? "border-slate-800" : "border-white"
+                            )} />
                         </div>
 
                         {/* Info */}
                         <div className="flex-1 min-w-0">
-                            <h3 className="font-semibold text-white text-lg">{doctor.full_name}</h3>
-                            <p className="text-slate-400">
+                            <h3 className={cn("font-semibold text-base sm:text-lg truncate", isDark ? "text-white" : "text-slate-900")}>
+                                {doctor.full_name}
+                            </h3>
+                            <p className={cn("text-sm truncate", isDark ? "text-slate-400" : "text-slate-600")}>
                                 {doctor.specialty.length > 0 ? doctor.specialty.join(", ") : "General Practice"}
                             </p>
 
                             {/* Stats */}
-                            <div className="flex items-center gap-4 mt-2 text-sm">
-                                <div className="flex items-center gap-1 text-amber-400">
+                            <div className="flex flex-wrap items-center gap-3 sm:gap-4 mt-2 text-sm">
+                                <div className="flex items-center gap-1 text-amber-500 font-medium">
                                     {Icons.star}
                                     <span>{doctor.rating_average.toFixed(1)}</span>
-                                    <span className="text-slate-500">({doctor.rating_count})</span>
+                                    <span className={isDark ? "text-slate-500" : "text-slate-400"}>({doctor.rating_count})</span>
                                 </div>
-                                <div className="flex items-center gap-1 text-slate-400">
+                                <div className={cn("flex items-center gap-1", isDark ? "text-slate-400" : "text-slate-500")}>
                                     {Icons.clock}
                                     <span>{formatWaitTime(doctor.estimated_wait_minutes)}</span>
                                 </div>
                                 {doctor.queue_length > 0 && (
-                                    <div className="flex items-center gap-1 text-slate-400">
+                                    <div className={cn("flex items-center gap-1", isDark ? "text-slate-400" : "text-slate-600")}>
                                         {Icons.users}
                                         <span>{doctor.queue_length} {isRTL ? "ينتظرون" : "waiting"}</span>
                                     </div>
@@ -284,11 +329,14 @@ export default function PaymentPage() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.1 }}
-                    className="bg-slate-800/50 border border-white/10 rounded-2xl p-6 mb-6"
+                    className={cn(
+                        "rounded-2xl p-4 sm:p-6 mb-6 border",
+                        isDark ? "bg-slate-800/50 border-white/10" : "bg-white border-slate-200 shadow-sm"
+                    )}
                 >
-                    <label className="block text-white font-medium mb-2">
+                    <label className={cn("block font-medium mb-2", isDark ? "text-white" : "text-slate-900")}>
                         {isRTL ? "ما هي شكواك الرئيسية؟" : "What's your chief complaint?"}
-                        <span className="text-slate-500 text-sm font-normal ms-2">
+                        <span className={cn("text-sm font-normal ms-2", isDark ? "text-slate-500" : "text-slate-400")}>
                             ({isRTL ? "اختياري" : "Optional"})
                         </span>
                     </label>
@@ -296,11 +344,16 @@ export default function PaymentPage() {
                         value={chiefComplaint}
                         onChange={(e) => setChiefComplaint(e.target.value)}
                         placeholder={isRTL ? "صف مشكلتك الصحية بإيجاز..." : "Briefly describe your health concern..."}
-                        className="w-full bg-slate-900/50 border border-white/10 rounded-xl p-4 text-white placeholder-slate-500 resize-none focus:outline-none focus:ring-2 focus:ring-teal-500/50"
+                        className={cn(
+                            "w-full rounded-xl p-4 resize-none focus:outline-none focus:ring-2 focus:ring-amber-500/50 border transition-colors",
+                            isDark
+                                ? "bg-slate-900/50 border-white/10 text-white placeholder-slate-500"
+                                : "bg-slate-50 border-slate-200 text-slate-900 placeholder-slate-400"
+                        )}
                         rows={3}
                         maxLength={500}
                     />
-                    <p className="text-slate-500 text-sm mt-2">
+                    <p className={cn("text-xs sm:text-sm mt-2", isDark ? "text-slate-500" : "text-slate-400")}>
                         {chiefComplaint.length}/500 {isRTL ? "حرف" : "characters"}
                     </p>
                 </motion.div>
@@ -310,23 +363,26 @@ export default function PaymentPage() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.2 }}
-                    className="bg-slate-800/50 border border-white/10 rounded-2xl p-6 mb-6"
+                    className={cn(
+                        "rounded-2xl p-4 sm:p-6 mb-6 border",
+                        isDark ? "bg-slate-800/50 border-white/10" : "bg-white border-slate-200 shadow-sm"
+                    )}
                 >
-                    <h3 className="font-semibold text-white mb-4 flex items-center gap-2">
+                    <h3 className={cn("font-semibold mb-4 flex items-center gap-2", isDark ? "text-white" : "text-slate-900")}>
                         {Icons.creditCard}
                         {isRTL ? "ملخص الدفع" : "Payment Summary"}
                     </h3>
 
                     <div className="space-y-3">
-                        <div className="flex justify-between text-slate-400">
+                        <div className={cn("flex justify-between", isDark ? "text-slate-400" : "text-slate-600")}>
                             <span>{isRTL ? "رسوم الاستشارة" : "Consultation Fee"}</span>
-                            <span>{doctor.consultation_fee} EGP</span>
+                            <span className="font-medium">{doctor.consultation_fee} EGP</span>
                         </div>
-                        <div className="flex justify-between text-slate-400">
+                        <div className={cn("flex justify-between", isDark ? "text-slate-400" : "text-slate-600")}>
                             <span>{isRTL ? "رسوم الخدمة" : "Service Fee"}</span>
-                            <span>{serviceFee} EGP</span>
+                            <span className="font-medium">{serviceFee} EGP</span>
                         </div>
-                        <div className="border-t border-white/10 pt-3 flex justify-between text-white font-semibold text-lg">
+                        <div className={cn("border-t pt-3 flex justify-between font-bold text-lg", isDark ? "border-white/10 text-white" : "border-slate-200 text-slate-900")}>
                             <span>{isRTL ? "الإجمالي" : "Total"}</span>
                             <span>{totalAmount} EGP</span>
                         </div>
@@ -338,17 +394,20 @@ export default function PaymentPage() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.3 }}
-                    className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 mb-6"
+                    className={cn(
+                        "rounded-xl p-4 mb-6 border",
+                        isDark ? "bg-amber-500/10 border-amber-500/30 text-amber-200" : "bg-amber-50 border-amber-200 text-amber-900"
+                    )}
                 >
                     <div className="flex items-start gap-3">
-                        <div className="text-amber-400 mt-0.5">
+                        <div className="text-amber-500 mt-0.5 shrink-0">
                             {Icons.shield}
                         </div>
                         <div>
-                            <p className="text-amber-200 font-medium">
+                            <p className={cn("font-medium", isDark ? "text-amber-200" : "text-amber-900")}>
                                 {isRTL ? "وضع الاختبار" : "Test Mode"}
                             </p>
-                            <p className="text-amber-200/70 text-sm">
+                            <p className={cn("text-sm", isDark ? "text-amber-200/70" : "text-amber-800")}>
                                 {isRTL
                                     ? "هذه صفحة دفع تجريبية. لن يتم خصم أي مبالغ حقيقية."
                                     : "This is a demo payment page. No real charges will be made."}
@@ -364,7 +423,7 @@ export default function PaymentPage() {
                         animate={{ opacity: 1, y: 0 }}
                         className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 mb-6"
                     >
-                        <p className="text-red-400">{error}</p>
+                        <p className="text-red-500 font-medium">{error}</p>
                     </motion.div>
                 )}
 
@@ -378,14 +437,17 @@ export default function PaymentPage() {
                     <button
                         onClick={handleBack}
                         disabled={processing}
-                        className="flex-1 px-6 py-3 bg-slate-800 text-white rounded-xl font-medium hover:bg-slate-700 transition-colors disabled:opacity-50"
+                        className={cn(
+                            "flex-1 px-6 py-3 rounded-xl font-medium transition-colors disabled:opacity-50",
+                            isDark ? "bg-slate-800 text-white hover:bg-slate-700" : "bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200"
+                        )}
                     >
                         {isRTL ? "إلغاء" : "Cancel"}
                     </button>
                     <button
                         onClick={handleCompletePayment}
                         disabled={processing}
-                        className="flex-1 px-6 py-3 bg-teal-500 text-white rounded-xl font-medium hover:bg-teal-600 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                        className="flex-1 px-6 py-3 bg-amber-500 text-white rounded-xl font-medium hover:bg-amber-600 transition-colors disabled:opacity-50 flex items-center justify-center gap-2 shadow-sm"
                     >
                         {processing ? (
                             <>
@@ -402,7 +464,7 @@ export default function PaymentPage() {
                 </motion.div>
 
                 {/* Footer Info */}
-                <p className="text-center text-slate-500 text-sm mt-6">
+                <p className={cn("text-center text-sm mt-6", isDark ? "text-slate-500" : "text-slate-600")}>
                     {isRTL
                         ? "بالضغط على إتمام الدفع، ستنضم إلى قائمة انتظار الطبيب"
                         : "By clicking Complete Payment, you will join the doctor's queue"}

@@ -1,6 +1,28 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+    // Configure allowed dev origins for network access (LAN testing on mobile)
+    allowedDevOrigins: [
+        "localhost",
+        "localhost:3000",
+        "127.0.0.1",
+        "127.0.0.1:3000",
+        "192.168.1.6",
+        "192.168.1.6:3000",
+    ],
+
+    // Experimental settings including Server Actions allowed origins
+    experimental: {
+        serverActions: {
+            allowedOrigins: [
+                "localhost:3000",
+                "127.0.0.1:3000",
+                "192.168.1.6:3000",
+                "192.168.1.6",
+            ],
+        },
+    },
+
     // Configure external image domains for next/image
     images: {
         remotePatterns: [
@@ -43,13 +65,13 @@ const nextConfig: NextConfig = {
                             // Images - allow data: for base64, blob: for uploads, and specific sources
                             "img-src 'self' data: blob: https://*.supabase.co https://lh3.googleusercontent.com https://images.unsplash.com https://*.daily.co https://*.pluot.blue",
                             // Connect - API calls + Daily.co for video calls + Sentry for Daily's error reporting
-                            "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://www.google-analytics.com https://vitals.vercel-insights.com https://*.daily.co https://*.pluot.blue wss://*.daily.co wss://*.pluot.blue https://api.daily.co https://*.ingest.sentry.io",
-                            // Frames - for video calls (Daily.co)
-                            "frame-src 'self' https://*.daily.co https://*.pluot.blue",
+                            "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://www.google-analytics.com https://vitals.vercel-insights.com https://*.daily.co https://*.pluot.blue wss://*.daily.co wss://*.pluot.blue https://api.daily.co https://*.ingest.sentry.io https://fairmeeting.net https://*.fairmeeting.net wss://fairmeeting.net wss://*.fairmeeting.net",
+                            // Frames - for video calls (Daily.co / Jitsi Meet fallback)
+                            "frame-src 'self' https://*.daily.co https://*.pluot.blue https://meet.jit.si https://fairmeeting.net https://*.fairmeeting.net https://*.8x8.vc",
                             // Workers for Daily
                             "worker-src 'self' blob: https://*.daily.co https://*.pluot.blue",
                             // Child frames
-                            "child-src 'self' blob: https://*.daily.co https://*.pluot.blue",
+                            "child-src 'self' blob: https://*.daily.co https://*.pluot.blue https://meet.jit.si https://fairmeeting.net https://*.fairmeeting.net https://*.8x8.vc",
                             // Media - allow Daily media streams
                             "media-src 'self' blob: https://*.daily.co https://*.pluot.blue",
                             // Objects - disable plugins
@@ -89,9 +111,9 @@ const nextConfig: NextConfig = {
                     {
                         key: "Permissions-Policy",
                         value: [
-                            'camera=(self "https://*.daily.co" "https://*.pluot.blue")',  // Allow camera for video calls
-                            'microphone=(self "https://*.daily.co" "https://*.pluot.blue")', // Allow microphone for video calls
-                            "display-capture=(self)", // Allow screen sharing
+                            'camera=(self "https://*.daily.co" "https://*.pluot.blue" "https://meet.jit.si" "https://fairmeeting.net" "https://*.fairmeeting.net")',  // Allow camera for video calls
+                            'microphone=(self "https://*.daily.co" "https://*.pluot.blue" "https://meet.jit.si" "https://fairmeeting.net" "https://*.fairmeeting.net")', // Allow microphone for video calls
+                            'display-capture=(self "https://meet.jit.si" "https://fairmeeting.net" "https://*.fairmeeting.net")', // Allow screen sharing
                             "geolocation=()",        // Disable geolocation
                             "payment=()",            // Disable Payment Request API (using Paymob redirect)
                             "usb=()",                // Disable USB

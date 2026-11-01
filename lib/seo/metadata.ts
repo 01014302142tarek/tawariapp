@@ -13,8 +13,8 @@ export function generateLandingMetadata(lang: Locale): Metadata {
 
     return {
         title: isArabic
-            ? "تواري - الرعاية الصحية في متناول يدك"
-            : "TawariApp - Healthcare at Your Fingertips",
+            ? "طبيبي - الرعاية الصحية في متناول يدك"
+            : "Tabibi - Healthcare at Your Fingertips",
         description: isArabic ? siteConfig.description.ar : siteConfig.description.en,
         keywords: isArabic ? siteConfig.keywords.ar : siteConfig.keywords.en,
         alternates: {
@@ -27,8 +27,8 @@ export function generateLandingMetadata(lang: Locale): Metadata {
         },
         openGraph: {
             title: isArabic
-                ? "تواري - الرعاية الصحية في متناول يدك"
-                : "TawariApp - Healthcare at Your Fingertips",
+                ? "طبيبي - الرعاية الصحية في متناول يدك"
+                : "Tabibi - Healthcare at Your Fingertips",
             description: isArabic ? siteConfig.description.ar : siteConfig.description.en,
             url: `${BASE_URL}/${lang}`,
             locale: isArabic ? "ar_EG" : "en_US",
@@ -42,7 +42,7 @@ export function generateLandingMetadata(lang: Locale): Metadata {
 export function generateAboutMetadata(lang: Locale): Metadata {
     const isArabic = lang === "ar";
 
-    const title = isArabic ? "عن تواري" : "About TawariApp";
+    const title = isArabic ? "عن طبيبي" : "About Tabibi";
     const description = isArabic
         ? "تعرف على مهمتنا لتحويل الرعاية الصحية في مصر. نربط المرضى بأطباء مرخصين عبر استشارات فيديو آمنة."
         : "Learn about our mission to transform healthcare in Egypt. We connect patients with licensed doctors through secure video consultations.";
@@ -74,8 +74,8 @@ export function generateContactMetadata(lang: Locale): Metadata {
 
     const title = isArabic ? "اتصل بنا" : "Contact Us";
     const description = isArabic
-        ? "تواصل مع فريق دعم تواري. نحن هنا للمساعدة في أي أسئلة حول خدمات الطب عن بعد."
-        : "Get in touch with TawariApp support team. We're here to help with any questions about our telemedicine services.";
+        ? "تواصل مع فريق دعم طبيبي. نحن هنا للمساعدة في أي أسئلة حول خدمات الطب عن بعد."
+        : "Get in touch with Tabibi support team. We're here to help with any questions about our telemedicine services.";
 
     return {
         title,
@@ -104,8 +104,8 @@ export function generateTermsMetadata(lang: Locale): Metadata {
 
     const title = isArabic ? "شروط الخدمة" : "Terms of Service";
     const description = isArabic
-        ? "اقرأ شروط خدمة تواري. فهم حقوقك ومسؤولياتك عند استخدام منصة الطب عن بعد."
-        : "Read TawariApp's terms of service. Understand your rights and responsibilities when using our telemedicine platform.";
+        ? "اقرأ شروط خدمة طبيبي. فهم حقوقك ومسؤولياتك عند استخدام منصة الطب عن بعد."
+        : "Read Tabibi's terms of service. Understand your rights and responsibilities when using our telemedicine platform.";
 
     return {
         title,
@@ -132,8 +132,8 @@ export function generatePrivacyMetadata(lang: Locale): Metadata {
 
     const title = isArabic ? "سياسة الخصوصية" : "Privacy Policy";
     const description = isArabic
-        ? "تعرف على كيفية حماية تواري لخصوصيتك وبياناتك الصحية. التزامنا بأمان البيانات والامتثال لـ HIPAA."
-        : "Learn how TawariApp protects your privacy and health data. Our commitment to data security and HIPAA compliance.";
+        ? "تعرف على كيفية حماية طبيبي لخصوصيتك وبياناتك الصحية. التزامنا بأمان البيانات والامتثال لـ HIPAA."
+        : "Learn how Tabibi protects your privacy and health data. Our commitment to data security and HIPAA compliance.";
 
     return {
         title,
@@ -160,8 +160,8 @@ export function generateLoginMetadata(lang: Locale): Metadata {
 
     const title = isArabic ? "تسجيل الدخول" : "Login";
     const description = isArabic
-        ? "سجل الدخول إلى حسابك في تواري للوصول إلى استشارات الأطباء والوصفات الطبية."
-        : "Sign in to your TawariApp account to access doctor consultations and prescriptions.";
+        ? "سجل الدخول إلى حسابك في طبيبي للوصول إلى استشارات الأطباء والوصفات الطبية."
+        : "Sign in to your Tabibi account to access doctor consultations and prescriptions.";
 
     return {
         title,
@@ -188,8 +188,8 @@ export function generateRegisterMetadata(lang: Locale): Metadata {
 
     const title = isArabic ? "إنشاء حساب" : "Create Account";
     const description = isArabic
-        ? "انضم إلى تواري اليوم. سجل للوصول إلى استشارات الأطباء المرخصين عبر الفيديو في مصر."
-        : "Join TawariApp today. Sign up to access video consultations with licensed doctors in Egypt.";
+        ? "انضم إلى طبيبي اليوم. سجل للوصول إلى استشارات الأطباء المرخصين عبر الفيديو في مصر."
+        : "Join Tabibi today. Sign up to access video consultations with licensed doctors in Egypt.";
 
     return {
         title,

@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useI18n } from "@/app/i18n";
+import { useGlobalTheme } from "@/app/context/GlobalThemeContext";
 import { GlowingCard } from "@/components/ui/glowing-card";
 
 // Icons
@@ -56,6 +57,7 @@ export default function PreCallPage() {
     const params = useParams();
     const router = useRouter();
     const { isRTL, language } = useI18n();
+    const { isDark } = useGlobalTheme();
     const appointmentId = params.appointmentId as string;
 
     const videoRef = useRef<HTMLVideoElement>(null);
@@ -191,7 +193,7 @@ export default function PreCallPage() {
                 return <span className="text-red-500">{Icons.x}</span>;
             default:
                 return (
-                    <div className="w-5 h-5 border-2 border-teal-500 border-t-transparent rounded-full animate-spin" />
+                    <div className="w-5 h-5 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" />
                 );
         }
     };
@@ -220,12 +222,18 @@ export default function PreCallPage() {
     };
 
     return (
-        <div className={cn("min-h-screen bg-slate-950 flex flex-col", isRTL && "rtl")}>
+        <div className={cn("min-h-screen flex flex-col", isDark ? "bg-slate-950 text-white" : "bg-gray-50 text-slate-900", isRTL && "rtl")}>
             {/* Header */}
-            <header className="h-14 bg-slate-900/80 backdrop-blur border-b border-white/10 flex items-center justify-between px-4">
+            <header className={cn(
+                "h-14 backdrop-blur border-b flex items-center justify-between px-4 transition-colors",
+                isDark ? "bg-slate-900/80 border-white/10" : "bg-white/80 border-gray-200"
+            )}>
                 <button
                     onClick={handleBack}
-                    className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors"
+                    className={cn(
+                        "flex items-center gap-2 transition-colors",
+                        isDark ? "text-gray-400 hover:text-white" : "text-gray-600 hover:text-slate-900"
+                    )}
                 >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path
@@ -237,7 +245,7 @@ export default function PreCallPage() {
                     </svg>
                     <span>{isRTL ? "رجوع" : "Back"}</span>
                 </button>
-                <h1 className="text-white font-medium">
+                <h1 className={cn("font-semibold", isDark ? "text-white" : "text-slate-900")}>
                     {isRTL ? "التحقق من الأجهزة" : "Device Check"}
                 </h1>
                 <div className="w-20" />
@@ -247,8 +255,8 @@ export default function PreCallPage() {
                 <div className="w-full max-w-4xl">
                     <div className="grid md:grid-cols-2 gap-6">
                         {/* Video Preview */}
-                        <GlowingCard glowColor="teal" className="p-4" isDark>
-                            <h2 className="text-lg font-semibold text-white mb-4">
+                        <GlowingCard glowColor="amber" className="p-4" isDark={isDark}>
+                            <h2 className={cn("text-lg font-semibold mb-4", isDark ? "text-white" : "text-slate-900")}>
                                 {isRTL ? "معاينة الكاميرا" : "Camera Preview"}
                             </h2>
                             <div className="relative aspect-video bg-black rounded-xl overflow-hidden">
@@ -310,14 +318,14 @@ export default function PreCallPage() {
                             {isMicOn && deviceStatus.microphone === "granted" && (
                                 <div className="mt-4">
                                     <div className="flex items-center gap-2 mb-2">
-                                        <span className="text-teal-500">{Icons.microphone}</span>
-                                        <span className="text-sm text-gray-400">
+                                        <span className="text-amber-500">{Icons.microphone}</span>
+                                        <span className={cn("text-sm", isDark ? "text-gray-400" : "text-gray-600")}>
                                             {isRTL ? "مستوى الصوت" : "Audio Level"}
                                         </span>
                                     </div>
-                                    <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
+                                    <div className={cn("h-2 rounded-full overflow-hidden", isDark ? "bg-slate-800" : "bg-gray-200")}>
                                         <motion.div
-                                            className="h-full bg-gradient-to-r from-teal-500 to-emerald-500"
+                                            className="h-full bg-gradient-to-r from-amber-500 to-emerald-500"
                                             animate={{ width: `${audioLevel}%` }}
                                             transition={{ duration: 0.1 }}
                                         />
@@ -328,21 +336,21 @@ export default function PreCallPage() {
 
                         {/* Device Status */}
                         <div className="space-y-4">
-                            <GlowingCard glowColor="teal" className="p-4" isDark>
-                                <h2 className="text-lg font-semibold text-white mb-4">
+                            <GlowingCard glowColor="amber" className="p-4" isDark={isDark}>
+                                <h2 className={cn("text-lg font-semibold mb-4", isDark ? "text-white" : "text-slate-900")}>
                                     {isRTL ? "حالة الأجهزة" : "Device Status"}
                                 </h2>
                                 <div className="space-y-4">
                                     {/* Camera */}
-                                    <div className="flex items-center justify-between p-3 bg-slate-800/50 rounded-xl">
+                                    <div className={cn("flex items-center justify-between p-3 rounded-xl border", isDark ? "bg-slate-800/50 border-white/5" : "bg-gray-50 border-gray-200")}>
                                         <div className="flex items-center gap-3">
-                                            <span className="text-teal-500">{Icons.camera}</span>
-                                            <span className="text-white">
+                                            <span className="text-amber-500">{Icons.camera}</span>
+                                            <span className={isDark ? "text-white" : "text-slate-900"}>
                                                 {isRTL ? "الكاميرا" : "Camera"}
                                             </span>
                                         </div>
                                         <div className="flex items-center gap-2">
-                                            <span className="text-sm text-gray-400">
+                                            <span className={cn("text-sm", isDark ? "text-gray-400" : "text-gray-600")}>
                                                 {getStatusText(deviceStatus.camera, "camera")}
                                             </span>
                                             {getStatusIcon(deviceStatus.camera)}
@@ -350,15 +358,15 @@ export default function PreCallPage() {
                                     </div>
 
                                     {/* Microphone */}
-                                    <div className="flex items-center justify-between p-3 bg-slate-800/50 rounded-xl">
+                                    <div className={cn("flex items-center justify-between p-3 rounded-xl border", isDark ? "bg-slate-800/50 border-white/5" : "bg-gray-50 border-gray-200")}>
                                         <div className="flex items-center gap-3">
-                                            <span className="text-teal-500">{Icons.microphone}</span>
-                                            <span className="text-white">
+                                            <span className="text-amber-500">{Icons.microphone}</span>
+                                            <span className={isDark ? "text-white" : "text-slate-900"}>
                                                 {isRTL ? "الميكروفون" : "Microphone"}
                                             </span>
                                         </div>
                                         <div className="flex items-center gap-2">
-                                            <span className="text-sm text-gray-400">
+                                            <span className={cn("text-sm", isDark ? "text-gray-400" : "text-gray-600")}>
                                                 {getStatusText(deviceStatus.microphone, "microphone")}
                                             </span>
                                             {getStatusIcon(deviceStatus.microphone)}
@@ -366,15 +374,15 @@ export default function PreCallPage() {
                                     </div>
 
                                     {/* Speaker */}
-                                    <div className="flex items-center justify-between p-3 bg-slate-800/50 rounded-xl">
+                                    <div className={cn("flex items-center justify-between p-3 rounded-xl border", isDark ? "bg-slate-800/50 border-white/5" : "bg-gray-50 border-gray-200")}>
                                         <div className="flex items-center gap-3">
-                                            <span className="text-teal-500">{Icons.speaker}</span>
-                                            <span className="text-white">
+                                            <span className="text-amber-500">{Icons.speaker}</span>
+                                            <span className={isDark ? "text-white" : "text-slate-900"}>
                                                 {isRTL ? "مكبر الصوت" : "Speaker"}
                                             </span>
                                         </div>
                                         <div className="flex items-center gap-2">
-                                            <span className="text-sm text-gray-400">
+                                            <span className={cn("text-sm", isDark ? "text-gray-400" : "text-gray-600")}>
                                                 {getStatusText(deviceStatus.speaker, "speaker")}
                                             </span>
                                             {getStatusIcon(deviceStatus.speaker)}
@@ -386,23 +394,23 @@ export default function PreCallPage() {
                             {/* Permission Warning */}
                             {(deviceStatus.camera === "denied" ||
                                 deviceStatus.microphone === "denied") && (
-                                <GlowingCard glowColor="amber" className="p-4" isDark>
+                                <GlowingCard glowColor="amber" className="p-4" isDark={isDark}>
                                     <div className="flex gap-3">
                                         <span className="text-amber-500">{Icons.warning}</span>
                                         <div>
-                                            <h3 className="text-amber-400 font-medium mb-1">
+                                            <h3 className={cn("font-medium mb-1", isDark ? "text-amber-400" : "text-amber-800")}>
                                                 {isRTL
                                                     ? "صلاحيات مطلوبة"
                                                     : "Permissions Required"}
                                             </h3>
-                                            <p className="text-sm text-gray-400">
+                                            <p className={cn("text-sm", isDark ? "text-gray-400" : "text-gray-600")}>
                                                 {isRTL
                                                     ? "يرجى السماح بالوصول إلى الكاميرا والميكروفون من إعدادات المتصفح للانضمام إلى المكالمة."
                                                     : "Please allow camera and microphone access in your browser settings to join the call."}
                                             </p>
                                             <button
                                                 onClick={checkDevices}
-                                                className="mt-3 px-4 py-2 bg-amber-500/20 text-amber-400 rounded-lg hover:bg-amber-500/30 transition-colors text-sm"
+                                                className="mt-3 px-4 py-2 bg-amber-500/20 text-amber-500 rounded-lg hover:bg-amber-500/30 transition-colors text-sm font-medium"
                                             >
                                                 {isRTL ? "إعادة المحاولة" : "Try Again"}
                                             </button>
@@ -418,8 +426,8 @@ export default function PreCallPage() {
                                 className={cn(
                                     "w-full py-4 rounded-xl font-semibold text-lg transition-all",
                                     allDevicesReady
-                                        ? "bg-gradient-to-r from-teal-500 to-emerald-500 text-white hover:from-teal-600 hover:to-emerald-600 shadow-lg shadow-teal-500/25"
-                                        : "bg-slate-800 text-gray-500 cursor-not-allowed"
+                                        ? "bg-gradient-to-r from-amber-500 to-emerald-500 text-white hover:from-amber-600 hover:to-emerald-600 shadow-lg shadow-amber-500/25"
+                                        : isDark ? "bg-slate-800 text-gray-500 cursor-not-allowed" : "bg-gray-200 text-gray-400 cursor-not-allowed"
                                 )}
                             >
                                 {allDevicesReady
@@ -432,8 +440,8 @@ export default function PreCallPage() {
                             </button>
 
                             {/* Tips */}
-                            <div className="text-sm text-gray-500 space-y-1">
-                                <p>
+                            <div className={cn("text-sm space-y-1", isDark ? "text-gray-500" : "text-gray-600")}>
+                                <p className="font-medium">
                                     {isRTL ? "💡 نصائح:" : "💡 Tips:"}
                                 </p>
                                 <ul className="list-disc list-inside space-y-1">

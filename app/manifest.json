@@ -1,6 +1,6 @@
 {
-  "name": "TawariApp - Healthcare at Your Fingertips",
-  "short_name": "TawariApp",
+  "name": "Tabibi - Healthcare at Your Fingertips",
+  "short_name": "Tabibi",
   "description": "Connect with licensed Egyptian doctors for video consultations. Get medical advice, prescriptions, and care from anywhere.",
   "start_url": "/",
   "icons": [
@@ -18,6 +18,6 @@
     }
   ],
   "theme_color": "#f59e0b",
-  "background_color": "#0d9488",
+  "background_color": "#0a0a0a",
   "display": "standalone"
 }

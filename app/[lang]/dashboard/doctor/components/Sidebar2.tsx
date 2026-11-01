@@ -5,8 +5,9 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
-import { cn } from "@/lib/utils";
 import { useTheme } from "../context/ThemeContext";
+import { Logo, LogoIcon } from "@/components/ui/Logo";
+import { cn } from "@/lib/utils";
 
 const navItems = [
     {
@@ -81,16 +82,8 @@ export default function Sidebar2() {
                 "h-16 flex items-center px-6 border-b",
                 isDark ? "border-white/5" : "border-gray-200"
             )}>
-                <Link href="/" className="flex items-center gap-3 group">
-                    <div className="relative w-9 h-9 rounded-xl overflow-hidden shadow-lg shadow-teal-500/20">
-                        <Image
-                            src="/logo.png"
-                            alt="TawariApp"
-                            fill
-                            className="object-cover"
-                        />
-                    </div>
-                    <span className={cn("text-lg font-bold", isDark ? "text-white" : "text-slate-900")}>TawariApp</span>
+                <Link href="/" className="flex items-center group">
+                    <Logo isDark={isDark} size="md" />
                 </Link>
             </div>
 
@@ -106,7 +99,7 @@ export default function Sidebar2() {
                                     className={cn(
                                         "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200",
                                         isActive
-                                            ? "bg-teal-500/10 text-teal-500 border border-teal-500/20"
+                                            ? "bg-blue-500/10 text-blue-400 border border-blue-500/20 font-semibold"
                                             : isDark
                                                 ? "text-gray-400 hover:text-white hover:bg-white/5"
                                                 : "text-gray-600 hover:text-slate-900 hover:bg-gray-100"
@@ -115,7 +108,7 @@ export default function Sidebar2() {
                                     {item.icon}
                                     <span className="font-medium text-sm flex-1">{item.name}</span>
                                     {item.count && (
-                                        <span className="w-5 h-5 flex items-center justify-center text-xs font-bold text-white bg-teal-500 rounded-full">
+                                        <span className="w-5 h-5 flex items-center justify-center text-xs font-bold text-white bg-amber-500 rounded-full">
                                             {item.count}
                                         </span>
                                     )}

@@ -1,7 +1,7 @@
 /**
  * Paymob Payment Gateway Client
  *
- * Egypt's leading payment gateway integration for TawariApp
+ * Egypt's leading payment gateway integration for Tabibi
  * Supports: Credit/Debit cards, Mobile wallets, Bank transfers
  *
  * Documentation: https://docs.paymob.com/docs/accept-standard-redirect

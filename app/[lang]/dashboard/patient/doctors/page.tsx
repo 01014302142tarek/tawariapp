@@ -290,7 +290,7 @@ export default function DoctorsPage() {
     if (!mounted) {
         return (
             <div className="p-4 md:p-6 lg:p-8 flex items-center justify-center min-h-[60vh]">
-                <div className="animate-spin w-8 h-8 border-2 border-teal-500 border-t-transparent rounded-full" />
+                <div className="animate-spin w-8 h-8 border-2 border-amber-500 border-t-transparent rounded-full" />
             </div>
         );
     }
@@ -307,7 +307,7 @@ export default function DoctorsPage() {
                         {/* Header */}
                         <div className="mb-6 md:mb-8">
                             <h1 className={cn("text-xl md:text-2xl font-bold flex items-center gap-2 md:gap-3", textPrimary)}>
-                                <span className="w-8 h-8 md:w-10 md:h-10 rounded-lg md:rounded-xl bg-teal-500/10 flex items-center justify-center text-teal-500">
+                                <span className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-br from-[#38BDF8] to-[#0284C7] flex items-center justify-center text-white shadow-[0_0_15px_rgba(14,165,233,0.5)] border border-sky-300/40">
                                     {Icons.users}
                                 </span>
                                 {t.patientDashboard.doctorsPage.title}
@@ -355,14 +355,14 @@ export default function DoctorsPage() {
                                     className={cn(
                                         "flex items-center gap-2 px-4 py-3 rounded-xl border transition-colors",
                                         showFilters
-                                            ? "bg-teal-500 text-white border-teal-500"
-                                            : cn(inputBg, border, textSecondary, "hover:border-teal-500")
+                                            ? "bg-amber-500 text-white border-amber-500"
+                                            : cn(inputBg, border, textSecondary, "hover:border-amber-500")
                                     )}
                                 >
                                     {Icons.filter}
                                     <span className="font-medium">{isRTL ? "فلترة" : "Filters"}</span>
                                     {hasActiveFilters && (
-                                        <span className="w-2 h-2 bg-teal-400 rounded-full" />
+                                        <span className="w-2 h-2 bg-amber-400 rounded-full" />
                                     )}
                                 </button>
                             </div>
@@ -376,7 +376,7 @@ export default function DoctorsPage() {
                                         exit={{ opacity: 0, height: 0 }}
                                         className="overflow-hidden"
                                     >
-                                        <GlowingCard isDark={isDark} glowColor="teal" className="p-4">
+                                        <GlowingCard isDark={isDark} glowColor="amber" className="p-4">
                                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                                                 {/* Specialization Filter */}
                                                 <div>
@@ -491,7 +491,7 @@ export default function DoctorsPage() {
                                 ))}
                             </div>
                         ) : doctors.length === 0 ? (
-                            <GlowingCard isDark={isDark} glowColor="teal" className="p-12 text-center">
+                            <GlowingCard isDark={isDark} glowColor="amber" className="p-12 text-center">
                                 <div className={cn("w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4", isDark ? "bg-slate-900" : "bg-gray-100", textMuted)}>
                                     {Icons.users}
                                 </div>
@@ -502,7 +502,7 @@ export default function DoctorsPage() {
                                 {(hasActiveFilters || filters.search) && (
                                     <button
                                         onClick={clearFilters}
-                                        className="mt-4 px-4 py-2 bg-teal-500 text-white rounded-lg text-sm font-medium hover:bg-teal-600 transition-colors"
+                                        className="mt-4 px-4 py-2 bg-amber-500 text-white rounded-lg text-sm font-medium hover:bg-amber-600 transition-colors"
                                     >
                                         {isRTL ? "مسح الفلاتر" : "Clear Filters"}
                                     </button>
@@ -515,9 +515,9 @@ export default function DoctorsPage() {
                                         key={doctor.id}
                                         initial={false}
                                     >
-                                        <GlowingCard isDark={isDark} glowColor="teal" className="p-4 h-full flex flex-col">
+                                        <GlowingCard isDark={isDark} glowColor="amber" className="p-4 h-full flex flex-col">
                                             <div className="flex items-start gap-4 mb-4">
-                                                <div className="relative w-16 h-16 rounded-xl overflow-hidden border-2 border-teal-500/30 flex-shrink-0">
+                                                <div className="relative w-16 h-16 rounded-xl overflow-hidden border-2 border-amber-500/30 flex-shrink-0">
                                                     {doctor.avatar_url ? (
                                                         <Image
                                                             src={doctor.avatar_url}
@@ -527,7 +527,7 @@ export default function DoctorsPage() {
                                                             sizes="64px"
                                                         />
                                                     ) : (
-                                                        <div className={cn("w-full h-full flex items-center justify-center text-2xl font-bold", isDark ? "bg-teal-500/10 text-teal-400" : "bg-teal-50 text-teal-600")}>
+                                                        <div className={cn("w-full h-full flex items-center justify-center text-2xl font-bold", isDark ? "bg-amber-500/10 text-amber-400" : "bg-amber-50 text-amber-600")}>
                                                             {doctor.full_name.charAt(0)}
                                                         </div>
                                                     )}
@@ -540,7 +540,13 @@ export default function DoctorsPage() {
                                                         {doctor.full_name}
                                                     </h3>
                                                     <p className={cn("text-sm", textSecondary)}>
-                                                        {doctor.specializations.join(", ") || (isRTL ? "طب عام" : "General Practice")}
+                                                        {doctor.specializations
+                                                            .map(s => {
+                                                                if (!isRTL) return s;
+                                                                const found = specializations.find(sp => sp.name_en.toLowerCase() === s.toLowerCase());
+                                                                return found ? found.name_ar : s;
+                                                            })
+                                                            .join(", ") || (isRTL ? "طب عام" : "General Practice")}
                                                     </p>
                                                     {doctor.years_of_experience && (
                                                         <p className={cn("text-xs mt-1", textMuted)}>
@@ -576,7 +582,7 @@ export default function DoctorsPage() {
                                             <div className="mt-auto flex items-center justify-between pt-4 border-t border-white/5">
                                                 <div>
                                                     {doctor.consultation_fee && (
-                                                        <p className="text-teal-500 font-semibold">
+                                                        <p className="text-amber-500 font-semibold">
                                                             {formatCurrency(doctor.consultation_fee)}
                                                             <span className={cn("text-xs font-normal ml-1", textMuted)}>
                                                                 {t.patientDashboard.doctorsPage.perSession}
@@ -586,7 +592,7 @@ export default function DoctorsPage() {
                                                 </div>
                                                 <button
                                                     onClick={() => handleBookDoctor(doctor)}
-                                                    className="px-4 py-2 bg-teal-500 hover:bg-teal-600 text-white rounded-lg font-medium text-sm transition-colors"
+                                                    className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg font-medium text-sm transition-colors"
                                                 >
                                                     {t.patientDashboard.doctorsPage.bookNow}
                                                 </button>
@@ -618,9 +624,9 @@ export default function DoctorsPage() {
                         {booking.doctor && (
                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                                 {/* Doctor Info */}
-                                <GlowingCard isDark={isDark} glowColor="teal" className="p-6">
+                                <GlowingCard isDark={isDark} glowColor="amber" className="p-6">
                                     <div className="flex items-start gap-4 mb-6">
-                                        <div className="relative w-20 h-20 rounded-xl overflow-hidden border-2 border-teal-500/30 flex-shrink-0">
+                                        <div className="relative w-20 h-20 rounded-xl overflow-hidden border-2 border-amber-500/30 flex-shrink-0">
                                             {booking.doctor.avatar_url ? (
                                                 <Image
                                                     src={booking.doctor.avatar_url}
@@ -630,7 +636,7 @@ export default function DoctorsPage() {
                                                     sizes="80px"
                                                 />
                                             ) : (
-                                                <div className={cn("w-full h-full flex items-center justify-center text-3xl font-bold", isDark ? "bg-teal-500/10 text-teal-400" : "bg-teal-50 text-teal-600")}>
+                                                <div className={cn("w-full h-full flex items-center justify-center text-3xl font-bold", isDark ? "bg-amber-500/10 text-amber-400" : "bg-amber-50 text-amber-600")}>
                                                     {booking.doctor.full_name.charAt(0)}
                                                 </div>
                                             )}
@@ -653,7 +659,7 @@ export default function DoctorsPage() {
                                                 </div>
                                             )}
                                             {booking.doctor.consultation_fee && (
-                                                <p className="text-teal-500 font-semibold mt-2">
+                                                <p className="text-amber-500 font-semibold mt-2">
                                                     {formatCurrency(booking.doctor.consultation_fee)}
                                                     <span className={cn("text-xs font-normal ml-1", textMuted)}>
                                                         {t.patientDashboard.doctorsPage.perSession}
@@ -669,7 +675,7 @@ export default function DoctorsPage() {
                                 </GlowingCard>
 
                                 {/* Booking Form */}
-                                <GlowingCard isDark={isDark} glowColor="teal" className="p-6">
+                                <GlowingCard isDark={isDark} glowColor="amber" className="p-6">
                                     {/* Date Selection */}
                                     <div className="mb-6">
                                         <label className={cn("block text-sm font-medium mb-2", textSecondary)}>
@@ -696,7 +702,7 @@ export default function DoctorsPage() {
                                         </label>
                                         {booking.loadingSlots ? (
                                             <div className="flex items-center justify-center py-8">
-                                                <div className="animate-spin w-6 h-6 border-2 border-teal-500 border-t-transparent rounded-full" />
+                                                <div className="animate-spin w-6 h-6 border-2 border-amber-500 border-t-transparent rounded-full" />
                                             </div>
                                         ) : booking.availableSlots.length === 0 ? (
                                             <p className={cn("text-center py-8", textMuted)}>
@@ -711,7 +717,7 @@ export default function DoctorsPage() {
                                                         className={cn(
                                                             "px-3 py-2 rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-1",
                                                             booking.selectedSlot?.start === slot.start
-                                                                ? "bg-teal-500 text-white"
+                                                                ? "bg-amber-500 text-white"
                                                                 : isDark
                                                                     ? "bg-white/5 hover:bg-white/10 text-gray-300"
                                                                     : "bg-gray-100 hover:bg-gray-200 text-gray-700"
@@ -751,7 +757,7 @@ export default function DoctorsPage() {
                                         className={cn(
                                             "w-full py-3 rounded-xl font-semibold transition-all flex items-center justify-center gap-2",
                                             booking.selectedSlot && bookingStatus === "idle"
-                                                ? "bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-400 hover:to-teal-500 text-white shadow-lg shadow-teal-500/20"
+                                                ? "bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-white shadow-lg shadow-amber-500/20"
                                                 : bookingStatus === "success"
                                                     ? "bg-green-500 text-white"
                                                     : bookingStatus === "error"

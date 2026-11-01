@@ -146,7 +146,7 @@ const UserDropdown = ({
                 )}
             >
                 <div className="relative">
-                    <div className="w-9 h-9 md:w-10 md:h-10 rounded-full overflow-hidden border-2 border-teal-500/30">
+                    <div className="w-9 h-9 md:w-10 md:h-10 rounded-full overflow-hidden border-2 border-amber-500/30">
                         <Image
                             src={image}
                             alt={name}
@@ -175,7 +175,7 @@ const UserDropdown = ({
                         className={cn(
                             "absolute top-full mt-2 w-64 rounded-xl shadow-2xl overflow-hidden z-[100]",
                             isRTL ? "left-0" : "right-0",
-                            isDark ? "bg-slate-900 border border-white/10" : "bg-white border border-gray-200"
+                            isDark ? "bg-[#0B152B] border border-blue-500/30 shadow-2xl" : "bg-white border border-gray-200"
                         )}
                     >
                         <div className="p-2">
@@ -222,7 +222,7 @@ const UserDropdown = ({
                                                     isDark
                                                         ? "text-gray-400 hover:text-white hover:bg-white/5"
                                                         : "text-gray-600 hover:text-gray-900 hover:bg-gray-100",
-                                                    themeMode === option.mode && (isDark ? "text-teal-400" : "text-teal-600")
+                                                    themeMode === option.mode && (isDark ? "text-blue-400 font-semibold" : "text-blue-600 font-semibold")
                                                 )}
                                             >
                                                 <div className="flex items-center gap-3">
@@ -230,7 +230,7 @@ const UserDropdown = ({
                                                     <span className="text-sm">{option.label}</span>
                                                 </div>
                                                 {themeMode === option.mode && (
-                                                    <span className={isDark ? "text-teal-400" : "text-teal-600"}>
+                                                    <span className={isDark ? "text-blue-400" : "text-blue-600"}>
                                                         {Icons.check}
                                                     </span>
                                                 )}
@@ -283,7 +283,7 @@ const UserDropdown = ({
                                                     isDark
                                                         ? "text-gray-400 hover:text-white hover:bg-white/5"
                                                         : "text-gray-600 hover:text-gray-900 hover:bg-gray-100",
-                                                    language === option.code && (isDark ? "text-teal-400" : "text-teal-600")
+                                                    language === option.code && (isDark ? "text-blue-400 font-semibold" : "text-blue-600 font-semibold")
                                                 )}
                                             >
                                                 <div className="flex items-center gap-3">
@@ -291,7 +291,7 @@ const UserDropdown = ({
                                                     <span className="text-sm">{option.label}</span>
                                                 </div>
                                                 {language === option.code && (
-                                                    <span className={isDark ? "text-teal-400" : "text-teal-600"}>
+                                                    <span className={isDark ? "text-blue-400" : "text-blue-600"}>
                                                         {Icons.check}
                                                     </span>
                                                 )}
@@ -334,12 +334,13 @@ const UserDropdown = ({
 export default function Header({ onMenuClick }: { onMenuClick?: () => void }) {
     const { theme, themeMode, setThemeMode } = useTheme();
     const { isRTL, language } = useI18n();
-    const { profile, signOut, isLoading } = useAuth();
+    const { user, profile, signOut, isLoading } = useAuth();
     const isDark = theme === "dark";
 
-    // Get user's name and avatar from profile
-    // Show "..." during loading, then fallback to "Admin" if no name
-    const userName = profile?.profile.full_name || (isLoading ? "..." : "Admin");
+    // Get user's name and avatar from profile with user_metadata fallback
+    const userName = profile?.profile?.full_name || 
+        (user?.user_metadata as any)?.full_name || 
+        (user?.email ? user.email.split('@')[0] : (isLoading ? "..." : "Admin"));
     // Ensure avatar is a valid non-empty string, otherwise use default
     const avatarUrl = profile?.profile.avatar_url;
     const userAvatar = avatarUrl && avatarUrl.trim() !== "" ? avatarUrl : DEFAULT_AVATAR;

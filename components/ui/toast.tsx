@@ -73,9 +73,9 @@ const typeStyles: Record<ToastType, { bg: string; icon: string; border: string }
         border: "border-amber-500/20",
     },
     info: {
-        bg: "bg-teal-500/10",
-        icon: "text-teal-500",
-        border: "border-teal-500/20",
+        bg: "bg-amber-500/10",
+        icon: "text-amber-500",
+        border: "border-amber-500/20",
     },
 };
 
@@ -256,7 +256,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
                                     </button>
                                     <button
                                         onClick={handleConfirm}
-                                        className="px-4 py-2 rounded-lg text-sm font-medium bg-teal-500 text-white hover:bg-teal-600 transition-colors"
+                                        className="px-4 py-2 rounded-lg text-sm font-semibold bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-black shadow-md shadow-amber-500/20 transition-all"
                                     >
                                         Confirm
                                     </button>

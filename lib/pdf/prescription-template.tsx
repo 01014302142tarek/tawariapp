@@ -28,7 +28,7 @@ const styles = StyleSheet.create({
         marginBottom: 20,
         paddingBottom: 15,
         borderBottomWidth: 2,
-        borderBottomColor: "#0d9488", // teal-600
+        borderBottomColor: "#D97706", // amber-600
     },
     logo: {
         width: 80,
@@ -41,21 +41,21 @@ const styles = StyleSheet.create({
     title: {
         fontSize: 24,
         fontWeight: "bold",
-        color: "#0d9488",
+        color: "#D97706",
         marginBottom: 4,
     },
     doctorSection: {
-        backgroundColor: "#f0fdfa", // teal-50
+        backgroundColor: "#fffbeb", // amber-50
         padding: 15,
         marginBottom: 20,
         borderRadius: 8,
         borderWidth: 1,
-        borderColor: "#99f6e4", // teal-200
+        borderColor: "#fde68a", // amber-200
     },
     doctorName: {
         fontSize: 16,
         fontWeight: "bold",
-        color: "#134e4a", // teal-900
+        color: "#78350f", // amber-900
         marginBottom: 8,
     },
     doctorDetail: {
@@ -113,11 +113,11 @@ const styles = StyleSheet.create({
     medicationsHeader: {
         fontSize: 14,
         fontWeight: "bold",
-        color: "#0d9488",
+        color: "#D97706",
         marginBottom: 15,
         paddingBottom: 5,
         borderBottomWidth: 1,
-        borderBottomColor: "#0d9488",
+        borderBottomColor: "#D97706",
     },
     medicationCard: {
         backgroundColor: "#fafafa",
@@ -196,7 +196,7 @@ const styles = StyleSheet.create({
     rxSymbol: {
         fontSize: 28,
         fontWeight: "bold",
-        color: "#0d9488",
+        color: "#D97706",
         marginRight: 10,
     },
 });
@@ -406,8 +406,8 @@ export function PrescriptionPdf({ data, logoBase64 }: PrescriptionPdfProps): Rea
                         </Text>
                     </View>
                     <Text style={styles.footerNote}>
-                        This is an electronically generated prescription from Tawari
-                        Telemedicine Platform. For verification, contact support@tawari.app
+                        This is an electronically generated prescription from Tabibi
+                        Telemedicine Platform. For verification, contact support@tabibi.com
                     </Text>
                 </View>
             </Page>

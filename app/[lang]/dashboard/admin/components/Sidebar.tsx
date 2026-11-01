@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import { useTheme } from "../context/ThemeContext";
 import { useI18n } from "@/app/i18n";
 import { useAdminSidebar } from "../context/SidebarContext";
+import { Logo, LogoIcon } from "@/components/ui/Logo";
 
 
 
@@ -35,10 +36,10 @@ function Tooltip({ children, label, isExpanded, isRTL }: { children: React.React
                             isRTL ? "right-full mr-3" : "left-full ml-3"
                         )}
                     >
-                        <div className="bg-slate-900 text-white text-sm font-medium px-3 py-1.5 rounded-lg shadow-xl whitespace-nowrap">
+                        <div className="bg-[#0B152B] border border-blue-500/30 text-white text-sm font-medium px-3 py-1.5 rounded-lg shadow-xl whitespace-nowrap">
                             {label}
                             <div className={cn(
-                                "absolute top-1/2 -translate-y-1/2 w-2 h-2 bg-slate-900 rotate-45",
+                                "absolute top-1/2 -translate-y-1/2 w-2 h-2 bg-[#0B152B] border-l border-t border-blue-500/30 rotate-45",
                                 isRTL ? "right-0 translate-x-1" : "left-0 -translate-x-1"
                             )} />
                         </div>
@@ -179,36 +180,13 @@ export default function Sidebar({ isMobileOpen, onClose }: { isMobileOpen?: bool
                 <div className={cn("h-16 flex items-center flex-shrink-0")}>
                     <Link
                         href="/"
-                        className="flex items-center gap-3 group w-full"
-                        style={{ paddingLeft: isRTL ? 0 : (collapsedWidth - 40) / 2, paddingRight: isRTL ? (collapsedWidth - 40) / 2 : 0 }}
+                        className="flex items-center group w-full overflow-hidden"
+                        style={{ paddingLeft: isRTL ? 0 : (isExpanded ? 16 : (collapsedWidth - 36) / 2), paddingRight: isRTL ? (isExpanded ? 16 : (collapsedWidth - 36) / 2) : 0 }}
                     >
-                        <motion.div
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            className="relative w-10 h-10 rounded-xl overflow-hidden flex-shrink-0"
-                            style={{
-                                boxShadow: isDark
-                                    ? "0 0 20px rgba(20, 184, 166, 0.3)"
-                                    : "0 4px 12px rgba(0, 0, 0, 0.1)"
-                            }}
-                        >
-                            <Image
-                                src="/logo.png"
-                                alt="TawariApp"
-                                fill
-                                className="object-cover"
-                            />
-                            <div className="absolute inset-0 bg-gradient-to-tr from-teal-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                        </motion.div>
-                        {isExpanded && (
-                            <span
-                                className={cn(
-                                    "text-lg font-bold whitespace-nowrap",
-                                    isDark ? "text-white" : "text-slate-900"
-                                )}
-                            >
-                                Admin Panel
-                            </span>
+                        {isExpanded ? (
+                            <Logo isDark={isDark} size="md" />
+                        ) : (
+                            <LogoIcon size="md" isDark={isDark} />
                         )}
                     </Link>
                 </div>
@@ -238,8 +216,8 @@ export default function Sidebar({ isMobileOpen, onClose }: { isMobileOpen?: bool
                                                 "flex items-center py-2.5 rounded-xl transition-all duration-200 relative mx-3",
                                                 isActive
                                                     ? isDark
-                                                        ? "bg-gradient-to-r from-teal-500/20 to-teal-500/5 text-teal-400"
-                                                        : "bg-gradient-to-r from-teal-500/15 to-teal-500/5 text-teal-600"
+                                                        ? "bg-gradient-to-r from-blue-600/25 to-blue-600/5 text-blue-400 font-semibold shadow-[inset_0_0_12px_rgba(37,99,235,0.15)]"
+                                                        : "bg-gradient-to-r from-blue-600/15 to-blue-600/5 text-blue-600 font-semibold"
                                                     : isDark
                                                         ? "text-gray-400 hover:text-white hover:bg-white/5"
                                                         : "text-gray-600 hover:text-slate-900 hover:bg-gray-100/80"
@@ -251,7 +229,7 @@ export default function Sidebar({ isMobileOpen, onClose }: { isMobileOpen?: bool
                                                     className={cn(
                                                         "absolute top-1/2 -translate-y-1/2 w-1 h-6",
                                                         isRTL ? "right-0 rounded-l-full" : "left-0 rounded-r-full",
-                                                        isDark ? "bg-teal-400" : "bg-teal-500"
+                                                        isDark ? "bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.8)]" : "bg-blue-600"
                                                     )}
                                                     transition={{ duration: 0.3, ease: "easeInOut" }}
                                                 />
@@ -260,7 +238,7 @@ export default function Sidebar({ isMobileOpen, onClose }: { isMobileOpen?: bool
                                             <div
                                                 className={cn(
                                                     "flex items-center justify-center flex-shrink-0",
-                                                    isActive && "drop-shadow-[0_0_8px_rgba(20,184,166,0.5)]"
+                                                    isActive && "drop-shadow-[0_0_8px_rgba(245,158,11,0.5)]"
                                                 )}
                                                 style={{ width: collapsedWidth - 24, minWidth: collapsedWidth - 24 }}
                                             >
@@ -290,7 +268,7 @@ export default function Sidebar({ isMobileOpen, onClose }: { isMobileOpen?: bool
                                                     }}
                                                     transition={{ duration: 0.2 }}
                                                     className={cn(
-                                                        "flex items-center justify-center text-xs font-bold text-white bg-gradient-to-r from-teal-500 to-teal-400 rounded-full shadow-lg shadow-teal-500/30",
+                                                        "flex items-center justify-center text-xs font-bold text-black bg-gradient-to-r from-amber-500 to-amber-400 rounded-full shadow-lg shadow-amber-500/30",
                                                         isExpanded ? "w-5 h-5 ml-3" : "w-4 h-4 text-[10px]"
                                                     )}
                                                 >

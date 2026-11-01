@@ -6,6 +6,8 @@ import Image from "next/image";
 import { useI18n } from "@/app/i18n";
 import { useGlobalTheme } from "@/app/context/GlobalThemeContext";
 import type { DoctorProfileDetail } from "@/app/actions/appointments";
+import { useAuth } from "@/app/context/AuthContext";
+import { Logo } from "@/components/ui/Logo";
 
 // Translations
 const translations = {
@@ -52,7 +54,7 @@ const translations = {
         footerPrivacy: "Privacy Policy",
         footerTerms: "Terms of Service",
         footerPaymentMethods: "Payment Methods",
-        footerCopyright: "© 2024 TawariApp. All rights reserved.",
+        footerCopyright: "© 2025 Tabibi. All rights reserved.",
     },
     ar: {
         backToDoctors: "العودة للأطباء",
@@ -97,61 +99,16 @@ const translations = {
         footerPrivacy: "سياسة الخصوصية",
         footerTerms: "شروط الخدمة",
         footerPaymentMethods: "طرق الدفع",
-        footerCopyright: "© 2024 تواري. جميع الحقوق محفوظة.",
+        footerCopyright: "© 2025 طبيبي. جميع الحقوق محفوظة.",
     },
 };
-
-// Custom Logo Component
-const LogoFull = ({ className = "", isDark = true }: { className?: string; isDark?: boolean }) => (
-    <div className={`flex items-center gap-2 ${className}`}>
-        <svg className="h-10 w-10 flex-shrink-0" viewBox="0 0 100 90" fill="none">
-            <defs>
-                <linearGradient id="heartGradientProfile" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#2DD4BF" />
-                    <stop offset="50%" stopColor="#14B8A6" />
-                    <stop offset="100%" stopColor="#0D9488" />
-                </linearGradient>
-                <linearGradient id="heartShadowProfile" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#0F766E" />
-                    <stop offset="100%" stopColor="#134E4A" />
-                </linearGradient>
-            </defs>
-            <path
-                d="M50 85 C50 85 10 55 10 30 C10 15 22 5 35 5 C42 5 48 10 50 15 C52 10 58 5 65 5 C78 5 90 15 90 30 C90 55 50 85 50 85Z"
-                fill="url(#heartShadowProfile)"
-                transform="translate(2, 2)"
-                opacity="0.3"
-            />
-            <path
-                d="M50 85 C50 85 10 55 10 30 C10 15 22 5 35 5 C42 5 48 10 50 15 C52 10 58 5 65 5 C78 5 90 15 90 30 C90 55 50 85 50 85Z"
-                fill="none"
-                stroke="url(#heartGradientProfile)"
-                strokeWidth="6"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-            />
-            <path
-                d="M5 45 L25 45 L35 25 L50 65 L65 35 L75 45 L95 45"
-                fill="none"
-                stroke="#F59E0B"
-                strokeWidth="5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-            />
-        </svg>
-        <span className="text-xl font-bold tracking-tight">
-            <span className={isDark ? "text-white" : "text-slate-800"}>Tawari</span>
-            <span className={isDark ? "text-gray-400" : "text-slate-500"}>App</span>
-        </span>
-    </div>
-);
 
 // Icons
 const Icons = {
     menu: <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>,
     close: <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>,
     back: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>,
-    verified: <svg className="w-5 h-5 text-teal-500" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.403 12.652a3 3 0 000-5.304 3 3 0 00-3.75-3.751 3 3 0 00-5.305 0 3 3 0 00-3.751 3.75 3 3 0 000 5.305 3 3 0 003.75 3.751 3 3 0 005.305 0 3 3 0 003.751-3.75zm-2.546-4.46a.75.75 0 00-1.214-.883l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clipRule="evenodd" /></svg>,
+    verified: <svg className="w-5 h-5 text-amber-500" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.403 12.652a3 3 0 000-5.304 3 3 0 00-3.75-3.751 3 3 0 00-5.305 0 3 3 0 00-3.751 3.75 3 3 0 000 5.305 3 3 0 003.75 3.751 3 3 0 005.305 0 3 3 0 003.751-3.75zm-2.546-4.46a.75.75 0 00-1.214-.883l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clipRule="evenodd" /></svg>,
     language: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" /></svg>,
     briefcase: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>,
     academic: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l9-5-9-5-9 5 9 5z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" /></svg>,
@@ -168,7 +125,7 @@ function ThemeToggle() {
             onClick={toggleTheme}
             className={`flex items-center justify-center w-10 h-10 rounded-full transition-all duration-300 ${isDark
                 ? 'bg-white/5 hover:bg-white/10 border border-white/10 text-white hover:text-amber-300'
-                : 'bg-teal-500 hover:bg-teal-600 border border-teal-500 text-slate-600 hover:text-slate-800'
+                : 'bg-amber-500 hover:bg-amber-600 border border-amber-500 text-white'
                 }`}
             aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
         >
@@ -256,16 +213,17 @@ export default function DoctorProfileClient({ doctor, lang }: DoctorProfileClien
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
     // Theme-aware class helpers
-    const bgMain = isDark ? 'bg-[#0F172A]' : 'bg-[#F8FAFC]';
+    const bgMain = isDark ? 'bg-[#060B18]' : 'bg-[#F8FAFC]';
     const textPrimary = isDark ? 'text-white' : 'text-slate-900';
     const textSecondary = isDark ? 'text-gray-400' : 'text-slate-600';
     const textMuted = isDark ? 'text-gray-500' : 'text-slate-500';
     const borderColor = isDark ? 'border-white/5' : 'border-slate-200';
-    const navBg = isDark ? 'bg-[#0F172A]/80' : 'bg-white/90';
+    const navBg = isDark ? 'bg-[#060B18]/85' : 'bg-white/90';
     const cardBg = isDark
-        ? 'bg-[#1E293B]/50 border border-white/5'
+        ? 'bg-[#0B152B]/85 border border-blue-500/30 shadow-[0_0_25px_rgba(37,99,235,0.18)]'
         : 'bg-white border border-slate-200 shadow-lg';
 
+    const { user } = useAuth();
     const doctorName = formatDoctorName(doctor.full_name);
     const specialty = doctor.specializations[0] || "General Practice";
 
@@ -273,8 +231,8 @@ export default function DoctorProfileClient({ doctor, lang }: DoctorProfileClien
         <div className={`min-h-screen ${bgMain} ${textPrimary} overflow-x-hidden transition-colors duration-300 ${isRTL ? 'font-cairo' : ''}`} dir={isRTL ? 'rtl' : 'ltr'}>
             {/* Background Effects */}
             <div className="fixed inset-0 overflow-hidden pointer-events-none">
-                <div className={`absolute inset-0 ${isDark ? 'bg-gradient-to-br from-teal-900/20 via-[#0F172A] to-[#0F172A]' : 'bg-gradient-to-br from-teal-50 via-white to-white'}`} />
-                <div className={`absolute top-1/4 -right-1/4 w-[800px] h-[800px] ${isDark ? 'bg-teal-500/10' : 'bg-teal-200/30'} rounded-full blur-3xl`} />
+                <div className={`absolute inset-0 ${isDark ? 'bg-gradient-to-br from-[#0B1528] via-[#060B18] to-[#060B18]' : 'bg-gradient-to-br from-amber-50/50 via-white to-white'}`} />
+                <div className={`absolute top-1/4 -right-1/4 w-[800px] h-[800px] ${isDark ? 'bg-blue-600/10' : 'bg-blue-200/20'} rounded-full blur-3xl`} />
             </div>
 
             {/* Navigation */}
@@ -282,21 +240,21 @@ export default function DoctorProfileClient({ doctor, lang }: DoctorProfileClien
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex items-center justify-between h-16 lg:h-20">
                         <Link href={`/${language}`} className="group hover:opacity-90 transition-opacity">
-                            <LogoFull isDark={isDark} />
+                            <Logo isDark={isDark} />
                         </Link>
 
                         <div className="hidden lg:flex items-center gap-8">
-                            <Link href={`/${language}#how-it-works`} className={`${textSecondary} hover:text-teal-500 transition-colors text-sm font-medium`}>{t.navHowItWorks}</Link>
-                            <Link href={`/${language}#specialties`} className={`${textSecondary} hover:text-teal-500 transition-colors text-sm font-medium`}>{t.navSpecialties}</Link>
-                            <Link href={`/${language}/doctors`} className="text-teal-500 transition-colors text-sm font-medium">{t.navDoctors}</Link>
-                            <Link href={`/${language}#for-doctors`} className={`${textSecondary} hover:text-teal-500 transition-colors text-sm font-medium`}>{t.navForDoctors}</Link>
+                            <Link href={`/${language}#how-it-works`} className={`${textSecondary} hover:text-blue-400 transition-colors text-sm font-medium`}>{t.navHowItWorks}</Link>
+                            <Link href={`/${language}#specialties`} className={`${textSecondary} hover:text-blue-400 transition-colors text-sm font-medium`}>{t.navSpecialties}</Link>
+                            <Link href={`/${language}/doctors`} className="text-blue-400 font-semibold transition-colors text-sm">{t.navDoctors}</Link>
+                            <Link href={`/${language}#for-doctors`} className={`${textSecondary} hover:text-blue-400 transition-colors text-sm font-medium`}>{t.navForDoctors}</Link>
                         </div>
 
                         <div className="hidden lg:flex items-center gap-3">
                             <ThemeToggle />
                             <LanguageToggle />
                             <Link href={`/${language}/login`} className={`${textSecondary} hover:${textPrimary} font-medium text-sm px-4 py-2 transition-colors`}>{t.navLogin}</Link>
-                            <Link href={`/${language}/get-started`} className="bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-400 hover:to-teal-500 text-white font-semibold px-5 py-2.5 rounded-full transition-all shadow-lg shadow-teal-500/25">{t.navGetStarted}</Link>
+                            <Link href={`/${language}/get-started`} className="bg-gradient-to-r from-blue-600 via-blue-500 to-blue-600 hover:from-blue-500 text-white font-bold px-5 py-2.5 rounded-full transition-all shadow-lg shadow-blue-500/25">{t.navGetStarted}</Link>
                         </div>
 
                         <div className="flex lg:hidden items-center gap-2">
@@ -310,16 +268,16 @@ export default function DoctorProfileClient({ doctor, lang }: DoctorProfileClien
                     {mobileMenuOpen && (
                         <div className={`lg:hidden py-4 border-t ${borderColor}`}>
                             <div className="flex flex-col gap-4">
-                                <Link href={`/${language}#how-it-works`} className={`${textSecondary} hover:text-teal-500 py-2`}>{t.navHowItWorks}</Link>
-                                <Link href={`/${language}#specialties`} className={`${textSecondary} hover:text-teal-500 py-2`}>{t.navSpecialties}</Link>
-                                <Link href={`/${language}/doctors`} className="text-teal-500 py-2">{t.navDoctors}</Link>
-                                <Link href={`/${language}#for-doctors`} className={`${textSecondary} hover:text-teal-500 py-2`}>{t.navForDoctors}</Link>
+                                <Link href={`/${language}#how-it-works`} className={`${textSecondary} hover:text-blue-400 py-2`}>{t.navHowItWorks}</Link>
+                                <Link href={`/${language}#specialties`} className={`${textSecondary} hover:text-blue-400 py-2`}>{t.navSpecialties}</Link>
+                                <Link href={`/${language}/doctors`} className="text-blue-400 py-2 font-medium">{t.navDoctors}</Link>
+                                <Link href={`/${language}#for-doctors`} className={`${textSecondary} hover:text-blue-400 py-2`}>{t.navForDoctors}</Link>
                                 <div className={`flex flex-col gap-3 pt-4 border-t ${borderColor}`}>
                                     <div className="flex items-center gap-3">
                                         <LanguageToggle />
                                         <Link href={`/${language}/login`} className={`${textSecondary} hover:${textPrimary} font-medium text-sm px-4 py-2 transition-colors`}>{t.navLogin}</Link>
                                     </div>
-                                    <Link href={`/${language}/get-started`} className="bg-teal-500 hover:bg-teal-400 text-white font-semibold px-5 py-2 rounded-full text-center">{t.navGetStarted}</Link>
+                                    <Link href={`/${language}/get-started`} className="bg-gradient-to-r from-blue-600 via-blue-500 to-blue-600 hover:from-blue-500 text-white font-bold px-5 py-2 rounded-full text-center">{t.navGetStarted}</Link>
                                 </div>
                             </div>
                         </div>
@@ -333,7 +291,7 @@ export default function DoctorProfileClient({ doctor, lang }: DoctorProfileClien
                     {/* Back Link */}
                     <Link
                         href={`/${language}/doctors`}
-                        className={`inline-flex items-center gap-2 mb-6 ${textSecondary} hover:text-teal-500 transition-colors`}
+                        className={`inline-flex items-center gap-2 mb-6 ${textSecondary} hover:text-blue-400 transition-colors`}
                     >
                         <span className={isRTL ? 'rotate-180' : ''}>{Icons.back}</span>
                         {t.backToDoctors}
@@ -342,11 +300,11 @@ export default function DoctorProfileClient({ doctor, lang }: DoctorProfileClien
                     {/* Doctor Profile Card */}
                     <div className={`rounded-3xl overflow-hidden ${cardBg}`}>
                         {/* Header Section */}
-                        <div className={`p-6 sm:p-8 ${isDark ? 'bg-gradient-to-r from-teal-900/30 to-teal-800/20' : 'bg-gradient-to-r from-teal-50 to-teal-100/50'}`}>
+                        <div className={`p-6 sm:p-8 ${isDark ? 'bg-gradient-to-r from-blue-950/40 via-blue-900/20 to-transparent' : 'bg-gradient-to-r from-blue-50 to-blue-100/50'}`}>
                             <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
                                 {/* Avatar */}
                                 <div className="relative">
-                                    <div className="w-32 h-32 sm:w-40 sm:h-40 rounded-full overflow-hidden border-4 border-teal-500/50 shadow-xl">
+                                    <div className="w-32 h-32 sm:w-40 sm:h-40 rounded-full overflow-hidden border-4 border-amber-400 shadow-xl shadow-amber-500/20">
                                         {doctor.avatar_url ? (
                                             <Image
                                                 src={doctor.avatar_url}
@@ -356,7 +314,7 @@ export default function DoctorProfileClient({ doctor, lang }: DoctorProfileClien
                                                 sizes="160px"
                                             />
                                         ) : (
-                                            <div className={`w-full h-full flex items-center justify-center text-4xl font-bold ${isDark ? 'bg-teal-500/20 text-teal-400' : 'bg-teal-100 text-teal-600'}`}>
+                                            <div className={`w-full h-full flex items-center justify-center text-4xl font-bold ${isDark ? 'bg-amber-500/20 text-amber-400' : 'bg-amber-100 text-amber-700'}`}>
                                                 {doctor.full_name.charAt(0)}
                                             </div>
                                         )}
@@ -375,7 +333,7 @@ export default function DoctorProfileClient({ doctor, lang }: DoctorProfileClien
                                         <h1 className={`text-2xl sm:text-3xl font-bold ${textPrimary}`}>{doctorName}</h1>
                                         {Icons.verified}
                                     </div>
-                                    <p className="text-teal-500 font-semibold text-lg mb-2">{specialty}</p>
+                                    <p className={`${isDark ? 'text-blue-400' : 'text-blue-600'} font-semibold text-lg mb-2`}>{specialty}</p>
                                     <div className="flex items-center justify-center sm:justify-start gap-2 mb-4">
                                         <StarRating rating={doctor.rating_average || 0} />
                                         <span className={textSecondary}>
@@ -400,7 +358,11 @@ export default function DoctorProfileClient({ doctor, lang }: DoctorProfileClien
                                     </div>
 
                                     {/* Verified Badge */}
-                                    <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-teal-500/10 text-teal-500 text-sm font-medium">
+                                    <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium border ${
+                                        isDark
+                                            ? 'bg-blue-500/10 text-blue-400 border-blue-500/20'
+                                            : 'bg-blue-50 text-blue-700 border-blue-200'
+                                    }`}>
                                         {Icons.verified}
                                         {t.verified}
                                     </div>
@@ -428,7 +390,7 @@ export default function DoctorProfileClient({ doctor, lang }: DoctorProfileClien
                                             {doctor.specializations.map((spec, index) => (
                                                 <span
                                                     key={index}
-                                                    className={`px-3 py-1.5 rounded-full text-sm font-medium ${isDark ? 'bg-teal-500/10 text-teal-400' : 'bg-teal-100 text-teal-700'}`}
+                                                    className={`px-3 py-1.5 rounded-full text-sm font-medium ${isDark ? 'bg-blue-500/10 text-blue-300 border border-blue-500/20' : 'bg-blue-50 text-blue-800 border border-blue-200'}`}
                                                 >
                                                     {spec}
                                                 </span>
@@ -509,7 +471,7 @@ export default function DoctorProfileClient({ doctor, lang }: DoctorProfileClien
 
                             {/* Right Column - Booking Card */}
                             <div className="md:col-span-1">
-                                <div className={`sticky top-28 rounded-2xl p-6 ${isDark ? 'bg-white/5 border border-white/10' : 'bg-slate-50 border border-slate-200'}`}>
+                                <div className={`sticky top-28 rounded-2xl p-6 ${isDark ? 'bg-[#0E1A38]/90 border border-blue-500/30 shadow-xl shadow-black/20' : 'bg-slate-50 border border-slate-200'}`}>
                                     <div className="text-center mb-6">
                                         <p className={`text-sm ${textMuted} mb-1`}>{t.consultationFee}</p>
                                         <p className={`text-3xl font-bold ${textPrimary}`}>
@@ -530,8 +492,8 @@ export default function DoctorProfileClient({ doctor, lang }: DoctorProfileClien
 
                                     {/* Book Button */}
                                     <Link
-                                        href={`/${language}/login?redirect=/doctors/${doctor.slug}`}
-                                        className="block w-full bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-400 hover:to-teal-500 text-white font-bold py-3 px-6 rounded-xl transition-all text-center shadow-lg shadow-teal-500/25"
+                                        href={user ? `/${language}/dashboard/patient/doctors` : `/${language}/login?redirect=/dashboard/patient/doctors`}
+                                        className="block w-full bg-gradient-to-r from-blue-600 via-blue-500 to-blue-600 hover:from-blue-500 text-white font-bold py-3 px-6 rounded-xl transition-all text-center shadow-lg shadow-blue-500/25"
                                     >
                                         {t.bookNow}
                                     </Link>
@@ -543,38 +505,38 @@ export default function DoctorProfileClient({ doctor, lang }: DoctorProfileClien
             </main>
 
             {/* Footer */}
-            <footer className={`${isDark ? 'bg-[#0a0f1a]' : 'bg-slate-50'} border-t ${borderColor} py-16 px-4 transition-colors duration-300`}>
+            <footer className={`${isDark ? 'bg-[#040812]' : 'bg-slate-50'} border-t ${borderColor} py-16 px-4 transition-colors duration-300`}>
                 <div className="max-w-7xl mx-auto">
                     <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">
                         <div className="lg:col-span-1">
                             <Link href={`/${language}`} className="block mb-6 group hover:opacity-90 transition-opacity">
-                                <LogoFull isDark={isDark} />
+                                <Logo isDark={isDark} />
                             </Link>
                             <p className={`${textMuted} text-sm mb-6 max-w-xs`}>{t.footerTagline}</p>
                         </div>
                         <div>
                             <h4 className={`font-bold mb-4 ${textPrimary}`}>{t.footerForPatients}</h4>
                             <div className="flex flex-col gap-3">
-                                <Link href={`/${language}/doctors`} className={`${textSecondary} text-sm hover:text-teal-500 transition-colors`}>{t.footerFindDoctors}</Link>
-                                <Link href={`/${language}#how-it-works`} className={`${textSecondary} text-sm hover:text-teal-500 transition-colors`}>{t.footerHowItWorks}</Link>
-                                <Link href={`/${language}/faq`} className={`${textSecondary} text-sm hover:text-teal-500 transition-colors`}>{t.footerFaq}</Link>
+                                <Link href={`/${language}/doctors`} className={`${textSecondary} text-sm hover:text-blue-400 transition-colors`}>{t.footerFindDoctors}</Link>
+                                <Link href={`/${language}#how-it-works`} className={`${textSecondary} text-sm hover:text-blue-400 transition-colors`}>{t.footerHowItWorks}</Link>
+                                <Link href={`/${language}/faq`} className={`${textSecondary} text-sm hover:text-blue-400 transition-colors`}>{t.footerFaq}</Link>
                             </div>
                         </div>
                         <div>
                             <h4 className={`font-bold mb-4 ${textPrimary}`}>{t.footerForDoctorsTitle}</h4>
                             <div className="flex flex-col gap-3">
-                                <Link href={`/${language}/doctor-onboarding`} className={`${textSecondary} text-sm hover:text-teal-500 transition-colors`}>{t.footerJoinAsDoctor}</Link>
-                                <Link href={`/${language}/faq`} className={`${textSecondary} text-sm hover:text-teal-500 transition-colors`}>{t.footerDoctorFaq}</Link>
-                                <span className={`${textSecondary} text-sm hover:text-teal-500 transition-colors cursor-default`}>{t.footerPricing}</span>
+                                <Link href={`/${language}/doctor-onboarding`} className={`${textSecondary} text-sm hover:text-blue-400 transition-colors`}>{t.footerJoinAsDoctor}</Link>
+                                <Link href={`/${language}/faq`} className={`${textSecondary} text-sm hover:text-blue-400 transition-colors`}>{t.footerDoctorFaq}</Link>
+                                <span className={`${textSecondary} text-sm hover:text-blue-400 transition-colors cursor-default`}>{t.footerPricing}</span>
                             </div>
                         </div>
                         <div>
                             <h4 className={`font-bold mb-4 ${textPrimary}`}>{t.footerCompany}</h4>
                             <div className="flex flex-col gap-3">
-                                <Link href={`/${language}/about`} className={`${textSecondary} text-sm hover:text-teal-500 transition-colors`}>{t.footerAboutUs}</Link>
-                                <Link href={`/${language}/contact`} className={`${textSecondary} text-sm hover:text-teal-500 transition-colors`}>{t.footerContact}</Link>
-                                <Link href={`/${language}/privacy`} className={`${textSecondary} text-sm hover:text-teal-500 transition-colors`}>{t.footerPrivacy}</Link>
-                                <Link href={`/${language}/terms`} className={`${textSecondary} text-sm hover:text-teal-500 transition-colors`}>{t.footerTerms}</Link>
+                                <Link href={`/${language}/about`} className={`${textSecondary} text-sm hover:text-blue-400 transition-colors`}>{t.footerAboutUs}</Link>
+                                <Link href={`/${language}/contact`} className={`${textSecondary} text-sm hover:text-blue-400 transition-colors`}>{t.footerContact}</Link>
+                                <Link href={`/${language}/privacy`} className={`${textSecondary} text-sm hover:text-blue-400 transition-colors`}>{t.footerPrivacy}</Link>
+                                <Link href={`/${language}/terms`} className={`${textSecondary} text-sm hover:text-blue-400 transition-colors`}>{t.footerTerms}</Link>
                             </div>
                         </div>
                     </div>

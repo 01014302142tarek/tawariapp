@@ -215,7 +215,7 @@ function CheckoutPageContent() {
         return (
             <div className={cn("min-h-screen flex items-center justify-center", isDark ? "bg-slate-950" : "bg-gray-50")}>
                 <div className="text-center">
-                    <div className="w-16 h-16 border-4 border-teal-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+                    <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
                     <p className={cn("text-lg", isDark ? "text-white" : "text-gray-900")}>
                         {isRTL ? "جاري التحميل..." : "Loading..."}
                     </p>
@@ -238,7 +238,7 @@ function CheckoutPageContent() {
                     <p className={cn("mb-6", isDark ? "text-gray-400" : "text-gray-600")}>{error}</p>
                     <button
                         onClick={() => router.back()}
-                        className="px-6 py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-600 transition-colors"
+                        className="px-6 py-2 bg-gradient-to-r from-blue-600 via-blue-500 to-blue-600 hover:from-blue-500 text-white rounded-xl shadow-lg shadow-blue-500/25 transition-all"
                     >
                         {isRTL ? "العودة" : "Go Back"}
                     </button>
@@ -268,13 +268,13 @@ function CheckoutPageContent() {
                 </div>
 
                 {/* Appointment Summary */}
-                <GlowingCard glowColor="teal" className="p-5 mb-6" isDark={isDark}>
+                <GlowingCard glowColor="blue" className="p-5 mb-6" isDark={isDark}>
                     <h3 className={cn("text-lg font-semibold mb-4", isDark ? "text-white" : "text-gray-900")}>
                         {isRTL ? "تفاصيل الموعد" : "Appointment Details"}
                     </h3>
 
                     <div className="flex items-start gap-4 mb-4">
-                        <div className={cn("w-12 h-12 rounded-full flex items-center justify-center", isDark ? "bg-teal-500/20 text-teal-400" : "bg-teal-100 text-teal-600")}>
+                        <div className={cn("w-12 h-12 rounded-full flex items-center justify-center", isDark ? "bg-blue-500/20 text-blue-400" : "bg-amber-100 text-amber-600")}>
                             {Icons.doctor}
                         </div>
                         <div>
@@ -285,18 +285,18 @@ function CheckoutPageContent() {
 
                     <div className={cn("space-y-3 pt-4 border-t", isDark ? "border-white/10" : "border-gray-200")}>
                         <div className={cn("flex items-center gap-3", isDark ? "text-gray-300" : "text-gray-700")}>
-                            <span className="text-teal-400">{Icons.calendar}</span>
+                            <span className="text-amber-400">{Icons.calendar}</span>
                             <span>{formatDate(appointment.scheduledStart)}</span>
                         </div>
                         <div className={cn("flex items-center gap-3", isDark ? "text-gray-300" : "text-gray-700")}>
-                            <span className="text-teal-400">{Icons.clock}</span>
+                            <span className="text-amber-400">{Icons.clock}</span>
                             <span>{formatTime(appointment.scheduledStart)}</span>
                         </div>
                     </div>
                 </GlowingCard>
 
                 {/* Payment Method Selection */}
-                <GlowingCard glowColor="teal" className="p-5 mb-6" isDark={isDark}>
+                <GlowingCard glowColor="blue" className="p-5 mb-6" isDark={isDark}>
                     <h3 className={cn("text-lg font-semibold mb-4", isDark ? "text-white" : "text-gray-900")}>
                         {isRTL ? "طريقة الدفع" : "Payment Method"}
                     </h3>
@@ -308,17 +308,17 @@ function CheckoutPageContent() {
                             className={cn(
                                 "w-full flex items-center gap-4 p-4 rounded-xl border transition-all",
                                 paymentMethod === "card"
-                                    ? "border-teal-500 bg-teal-500/10"
+                                    ? "border-blue-500 bg-blue-500/10 shadow-[0_0_15px_rgba(37,99,235,0.2)]"
                                     : isDark 
-                                        ? "border-teal-500/30 bg-teal-500/5 hover:border-teal-500/50"
-                                        : "border-teal-200 bg-teal-50/50 hover:border-teal-300"
+                                        ? "border-white/10 bg-white/5 hover:border-blue-500/40"
+                                        : "border-slate-200 bg-slate-50 hover:border-blue-300"
                             )}
                         >
                             <div className={cn(
                                 "w-10 h-10 rounded-full flex items-center justify-center",
                                 paymentMethod === "card" 
-                                    ? "bg-teal-500/20 text-teal-400" 
-                                    : isDark ? "bg-teal-500/10 text-teal-400" : "bg-teal-100 text-teal-600"
+                                    ? "bg-blue-500/20 text-blue-400" 
+                                    : isDark ? "bg-amber-500/10 text-amber-400" : "bg-amber-100 text-amber-600"
                             )}>
                                 {Icons.card}
                             </div>
@@ -331,7 +331,7 @@ function CheckoutPageContent() {
                                 </p>
                             </div>
                             {paymentMethod === "card" && (
-                                <span className="text-teal-400">{Icons.check}</span>
+                                <span className="text-amber-400">{Icons.check}</span>
                             )}
                         </button>
 
@@ -341,17 +341,17 @@ function CheckoutPageContent() {
                             className={cn(
                                 "w-full flex items-center gap-4 p-4 rounded-xl border transition-all",
                                 paymentMethod === "wallet"
-                                    ? "border-teal-500 bg-teal-500/10"
+                                    ? "border-blue-500 bg-blue-500/10 shadow-[0_0_15px_rgba(37,99,235,0.2)]"
                                     : isDark
-                                        ? "border-teal-500/30 bg-teal-500/5 hover:border-teal-500/50"
-                                        : "border-teal-200 bg-teal-50/50 hover:border-teal-300"
+                                        ? "border-white/10 bg-white/5 hover:border-blue-500/40"
+                                        : "border-slate-200 bg-slate-50 hover:border-blue-300"
                             )}
                         >
                             <div className={cn(
                                 "w-10 h-10 rounded-full flex items-center justify-center",
                                 paymentMethod === "wallet" 
-                                    ? "bg-teal-500/20 text-teal-400" 
-                                    : isDark ? "bg-teal-500/10 text-teal-400" : "bg-teal-100 text-teal-600"
+                                    ? "bg-blue-500/20 text-blue-400" 
+                                    : isDark ? "bg-amber-500/10 text-amber-400" : "bg-amber-100 text-amber-600"
                             )}>
                                 {Icons.wallet}
                             </div>
@@ -364,14 +364,14 @@ function CheckoutPageContent() {
                                 </p>
                             </div>
                             {paymentMethod === "wallet" && (
-                                <span className="text-teal-400">{Icons.check}</span>
+                                <span className="text-amber-400">{Icons.check}</span>
                             )}
                         </button>
                     </div>
                 </GlowingCard>
 
                 {/* Order Summary */}
-                <GlowingCard glowColor="teal" className="p-5 mb-6" isDark={isDark}>
+                <GlowingCard glowColor="blue" className="p-5 mb-6" isDark={isDark}>
                     <h3 className={cn("text-lg font-semibold mb-4", isDark ? "text-white" : "text-gray-900")}>
                         {isRTL ? "ملخص الطلب" : "Order Summary"}
                     </h3>
@@ -393,7 +393,7 @@ function CheckoutPageContent() {
                             <span className={cn("font-semibold", isDark ? "text-white" : "text-gray-900")}>
                                 {isRTL ? "الإجمالي" : "Total"}
                             </span>
-                            <span className="text-teal-400 font-bold text-lg">
+                            <span className="text-amber-400 font-bold text-lg">
                                 {appointment.consultationFee.toFixed(2)} {isRTL ? "ج.م" : "EGP"}
                             </span>
                         </div>
@@ -423,7 +423,7 @@ function CheckoutPageContent() {
                         "w-full py-4 rounded-xl font-semibold text-white transition-all flex items-center justify-center gap-3",
                         processing
                             ? "bg-gray-600 cursor-not-allowed"
-                            : "bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-400 hover:to-teal-500"
+                            : "bg-gradient-to-r from-blue-600 via-blue-500 to-blue-600 hover:from-blue-500 text-white shadow-lg shadow-blue-500/25"
                     )}
                 >
                     {processing ? (
@@ -461,7 +461,7 @@ function CheckoutLoading() {
     return (
         <div className={cn("min-h-screen flex items-center justify-center", isDark ? "bg-slate-950" : "bg-gray-50")}>
             <div className="text-center">
-                <div className="w-16 h-16 border-4 border-teal-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+                <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
                 <p className={cn("text-lg", isDark ? "text-white" : "text-gray-900")}>Loading...</p>
             </div>
         </div>

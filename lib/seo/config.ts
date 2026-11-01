@@ -1,12 +1,12 @@
 /**
- * SEO Configuration for TawariApp
+ * SEO Configuration for Tabibi
  * Centralized SEO settings for the entire application
  */
 
 export const siteConfig = {
-    name: "TawariApp",
-    nameAr: "تواري",
-    url: process.env.NEXT_PUBLIC_SITE_URL || "https://www.tawariapp.com",
+    name: "Tabibi",
+    nameAr: "طبيبي",
+    url: process.env.NEXT_PUBLIC_SITE_URL || "https://www.tabibi.com",
     description: {
         en: "Connect with licensed doctors in Egypt for video consultations. Get medical advice, prescriptions, and follow-up care from the comfort of your home.",
         ar: "تواصل مع أطباء مرخصين في مصر للاستشارات عبر الفيديو. احصل على المشورة الطبية والوصفات الطبية ومتابعة الرعاية من راحة منزلك.",
@@ -26,7 +26,7 @@ export const siteConfig = {
             "doctor appointment",
             "virtual healthcare",
             "online prescription",
-            "TawariApp",
+            "Tabibi",
         ],
         ar: [
             "طب عن بعد مصر",
@@ -38,17 +38,17 @@ export const siteConfig = {
             "حجز موعد طبيب",
             "رعاية صحية افتراضية",
             "وصفة طبية اونلاين",
-            "تواري",
+            "طبيبي",
         ],
     },
-    creator: "TawariApp",
+    creator: "Tabibi",
     ogImage: "/og-image.png",
-    twitterHandle: "@tawariapp",
+    twitterHandle: "@tabibiapp",
     locale: {
         default: "en",
         available: ["en", "ar"] as const,
     },
-    themeColor: "#14B8A6", // Teal-500
+    themeColor: "#D97706", // Gold
 };
 
 export type Locale = (typeof siteConfig.locale.available)[number];

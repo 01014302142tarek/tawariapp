@@ -248,7 +248,7 @@ export default function ReviewForm({
                         isDark
                             ? "bg-gray-700 border-gray-600 text-white placeholder-gray-400"
                             : "bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-500",
-                        "focus:outline-none focus:ring-2 focus:ring-teal-500"
+                        "focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500"
                     )}
                 />
                 <p
@@ -268,7 +268,7 @@ export default function ReviewForm({
                         type="checkbox"
                         checked={isAnonymous}
                         onChange={(e) => setIsAnonymous(e.target.checked)}
-                        className="w-4 h-4 rounded border-gray-300 text-teal-600 focus:ring-teal-500"
+                        className="w-4 h-4 rounded border-gray-300 text-amber-600 focus:ring-amber-500"
                     />
                     <span
                         className={cn(
@@ -324,8 +324,8 @@ export default function ReviewForm({
                     onClick={handleSubmit}
                     disabled={rating === 0 || isSubmitting}
                     className={cn(
-                        "px-5 py-2 text-sm font-medium rounded-lg transition-colors",
-                        "bg-teal-600 text-white hover:bg-teal-700",
+                        "px-5 py-2 text-sm font-semibold rounded-lg transition-all",
+                        "bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-black shadow-md shadow-amber-500/20",
                         "disabled:opacity-50 disabled:cursor-not-allowed"
                     )}
                 >

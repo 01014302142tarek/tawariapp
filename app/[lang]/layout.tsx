@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Cairo } from "next/font/google";
 import { Analytics } from "@vercel/analytics/react";
@@ -31,10 +31,17 @@ const cairo = Cairo({
   preload: false, // Loaded on-demand when Arabic content is rendered
 });
 
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+  viewportFit: "cover",
+};
+
 export const metadata: Metadata = {
   title: {
-    default: "TawariApp - Healthcare at Your Fingertips",
-    template: "%s | TawariApp",
+    default: "Tabibi - Healthcare at Your Fingertips",
+    template: "%s | Tabibi",
   },
   description: siteConfig.description.en,
   keywords: siteConfig.keywords.en,
@@ -46,20 +53,20 @@ export const metadata: Metadata = {
     locale: "en_US",
     url: siteConfig.url,
     siteName: siteConfig.name,
-    title: "TawariApp - Healthcare at Your Fingertips",
+    title: "Tabibi - Healthcare at Your Fingertips",
     description: siteConfig.description.en,
     images: [
       {
         url: siteConfig.ogImage,
         width: 1200,
         height: 630,
-        alt: "TawariApp - Telemedicine Platform",
+        alt: "Tabibi - Telemedicine Platform",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "TawariApp - Healthcare at Your Fingertips",
+    title: "Tabibi - Healthcare at Your Fingertips",
     description: siteConfig.description.en,
     site: siteConfig.twitterHandle,
     images: [siteConfig.ogImage],
@@ -96,6 +103,7 @@ export default async function RootLayout({
   return (
     <html lang={lang} dir={lang === 'ar' ? 'rtl' : 'ltr'} suppressHydrationWarning>
       <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, viewport-fit=cover" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
 

@@ -78,10 +78,10 @@ const NotificationIcons: Record<NotificationType, React.ReactNode> = {
     ),
 };
 
-// Get icon background color based on notification type - All using main teal color
+// Get icon background color based on notification type - All using main amber color
 const getIconBgColor = (type: NotificationType, isDark: boolean): string => {
-    // Unified teal color for all notification types
-    return isDark ? "bg-teal-500/20 text-teal-400" : "bg-teal-100 text-teal-600";
+    // Unified amber color for all notification types
+    return isDark ? "bg-amber-500/20 text-amber-400" : "bg-amber-100 text-amber-600";
 };
 
 // Format relative time
@@ -135,6 +135,7 @@ export default function NotificationDropdown({ isDark, dashboardType }: Notifica
         notifications,
         unreadCount,
         isConnected,
+        isLoading,
         markAsRead: markNotificationAsRead,
         markAllAsRead: markAllNotificationsAsRead,
         refresh,
@@ -152,7 +153,7 @@ export default function NotificationDropdown({ isDark, dashboardType }: Notifica
     });
 
     // Loading state is false once connected or we have notifications
-    const isLoading = !isConnected && notifications.length === 0;
+
 
     // Refresh on open (fallback for any missed updates)
     useEffect(() => {
@@ -245,7 +246,7 @@ export default function NotificationDropdown({ isDark, dashboardType }: Notifica
             <button
                 onClick={() => setIsOpen(!isOpen)}
                 className={cn(
-                    "relative p-1.5 md:p-2 rounded-xl transition-colors border border-black",
+                    "relative p-1.5 md:p-2 rounded-xl transition-colors",
                     isDark
                         ? "hover:bg-white/5 text-gray-400 hover:text-white"
                         : "hover:bg-gray-100 text-gray-600 hover:text-gray-900"
@@ -254,7 +255,7 @@ export default function NotificationDropdown({ isDark, dashboardType }: Notifica
             >
                 {BellIcon}
                 {unreadCount > 0 && (
-                    <span className="absolute -top-1 -right-1 w-4 h-4 md:w-5 md:h-5 bg-teal-500 text-white text-[10px] md:text-xs font-bold rounded-full flex items-center justify-center shadow-lg shadow-teal-500/50">
+                    <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 bg-amber-500 text-white text-[10px] md:text-xs font-bold rounded-full flex items-center justify-center shadow-lg shadow-amber-500/50">
                         {unreadCount > 9 ? "9+" : unreadCount}
                     </span>
                 )}
@@ -298,8 +299,8 @@ export default function NotificationDropdown({ isDark, dashboardType }: Notifica
                                     className={cn(
                                         "text-xs font-medium transition-colors",
                                         isDark
-                                            ? "text-teal-400 hover:text-teal-300"
-                                            : "text-teal-600 hover:text-teal-700",
+                                            ? "text-amber-400 hover:text-amber-300"
+                                            : "text-amber-600 hover:text-amber-700",
                                         isMarkingAll && "opacity-50 cursor-not-allowed"
                                     )}
                                 >
@@ -316,8 +317,8 @@ export default function NotificationDropdown({ isDark, dashboardType }: Notifica
                                         className={cn(
                                             "animate-spin w-6 h-6 border-2 rounded-full mx-auto",
                                             isDark
-                                                ? "border-gray-600 border-t-teal-400"
-                                                : "border-gray-300 border-t-teal-600"
+                                                ? "border-gray-600 border-t-amber-400"
+                                                : "border-gray-300 border-t-amber-600"
                                         )}
                                     />
                                     <p
@@ -360,8 +361,8 @@ export default function NotificationDropdown({ isDark, dashboardType }: Notifica
                                                 : "hover:bg-gray-50",
                                             !notification.is_read &&
                                                 (isDark
-                                                    ? "bg-teal-500/5"
-                                                    : "bg-teal-50/50")
+                                                    ? "bg-amber-500/5"
+                                                    : "bg-amber-50/50")
                                         )}
                                     >
                                         {/* Icon */}
@@ -408,7 +409,7 @@ export default function NotificationDropdown({ isDark, dashboardType }: Notifica
 
                                         {/* Unread indicator */}
                                         {!notification.is_read && (
-                                            <div className="w-2 h-2 rounded-full bg-teal-500 flex-shrink-0 mt-2" />
+                                            <div className="w-2 h-2 rounded-full bg-amber-500 flex-shrink-0 mt-2" />
                                         )}
                                     </button>
                                 ))
@@ -429,8 +430,8 @@ export default function NotificationDropdown({ isDark, dashboardType }: Notifica
                                     className={cn(
                                         "block text-center text-sm font-medium transition-colors",
                                         isDark
-                                            ? "text-teal-400 hover:text-teal-300"
-                                            : "text-teal-600 hover:text-teal-700"
+                                            ? "text-amber-400 hover:text-amber-300"
+                                            : "text-amber-600 hover:text-amber-700"
                                     )}
                                 >
                                     {viewAllLabel}

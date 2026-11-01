@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { endQueueConsultation, getQueueEntryForCall, leaveQueue } from "@/app/actions/queue";
 import { PrescriptionPromptModal, QuickPrescriptionForm, ReviewPromptModal } from "@/components/post-consultation";
 import { createClient as createBrowserSupabaseClient } from "@/lib/supabase/client";
+import { NativeWebRTCCall } from "@/components/native-webrtc-call";
 
 // ============================================
 // Types
@@ -78,6 +79,8 @@ export function QueueVideoCall({
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [callState, setCallState] = useState<"joining" | "joined" | "left" | "error">("joining");
+    const [webrtcUrl, setWebrtcUrl] = useState<string | null>(null);
+    const [webrtcUserName, setWebrtcUserName] = useState<string>("");
     const [showEndConfirm, setShowEndConfirm] = useState(false);
     const [ending, setEnding] = useState(false);
     const [participantInfo, setParticipantInfo] = useState<{
@@ -231,6 +234,18 @@ export function QueueVideoCall({
             });
 
             if (!isMountedRef.current) return;
+
+            // Handle high-availability WebRTC fallback room
+            if (tokenData.roomUrl && !tokenData.roomUrl.includes("daily.co")) {
+                const effectiveUrl = tokenData.roomUrl.replace("meet.jit.si", process.env.NEXT_PUBLIC_JITSI_DOMAIN || "fairmeeting.net");
+                console.log("[VideoCall] Using WebRTC room:", effectiveUrl);
+                setWebrtcUrl(effectiveUrl);
+                setWebrtcUserName(tokenData.userName || (userRole === "doctor" ? "Doctor" : "Patient"));
+                hasJoinedRef.current = true;
+                setCallState("joined");
+                setLoading(false);
+                return;
+            }
 
             // Check for existing Daily instance and destroy it safely
             try {
@@ -727,6 +742,7 @@ export function QueueVideoCall({
             </AnimatePresence>
 
             {/* Header */}
+            {!webrtcUrl && (
             <div className={cn(
                 "p-4 border-b flex items-center justify-between",
                 isDark ? "bg-slate-900 border-white/10" : "bg-white border-gray-200"
@@ -755,21 +771,38 @@ export function QueueVideoCall({
                     </div>
                 </div>
 
-                {/* End Call Button */}
-                {callState === "joined" && (
-                    <button
-                        onClick={() => setShowEndConfirm(true)}
-                        className="px-4 py-2 bg-red-500 text-white rounded-lg font-medium hover:bg-red-600 transition-colors flex items-center gap-2"
-                    >
-                        {Icons.endCall}
-                        <span className="hidden sm:inline">
-                            {userRole === "doctor"
-                                ? (isRTL ? "إكمال الاستشارة" : "Complete Consultation")
-                                : (isRTL ? "مغادرة" : "Leave")}
-                        </span>
-                    </button>
-                )}
+                {/* Top Bar Actions */}
+                <div className="flex items-center gap-2">
+                    {webrtcUrl && (
+                        <a
+                            href={`${webrtcUrl}#userInfo.displayName="${encodeURIComponent(webrtcUserName || (userRole === "doctor" ? "Doctor" : "Patient"))}"&config.disableDeepLinking=true&config.prejoinPageEnabled=false&config.prejoinConfig.enabled=false&config.requireDisplayName=false&config.enableLobby=false&config.startWithAudioMuted=false&config.startWithVideoMuted=false&interfaceConfig.SHOW_JITSI_WATERMARK=false&interfaceConfig.SHOW_WATERMARK_FOR_GUESTS=false&interfaceConfig.MOBILE_APP_PROMO=false&interfaceConfig.HIDE_DEEP_LINKING_LOGO=true&interfaceConfig.SHOW_CHROME_EXTENSION_BANNER=false`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="px-2.5 py-1.5 sm:px-3 sm:py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs sm:text-sm font-medium transition-colors flex items-center gap-1.5 border border-white/10"
+                            title={isRTL ? "فتح في نافذة كاملة بدون تطبيقات" : "Open in Full Window"}
+                        >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                            </svg>
+                            <span className="hidden sm:inline">{isRTL ? "نافذة خارجية" : "Full Window"}</span>
+                        </a>
+                    )}
+                    {callState === "joined" && (
+                        <button
+                            onClick={() => setShowEndConfirm(true)}
+                            className="px-3 py-1.5 sm:px-4 sm:py-2 bg-red-500 text-white rounded-lg text-xs sm:text-sm font-medium hover:bg-red-600 transition-colors flex items-center gap-1.5"
+                        >
+                            {Icons.endCall}
+                            <span>
+                                {userRole === "doctor"
+                                    ? (isRTL ? "إنهاء" : "End Call")
+                                    : (isRTL ? "مغادرة" : "Leave")}
+                            </span>
+                        </button>
+                    )}
+                </div>
             </div>
+            )}
 
             {/* Video Container */}
             <div className="flex-1 relative min-h-0 overflow-hidden">
@@ -789,8 +822,8 @@ export function QueueVideoCall({
                 {consultationEnded && userRole === "patient" && postCallPhase !== "review_prompt" && !createdAppointmentId && (
                     <div className="absolute inset-0 flex items-center justify-center bg-slate-900 z-10 overflow-auto">
                         <div className="text-center max-w-md mx-auto p-6 my-auto">
-                            <div className="w-16 h-16 rounded-full bg-teal-500/10 flex items-center justify-center mx-auto mb-4">
-                                <svg className="w-8 h-8 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <div className="w-16 h-16 rounded-full bg-amber-500/10 flex items-center justify-center mx-auto mb-4">
+                                <svg className="w-8 h-8 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>
                             </div>
@@ -804,7 +837,7 @@ export function QueueVideoCall({
                             </p>
                             <button
                                 onClick={handleCallEnded}
-                                className="px-6 py-2 bg-teal-500 text-white rounded-lg font-medium hover:bg-teal-600 transition-colors"
+                                className="px-6 py-2 bg-amber-500 text-white rounded-lg font-medium hover:bg-amber-600 transition-colors"
                             >
                                 {isRTL ? "العودة للأطباء المتاحين" : "Back to Available Doctors"}
                             </button>
@@ -834,7 +867,7 @@ export function QueueVideoCall({
                                 </button>
                                 <button
                                     onClick={initializeCall}
-                                    className="px-4 py-2 bg-teal-500 text-white rounded-lg font-medium hover:bg-teal-600 transition-colors"
+                                    className="px-4 py-2 bg-amber-500 text-white rounded-lg font-medium hover:bg-amber-600 transition-colors"
                                 >
                                     {isRTL ? "إعادة المحاولة" : "Retry"}
                                 </button>
@@ -843,15 +876,34 @@ export function QueueVideoCall({
                     </div>
                 )}
 
-                {/* Daily.co Container - hide when showing post-call modals */}
-                <div
-                    ref={containerRef}
-                    className="absolute inset-0 bg-slate-900"
-                    style={{
-                        minHeight: "400px",
-                        display: postCallPhase !== "none" ? "none" : "block"
-                    }}
-                />
+                {/* Video Container - hide when showing post-call modals */}
+                {webrtcUrl ? (
+                    <div
+                        className="w-full h-full absolute inset-0"
+                        style={{
+                            display: postCallPhase !== "none" ? "none" : "block"
+                        }}
+                    >
+                        <NativeWebRTCCall
+                            roomId={queueEntryId}
+                            userRole={userRole}
+                            userName={webrtcUserName}
+                            remoteUserName={userRole === "doctor" ? participantInfo.patientName : participantInfo.doctorName}
+                            onEndCall={() => setShowEndConfirm(true)}
+                            isRTL={isRTL}
+                            language={language}
+                        />
+                    </div>
+                ) : (
+                    <div
+                        ref={containerRef}
+                        className="absolute inset-0 bg-slate-900"
+                        style={{
+                            minHeight: "400px",
+                            display: postCallPhase !== "none" ? "none" : "block"
+                        }}
+                    />
+                )}
             </div>
 
             {/* Post-Consultation Modals */}

@@ -8,13 +8,12 @@ import { cn } from "@/lib/utils";
 // Rotating gradient border animation
 function RotatingBorder({
     duration = 3000,
-    color = "teal"
+    color = "amber"
 }: {
     duration?: number;
-    color?: "teal" | "red" | "amber"
+    color?: "amber" | "red"
 }) {
     const gradientColors = {
-        teal: "#14b8a6",
         red: "#ef4444",
         amber: "#f59e0b",
     };
@@ -37,9 +36,8 @@ function RotatingBorder({
 }
 
 // Pulsing glow effect
-function PulsingGlow({ color = "teal" }: { color?: "teal" | "red" | "amber" }) {
+function PulsingGlow({ color = "amber" }: { color?: "amber" | "red" }) {
     const glowColors = {
-        teal: "bg-teal-500/30",
         red: "bg-red-500/30",
         amber: "bg-amber-500/30",
     };
@@ -92,24 +90,24 @@ export function AnimatedActionButton({
     isLoading = false,
     loadingText,
 }: AnimatedActionButtonProps) {
-    const colors = variant === "urgent" ? "red" : "teal";
+    const colors = variant === "urgent" ? "red" : "amber";
 
     const bgColors = {
-        teal: isDark
-            ? "bg-gradient-to-br from-slate-900 via-slate-900 to-teal-950"
-            : "bg-gradient-to-br from-white via-white to-teal-50",
+        amber: isDark
+            ? "bg-gradient-to-br from-[#161616] via-[#14120c] to-[#251a08]"
+            : "bg-gradient-to-br from-white via-amber-50/40 to-amber-100/50",
         red: isDark
             ? "bg-gradient-to-br from-slate-900 via-slate-900 to-red-950"
             : "bg-gradient-to-br from-white via-white to-red-50",
     };
 
     const iconBgColors = {
-        teal: "bg-teal-500/20 text-teal-500 group-hover:bg-teal-500 group-hover:text-white",
+        amber: "bg-amber-500/20 text-amber-500 group-hover:bg-amber-500 group-hover:text-black",
         red: "bg-red-500/20 text-red-500 group-hover:bg-red-500 group-hover:text-white",
     };
 
     const borderColors = {
-        teal: isDark ? "border-teal-500/30" : "border-teal-300",
+        amber: isDark ? "border-amber-500/30" : "border-amber-300",
         red: isDark ? "border-red-500/30" : "border-red-300",
     };
 
@@ -158,7 +156,7 @@ export function AnimatedActionButton({
                         <h3 className={cn(
                             "font-bold text-base md:text-lg transition-colors",
                             isDark ? "text-white" : "text-slate-900",
-                            variant === "urgent" ? "group-hover:text-red-500" : "group-hover:text-teal-500"
+                            variant === "urgent" ? "group-hover:text-red-500" : "group-hover:text-amber-400"
                         )}>
                             {isLoading ? (
                                 <span className="flex items-center gap-2">
@@ -190,7 +188,7 @@ export function AnimatedActionButton({
                             isDark ? "bg-white/10 text-white" : "bg-gray-100 text-gray-600",
                             variant === "urgent"
                                 ? "group-hover:bg-red-500 group-hover:text-white"
-                                : "group-hover:bg-teal-500 group-hover:text-white"
+                                : "group-hover:bg-amber-500 group-hover:text-black"
                         )}
                         animate={{ x: [0, 4, 0] }}
                         transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
@@ -238,11 +236,11 @@ export function AnimatedActionButtonCompact({
     disabled?: boolean;
     isLoading?: boolean;
 }) {
-    const colors = variant === "urgent" ? "red" : "teal";
+    const colors = variant === "urgent" ? "red" : "amber";
 
     const bgColors = {
-        teal: "bg-teal-500 hover:bg-teal-600",
-        red: "bg-red-500 hover:bg-red-600",
+        amber: "bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-black font-semibold shadow-lg shadow-amber-500/25",
+        red: "bg-red-500 hover:bg-red-600 text-white",
     };
 
     const content = (

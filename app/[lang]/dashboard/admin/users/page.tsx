@@ -64,13 +64,13 @@ const Icons = {
 
 const Badge = ({ variant, children }: { variant: string; children: React.ReactNode }) => {
     const variants: Record<string, string> = {
-        active: "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20",
-        pending: "bg-orange-500/10 text-orange-400 border border-orange-500/20",
-        inactive: "bg-gray-500/10 text-gray-400 border border-gray-500/20",
-        suspended: "bg-red-500/10 text-red-400 border border-red-500/20",
-        doctor: "bg-teal-500/10 text-teal-400 border border-teal-500/20",
-        patient: "bg-blue-500/10 text-blue-400 border border-blue-500/20",
-        admin: "bg-amber-500/10 text-amber-400 border border-amber-500/20",
+        active: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20",
+        pending: "bg-orange-500/10 text-orange-700 dark:text-orange-400 border border-orange-500/20",
+        inactive: "bg-gray-500/10 text-gray-700 dark:text-gray-400 border border-gray-500/20",
+        suspended: "bg-red-500/10 text-red-700 dark:text-red-400 border border-red-500/20",
+        doctor: "bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20",
+        patient: "bg-blue-500/10 text-blue-700 dark:text-blue-400 border border-blue-500/20",
+        admin: "bg-purple-500/10 text-purple-700 dark:text-purple-400 border border-purple-500/20",
     };
     return (
         <span className={cn("px-2.5 py-1 rounded-full text-xs font-medium", variants[variant] || variants.inactive)}>
@@ -194,7 +194,7 @@ export default function UsersPage() {
     });
 
     const statCards = [
-        { label: t.adminDashboard.usersPage.stats.totalUsers, value: stats.total_users, icon: Icons.users, color: "teal" },
+        { label: t.adminDashboard.usersPage.stats.totalUsers, value: stats.total_users, icon: Icons.users, color: "amber" },
         { label: t.adminDashboard.usersPage.stats.doctors, value: stats.doctors, icon: Icons.doctor, color: "emerald" },
         { label: t.adminDashboard.usersPage.stats.patients, value: stats.patients, icon: Icons.patient, color: "blue" },
         { label: t.adminDashboard.usersPage.stats.admins, value: stats.admins, icon: Icons.admin, color: "amber" },
@@ -217,7 +217,7 @@ export default function UsersPage() {
         return (
             <div className="min-h-screen flex items-center justify-center">
                 <div className="text-center">
-                    <div className="text-teal-500 mb-4 flex justify-center">{Icons.spinner}</div>
+                    <div className="text-amber-500 mb-4 flex justify-center">{Icons.spinner}</div>
                     <p className={isDark ? "text-gray-400" : "text-gray-600"}>{t.common.loading || "Loading..."}</p>
                 </div>
             </div>
@@ -234,12 +234,12 @@ export default function UsersPage() {
                     minSize={0.4}
                     maxSize={1}
                     particleDensity={isDark ? 20 : 10}
-                    particleColor={isDark ? "20, 184, 166" : "13, 148, 136"}
+                    particleColor={isDark ? "245, 158, 11" : "217, 119, 6"}
                 />
                 {isDark && (
                     <>
-                        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-teal-500/5 rounded-full blur-3xl" />
-                        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-teal-500/5 rounded-full blur-3xl" />
+                        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-amber-500/5 rounded-full blur-3xl" />
+                        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-amber-500/5 rounded-full blur-3xl" />
                     </>
                 )}
             </div>
@@ -256,7 +256,7 @@ export default function UsersPage() {
                     <button
                         type="button"
                         onClick={() => setShowAddUserModal(true)}
-                        className="px-4 md:px-5 py-2 md:py-2.5 bg-teal-500 hover:bg-teal-600 text-white font-medium rounded-xl transition-colors flex items-center gap-2 self-start text-sm md:text-base"
+                        className="px-4 md:px-5 py-2 md:py-2.5 bg-amber-500 hover:bg-amber-600 text-white font-medium rounded-xl transition-colors flex items-center gap-2 self-start text-sm md:text-base"
                     >
                         {Icons.plus}
                         {t.adminDashboard.usersPage.addUser}
@@ -266,9 +266,9 @@ export default function UsersPage() {
                 {/* Stats Row */}
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-6 md:mb-8">
                     {statCards.map((stat, idx) => (
-                        <GlowingCard key={idx} glowColor="teal" className="p-3 md:p-4" isDark={isDark}>
+                        <GlowingCard key={idx} glowColor="amber" className="p-3 md:p-4" isDark={isDark}>
                             <div className="flex items-center gap-2 md:gap-3">
-                                <div className="w-8 h-8 md:w-10 md:h-10 rounded-lg md:rounded-xl flex items-center justify-center bg-teal-500/10 text-teal-500">
+                                <div className="w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center bg-gradient-to-br from-[#38BDF8] to-[#0284C7] text-white shadow-[0_0_15px_rgba(14,165,233,0.5)] border border-sky-300/40">
                                     <span className="[&>svg]:w-4 [&>svg]:h-4 md:[&>svg]:w-5 md:[&>svg]:h-5">
                                         {stat.icon}
                                     </span>
@@ -285,7 +285,7 @@ export default function UsersPage() {
                 </div>
 
                 {/* Search and Filters */}
-                <GlowingCard glowColor="teal" className="p-3 md:p-4 mb-4 md:mb-6" isDark={isDark}>
+                <GlowingCard glowColor="amber" className="p-3 md:p-4 mb-4 md:mb-6" isDark={isDark}>
                     <div className="flex flex-col md:flex-row gap-3 md:gap-4">
                         <div className="flex-1 relative">
                             <div className={cn("absolute top-1/2 -translate-y-1/2 text-gray-500", isRTL ? "right-3" : "left-3")}>{Icons.search}</div>
@@ -298,8 +298,8 @@ export default function UsersPage() {
                                     "w-full py-2 md:py-2.5 rounded-xl border outline-none transition-colors text-sm md:text-base",
                                     isRTL ? "pr-10 pl-4" : "pl-10 pr-4",
                                     isDark
-                                        ? "bg-slate-800/50 border-white/10 text-white placeholder-gray-500 focus:border-teal-500/50"
-                                        : "bg-gray-50 border-gray-200 text-slate-900 placeholder-gray-400 focus:border-teal-500"
+                                        ? "bg-slate-800/50 border-white/10 text-white placeholder-gray-500 focus:border-amber-500/50"
+                                        : "bg-gray-50 border-gray-200 text-slate-900 placeholder-gray-400 focus:border-amber-500"
                                 )}
                             />
                         </div>
@@ -311,7 +311,7 @@ export default function UsersPage() {
                                     className={cn(
                                         "px-3 md:px-4 py-1.5 md:py-2.5 rounded-lg md:rounded-xl text-xs md:text-sm font-medium transition-colors capitalize whitespace-nowrap",
                                         filter === f
-                                            ? "bg-teal-500 text-white"
+                                            ? "bg-amber-500 text-white"
                                             : isDark
                                                 ? "bg-white/5 text-gray-400 hover:bg-white/10"
                                                 : "bg-gray-100 text-gray-600 hover:bg-gray-200"
@@ -334,10 +334,10 @@ export default function UsersPage() {
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: idx * 0.05 }}
                             >
-                                <GlowingCard glowColor="teal" className="p-3 md:p-5" isDark={isDark}>
+                                <GlowingCard glowColor="amber" className="p-3 md:p-5" isDark={isDark}>
                                     <div className="flex items-start justify-between mb-3 md:mb-4">
                                         <div className="flex items-center gap-2 md:gap-3">
-                                            <div className="relative w-10 h-10 md:w-12 md:h-12 rounded-lg md:rounded-xl overflow-hidden border-2 border-teal-500/30">
+                                            <div className="relative w-10 h-10 md:w-12 md:h-12 rounded-lg md:rounded-xl overflow-hidden border-2 border-amber-500/30">
                                                 {user.avatar_url ? (
                                                     <Image
                                                         src={user.avatar_url}
@@ -433,7 +433,7 @@ export default function UsersPage() {
                         </h3>
 
                         <div className="flex items-center gap-3 mb-6">
-                            <div className="relative w-12 h-12 rounded-xl overflow-hidden border-2 border-teal-500/30">
+                            <div className="relative w-12 h-12 rounded-xl overflow-hidden border-2 border-amber-500/30">
                                 {showStatusModal.avatar_url ? (
                                     <Image
                                         src={showStatusModal.avatar_url}
@@ -495,7 +495,7 @@ export default function UsersPage() {
                                         </p>
                                     </div>
                                     {actionLoading === showStatusModal.id && (
-                                        <svg className="w-5 h-5 animate-spin text-teal-500" fill="none" viewBox="0 0 24 24">
+                                        <svg className="w-5 h-5 animate-spin text-amber-500" fill="none" viewBox="0 0 24 24">
                                             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                                             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
                                         </svg>
@@ -815,7 +815,7 @@ export default function UsersPage() {
                                 type="button"
                                 onClick={handleAddUser}
                                 disabled={actionLoading === "add_user"}
-                                className="flex-1 py-2.5 rounded-xl font-medium bg-teal-500 hover:bg-teal-600 text-white transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                                className="flex-1 py-2.5 rounded-xl font-medium bg-amber-500 hover:bg-amber-600 text-white transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
                             >
                                 {actionLoading === "add_user" ? (
                                     <>

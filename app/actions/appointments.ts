@@ -751,53 +751,74 @@ export async function startConsultation(
     if (!doctorProfile) {
         return { success: false, error: "Doctor profile not found" };
     }
+    // Check if appointment already has an active session (allow doctor to reconnect)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: existingSession } = await (supabase as any)
+        .from("consultation_sessions")
+        .select("id, jitsi_room_id")
+        .eq("appointment_id", appointmentId)
+        .is("ended_at", null)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
 
-    // Create Daily.co room for video call
+    if (existingSession?.jitsi_room_id) {
+        const jitsiDomain = process.env.NEXT_PUBLIC_JITSI_DOMAIN || "fairmeeting.net";
+        const sessionRoom = existingSession.jitsi_room_id.replace("meet.jit.si", jitsiDomain);
+        console.log("[startConsultation] Rejoining existing session:", sessionRoom);
+        return { success: true, roomUrl: sessionRoom };
+
+    }
+
+    // Create Video room (Daily.co or high-availability WebRTC fallback)
     let roomUrl: string;
     const dailyApiKey = process.env.DAILY_API_KEY;
     const dailyDomain = process.env.NEXT_PUBLIC_DAILY_DOMAIN;
 
     if (!dailyApiKey || !dailyDomain) {
-        console.error("Daily.co not configured - DAILY_API_KEY or NEXT_PUBLIC_DAILY_DOMAIN missing");
-        return { success: false, error: "Video service not configured" };
-    }
+        // Fallback to WebRTC room (meet.jit.si) when Daily.co keys are not set
+        const roomName = `tabibi-${appointmentId.replace(/[^a-zA-Z0-9]/g, "").slice(0, 12)}-${Date.now().toString(36)}`;
+        const jitsiDomain = process.env.NEXT_PUBLIC_JITSI_DOMAIN || "fairmeeting.net";
+        roomUrl = `https://${jitsiDomain}/${roomName}`;
+        console.log("[startConsultation] Using WebRTC fallback room:", roomUrl);
+    } else {
+        try {
+            const roomName = `tabibi-${appointmentId.slice(0, 8)}-${Date.now()}`;
 
-    try {
-        const roomName = `tawari-${appointmentId.slice(0, 8)}-${Date.now()}`;
-
-        const response = await fetch("https://api.daily.co/v1/rooms", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${dailyApiKey}`,
-            },
-            body: JSON.stringify({
-                name: roomName,
-                privacy: "public",
-                properties: {
-                    exp: Math.floor(Date.now() / 1000) + 3600, // 1 hour expiry
-                    enable_screenshare: true,
-                    enable_chat: true,
-                    enable_knocking: false,
-                    start_video_off: false,
-                    start_audio_off: false,
-                    max_participants: 4,
-                    eject_at_room_exp: true,
+            const response = await fetch("https://api.daily.co/v1/rooms", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${dailyApiKey}`,
                 },
-            }),
-        });
+                body: JSON.stringify({
+                    name: roomName,
+                    privacy: "public",
+                    properties: {
+                        exp: Math.floor(Date.now() / 1000) + 3600, // 1 hour expiry
+                        enable_screenshare: true,
+                        enable_chat: true,
+                        enable_knocking: false,
+                        start_video_off: false,
+                        start_audio_off: false,
+                        max_participants: 4,
+                        eject_at_room_exp: true,
+                    },
+                }),
+            });
 
-        if (!response.ok) {
-            const error = await response.json();
-            console.error("Daily API error:", error);
+            if (!response.ok) {
+                const error = await response.json();
+                console.error("Daily API error:", error);
+                return { success: false, error: "Failed to create video room" };
+            }
+
+            const room = await response.json();
+            roomUrl = room.url;
+        } catch (err) {
+            console.error("Error creating Daily room:", err);
             return { success: false, error: "Failed to create video room" };
         }
-
-        const room = await response.json();
-        roomUrl = room.url;
-    } catch (err) {
-        console.error("Error creating Daily room:", err);
-        return { success: false, error: "Failed to create video room" };
     }
 
     // Update appointment status
@@ -810,7 +831,7 @@ export async function startConsultation(
         })
         .eq("id", appointmentId)
         .eq("doctor_profile_id", doctorProfile.id)
-        .in("status", ["scheduled", "in_waiting_room"]);
+        .in("status", ["scheduled", "in_waiting_room", "in_progress"]);
 
     if (updateError) {
         console.error("Error starting consultation:", updateError);
@@ -1254,9 +1275,21 @@ export async function getAvailableDoctors(filters?: {
 
     // Filter by specialization if provided
     if (filters?.specialization && filters.specialization !== "all") {
-        const specLower = filters.specialization.toLowerCase();
+        const specLower = filters.specialization.toLowerCase().trim();
         doctors = doctors.filter(doc =>
-            doc.specializations.some(s => s.toLowerCase() === specLower)
+            doc.specializations.some(s => {
+                const sLower = s.toLowerCase();
+                if (sLower === specLower) return true;
+                if (sLower.includes(specLower) || specLower.includes(sLower)) return true;
+                // Aliases from landing page and URL params
+                if (specLower === "general" && sLower.includes("general")) return true;
+                if (specLower === "mental" && (sLower.includes("psych") || sLower.includes("mental"))) return true;
+                if (specLower === "nutrition" && sLower.includes("nutrition")) return true;
+                if (specLower === "obgyn" && (sLower.includes("obstetric") || sLower.includes("gynecol"))) return true;
+                if (specLower === "ent" && sLower.includes("ent")) return true;
+                if (specLower === "orthopedics" && sLower.includes("orthopedic")) return true;
+                return false;
+            })
         );
     }
 

@@ -261,7 +261,7 @@ export default function PrescriptionsPage({
     if (loading) {
         return (
             <div className="p-4 md:p-6 lg:p-8 flex items-center justify-center min-h-[60vh]">
-                <div className="animate-spin w-8 h-8 border-2 border-teal-500 border-t-transparent rounded-full" />
+                <div className="animate-spin w-8 h-8 border-2 border-amber-500 border-t-transparent rounded-full" />
             </div>
         );
     }
@@ -272,7 +272,7 @@ export default function PrescriptionsPage({
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 md:mb-8">
                 <div>
                     <h1 className={cn("text-xl md:text-2xl font-bold flex items-center gap-2 md:gap-3", textPrimary)}>
-                        <span className="w-8 h-8 md:w-10 md:h-10 rounded-lg md:rounded-xl bg-teal-500/10 flex items-center justify-center text-teal-500">
+                        <span className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-br from-[#38BDF8] to-[#0284C7] flex items-center justify-center text-white shadow-[0_0_15px_rgba(14,165,233,0.5)] border border-sky-300/40">
                             {Icons.prescription}
                         </span>
                         {isRTL ? "الوصفات الطبية" : "Prescriptions"}
@@ -283,7 +283,7 @@ export default function PrescriptionsPage({
                 </div>
                 <button
                     onClick={() => setShowCreateModal(true)}
-                    className="flex items-center justify-center gap-2 bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-400 hover:to-teal-500 text-white font-semibold py-2 md:py-2.5 px-4 md:px-5 rounded-lg md:rounded-xl transition-all shadow-lg shadow-teal-500/20 text-sm md:text-base"
+                    className="flex items-center justify-center gap-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-white font-semibold py-2 md:py-2.5 px-4 md:px-5 rounded-lg md:rounded-xl transition-all shadow-lg shadow-amber-500/20 text-sm md:text-base"
                 >
                     {Icons.plus}
                     <span>{isRTL ? "وصفة جديدة" : "New Prescription"}</span>
@@ -297,7 +297,7 @@ export default function PrescriptionsPage({
                     className={cn(
                         "px-4 py-2.5 rounded-xl text-sm font-medium transition-all border",
                         activeTab === "prescriptions"
-                            ? "bg-teal-500 text-white border-teal-500 shadow-lg shadow-teal-500/20"
+                            ? "bg-amber-500 text-white border-amber-500 shadow-lg shadow-amber-500/20"
                             : cn("border-transparent", isDark ? "bg-white/5 text-gray-400 hover:bg-white/10" : "bg-gray-100 text-gray-600 hover:bg-gray-200")
                     )}
                 >
@@ -308,7 +308,7 @@ export default function PrescriptionsPage({
                     className={cn(
                         "px-4 py-2.5 rounded-xl text-sm font-medium transition-all border relative",
                         activeTab === "renewals"
-                            ? "bg-teal-500 text-white border-teal-500 shadow-lg shadow-teal-500/20"
+                            ? "bg-amber-500 text-white border-amber-500 shadow-lg shadow-amber-500/20"
                             : cn("border-transparent", isDark ? "bg-white/5 text-gray-400 hover:bg-white/10" : "bg-gray-100 text-gray-600 hover:bg-gray-200")
                     )}
                 >
@@ -343,7 +343,7 @@ export default function PrescriptionsPage({
             {activeTab === "renewals" && (
                 <>
                     {filteredRenewals.length === 0 ? (
-                        <GlowingCard glowColor="teal" className="p-12 text-center" isDark={isDark}>
+                        <GlowingCard glowColor="amber" className="p-12 text-center" isDark={isDark}>
                             <div className={cn("w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4", isDark ? "bg-slate-900" : "bg-gray-100", textMuted)}>
                                 <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
@@ -357,7 +357,7 @@ export default function PrescriptionsPage({
                             </p>
                         </GlowingCard>
                     ) : (
-                        <GlowingCard glowColor="teal" className="p-0 overflow-hidden" isDark={isDark}>
+                        <GlowingCard glowColor="amber" className="p-0 overflow-hidden" isDark={isDark}>
                             <div className={cn("divide-y", isDark ? "divide-white/5" : "divide-gray-100")}>
                                 {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                                 {filteredRenewals.map((request: any, idx) => (
@@ -404,7 +404,7 @@ export default function PrescriptionsPage({
                                             {/* Actions */}
                                             <div className="flex items-center gap-2 flex-shrink-0">
                                                 {actionLoading === request.id ? (
-                                                    <div className="animate-spin w-5 h-5 border-2 border-teal-500 border-t-transparent rounded-full" />
+                                                    <div className="animate-spin w-5 h-5 border-2 border-amber-500 border-t-transparent rounded-full" />
                                                 ) : (
                                                     <>
                                                         <button
@@ -438,7 +438,7 @@ export default function PrescriptionsPage({
             {activeTab === "prescriptions" && (
             <>
             {filteredPrescriptions.length === 0 ? (
-                <GlowingCard glowColor="teal" className="p-12 text-center" isDark={isDark}>
+                <GlowingCard glowColor="amber" className="p-12 text-center" isDark={isDark}>
                     <div className={cn("w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4", isDark ? "bg-slate-900" : "bg-gray-100", textMuted)}>
                         {Icons.prescription}
                     </div>
@@ -458,11 +458,11 @@ export default function PrescriptionsPage({
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: idx * 0.05 }}
                         >
-                            <GlowingCard glowColor="teal" className={cn("p-4 transition-colors", cardHover)} isDark={isDark}>
+                            <GlowingCard glowColor="amber" className={cn("p-4 transition-colors", cardHover)} isDark={isDark}>
                                 <div className="flex flex-col sm:flex-row sm:items-center gap-3">
                                     {/* Patient Info */}
                                     <div className="flex items-center gap-3 flex-1">
-                                        <div className="relative w-10 h-10 rounded-full overflow-hidden border border-teal-500/20 flex-shrink-0">
+                                        <div className="relative w-10 h-10 rounded-full overflow-hidden border border-amber-500/20 flex-shrink-0">
                                             {rx.patient?.avatar_url ? (
                                                 <Image
                                                     src={rx.patient.avatar_url}
@@ -472,7 +472,7 @@ export default function PrescriptionsPage({
                                                     sizes="40px"
                                                 />
                                             ) : (
-                                                <div className={cn("w-full h-full flex items-center justify-center text-sm font-bold", isDark ? "bg-teal-500/10 text-teal-400" : "bg-teal-50 text-teal-600")}>
+                                                <div className={cn("w-full h-full flex items-center justify-center text-sm font-bold", isDark ? "bg-amber-500/10 text-amber-400" : "bg-amber-50 text-amber-600")}>
                                                     {rx.patient?.full_name.charAt(0) || "?"}
                                                 </div>
                                             )}
@@ -509,7 +509,7 @@ export default function PrescriptionsPage({
                                     {/* Actions */}
                                     <div className="flex items-center gap-2 sm:flex-shrink-0">
                                         {actionLoading === rx.id ? (
-                                            <div className="animate-spin w-5 h-5 border-2 border-teal-500 border-t-transparent rounded-full" />
+                                            <div className="animate-spin w-5 h-5 border-2 border-amber-500 border-t-transparent rounded-full" />
                                         ) : (
                                             <>
                                                 <button
@@ -646,7 +646,7 @@ export default function PrescriptionsPage({
                                         <button
                                             type="button"
                                             onClick={addMedication}
-                                            className="text-teal-500 hover:text-teal-400 text-sm font-medium flex items-center gap-1"
+                                            className="text-amber-500 hover:text-amber-400 text-sm font-medium flex items-center gap-1"
                                         >
                                             {Icons.plus}
                                             {isRTL ? "إضافة دواء" : "Add Medication"}
@@ -749,7 +749,7 @@ export default function PrescriptionsPage({
                                 <button
                                     onClick={handleCreatePrescription}
                                     disabled={!selectedPatient || !medications.some(m => m.medication_name.trim()) || creating}
-                                    className="px-5 py-2.5 rounded-xl bg-teal-500 text-white font-medium hover:bg-teal-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                                    className="px-5 py-2.5 rounded-xl bg-amber-500 text-white font-medium hover:bg-amber-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                                 >
                                     {creating ? (
                                         <>

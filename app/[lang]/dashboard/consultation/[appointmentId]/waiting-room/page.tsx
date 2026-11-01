@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useI18n } from "@/app/i18n";
+import { useGlobalTheme } from "@/app/context/GlobalThemeContext";
 import { getAppointmentById } from "@/app/actions/appointments";
 import { useToast } from "@/components/ui/toast";
 
@@ -21,7 +22,7 @@ const WaitingDots = () => (
                     repeat: Infinity,
                     delay: i * 0.2,
                 }}
-                className="w-2 h-2 rounded-full bg-teal-500"
+                className="w-2 h-2 rounded-full bg-amber-500"
             />
         ))}
     </span>
@@ -30,7 +31,7 @@ const WaitingDots = () => (
 // Pulse ring animation
 const PulseRing = ({ delay = 0 }: { delay?: number }) => (
     <motion.div
-        className="absolute inset-0 rounded-full border-2 border-teal-500/30"
+        className="absolute inset-0 rounded-full border-2 border-amber-500/30"
         initial={{ scale: 1, opacity: 0.5 }}
         animate={{ scale: 2, opacity: 0 }}
         transition={{
@@ -46,6 +47,7 @@ export default function WaitingRoomPage() {
     const params = useParams();
     const router = useRouter();
     const { isRTL, language } = useI18n();
+    const { isDark } = useGlobalTheme();
     const { showConfirm } = useToast();
     const appointmentId = params.appointmentId as string;
 
@@ -174,10 +176,13 @@ export default function WaitingRoomPage() {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center">
+            <div className={cn(
+                "min-h-screen flex items-center justify-center",
+                isDark ? "bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-white" : "bg-gray-50 text-slate-900"
+            )}>
                 <div className="text-center">
-                    <div className="animate-spin w-10 h-10 border-2 border-gray-600 border-t-teal-400 rounded-full mx-auto mb-4" />
-                    <p className="text-gray-400">{isRTL ? "جاري التحميل..." : "Loading..."}</p>
+                    <div className="animate-spin w-10 h-10 border-2 border-gray-400 border-t-amber-500 rounded-full mx-auto mb-4" />
+                    <p className={isDark ? "text-gray-400" : "text-gray-600"}>{isRTL ? "جاري التحميل..." : "Loading..."}</p>
                 </div>
             </div>
         );
@@ -185,18 +190,21 @@ export default function WaitingRoomPage() {
 
     if (error) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center p-4">
+            <div className={cn(
+                "min-h-screen flex items-center justify-center p-4",
+                isDark ? "bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950" : "bg-gray-50"
+            )}>
                 <div className="text-center max-w-md">
                     <div className="w-16 h-16 rounded-full bg-red-500/20 flex items-center justify-center mx-auto mb-4">
-                        <svg className="w-8 h-8 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
                         </svg>
                     </div>
-                    <h2 className="text-xl font-semibold text-white mb-2">{labels.error}</h2>
-                    <p className="text-gray-400 mb-6">{error}</p>
+                    <h2 className={cn("text-xl font-semibold mb-2", isDark ? "text-white" : "text-slate-900")}>{labels.error}</h2>
+                    <p className={cn("mb-6", isDark ? "text-gray-400" : "text-gray-600")}>{error}</p>
                     <button
                         onClick={() => router.back()}
-                        className="px-6 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors"
+                        className="px-6 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors shadow-sm"
                     >
                         {labels.goBack}
                     </button>
@@ -206,7 +214,10 @@ export default function WaitingRoomPage() {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex flex-col items-center justify-center p-4">
+        <div className={cn(
+            "min-h-screen flex flex-col items-center justify-center p-4",
+            isDark ? "bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-white" : "bg-gray-50 text-slate-900"
+        )}>
             <div className="w-full max-w-lg text-center">
                 {/* Animated Waiting Icon */}
                 <div className="relative w-32 h-32 mx-auto mb-8">
@@ -214,21 +225,21 @@ export default function WaitingRoomPage() {
                     <PulseRing delay={0.5} />
                     <PulseRing delay={1} />
                     <motion.div
-                        className="absolute inset-0 rounded-full bg-gradient-to-br from-teal-500/20 to-teal-600/20 flex items-center justify-center"
+                        className="absolute inset-0 rounded-full bg-gradient-to-br from-amber-500/20 to-amber-600/20 flex items-center justify-center"
                         animate={{ scale: [1, 1.05, 1] }}
                         transition={{ duration: 2, repeat: Infinity }}
                     >
-                        <svg className="w-12 h-12 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-12 h-12 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
                         </svg>
                     </motion.div>
                 </div>
 
                 {/* Status */}
-                <h1 className="text-2xl md:text-3xl font-bold text-white mb-2">
+                <h1 className={cn("text-2xl md:text-3xl font-bold mb-2", isDark ? "text-white" : "text-slate-900")}>
                     {labels.waitingForDoctor}
                 </h1>
-                <div className="flex items-center justify-center gap-2 text-gray-400 mb-8">
+                <div className={cn("flex items-center justify-center gap-2 mb-8", isDark ? "text-gray-400" : "text-gray-600")}>
                     <span>{labels.doctorWillJoin}</span>
                     <WaitingDots />
                 </div>
@@ -236,32 +247,44 @@ export default function WaitingRoomPage() {
                 {/* Info Cards */}
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
                     {doctorName && (
-                        <div className="p-4 rounded-xl bg-white/5 border border-white/10">
-                            <p className="text-xs text-gray-500 mb-1">{labels.yourDoctor}</p>
-                            <p className="text-white font-medium">{doctorName}</p>
+                        <div className={cn(
+                            "p-4 rounded-xl border",
+                            isDark ? "bg-white/5 border-white/10" : "bg-white border-slate-200 shadow-xs"
+                        )}>
+                            <p className={cn("text-xs mb-1", isDark ? "text-gray-500" : "text-gray-500")}>{labels.yourDoctor}</p>
+                            <p className={cn("font-medium", isDark ? "text-white" : "text-slate-900")}>{doctorName}</p>
                         </div>
                     )}
                     {appointmentTime && (
-                        <div className="p-4 rounded-xl bg-white/5 border border-white/10">
-                            <p className="text-xs text-gray-500 mb-1">{labels.scheduledTime}</p>
-                            <p className="text-white font-medium">{appointmentTime}</p>
+                        <div className={cn(
+                            "p-4 rounded-xl border",
+                            isDark ? "bg-white/5 border-white/10" : "bg-white border-slate-200 shadow-xs"
+                        )}>
+                            <p className={cn("text-xs mb-1", isDark ? "text-gray-500" : "text-gray-500")}>{labels.scheduledTime}</p>
+                            <p className={cn("font-medium", isDark ? "text-white" : "text-slate-900")}>{appointmentTime}</p>
                         </div>
                     )}
-                    <div className="p-4 rounded-xl bg-white/5 border border-white/10">
-                        <p className="text-xs text-gray-500 mb-1">{labels.waitingFor}</p>
-                        <p className="text-teal-400 font-medium">{formatWaitingTime(waitingTime)}</p>
+                    <div className={cn(
+                        "p-4 rounded-xl border",
+                        isDark ? "bg-white/5 border-white/10" : "bg-white border-slate-200 shadow-xs"
+                    )}>
+                        <p className={cn("text-xs mb-1", isDark ? "text-gray-500" : "text-gray-500")}>{labels.waitingFor}</p>
+                        <p className="text-amber-500 font-semibold">{formatWaitingTime(waitingTime)}</p>
                     </div>
                 </div>
 
                 {/* Tips */}
-                <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 text-left mb-8">
-                    <h3 className="text-amber-400 font-medium mb-3 flex items-center gap-2">
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className={cn(
+                    "p-4 rounded-xl border text-start mb-8",
+                    isDark ? "bg-amber-500/10 border-amber-500/20 text-gray-400" : "bg-amber-50 border-amber-200 text-amber-950"
+                )}>
+                    <h3 className={cn("font-medium mb-3 flex items-center gap-2", isDark ? "text-amber-400" : "text-amber-900")}>
+                        <svg className="w-5 h-5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 18v-5.25m0 0a6.01 6.01 0 001.5-.189m-1.5.189a6.01 6.01 0 01-1.5-.189m3.75 7.478a12.06 12.06 0 01-4.5 0m3.75 2.383a14.406 14.406 0 01-3 0M14.25 18v-.192c0-.983.658-1.823 1.508-2.316a7.5 7.5 0 10-7.517 0c.85.493 1.509 1.333 1.509 2.316V18" />
                         </svg>
                         {labels.tips}
                     </h3>
-                    <ul className="space-y-2 text-sm text-gray-400">
+                    <ul className={cn("space-y-2 text-sm", isDark ? "text-gray-400" : "text-slate-700")}>
                         <li className="flex items-start gap-2">
                             <span className="text-amber-500 mt-0.5">1.</span>
                             {labels.tip1}
@@ -282,8 +305,10 @@ export default function WaitingRoomPage() {
                     <button
                         onClick={() => router.push(`/${language}/dashboard/consultation/${appointmentId}/pre-call`)}
                         className={cn(
-                            "px-6 py-3 rounded-xl font-medium transition-colors",
-                            "bg-white/5 text-white hover:bg-white/10 border border-white/10"
+                            "px-6 py-3 rounded-xl font-medium transition-colors border shadow-xs",
+                            isDark
+                                ? "bg-white/5 text-white hover:bg-white/10 border-white/10"
+                                : "bg-white text-slate-800 hover:bg-slate-50 border-slate-200"
                         )}
                     >
                         <span className="flex items-center justify-center gap-2">
@@ -297,8 +322,10 @@ export default function WaitingRoomPage() {
                     <button
                         onClick={handleCancel}
                         className={cn(
-                            "px-6 py-3 rounded-xl font-medium transition-colors",
-                            "bg-red-500/10 text-red-400 hover:bg-red-500/20 border border-red-500/20"
+                            "px-6 py-3 rounded-xl font-medium transition-colors border",
+                            isDark
+                                ? "bg-red-500/10 text-red-400 hover:bg-red-500/20 border-red-500/20"
+                                : "bg-red-50 text-red-600 hover:bg-red-100 border-red-200"
                         )}
                     >
                         {labels.cancel}

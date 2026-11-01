@@ -28,7 +28,7 @@ export interface EmailResult {
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 
 // Email sender address (must be from verified domain)
-const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || "Tawari <noreply@tawariapp.com>";
+const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || "Tabibi <noreply@tabibi.com>";
 
 /**
  * Send an email using Resend
@@ -91,9 +91,9 @@ export function getDoctorApprovalEmailHtml(doctorName: string, language: "en" | 
     <style>
         body { font-family: 'Segoe UI', Tahoma, sans-serif; line-height: 1.6; color: #333; }
         .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-        .header { background: linear-gradient(135deg, #0d9488 0%, #14b8a6 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+        .header { background: linear-gradient(135deg, #B45309 0%, #D97706 50%, #F59E0B 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
         .content { background: #f8fafc; padding: 30px; border-radius: 0 0 10px 10px; }
-        .button { display: inline-block; background: #0d9488; color: white; padding: 12px 30px; text-decoration: none; border-radius: 8px; margin: 20px 0; }
+        .button { display: inline-block; background: #D97706; color: white; padding: 12px 30px; text-decoration: none; border-radius: 8px; margin: 20px 0; }
         .footer { text-align: center; margin-top: 20px; color: #64748b; font-size: 14px; }
     </style>
 </head>
@@ -104,7 +104,7 @@ export function getDoctorApprovalEmailHtml(doctorName: string, language: "en" | 
         </div>
         <div class="content">
             <p>مرحباً دكتور ${doctorName}،</p>
-            <p>يسعدنا إبلاغك بأنه تم <strong>اعتماد طلبك</strong> للانضمام إلى منصة تواري كطبيب معتمد.</p>
+            <p>يسعدنا إبلاغك بأنه تم <strong>اعتماد طلبك</strong> للانضمام إلى منصة طبيبي كطبيب معتمد.</p>
             <p>يمكنك الآن:</p>
             <ul>
                 <li>تحديد مواعيد الاستشارات الخاصة بك</li>
@@ -113,12 +113,12 @@ export function getDoctorApprovalEmailHtml(doctorName: string, language: "en" | 
                 <li>إدارة ملفك الشخصي والأرباح</li>
             </ul>
             <p style="text-align: center;">
-                <a href="https://www.tawariapp.com/ar/login" class="button">تسجيل الدخول الآن</a>
+                <a href="https://www.tabibi.com/ar/login" class="button">تسجيل الدخول الآن</a>
             </p>
-            <p>شكراً لانضمامك إلى تواري!</p>
+            <p>شكراً لانضمامك إلى طبيبي!</p>
         </div>
         <div class="footer">
-            <p>فريق تواري</p>
+            <p>فريق طبيبي</p>
             <p>هذه رسالة آلية، يرجى عدم الرد عليها.</p>
         </div>
     </div>
@@ -135,9 +135,9 @@ export function getDoctorApprovalEmailHtml(doctorName: string, language: "en" | 
     <style>
         body { font-family: 'Segoe UI', Tahoma, sans-serif; line-height: 1.6; color: #333; }
         .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-        .header { background: linear-gradient(135deg, #0d9488 0%, #14b8a6 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+        .header { background: linear-gradient(135deg, #B45309 0%, #D97706 50%, #F59E0B 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
         .content { background: #f8fafc; padding: 30px; border-radius: 0 0 10px 10px; }
-        .button { display: inline-block; background: #0d9488; color: white; padding: 12px 30px; text-decoration: none; border-radius: 8px; margin: 20px 0; }
+        .button { display: inline-block; background: #D97706; color: white; padding: 12px 30px; text-decoration: none; border-radius: 8px; margin: 20px 0; }
         .footer { text-align: center; margin-top: 20px; color: #64748b; font-size: 14px; }
     </style>
 </head>
@@ -148,7 +148,7 @@ export function getDoctorApprovalEmailHtml(doctorName: string, language: "en" | 
         </div>
         <div class="content">
             <p>Dear Dr. ${doctorName},</p>
-            <p>We're pleased to inform you that your application has been <strong>approved</strong> to join Tawari as a verified doctor.</p>
+            <p>We're pleased to inform you that your application has been <strong>approved</strong> to join Tabibi as a verified doctor.</p>
             <p>You can now:</p>
             <ul>
                 <li>Set your consultation availability</li>
@@ -157,12 +157,12 @@ export function getDoctorApprovalEmailHtml(doctorName: string, language: "en" | 
                 <li>Manage your profile and earnings</li>
             </ul>
             <p style="text-align: center;">
-                <a href="https://www.tawariapp.com/en/login" class="button">Login Now</a>
+                <a href="https://www.tabibi.com/en/login" class="button">Login Now</a>
             </p>
-            <p>Thank you for joining Tawari!</p>
+            <p>Thank you for joining Tabibi!</p>
         </div>
         <div class="footer">
-            <p>The Tawari Team</p>
+            <p>The Tabibi Team</p>
             <p>This is an automated message. Please do not reply.</p>
         </div>
     </div>
@@ -191,7 +191,7 @@ export function getDoctorRejectionEmailHtml(
         .header { background: #f1f5f9; color: #475569; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; border-bottom: 3px solid #e2e8f0; }
         .content { background: #f8fafc; padding: 30px; border-radius: 0 0 10px 10px; }
         .reason-box { background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 15px; margin: 20px 0; }
-        .button { display: inline-block; background: #0d9488; color: white; padding: 12px 30px; text-decoration: none; border-radius: 8px; margin: 20px 0; }
+        .button { display: inline-block; background: #D97706; color: white; padding: 12px 30px; text-decoration: none; border-radius: 8px; margin: 20px 0; }
         .footer { text-align: center; margin-top: 20px; color: #64748b; font-size: 14px; }
     </style>
 </head>
@@ -202,18 +202,18 @@ export function getDoctorRejectionEmailHtml(
         </div>
         <div class="content">
             <p>مرحباً دكتور ${doctorName}،</p>
-            <p>نشكرك على اهتمامك بالانضمام إلى منصة تواري. بعد مراجعة طلبك، لم نتمكن من الموافقة عليه في الوقت الحالي.</p>
+            <p>نشكرك على اهتمامك بالانضمام إلى منصة طبيبي. بعد مراجعة طلبك، لم نتمكن من الموافقة عليه في الوقت الحالي.</p>
             <div class="reason-box">
                 <strong>السبب:</strong>
                 <p>${reason}</p>
             </div>
             <p>يمكنك تحديث معلوماتك وإعادة التقديم. إذا كانت لديك أي أسئلة، يرجى التواصل مع فريق الدعم.</p>
             <p style="text-align: center;">
-                <a href="https://www.tawariapp.com/ar/contact" class="button">تواصل معنا</a>
+                <a href="https://www.tabibi.com/ar/contact" class="button">تواصل معنا</a>
             </p>
         </div>
         <div class="footer">
-            <p>فريق تواري</p>
+            <p>فريق طبيبي</p>
             <p>هذه رسالة آلية، يرجى عدم الرد عليها.</p>
         </div>
     </div>
@@ -233,7 +233,7 @@ export function getDoctorRejectionEmailHtml(
         .header { background: #f1f5f9; color: #475569; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; border-bottom: 3px solid #e2e8f0; }
         .content { background: #f8fafc; padding: 30px; border-radius: 0 0 10px 10px; }
         .reason-box { background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 15px; margin: 20px 0; }
-        .button { display: inline-block; background: #0d9488; color: white; padding: 12px 30px; text-decoration: none; border-radius: 8px; margin: 20px 0; }
+        .button { display: inline-block; background: #D97706; color: white; padding: 12px 30px; text-decoration: none; border-radius: 8px; margin: 20px 0; }
         .footer { text-align: center; margin-top: 20px; color: #64748b; font-size: 14px; }
     </style>
 </head>
@@ -244,18 +244,18 @@ export function getDoctorRejectionEmailHtml(
         </div>
         <div class="content">
             <p>Dear Dr. ${doctorName},</p>
-            <p>Thank you for your interest in joining Tawari. After reviewing your application, we were unable to approve it at this time.</p>
+            <p>Thank you for your interest in joining Tabibi. After reviewing your application, we were unable to approve it at this time.</p>
             <div class="reason-box">
                 <strong>Reason:</strong>
                 <p>${reason}</p>
             </div>
             <p>You can update your information and reapply. If you have any questions, please contact our support team.</p>
             <p style="text-align: center;">
-                <a href="https://www.tawariapp.com/en/contact" class="button">Contact Us</a>
+                <a href="https://www.tabibi.com/en/contact" class="button">Contact Us</a>
             </p>
         </div>
         <div class="footer">
-            <p>The Tawari Team</p>
+            <p>The Tabibi Team</p>
             <p>This is an automated message. Please do not reply.</p>
         </div>
     </div>
@@ -274,7 +274,7 @@ export function getDoctorApprovalEmailText(doctorName: string, language: "en" | 
 
 مرحباً دكتور ${doctorName}،
 
-يسعدنا إبلاغك بأنه تم اعتماد طلبك للانضمام إلى منصة تواري كطبيب معتمد.
+يسعدنا إبلاغك بأنه تم اعتماد طلبك للانضمام إلى منصة طبيبي كطبيب معتمد.
 
 يمكنك الآن:
 - تحديد مواعيد الاستشارات الخاصة بك
@@ -282,11 +282,11 @@ export function getDoctorApprovalEmailText(doctorName: string, language: "en" | 
 - إجراء استشارات فيديو مع المرضى
 - إدارة ملفك الشخصي والأرباح
 
-قم بتسجيل الدخول الآن: https://www.tawariapp.com/ar/login
+قم بتسجيل الدخول الآن: https://www.tabibi.com/ar/login
 
-شكراً لانضمامك إلى تواري!
+شكراً لانضمامك إلى طبيبي!
 
-فريق تواري
+فريق طبيبي
         `.trim();
     }
 
@@ -295,7 +295,7 @@ Congratulations! You're Verified
 
 Dear Dr. ${doctorName},
 
-We're pleased to inform you that your application has been approved to join Tawari as a verified doctor.
+We're pleased to inform you that your application has been approved to join Tabibi as a verified doctor.
 
 You can now:
 - Set your consultation availability
@@ -303,11 +303,11 @@ You can now:
 - Conduct video consultations
 - Manage your profile and earnings
 
-Login now: https://www.tawariapp.com/en/login
+Login now: https://www.tabibi.com/en/login
 
-Thank you for joining Tawari!
+Thank you for joining Tabibi!
 
-The Tawari Team
+The Tabibi Team
     `.trim();
 }
 
@@ -325,15 +325,15 @@ export function getDoctorRejectionEmailText(
 
 مرحباً دكتور ${doctorName}،
 
-نشكرك على اهتمامك بالانضمام إلى منصة تواري. بعد مراجعة طلبك، لم نتمكن من الموافقة عليه في الوقت الحالي.
+نشكرك على اهتمامك بالانضمام إلى منصة طبيبي. بعد مراجعة طلبك، لم نتمكن من الموافقة عليه في الوقت الحالي.
 
 السبب: ${reason}
 
 يمكنك تحديث معلوماتك وإعادة التقديم. إذا كانت لديك أي أسئلة، يرجى التواصل مع فريق الدعم.
 
-تواصل معنا: https://www.tawariapp.com/ar/contact
+تواصل معنا: https://www.tabibi.com/ar/contact
 
-فريق تواري
+فريق طبيبي
         `.trim();
     }
 
@@ -342,14 +342,14 @@ Update on Your Application
 
 Dear Dr. ${doctorName},
 
-Thank you for your interest in joining Tawari. After reviewing your application, we were unable to approve it at this time.
+Thank you for your interest in joining Tabibi. After reviewing your application, we were unable to approve it at this time.
 
 Reason: ${reason}
 
 You can update your information and reapply. If you have any questions, please contact our support team.
 
-Contact us: https://www.tawariapp.com/en/contact
+Contact us: https://www.tabibi.com/en/contact
 
-The Tawari Team
+The Tabibi Team
     `.trim();
 }

@@ -6,27 +6,7 @@ import { useI18n } from "../../i18n";
 import { useGlobalTheme } from "@/app/context/GlobalThemeContext";
 import Footer from "@/components/landing/Footer";
 import { GlowingCard } from "@/components/ui/glowing-card";
-
-// Logo Component
-const LogoFull = ({ className = "", isDark = true }: { className?: string; isDark?: boolean }) => (
-    <div className={`flex items-center gap-2 ${className}`}>
-        <svg className="h-10 w-10 flex-shrink-0" viewBox="0 0 100 90" fill="none">
-            <defs>
-                <linearGradient id="heartGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#2DD4BF" />
-                    <stop offset="50%" stopColor="#14B8A6" />
-                    <stop offset="100%" stopColor="#0D9488" />
-                </linearGradient>
-            </defs>
-            <path d="M50 85 C50 85 10 55 10 30 C10 15 22 5 35 5 C42 5 48 10 50 15 C52 10 58 5 65 5 C78 5 90 15 90 30 C90 55 50 85 50 85Z" fill="none" stroke="url(#heartGradient)" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" />
-            <path d="M5 45 L25 45 L35 25 L50 65 L65 35 L75 45 L95 45" fill="none" stroke="#F59E0B" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-        <span className="text-xl font-bold tracking-tight">
-            <span className={isDark ? "text-white" : "text-slate-900"}>Tawari</span>
-            <span className={isDark ? "text-gray-400" : "text-gray-500"}>App</span>
-        </span>
-    </div>
-);
+import { Logo } from "@/components/ui/Logo";
 
 // Icons
 const Icons = {
@@ -43,7 +23,7 @@ const Icons = {
 function LanguageToggle({ isDark = true }: { isDark?: boolean }) {
     const { language, setLanguage } = useI18n();
     return (
-        <button onClick={() => setLanguage(language === 'en' ? 'ar' : 'en')} className={`flex items-center gap-2 px-3 py-1.5 rounded-full border text-sm font-medium transition-colors ${isDark ? "bg-white/5 hover:bg-white/10 border-white/10" : "bg-gray-100 hover:bg-gray-200 border-gray-200 text-gray-700"}`}>
+        <button onClick={() => setLanguage(language === 'en' ? 'ar' : 'en')} className={`flex items-center gap-2 px-3 py-1.5 rounded-full border text-sm font-medium transition-colors ${isDark ? "bg-white/5 hover:bg-white/10 border-white/10 text-gray-200" : "bg-gray-100 hover:bg-gray-200 border-gray-200 text-gray-700"}`}>
             {Icons.language}
             <span>{language === 'en' ? 'العربية' : 'English'}</span>
         </button>
@@ -58,7 +38,6 @@ export default function AboutPage() {
 
     // Scroll to top on mount with smooth animation
     useEffect(() => {
-        // Small delay to ensure DOM is ready, then smooth scroll to top
         setTimeout(() => {
             window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
         }, 100);
@@ -66,7 +45,7 @@ export default function AboutPage() {
 
     const translations = {
         en: {
-            title: "About TawariApp",
+            title: "About Tabibi",
             subtitle: "Transforming healthcare access across Egypt through technology",
             mission: "Our Mission",
             missionText: "To make quality healthcare accessible to every Egyptian, regardless of their location. We connect patients with licensed doctors through secure video consultations, making medical care just a tap away.",
@@ -82,10 +61,10 @@ export default function AboutPage() {
             value4Title: "Accessibility",
             value4Text: "Healthcare should be available to everyone, everywhere.",
             team: "Built in Egypt",
-            teamText: "TawariApp was founded in 2024 with a simple goal: bring quality healthcare to every home in Egypt. Our team combines medical expertise with cutting-edge technology to create a seamless telemedicine experience.",
+            teamText: "Tabibi was founded with a simple goal: bring quality healthcare to every home in Egypt. Our team combines medical expertise with cutting-edge technology to create a seamless telemedicine experience.",
         },
         ar: {
-            title: "عن طوارئ",
+            title: "عن طبيبي",
             subtitle: "تحويل الوصول للرعاية الصحية في جميع أنحاء مصر من خلال التكنولوجيا",
             mission: "مهمتنا",
             missionText: "جعل الرعاية الصحية عالية الجودة متاحة لكل مصري، بغض النظر عن موقعه. نحن نربط المرضى بأطباء مرخصين من خلال استشارات فيديو آمنة، مما يجعل الرعاية الطبية على بعد نقرة واحدة.",
@@ -101,44 +80,45 @@ export default function AboutPage() {
             value4Title: "إمكانية الوصول",
             value4Text: "يجب أن تكون الرعاية الصحية متاحة للجميع، في كل مكان.",
             team: "صُنع في مصر",
-            teamText: "تأسست طوارئ في عام 2024 بهدف بسيط: توفير رعاية صحية عالية الجودة لكل منزل في مصر. يجمع فريقنا بين الخبرة الطبية والتكنولوجيا المتطورة لإنشاء تجربة طب عن بُعد سلسة.",
+            teamText: "تأسست منصة طبيبي بهدف بسيط: توفير رعاية صحية عالية الجودة لكل منزل في مصر. يجمع فريقنا بين الخبرة الطبية والتكنولوجيا المتطورة لإنشاء تجربة طب عن بُعد سلسة.",
         }
     };
 
     const text = translations[language as keyof typeof translations] || translations.en;
-    const values: { icon: React.ReactNode; title: string; desc: string; color: "teal" | "amber" | "purple" | "blue" | "pink" | "green" }[] = [
-        { icon: Icons.heart, title: text.value1Title, desc: text.value1Text, color: "teal" },
-        { icon: Icons.shield, title: text.value2Title, desc: text.value2Text, color: "amber" },
+    const values: { icon: React.ReactNode; title: string; desc: string; color: "amber" | "purple" | "blue" | "pink" | "green" }[] = [
+        { icon: Icons.heart, title: text.value1Title, desc: text.value1Text, color: "blue" },
+        { icon: Icons.shield, title: text.value2Title, desc: text.value2Text, color: "blue" },
         { icon: Icons.users, title: text.value3Title, desc: text.value3Text, color: "green" },
-        { icon: Icons.globe, title: text.value4Title, desc: text.value4Text, color: "blue" },
+        { icon: Icons.globe, title: text.value4Title, desc: text.value4Text, color: "amber" },
     ];
 
     return (
-        <div className={`min-h-screen overflow-x-hidden ${isRTL ? 'font-cairo' : ''} ${isDark ? 'bg-[#0F172A] text-white' : 'bg-gray-50 text-slate-900'}`} dir={isRTL ? 'rtl' : 'ltr'}>
+        <div className={`min-h-screen overflow-x-hidden ${isRTL ? 'font-cairo' : ''} ${isDark ? 'bg-[#060B18] text-white' : 'bg-gray-50 text-slate-900'}`} dir={isRTL ? 'rtl' : 'ltr'}>
             <div className="fixed inset-0 overflow-hidden pointer-events-none">
-                <div className={`absolute inset-0 ${isDark ? 'bg-gradient-to-br from-teal-900/20 via-[#0F172A] to-[#0F172A]' : 'bg-gradient-to-br from-teal-50 via-white to-white'}`} />
-                <div className={`absolute top-1/4 -right-1/4 w-[600px] h-[600px] rounded-full blur-3xl ${isDark ? 'bg-teal-500/10' : 'bg-teal-500/5'}`} />
+                <div className={`absolute inset-0 ${isDark ? 'bg-gradient-to-br from-[#0B1528] via-[#060B18] to-[#060B18]' : 'bg-gradient-to-br from-blue-50/50 via-white to-white'}`} />
+                <div className={`absolute top-1/4 -right-1/4 w-[600px] h-[600px] rounded-full blur-3xl ${isDark ? 'bg-blue-600/10' : 'bg-blue-500/5'}`} />
+                <div className={`absolute bottom-1/4 -left-1/4 w-[400px] h-[400px] rounded-full blur-3xl ${isDark ? 'bg-amber-500/5' : 'bg-amber-500/5'}`} />
             </div>
 
-            <nav className={`relative z-50 backdrop-blur-xl border-b ${isDark ? 'bg-[#0F172A]/80 border-white/5' : 'bg-white/80 border-gray-200'}`}>
+            <nav className={`relative z-50 backdrop-blur-xl border-b ${isDark ? 'bg-[#060B18]/85 border-blue-500/20' : 'bg-white/80 border-gray-200'}`}>
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex items-center justify-between h-16 lg:h-20">
-                        <Link href={`/${language}`} className="group hover:opacity-90 transition-opacity"><LogoFull isDark={isDark} /></Link>
+                        <Link href={`/${language}`} className="group hover:opacity-90 transition-opacity"><Logo isDark={isDark} /></Link>
                         <div className="hidden lg:flex items-center gap-3">
                             <LanguageToggle isDark={isDark} />
                             <Link href={`/${language}/login`} className={`font-medium text-sm px-4 py-2 transition-colors ${isDark ? 'text-gray-300 hover:text-white' : 'text-gray-600 hover:text-gray-900'}`}>{t.nav.login}</Link>
-                            <Link href={`/${language}/get-started`} className="bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-400 hover:to-teal-500 text-white font-semibold px-5 py-2 rounded-full text-sm transition-all">{t.nav.getStarted}</Link>
+                            <Link href={`/${language}/get-started`} className="bg-gradient-to-r from-blue-600 via-blue-500 to-blue-600 hover:from-blue-500 text-white font-bold px-5 py-2 rounded-full text-sm transition-all shadow-lg shadow-blue-500/25">{t.nav.getStarted}</Link>
                         </div>
                         <button className={`lg:hidden p-2 ${isDark ? 'text-gray-300 hover:text-white' : 'text-gray-600 hover:text-gray-900'}`} onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
                             {mobileMenuOpen ? Icons.close : Icons.menu}
                         </button>
                     </div>
                     {mobileMenuOpen && (
-                        <div className="lg:hidden py-4">
+                        <div className="lg:hidden py-4 border-t border-blue-500/20">
                             <div className="flex flex-col gap-3 items-start">
-                                <Link href={`/${language}/login`} className={`py-2 font-medium ${isDark ? 'text-gray-300 hover:text-teal-400' : 'text-gray-600 hover:text-teal-600'}`} onClick={() => setMobileMenuOpen(false)}>{t.nav.login}</Link>
+                                <Link href={`/${language}/login`} className={`py-2 font-medium ${isDark ? 'text-gray-300 hover:text-blue-400' : 'text-gray-600 hover:text-blue-600'}`} onClick={() => setMobileMenuOpen(false)}>{t.nav.login}</Link>
                                 <LanguageToggle isDark={isDark} />
-                                <Link href={`/${language}/get-started`} className="bg-teal-500 hover:bg-teal-400 text-white font-semibold px-5 py-2.5 rounded-full text-center" onClick={() => setMobileMenuOpen(false)}>{t.nav.getStarted}</Link>
+                                <Link href={`/${language}/get-started`} className="bg-gradient-to-r from-blue-600 via-blue-500 to-blue-600 hover:from-blue-500 text-white font-bold px-5 py-2.5 rounded-full text-center" onClick={() => setMobileMenuOpen(false)}>{t.nav.getStarted}</Link>
                             </div>
                         </div>
                     )}
@@ -148,19 +128,23 @@ export default function AboutPage() {
             <main className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-20">
                 <div className="text-center mb-12">
                     <h1 className="text-3xl sm:text-4xl md:text-5xl font-black leading-tight tracking-tight mb-4">
-                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-400 to-teal-300">{text.title}</span>
+                        <span className={`text-transparent bg-clip-text ${
+                            isDark
+                                ? "bg-gradient-to-r from-white via-blue-100 to-blue-400"
+                                : "bg-gradient-to-r from-slate-900 via-blue-800 to-blue-600"
+                        }`}>{text.title}</span>
                     </h1>
                     <p className={`text-base sm:text-lg max-w-2xl mx-auto ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>{text.subtitle}</p>
                 </div>
 
                 <div className="space-y-12">
-                    <GlowingCard isDark={isDark} glowColor="teal" className="p-6 md:p-8">
-                        <h2 className="text-2xl font-bold text-teal-400 mb-4">{text.mission}</h2>
+                    <GlowingCard isDark={isDark} glowColor="blue" className="p-6 md:p-8">
+                        <h2 className={`text-2xl font-bold mb-4 ${isDark ? 'text-blue-400' : 'text-blue-600'}`}>{text.mission}</h2>
                         <p className={`leading-relaxed ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>{text.missionText}</p>
                     </GlowingCard>
 
-                    <GlowingCard isDark={isDark} glowColor="amber" className="p-6 md:p-8">
-                        <h2 className="text-2xl font-bold text-amber-400 mb-4">{text.vision}</h2>
+                    <GlowingCard isDark={isDark} glowColor="blue" className="p-6 md:p-8">
+                        <h2 className={`text-2xl font-bold mb-4 ${isDark ? 'text-blue-400' : 'text-blue-600'}`}>{text.vision}</h2>
                         <p className={`leading-relaxed ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>{text.visionText}</p>
                     </GlowingCard>
 
@@ -169,7 +153,7 @@ export default function AboutPage() {
                         <div className="grid sm:grid-cols-2 gap-4">
                             {values.map((value, idx) => (
                                 <GlowingCard key={idx} isDark={isDark} glowColor={value.color} className="p-5 transition-all hover:scale-[1.02]">
-                                    <div className={`w-10 h-10 rounded-lg bg-${value.color}-500/20 flex items-center justify-center text-${value.color}-400 mb-3`}>
+                                    <div className={`w-10 h-10 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 mb-3`}>
                                         {value.icon}
                                     </div>
                                     <h3 className={`font-bold mb-2 ${isDark ? 'text-white' : 'text-slate-900'}`}>{value.title}</h3>
@@ -179,7 +163,7 @@ export default function AboutPage() {
                         </div>
                     </div>
 
-                    <div className={`rounded-2xl p-6 md:p-8 text-center ${isDark ? 'bg-gradient-to-br from-teal-500/10 to-teal-600/5 border border-teal-500/20' : 'bg-gradient-to-br from-teal-50 to-teal-100/50 border border-teal-100'}`}>
+                    <div className={`rounded-2xl p-6 md:p-8 text-center ${isDark ? 'bg-gradient-to-br from-blue-900/20 to-blue-950/40 border border-blue-500/30 shadow-[0_0_20px_rgba(37,99,235,0.15)]' : 'bg-gradient-to-br from-blue-50 to-blue-100/50 border border-blue-200'}`}>
                         <h2 className={`text-2xl font-bold mb-4 ${isDark ? 'text-white' : 'text-slate-900'}`}>{text.team}</h2>
                         <p className={`leading-relaxed ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>{text.teamText}</p>
                     </div>

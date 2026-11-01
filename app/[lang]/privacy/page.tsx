@@ -6,27 +6,7 @@ import { useI18n } from "../../i18n";
 import { useGlobalTheme } from "@/app/context/GlobalThemeContext";
 import Footer from "@/components/landing/Footer";
 import { GlowingCard } from "@/components/ui/glowing-card";
-
-// Logo Component
-const LogoFull = ({ className = "", isDark = true }: { className?: string; isDark?: boolean }) => (
-    <div className={`flex items-center gap-2 ${className}`}>
-        <svg className="h-10 w-10 flex-shrink-0" viewBox="0 0 100 90" fill="none">
-            <defs>
-                <linearGradient id="heartGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#2DD4BF" />
-                    <stop offset="50%" stopColor="#14B8A6" />
-                    <stop offset="100%" stopColor="#0D9488" />
-                </linearGradient>
-            </defs>
-            <path d="M50 85 C50 85 10 55 10 30 C10 15 22 5 35 5 C42 5 48 10 50 15 C52 10 58 5 65 5 C78 5 90 15 90 30 C90 55 50 85 50 85Z" fill="none" stroke="url(#heartGradient)" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" />
-            <path d="M5 45 L25 45 L35 25 L50 65 L65 35 L75 45 L95 45" fill="none" stroke="#F59E0B" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-        <span className="text-xl font-bold tracking-tight">
-            <span className={isDark ? "text-white" : "text-slate-900"}>Tawari</span>
-            <span className={isDark ? "text-gray-400" : "text-gray-500"}>App</span>
-        </span>
-    </div>
-);
+import { Logo } from "@/components/ui/Logo";
 
 // Icons
 const Icons = {
@@ -39,7 +19,7 @@ const Icons = {
 function LanguageToggle({ isDark = true }: { isDark?: boolean }) {
     const { language, setLanguage } = useI18n();
     return (
-        <button onClick={() => setLanguage(language === 'en' ? 'ar' : 'en')} className={`flex items-center gap-2 px-3 py-1.5 rounded-full border text-sm font-medium transition-colors ${isDark ? "bg-white/5 hover:bg-white/10 border-white/10" : "bg-gray-100 hover:bg-gray-200 border-gray-200 text-gray-700"}`}>
+        <button onClick={() => setLanguage(language === 'en' ? 'ar' : 'en')} className={`flex items-center gap-2 px-3 py-1.5 rounded-full border text-sm font-medium transition-colors ${isDark ? "bg-white/5 hover:bg-white/10 border-white/10 text-gray-200" : "bg-gray-100 hover:bg-gray-200 border-gray-200 text-gray-700"}`}>
             {Icons.language}
             <span>{language === 'en' ? 'العربية' : 'English'}</span>
         </button>
@@ -54,7 +34,6 @@ export default function PrivacyPage() {
 
     // Scroll to top on mount with smooth animation
     useEffect(() => {
-        // Small delay to ensure DOM is ready, then smooth scroll to top
         setTimeout(() => {
             window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
         }, 100);
@@ -95,7 +74,7 @@ export default function PrivacyPage() {
                 },
                 {
                     title: "Contact Us",
-                    content: "If you have any questions about this Privacy Policy, please contact us at privacy@tawariapp.com."
+                    content: "If you have any questions about this Privacy Policy, please contact us at privacy@tabibi.com."
                 }
             ]
         },
@@ -133,7 +112,7 @@ export default function PrivacyPage() {
                 },
                 {
                     title: "تواصل معنا",
-                    content: "إذا كانت لديك أي أسئلة حول سياسة الخصوصية هذه، يرجى التواصل معنا على privacy@tawariapp.com."
+                    content: "إذا كانت لديك أي أسئلة حول سياسة الخصوصية هذه، يرجى التواصل معنا على privacy@tabibi.com."
                 }
             ]
         }
@@ -142,30 +121,30 @@ export default function PrivacyPage() {
     const text = translations[language as keyof typeof translations] || translations.en;
 
     return (
-        <div className={`min-h-screen overflow-x-hidden ${isRTL ? 'font-cairo' : ''} ${isDark ? 'bg-[#0F172A] text-white' : 'bg-gray-50 text-slate-900'}`} dir={isRTL ? 'rtl' : 'ltr'}>
+        <div className={`min-h-screen overflow-x-hidden ${isRTL ? 'font-cairo' : ''} ${isDark ? 'bg-[#060B18] text-white' : 'bg-gray-50 text-slate-900'}`} dir={isRTL ? 'rtl' : 'ltr'}>
             <div className="fixed inset-0 overflow-hidden pointer-events-none">
-                <div className={`absolute inset-0 ${isDark ? 'bg-gradient-to-br from-teal-900/20 via-[#0F172A] to-[#0F172A]' : 'bg-gradient-to-br from-teal-50 via-white to-white'}`} />
+                <div className={`absolute inset-0 ${isDark ? 'bg-gradient-to-br from-[#0B1528] via-[#060B18] to-[#060B18]' : 'bg-gradient-to-br from-amber-50/50 via-white to-white'}`} />
             </div>
 
-            <nav className={`relative z-50 backdrop-blur-xl border-b ${isDark ? 'bg-[#0F172A]/80 border-white/5' : 'bg-white/80 border-gray-200'}`}>
+            <nav className={`relative z-50 backdrop-blur-xl border-b ${isDark ? 'bg-[#060B18]/85 border-blue-500/20' : 'bg-white/80 border-gray-200'}`}>
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex items-center justify-between h-16 lg:h-20">
-                        <Link href={`/${language}`} className="group hover:opacity-90 transition-opacity"><LogoFull isDark={isDark} /></Link>
+                        <Link href={`/${language}`} className="group hover:opacity-90 transition-opacity"><Logo isDark={isDark} /></Link>
                         <div className="hidden lg:flex items-center gap-3">
                             <LanguageToggle isDark={isDark} />
                             <Link href={`/${language}/login`} className={`font-medium text-sm px-4 py-2 transition-colors ${isDark ? 'text-gray-300 hover:text-white' : 'text-gray-600 hover:text-gray-900'}`}>{t.nav.login}</Link>
-                            <Link href={`/${language}/get-started`} className="bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-400 hover:to-teal-500 text-white font-semibold px-5 py-2 rounded-full text-sm transition-all">{t.nav.getStarted}</Link>
+                            <Link href={`/${language}/get-started`} className="bg-gradient-to-r from-blue-600 via-blue-500 to-blue-600 hover:from-blue-500 text-white font-bold px-5 py-2 rounded-full text-sm transition-all shadow-lg shadow-blue-500/25">{t.nav.getStarted}</Link>
                         </div>
                         <button className={`lg:hidden p-2 ${isDark ? 'text-gray-300 hover:text-white' : 'text-gray-600 hover:text-gray-900'}`} onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
                             {mobileMenuOpen ? Icons.close : Icons.menu}
                         </button>
                     </div>
                     {mobileMenuOpen && (
-                        <div className="lg:hidden py-4">
+                        <div className="lg:hidden py-4 border-t border-white/5">
                             <div className="flex flex-col gap-3 items-start">
-                                <Link href={`/${language}/login`} className={`py-2 font-medium ${isDark ? 'text-gray-300 hover:text-teal-400' : 'text-gray-600 hover:text-teal-600'}`} onClick={() => setMobileMenuOpen(false)}>{t.nav.login}</Link>
+                                <Link href={`/${language}/login`} className={`py-2 font-medium ${isDark ? 'text-gray-300 hover:text-blue-400' : 'text-gray-600 hover:text-blue-600'}`} onClick={() => setMobileMenuOpen(false)}>{t.nav.login}</Link>
                                 <LanguageToggle isDark={isDark} />
-                                <Link href={`/${language}/get-started`} className="bg-teal-500 hover:bg-teal-400 text-white font-semibold px-5 py-2.5 rounded-full text-center" onClick={() => setMobileMenuOpen(false)}>{t.nav.getStarted}</Link>
+                                <Link href={`/${language}/get-started`} className="bg-gradient-to-r from-blue-600 via-blue-500 to-blue-600 hover:from-blue-500 text-white font-bold px-5 py-2.5 rounded-full text-center" onClick={() => setMobileMenuOpen(false)}>{t.nav.getStarted}</Link>
                             </div>
                         </div>
                     )}
@@ -175,14 +154,18 @@ export default function PrivacyPage() {
             <main className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-20">
                 <div className="text-center mb-12">
                     <h1 className="text-3xl sm:text-4xl md:text-5xl font-black leading-tight tracking-tight mb-4">
-                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-400 to-teal-300">{text.title}</span>
+                        <span className={`text-transparent bg-clip-text ${
+                            isDark
+                                ? "bg-gradient-to-r from-white via-blue-100 to-blue-400"
+                                : "bg-gradient-to-r from-slate-900 via-blue-800 to-blue-600"
+                        }`}>{text.title}</span>
                     </h1>
-                    <p className="text-gray-500 text-sm">{text.lastUpdated}</p>
+                    <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>{text.lastUpdated}</p>
                 </div>
 
                 <div className="space-y-8">
                     {text.sections.map((section, idx) => (
-                        <GlowingCard key={idx} isDark={isDark} glowColor="teal" className="p-6 md:p-8">
+                        <GlowingCard key={idx} isDark={isDark} glowColor="blue" className="p-6 md:p-8">
                             <h2 className={`text-xl font-bold mb-4 ${isDark ? 'text-white' : 'text-slate-900'}`}>{section.title}</h2>
                             <p className={`leading-relaxed ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>{section.content}</p>
                         </GlowingCard>

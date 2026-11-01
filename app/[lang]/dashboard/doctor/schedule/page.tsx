@@ -259,7 +259,7 @@ export default function SchedulePage() {
     if (loading) {
         return (
             <div className="p-4 md:p-6 lg:p-8 flex items-center justify-center min-h-[60vh]">
-                <div className="animate-spin w-8 h-8 border-2 border-teal-500 border-t-transparent rounded-full" />
+                <div className="animate-spin w-8 h-8 border-2 border-amber-500 border-t-transparent rounded-full" />
             </div>
         );
     }
@@ -269,7 +269,7 @@ export default function SchedulePage() {
             {/* Header */}
             <div className="mb-6 md:mb-8">
                 <h1 className={cn("text-xl md:text-2xl font-bold flex items-center gap-2 md:gap-3", textPrimary)}>
-                    <span className="w-8 h-8 md:w-10 md:h-10 rounded-lg md:rounded-xl bg-teal-500/10 flex items-center justify-center text-teal-500">
+                    <span className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-br from-[#38BDF8] to-[#0284C7] flex items-center justify-center text-white shadow-[0_0_15px_rgba(14,165,233,0.5)] border border-sky-300/40">
                         {Icons.clock}
                     </span>
                     {t.doctorDashboard.schedulePage.title}
@@ -282,7 +282,7 @@ export default function SchedulePage() {
             {/* Weekly Schedule */}
             <section className="mb-8">
                 <h2 className={cn("text-lg font-semibold mb-4 flex items-center gap-2", textPrimary)}>
-                    <span className="w-2 h-2 rounded-full bg-teal-500"></span>
+                    <span className="w-2 h-2 rounded-full bg-amber-500"></span>
                     {t.doctorDashboard.schedulePage.weeklySchedule}
                 </h2>
                 <p className={cn("text-sm mb-4", textMuted)}>
@@ -297,7 +297,7 @@ export default function SchedulePage() {
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: idx * 0.05 }}
                         >
-                            <GlowingCard isDark={isDark} glowColor="teal" className="p-4">
+                            <GlowingCard isDark={isDark} glowColor="amber" className="p-4">
                                 <div className="flex flex-col md:flex-row md:items-center gap-4">
                                     {/* Day Name */}
                                     <div className="w-full md:w-32 flex-shrink-0">
@@ -364,7 +364,7 @@ export default function SchedulePage() {
                                         <button
                                             onClick={() => addTimeSlot(day.dayOfWeek)}
                                             className={cn(
-                                                "flex items-center gap-1 text-sm font-medium text-teal-500 hover:text-teal-400 transition-colors"
+                                                "flex items-center gap-1 text-sm font-medium text-amber-500 hover:text-amber-400 transition-colors"
                                             )}
                                         >
                                             {Icons.plus}
@@ -381,7 +381,7 @@ export default function SchedulePage() {
                                                 "px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2",
                                                 savedDays.has(day.dayOfWeek)
                                                     ? "bg-green-500 text-white"
-                                                    : "bg-teal-500 hover:bg-teal-600 text-white"
+                                                    : "bg-amber-500 hover:bg-amber-600 text-white"
                                             )}
                                         >
                                             {saving === day.dayOfWeek ? (
@@ -417,7 +417,7 @@ export default function SchedulePage() {
                     </div>
                     <button
                         onClick={() => setShowBlockedForm(!showBlockedForm)}
-                        className="flex items-center gap-2 bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-400 hover:to-teal-500 text-white font-semibold py-2 px-4 rounded-xl transition-all shadow-lg shadow-teal-500/20 text-sm"
+                        className="flex items-center gap-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-white font-semibold py-2 px-4 rounded-xl transition-all shadow-lg shadow-amber-500/20 text-sm"
                     >
                         {Icons.plus}
                         {t.doctorDashboard.schedulePage.addBlockedTime}
@@ -431,7 +431,7 @@ export default function SchedulePage() {
                         animate={{ opacity: 1, y: 0 }}
                         className="mb-4"
                     >
-                        <GlowingCard isDark={isDark} glowColor="teal" className="p-4">
+                        <GlowingCard isDark={isDark} glowColor="amber" className="p-4">
                             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                                 <div>
                                     <label className={cn("block text-sm font-medium mb-1", textSecondary)}>
@@ -491,7 +491,7 @@ export default function SchedulePage() {
                                 <div className="flex items-end">
                                     <button
                                         onClick={handleAddBlockedTime}
-                                        className="w-full bg-teal-500 hover:bg-teal-600 text-white font-medium py-2 px-4 rounded-lg transition-colors"
+                                        className="w-full bg-amber-500 hover:bg-amber-600 text-white font-medium py-2 px-4 rounded-lg transition-colors"
                                     >
                                         {t.doctorDashboard.schedulePage.addBlockedTime}
                                     </button>
@@ -503,7 +503,7 @@ export default function SchedulePage() {
 
                 {/* Blocked Times List */}
                 {blockedTimes.length === 0 ? (
-                    <GlowingCard isDark={isDark} glowColor="teal" className="p-8 text-center">
+                    <GlowingCard isDark={isDark} glowColor="amber" className="p-8 text-center">
                         <div className={cn("w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-3", isDark ? "bg-slate-900" : "bg-gray-100", textMuted)}>
                             {Icons.calendar}
                         </div>
@@ -518,7 +518,7 @@ export default function SchedulePage() {
                                 animate={{ opacity: 1, x: 0 }}
                                 transition={{ delay: idx * 0.05 }}
                             >
-                                <GlowingCard isDark={isDark} glowColor="teal" className="p-4">
+                                <GlowingCard isDark={isDark} glowColor="amber" className="p-4">
                                     <div className="flex items-center justify-between">
                                         <div className="flex items-center gap-4">
                                             <div className={cn("p-2 rounded-lg", isDark ? "bg-red-500/10" : "bg-red-50")}>

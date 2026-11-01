@@ -75,7 +75,7 @@ const Icons = {
 
 const Badge = ({ variant, children }: { variant: string; children: React.ReactNode }) => {
     const variants: Record<string, string> = {
-        scheduled: "bg-teal-500/10 text-teal-400 border border-teal-500/20",
+        scheduled: "bg-amber-500/10 text-amber-400 border border-amber-500/20",
         in_waiting_room: "bg-amber-500/10 text-amber-400 border border-amber-500/20",
         in_progress: "bg-blue-500/10 text-blue-400 border border-blue-500/20",
         completed: "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20",
@@ -196,7 +196,7 @@ export default function AdminAppointmentsPage() {
     };
 
     const statCards = [
-        { label: language === "ar" ? "إجمالي المواعيد" : "Total Appointments", value: stats.total, icon: Icons.calendar, color: "teal" },
+        { label: language === "ar" ? "إجمالي المواعيد" : "Total Appointments", value: stats.total, icon: Icons.calendar, color: "amber" },
         { label: language === "ar" ? "مجدول" : "Scheduled", value: stats.scheduled, icon: Icons.clock, color: "blue" },
         { label: language === "ar" ? "مكتمل" : "Completed", value: stats.completed, icon: Icons.check, color: "emerald" },
         { label: language === "ar" ? "ملغي" : "Cancelled", value: stats.cancelled, icon: Icons.x, color: "red" },
@@ -214,7 +214,7 @@ export default function AdminAppointmentsPage() {
         return (
             <div className="min-h-screen flex items-center justify-center">
                 <div className="text-center">
-                    <div className="text-teal-500 mb-4 flex justify-center">{Icons.spinner}</div>
+                    <div className="text-amber-500 mb-4 flex justify-center">{Icons.spinner}</div>
                     <p className={isDark ? "text-gray-400" : "text-gray-600"}>{t.common.loading || "Loading..."}</p>
                 </div>
             </div>
@@ -231,12 +231,12 @@ export default function AdminAppointmentsPage() {
                     minSize={0.4}
                     maxSize={1}
                     particleDensity={isDark ? 20 : 10}
-                    particleColor={isDark ? "20, 184, 166" : "13, 148, 136"}
+                    particleColor={isDark ? "245, 158, 11" : "217, 119, 6"}
                 />
                 {isDark && (
                     <>
-                        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-teal-500/5 rounded-full blur-3xl" />
-                        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-teal-500/5 rounded-full blur-3xl" />
+                        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-amber-500/5 rounded-full blur-3xl" />
+                        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-amber-500/5 rounded-full blur-3xl" />
                     </>
                 )}
             </div>
@@ -257,15 +257,9 @@ export default function AdminAppointmentsPage() {
                 {/* Stats Row */}
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-6 md:mb-8">
                     {statCards.map((stat, idx) => (
-                        <GlowingCard key={idx} glowColor="teal" className="p-3 md:p-4" isDark={isDark}>
+                        <GlowingCard key={idx} glowColor="amber" className="p-3 md:p-4" isDark={isDark}>
                             <div className="flex items-center gap-2 md:gap-3">
-                                <div className={cn(
-                                    "w-8 h-8 md:w-10 md:h-10 rounded-lg md:rounded-xl flex items-center justify-center",
-                                    stat.color === "teal" && "bg-teal-500/10 text-teal-500",
-                                    stat.color === "blue" && "bg-blue-500/10 text-blue-500",
-                                    stat.color === "emerald" && "bg-emerald-500/10 text-emerald-500",
-                                    stat.color === "red" && "bg-red-500/10 text-red-500"
-                                )}>
+                                <div className="w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center bg-gradient-to-br from-[#38BDF8] to-[#0284C7] text-white shadow-[0_0_15px_rgba(14,165,233,0.5)] border border-sky-300/40">
                                     <span className="[&>svg]:w-4 [&>svg]:h-4 md:[&>svg]:w-5 md:[&>svg]:h-5">
                                         {stat.icon}
                                     </span>
@@ -282,7 +276,7 @@ export default function AdminAppointmentsPage() {
                 </div>
 
                 {/* Search and Filters */}
-                <GlowingCard glowColor="teal" className="p-3 md:p-4 mb-4 md:mb-6" isDark={isDark}>
+                <GlowingCard glowColor="amber" className="p-3 md:p-4 mb-4 md:mb-6" isDark={isDark}>
                     <div className="flex flex-col gap-4">
                         {/* Search Bar */}
                         <div className="flex-1 relative">
@@ -296,8 +290,8 @@ export default function AdminAppointmentsPage() {
                                     "w-full py-2.5 rounded-xl border outline-none transition-colors",
                                     isRTL ? "pr-10 pl-4" : "pl-10 pr-4",
                                     isDark
-                                        ? "bg-slate-800/50 border-white/10 text-white placeholder-gray-500 focus:border-teal-500/50"
-                                        : "bg-gray-50 border-gray-200 text-slate-900 placeholder-gray-400 focus:border-teal-500"
+                                        ? "bg-slate-800/50 border-white/10 text-white placeholder-gray-500 focus:border-amber-500/50"
+                                        : "bg-gray-50 border-gray-200 text-slate-900 placeholder-gray-400 focus:border-amber-500"
                                 )}
                             />
                         </div>
@@ -318,7 +312,7 @@ export default function AdminAppointmentsPage() {
                                     className={cn(
                                         "px-3 py-1.5 rounded-lg text-xs font-medium transition-colors",
                                         statusFilter === filter.key
-                                            ? "bg-teal-500 text-white"
+                                            ? "bg-amber-500 text-white"
                                             : isDark
                                                 ? "bg-white/5 text-gray-400 hover:bg-white/10"
                                                 : "bg-gray-100 text-gray-600 hover:bg-gray-200"
@@ -335,7 +329,7 @@ export default function AdminAppointmentsPage() {
                 {loading ? (
                     <div className="flex items-center justify-center py-20">
                         <div className="text-center">
-                            <div className="text-teal-500 mb-4 flex justify-center">{Icons.spinner}</div>
+                            <div className="text-amber-500 mb-4 flex justify-center">{Icons.spinner}</div>
                             <p className={isDark ? "text-gray-400" : "text-gray-600"}>{t.common.loading || "Loading..."}</p>
                         </div>
                     </div>
@@ -348,13 +342,13 @@ export default function AdminAppointmentsPage() {
                                 animate={{ opacity: 1, x: 0 }}
                                 transition={{ delay: idx * 0.05 }}
                             >
-                                <GlowingCard glowColor="teal" className="p-3 md:p-5" isDark={isDark}>
+                                <GlowingCard glowColor="amber" className="p-3 md:p-5" isDark={isDark}>
                                     <div className="flex flex-col gap-4">
                                         {/* Main Info Row */}
                                         <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4">
                                             {/* Patient Info */}
                                             <div className="flex items-center gap-3 flex-1">
-                                                <div className="relative w-10 h-10 md:w-12 md:h-12 rounded-lg md:rounded-xl overflow-hidden border-2 border-teal-500/30 flex-shrink-0">
+                                                <div className="relative w-10 h-10 md:w-12 md:h-12 rounded-lg md:rounded-xl overflow-hidden border-2 border-amber-500/30 flex-shrink-0">
                                                     {apt.patient.avatar_url ? (
                                                         <Image
                                                             src={apt.patient.avatar_url}
@@ -421,7 +415,7 @@ export default function AdminAppointmentsPage() {
                                                     <p className={cn("text-[10px] md:text-xs", isDark ? "text-gray-500" : "text-gray-600")}>{formatTime(apt.scheduled_start)}</p>
                                                 </div>
                                                 <div className="text-center">
-                                                    <p className={cn("text-sm md:text-base font-medium text-teal-500")}>{formatCurrency(apt.consultation_fee)}</p>
+                                                    <p className={cn("text-sm md:text-base font-medium text-amber-500")}>{formatCurrency(apt.consultation_fee)}</p>
                                                     <p className={cn("text-[10px] md:text-xs", isDark ? "text-gray-500" : "text-gray-600")}>
                                                         {language === "ar" ? "الرسوم" : "Fee"}
                                                     </p>
@@ -504,7 +498,7 @@ export default function AdminAppointmentsPage() {
                                                 className={cn(
                                                     "w-8 h-8 rounded-lg text-sm font-medium transition-colors",
                                                     currentPage === pageNum
-                                                        ? "bg-teal-500 text-white"
+                                                        ? "bg-amber-500 text-white"
                                                         : isDark
                                                             ? "hover:bg-white/10 text-gray-400"
                                                             : "hover:bg-gray-100 text-gray-600"

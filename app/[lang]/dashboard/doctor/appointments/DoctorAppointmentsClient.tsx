@@ -62,11 +62,11 @@ const Icons = {
 // Badge Component
 const Badge = ({ children, variant = "default", isDark = true, className }: { children: React.ReactNode; variant?: "default" | "success" | "warning" | "primary" | "error"; isDark?: boolean; className?: string }) => {
     const variants = {
-        default: isDark ? "bg-slate-700/50 text-slate-300" : "bg-gray-200 text-gray-700",
-        success: "bg-green-500/10 text-green-500 border border-green-500/20",
-        warning: "bg-amber-500/10 text-amber-500 border border-amber-500/20",
-        primary: "bg-teal-500/10 text-teal-500 border border-teal-500/20",
-        error: "bg-red-500/10 text-red-500 border border-red-500/20",
+        default: isDark ? "bg-slate-700/50 text-slate-300" : "bg-gray-100 text-slate-700 border border-gray-200",
+        success: "bg-green-500/10 text-green-700 dark:text-green-400 border border-green-500/20",
+        warning: "bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20",
+        primary: "bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20",
+        error: "bg-red-500/10 text-red-700 dark:text-red-400 border border-red-500/20",
     };
     return (
         <span className={cn("px-2.5 py-1 rounded-full text-xs font-medium whitespace-nowrap", variants[variant], className)}>
@@ -255,7 +255,7 @@ export default function AppointmentsPage({
     if (loading) {
         return (
             <div className="p-4 md:p-6 lg:p-8 flex items-center justify-center min-h-[60vh]">
-                <div className="animate-spin w-8 h-8 border-2 border-teal-500 border-t-transparent rounded-full" />
+                <div className="animate-spin w-8 h-8 border-2 border-amber-500 border-t-transparent rounded-full" />
             </div>
         );
     }
@@ -266,7 +266,7 @@ export default function AppointmentsPage({
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 md:mb-8">
                 <div>
                     <h1 className={cn("text-xl md:text-2xl font-bold flex items-center gap-2 md:gap-3", textPrimary)}>
-                        <span className="w-8 h-8 md:w-10 md:h-10 rounded-lg md:rounded-xl bg-teal-500/10 flex items-center justify-center text-teal-500">
+                        <span className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-br from-[#38BDF8] to-[#0284C7] flex items-center justify-center text-white shadow-[0_0_15px_rgba(14,165,233,0.5)] border border-sky-300/40">
                             {Icons.calendar}
                         </span>
                         {t.doctorDashboard.appointmentsPage.title}
@@ -288,7 +288,7 @@ export default function AppointmentsPage({
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         className={cn(
-                            "w-full py-3 rounded-xl border transition-colors outline-none ring-0 focus:ring-2 focus:ring-teal-500/20",
+                            "w-full py-3 rounded-xl border transition-colors outline-none ring-0 focus:ring-2 focus:ring-amber-500/20",
                             isRTL ? "pr-12 pl-4" : "pl-12 pr-4",
                             inputBg, inputFocus
                         )}
@@ -304,8 +304,8 @@ export default function AppointmentsPage({
                             className={cn(
                                 "px-4 py-2.5 rounded-xl text-sm font-medium transition-all whitespace-nowrap border",
                                 activeFilter === filter.id
-                                    ? "bg-teal-500 text-white border-teal-500 shadow-lg shadow-teal-500/20"
-                                    : cn("border-transparent hover:border-teal-500/30", buttonSecondary)
+                                    ? "bg-amber-500 text-white border-amber-500 shadow-lg shadow-amber-500/20"
+                                    : cn("border-transparent hover:border-amber-500/30", buttonSecondary)
                             )}
                         >
                             {filter.label}
@@ -318,7 +318,7 @@ export default function AppointmentsPage({
             {todayAppointments.length > 0 && (
                 <section className="mb-6 md:mb-8">
                     <h2 className={cn("text-base md:text-lg font-semibold mb-3 md:mb-4 flex items-center gap-2", textPrimary)}>
-                        <span className="w-2 h-2 rounded-full bg-teal-500"></span>
+                        <span className="w-2 h-2 rounded-full bg-amber-500"></span>
                         {t.doctorDashboard.appointmentsPage.sections.today}
                     </h2>
                     <div className="hidden md:grid grid-cols-12 gap-4 px-5 py-3 text-xs font-semibold tracking-wider uppercase opacity-60">
@@ -327,7 +327,7 @@ export default function AppointmentsPage({
                         <div className="col-span-3">{t.doctorDashboard.appointmentsPage.tableHeaders.purpose}</div>
                         <div className={cn("col-span-3", isRTL ? "text-left" : "text-right")}>{t.doctorDashboard.appointmentsPage.tableHeaders.statusActions}</div>
                     </div>
-                    <GlowingCard isDark={isDark} glowColor="teal" className="p-0 overflow-hidden">
+                    <GlowingCard isDark={isDark} glowColor="amber" className="p-0 overflow-hidden">
                         <div className={divider}>
                             {todayAppointments.map((apt) => (
                                 <motion.div
@@ -336,17 +336,17 @@ export default function AppointmentsPage({
                                     className={cn(
                                         "flex flex-col md:grid md:grid-cols-12 gap-3 md:gap-4 p-4 transition-colors items-start md:items-center",
                                         cardHover,
-                                        apt.status === "in_progress" && "bg-teal-500/5 relative overflow-hidden"
+                                        apt.status === "in_progress" && "bg-amber-500/5 relative overflow-hidden"
                                     )}
                                 >
                                     {apt.status === "in_progress" && (
-                                        <div className="absolute left-0 top-0 bottom-0 w-1 bg-teal-500 md:rounded-l-lg" />
+                                        <div className="absolute left-0 top-0 bottom-0 w-1 bg-amber-500 md:rounded-l-lg" />
                                     )}
 
                                     {/* Time Block */}
                                     <div className="md:col-span-2 flex items-center gap-2 md:gap-3 w-full md:w-auto justify-between md:justify-start">
                                         <div className="flex items-center gap-2">
-                                            <div className="p-2 rounded-lg bg-teal-500/10 text-teal-500">
+                                            <div className="p-2 rounded-lg bg-amber-500/10 text-amber-500">
                                                 {Icons.clock}
                                             </div>
                                             <span className={cn("text-base md:text-lg font-bold tracking-tight", textPrimary)}>
@@ -363,7 +363,7 @@ export default function AppointmentsPage({
 
                                     {/* Patient Info */}
                                     <div className="md:col-span-4 flex items-center gap-3 w-full">
-                                        <div className="relative w-10 h-10 md:w-11 md:h-11 rounded-full overflow-hidden border-2 border-teal-500/20 flex-shrink-0">
+                                        <div className="relative w-10 h-10 md:w-11 md:h-11 rounded-full overflow-hidden border-2 border-amber-500/20 flex-shrink-0">
                                             {apt.patient?.avatar_url ? (
                                                 <Image
                                                     src={apt.patient.avatar_url}
@@ -373,7 +373,7 @@ export default function AppointmentsPage({
                                                     sizes="(max-width: 768px) 40px, 44px"
                                                 />
                                             ) : (
-                                                <div className={cn("w-full h-full flex items-center justify-center text-lg font-bold", isDark ? "bg-teal-500/10 text-teal-400" : "bg-teal-50 text-teal-600")}>
+                                                <div className={cn("w-full h-full flex items-center justify-center text-lg font-bold", isDark ? "bg-amber-500/10 text-amber-400" : "bg-amber-50 text-amber-600")}>
                                                     {apt.patient?.full_name.charAt(0) || "?"}
                                                 </div>
                                             )}
@@ -403,14 +403,14 @@ export default function AppointmentsPage({
 
                                         <div className="flex items-center gap-2 w-full md:w-auto justify-end">
                                             {actionLoading === apt.id ? (
-                                                <div className="animate-spin w-5 h-5 border-2 border-teal-500 border-t-transparent rounded-full" />
+                                                <div className="animate-spin w-5 h-5 border-2 border-amber-500 border-t-transparent rounded-full" />
                                             ) : (
                                                 <>
                                                     {apt.status === "scheduled" && (
                                                         <>
                                                             <button
                                                                 onClick={() => handleStartConsultation(apt.id, apt.patient?.full_name || "Patient")}
-                                                                className="flex items-center gap-2 px-3 py-1.5 md:py-2 rounded-lg bg-teal-500 text-white hover:bg-teal-600 transition-all text-sm font-medium shadow-lg shadow-teal-500/20"
+                                                                className="flex items-center gap-2 px-3 py-1.5 md:py-2 rounded-lg bg-amber-500 text-white hover:bg-amber-600 transition-all text-sm font-medium shadow-lg shadow-amber-500/20"
                                                             >
                                                                 {Icons.video}
                                                                 <span className="md:hidden lg:inline">{t.doctorDashboard.appointmentsPage.actions.join}</span>
@@ -428,7 +428,7 @@ export default function AppointmentsPage({
                                                         <>
                                                             <button
                                                                 onClick={() => handleStartConsultation(apt.id, apt.patient?.full_name || "Patient")}
-                                                                className="flex items-center gap-2 px-3 py-1.5 md:py-2 rounded-lg bg-teal-500 text-white hover:bg-teal-600 transition-all text-sm font-medium shadow-lg shadow-teal-500/20"
+                                                                className="flex items-center gap-2 px-3 py-1.5 md:py-2 rounded-lg bg-amber-500 text-white hover:bg-amber-600 transition-all text-sm font-medium shadow-lg shadow-amber-500/20"
                                                             >
                                                                 {Icons.video}
                                                                 <span>{isRTL ? "ابدأ الاستشارة" : "Start"}</span>
@@ -445,7 +445,7 @@ export default function AppointmentsPage({
                                                         <>
                                                             <button
                                                                 onClick={() => router.push(`/${language}/dashboard/consultation/${apt.id}`)}
-                                                                className="flex items-center gap-2 px-3 py-1.5 md:py-2 rounded-lg bg-teal-500 text-white hover:bg-teal-600 transition-all text-sm font-medium shadow-lg shadow-teal-500/20"
+                                                                className="flex items-center gap-2 px-3 py-1.5 md:py-2 rounded-lg bg-amber-500 text-white hover:bg-amber-600 transition-all text-sm font-medium shadow-lg shadow-amber-500/20"
                                                             >
                                                                 {Icons.video}
                                                                 <span>{isRTL ? "متابعة" : "Resume"}</span>
@@ -495,7 +495,7 @@ export default function AppointmentsPage({
                         <div className="col-span-3">{t.doctorDashboard.appointmentsPage.tableHeaders.purpose}</div>
                         <div className={cn("col-span-3", isRTL ? "text-left" : "text-right")}>{t.doctorDashboard.appointmentsPage.tableHeaders.status}</div>
                     </div>
-                    <GlowingCard isDark={isDark} glowColor="teal" className="p-0 overflow-hidden">
+                    <GlowingCard isDark={isDark} glowColor="amber" className="p-0 overflow-hidden">
                         <div className={divider}>
                             {upcomingAppointments.map((apt) => (
                                 <motion.div
@@ -522,7 +522,7 @@ export default function AppointmentsPage({
 
                                     {/* Patient */}
                                     <div className="md:col-span-4 flex items-center gap-3 w-full">
-                                        <div className="relative w-9 h-9 md:w-10 md:h-10 rounded-full overflow-hidden border border-teal-500/20">
+                                        <div className="relative w-9 h-9 md:w-10 md:h-10 rounded-full overflow-hidden border border-amber-500/20">
                                             {apt.patient?.avatar_url ? (
                                                 <Image
                                                     src={apt.patient.avatar_url}
@@ -532,7 +532,7 @@ export default function AppointmentsPage({
                                                     sizes="(max-width: 768px) 36px, 40px"
                                                 />
                                             ) : (
-                                                <div className={cn("w-full h-full flex items-center justify-center text-sm font-bold", isDark ? "bg-teal-500/10 text-teal-400" : "bg-teal-50 text-teal-600")}>
+                                                <div className={cn("w-full h-full flex items-center justify-center text-sm font-bold", isDark ? "bg-amber-500/10 text-amber-400" : "bg-amber-50 text-amber-600")}>
                                                     {apt.patient?.full_name.charAt(0) || "?"}
                                                 </div>
                                             )}

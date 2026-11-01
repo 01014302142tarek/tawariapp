@@ -188,7 +188,7 @@ const UserDropdown = ({
                     isDark ? "hover:bg-white/5" : "hover:bg-gray-100"
                 )}
             >
-                <div className="relative w-9 h-9 md:w-10 md:h-10 rounded-full overflow-hidden border-2 border-teal-500/30 flex items-center justify-center bg-teal-500/10">
+                <div className="relative w-9 h-9 md:w-10 md:h-10 rounded-full overflow-hidden border-2 border-amber-500/30 flex items-center justify-center bg-amber-500/10">
                     {avatarUrl ? (
                         <Image
                             src={avatarUrl}
@@ -198,7 +198,7 @@ const UserDropdown = ({
                             sizes="(max-width: 768px) 36px, 40px"
                         />
                     ) : (
-                        <span className="text-sm font-semibold text-teal-500">{getInitials(name)}</span>
+                        <span className="text-sm font-semibold text-amber-500">{getInitials(name)}</span>
                     )}
                 </div>
                 <div className="text-left hidden sm:block">
@@ -220,7 +220,7 @@ const UserDropdown = ({
                         className={cn(
                             "absolute top-full mt-2 w-64 rounded-xl shadow-2xl overflow-hidden z-[100]",
                             isRTL ? "left-0" : "right-0",
-                            isDark ? "bg-slate-900 border border-white/10" : "bg-white border border-gray-200"
+                            isDark ? "bg-[#0B152B] border border-blue-500/30 shadow-2xl" : "bg-white border border-gray-200"
                         )}
                     >
                         <div className="p-2">
@@ -267,7 +267,7 @@ const UserDropdown = ({
                                                     isDark
                                                         ? "text-gray-400 hover:text-white hover:bg-white/5"
                                                         : "text-gray-600 hover:text-gray-900 hover:bg-gray-100",
-                                                    themeMode === option.mode && (isDark ? "text-teal-400" : "text-teal-600")
+                                                    themeMode === option.mode && (isDark ? "text-blue-400 font-semibold" : "text-blue-600 font-semibold")
                                                 )}
                                             >
                                                 <div className="flex items-center gap-3">
@@ -275,7 +275,7 @@ const UserDropdown = ({
                                                     <span className="text-sm">{option.label}</span>
                                                 </div>
                                                 {themeMode === option.mode && (
-                                                    <span className={isDark ? "text-teal-400" : "text-teal-600"}>
+                                                    <span className={isDark ? "text-blue-400" : "text-blue-600"}>
                                                         {Icons.check}
                                                     </span>
                                                 )}
@@ -328,7 +328,7 @@ const UserDropdown = ({
                                                     isDark
                                                         ? "text-gray-400 hover:text-white hover:bg-white/5"
                                                         : "text-gray-600 hover:text-gray-900 hover:bg-gray-100",
-                                                    language === option.code && (isDark ? "text-teal-400" : "text-teal-600")
+                                                    language === option.code && (isDark ? "text-blue-400 font-semibold" : "text-blue-600 font-semibold")
                                                 )}
                                             >
                                                 <div className="flex items-center gap-3">
@@ -336,7 +336,7 @@ const UserDropdown = ({
                                                     <span className="text-sm">{option.label}</span>
                                                 </div>
                                                 {language === option.code && (
-                                                    <span className={isDark ? "text-teal-400" : "text-teal-600"}>
+                                                    <span className={isDark ? "text-blue-400" : "text-blue-600"}>
                                                         {Icons.check}
                                                     </span>
                                                 )}
@@ -379,13 +379,14 @@ const UserDropdown = ({
 export default function Header({ onMenuClick }: { onMenuClick?: () => void }) {
     const { theme, themeMode, setThemeMode } = useTheme();
     const { t, isRTL, language } = useI18n();
-    const { profile, signOut, isLoading } = useAuth();
+    const { user, profile, signOut, isLoading } = useAuth();
     const router = useRouter();
     const isDark = theme === "dark";
 
-    // Get user's name and avatar from profile
-    // Show "..." during loading, then fallback to "Doctor" if no name
-    const userName = profile?.profile.full_name || (isLoading ? "..." : "Doctor");
+    // Get user's name and avatar from profile with user_metadata fallback
+    const userName = profile?.profile?.full_name || 
+        (user?.user_metadata as any)?.full_name || 
+        (user?.email ? user.email.split('@')[0] : (isLoading ? "..." : "Doctor"));
     // Ensure avatar is a valid non-empty string, otherwise null
     const avatarUrl = profile?.profile.avatar_url;
     const userAvatar = avatarUrl && avatarUrl.trim() !== "" ? avatarUrl : null;
@@ -415,15 +416,16 @@ export default function Header({ onMenuClick }: { onMenuClick?: () => void }) {
         )}>
             <div className="px-4 md:px-8 py-3 md:py-4 flex items-center justify-between">
                 {/* Left: Mobile Menu + Date */}
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 sm:gap-3">
                     {/* Hamburger menu - mobile only */}
                     <button
                         onClick={onMenuClick}
+                        aria-label="Open menu"
                         className={cn(
-                            "p-2 rounded-lg md:hidden transition-colors",
+                            "p-2 rounded-xl md:hidden transition-colors",
                             isDark
-                                ? "text-gray-400 hover:text-white hover:bg-white/5"
-                                : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+                                ? "text-gray-400 hover:text-white hover:bg-white/5 active:bg-white/10"
+                                : "text-gray-600 hover:text-gray-900 hover:bg-gray-100 active:bg-gray-200"
                         )}
                     >
                         {Icons.menu}
@@ -431,44 +433,48 @@ export default function Header({ onMenuClick }: { onMenuClick?: () => void }) {
                     {/* Date - hidden on mobile */}
                     <div className={cn("items-center gap-2 hidden md:flex", isDark ? "text-gray-400" : "text-gray-600")}>
                         {Icons.calendar}
-                        <span className="font-medium">{currentDate}</span>
+                        <span className="font-medium text-sm">{currentDate}</span>
                     </div>
-                    {/* Language Toggle */}
-                    <LanguageToggleButton isDark={isDark} />
+                    {/* Language Toggle - hidden on mobile, visible on desktop */}
+                    <div className="hidden md:flex">
+                        <LanguageToggleButton isDark={isDark} />
+                    </div>
                 </div>
 
                 {/* Right: Actions */}
-                <div className="flex items-center gap-2 md:gap-3">
-                    {/* Video Call Button - visible on all screens */}
+                <div className="flex items-center gap-2 sm:gap-3">
+                    {/* Video Call Button - visible on sm+ screens */}
                     <button
                         onClick={() => router.push(`/${language}/dashboard/doctor/appointments`)}
-                        className="focus:outline-none"
+                        className="hidden sm:block focus:outline-none"
+                        title={t.doctorDashboard?.actions?.startVideoCall || "Start Call"}
                     >
                         <MovingBorder
                             duration={3000}
-                            className="px-3 md:px-5 py-2 md:py-2.5 font-medium cursor-pointer"
+                            className="px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium cursor-pointer"
                             bgClassName={isDark ? "bg-slate-900/[0.8]" : "bg-white"}
                         >
-                            <div className={cn("flex items-center gap-1.5 md:gap-2 text-sm", isDark ? "text-white" : "text-teal-600")}>
+                            <div className={cn("flex items-center gap-1.5 md:gap-2 text-xs sm:text-sm whitespace-nowrap", isDark ? "text-white" : "text-amber-600")}>
                                 {Icons.video}
                                 <span>{t.doctorDashboard?.actions?.startVideoCall || "Start Call"}</span>
                             </div>
                         </MovingBorder>
                     </button>
 
-                    {/* Urgent Care Button - visible on all screens */}
+                    {/* Urgent Care Status Button */}
                     <button
                         onClick={() => router.push(`/${language}/dashboard/doctor/urgent-care`)}
                         className="focus:outline-none"
+                        title={t.doctorDashboard?.actions?.urgentCare || "Urgent Care"}
                     >
                         <MovingBorder
                             duration={2500}
-                            className="px-3 md:px-5 py-2 md:py-2.5 font-medium cursor-pointer"
+                            className="px-2.5 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium cursor-pointer"
                             bgClassName={isDark ? "bg-slate-900/[0.8]" : "bg-white"}
                         >
-                            <div className={cn("flex items-center gap-1.5 md:gap-2 text-sm", isDark ? "text-orange-400" : "text-orange-600")}>
+                            <div className={cn("flex items-center gap-1.5 md:gap-2 text-xs sm:text-sm whitespace-nowrap", isDark ? "text-orange-400" : "text-orange-600")}>
                                 {Icons.urgentCare}
-                                <span>{t.doctorDashboard?.actions?.urgentCare || "Urgent Care"}</span>
+                                <span className="hidden sm:inline">{t.doctorDashboard?.actions?.urgentCare || "Urgent Care"}</span>
                             </div>
                         </MovingBorder>
                     </button>

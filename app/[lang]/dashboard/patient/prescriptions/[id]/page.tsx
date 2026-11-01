@@ -162,7 +162,7 @@ export default function PrescriptionDetailPage() {
         return (
             <div className="p-4 md:p-6 lg:p-8 flex items-center justify-center min-h-[60vh]">
                 <div className="text-center">
-                    <div className="animate-spin w-8 h-8 border-2 border-teal-500 border-t-transparent rounded-full mx-auto mb-4" />
+                    <div className="animate-spin w-8 h-8 border-2 border-amber-500 border-t-transparent rounded-full mx-auto mb-4" />
                     <p className={textMuted}>{labels.loading}</p>
                 </div>
             </div>
@@ -182,7 +182,7 @@ export default function PrescriptionDetailPage() {
                     <p className={textMuted}>{error || labels.notFound}</p>
                     <button
                         onClick={() => router.back()}
-                        className="mt-4 px-4 py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-600 transition-colors"
+                        className="mt-4 px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors"
                     >
                         {labels.back}
                     </button>
@@ -219,10 +219,10 @@ export default function PrescriptionDetailPage() {
 
             <div className="grid gap-6 max-w-3xl mx-auto">
                 {/* Doctor & Status Card */}
-                <GlowingCard isDark={isDark} glowColor="teal" className="p-6">
+                <GlowingCard isDark={isDark} glowColor="amber" className="p-6">
                     <div className="flex flex-col sm:flex-row sm:items-center gap-4 justify-between">
                         <div className="flex items-center gap-4">
-                            <div className="relative w-14 h-14 rounded-xl overflow-hidden border-2 border-teal-500/30 flex-shrink-0">
+                            <div className="relative w-14 h-14 rounded-xl overflow-hidden border-2 border-amber-500/30 flex-shrink-0">
                                 {prescription.doctor?.avatar_url ? (
                                     <Image
                                         src={prescription.doctor.avatar_url}
@@ -232,7 +232,7 @@ export default function PrescriptionDetailPage() {
                                         sizes="56px"
                                     />
                                 ) : (
-                                    <div className={cn("w-full h-full flex items-center justify-center text-xl font-bold", isDark ? "bg-teal-500/10 text-teal-400" : "bg-teal-50 text-teal-600")}>
+                                    <div className={cn("w-full h-full flex items-center justify-center text-xl font-bold", isDark ? "bg-amber-500/10 text-amber-400" : "bg-amber-50 text-amber-600")}>
                                         {prescription.doctor?.full_name?.charAt(0) || "D"}
                                     </div>
                                 )}
@@ -278,9 +278,9 @@ export default function PrescriptionDetailPage() {
                 </GlowingCard>
 
                 {/* Medication Details */}
-                <GlowingCard isDark={isDark} glowColor="teal" className="p-6">
+                <GlowingCard isDark={isDark} glowColor="amber" className="p-6">
                     <div className="flex items-center gap-3 mb-6">
-                        <div className={cn("p-3 rounded-xl", isDark ? "bg-teal-500/10 text-teal-400" : "bg-teal-50 text-teal-600")}>
+                        <div className={cn("p-3 rounded-xl", isDark ? "bg-amber-500/10 text-amber-400" : "bg-amber-50 text-amber-600")}>
                             {Icons.pill}
                         </div>
                         <div>
@@ -336,7 +336,7 @@ export default function PrescriptionDetailPage() {
                             disabled={renewalLoading}
                             className={cn(
                                 "flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-medium transition-colors",
-                                "bg-teal-500 text-white hover:bg-teal-600",
+                                "bg-amber-500 text-white hover:bg-amber-600",
                                 renewalLoading && "opacity-50 cursor-not-allowed"
                             )}
                         >

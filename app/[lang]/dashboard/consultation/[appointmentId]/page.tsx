@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { useI18n } from "@/app/i18n";
 import { getConsultationSession, endConsultation, getConsultationUserInfo, getAppointmentById } from "@/app/actions/appointments";
 import DailyIframe, { DailyCall } from "@daily-co/daily-js";
+import { NativeWebRTCCall } from "@/components/native-webrtc-call";
 import { PrescriptionPromptModal, QuickPrescriptionForm, ReviewPromptModal } from "@/components/post-consultation";
 
 export default function ConsultationPage() {
@@ -100,20 +101,31 @@ export default function ConsultationPage() {
     // Initialize Daily call
     useEffect(() => {
         // Prevent duplicate initialization
-        if (!roomUrl || !containerRef.current || callFrameRef.current) return;
+        if (!roomUrl || callFrameRef.current) return;
+
+        // If using high-availability WebRTC fallback room
+        if (roomUrl && !roomUrl.includes("daily.co")) {
+            setCallJoined(true);
+            return;
+        }
+
+        if (!containerRef.current) return;
 
         const dailyDomain = process.env.NEXT_PUBLIC_DAILY_DOMAIN;
-        if (!dailyDomain) {
+        if (!roomUrl.startsWith("https://") && !dailyDomain) {
             setError("Video service not configured");
             return;
         }
 
-        // Check if there's an existing Daily instance (React Strict Mode protection)
-        const existingInstance = DailyIframe.getCallInstance();
-        if (existingInstance) {
-            console.log("Daily: Using existing call instance");
-            callFrameRef.current = existingInstance;
-            return;
+        // Clean up any existing Daily instance (React Strict Mode / remount protection)
+        try {
+            const existingInstance = DailyIframe.getCallInstance();
+            if (existingInstance) {
+                console.log("Daily: Cleaning up existing call instance before creating new one");
+                existingInstance.destroy();
+            }
+        } catch (destroyErr) {
+            console.warn("Daily: Error cleaning up existing instance:", destroyErr);
         }
 
         // Construct full room URL if not already full
@@ -339,7 +351,7 @@ export default function ConsultationPage() {
         return (
             <div className="min-h-screen bg-slate-950 flex items-center justify-center">
                 <div className="text-center">
-                    <div className="w-16 h-16 border-4 border-teal-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+                    <div className="w-16 h-16 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
                     <p className="text-white text-lg">{t.common?.loading || "Loading consultation..."}</p>
                 </div>
             </div>
@@ -362,7 +374,7 @@ export default function ConsultationPage() {
                     <p className="text-gray-400 mb-6">{error}</p>
                     <button
                         onClick={() => router.back()}
-                        className="px-6 py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-600 transition-colors"
+                        className="px-6 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors"
                     >
                         {t.common?.goBack || "Go Back"}
                     </button>
@@ -397,12 +409,23 @@ export default function ConsultationPage() {
                 </div>
             </header>
 
-            {/* Daily Container */}
+            {/* Video Container */}
             <div className="flex-1 relative bg-black">
-                <div
-                    ref={containerRef}
-                    className="absolute inset-0"
-                />
+                {roomUrl && !roomUrl.includes("daily.co") ? (
+                    <NativeWebRTCCall
+                        roomId={appointmentId}
+                        userRole={userInfo?.role === "doctor" ? "doctor" : "patient"}
+                        userName={userInfo?.displayName}
+                        onEndCall={() => setShowEndModal(true)}
+                        isRTL={isRTL}
+                        language={language}
+                    />
+                ) : (
+                    <div
+                        ref={containerRef}
+                        className="absolute inset-0"
+                    />
+                )}
             </div>
 
             {/* End Consultation Modal */}

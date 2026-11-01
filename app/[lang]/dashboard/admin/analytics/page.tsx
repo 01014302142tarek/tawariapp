@@ -74,7 +74,7 @@ const ProgressBar = ({ value, max, isDark = true }: { value: number; max: number
                 initial={{ width: 0 }}
                 animate={{ width: `${percentage}%` }}
                 transition={{ duration: 1, ease: "easeOut" }}
-                className="h-full rounded-full bg-gradient-to-r from-teal-500 to-teal-400"
+                className="h-full rounded-full bg-gradient-to-r from-amber-500 to-amber-400"
             />
         </div>
     );
@@ -115,14 +115,14 @@ export default function AnalyticsPage() {
     const revenueInK = analytics ? Math.round(analytics.total_revenue / 1000) : 0;
 
     const stats = [
-        { label: t.adminDashboard.analyticsPage.stats.revenue, value: revenueInK, suffix: ` ${t.common.units.kEgp}`, icon: Icons.money, color: "teal" },
+        { label: t.adminDashboard.analyticsPage.stats.revenue, value: revenueInK, suffix: ` ${t.common.units.kEgp}`, icon: Icons.money, color: "amber" },
         { label: t.adminDashboard.analyticsPage.stats.users, value: analytics?.total_users || 0, icon: Icons.users, color: "blue" },
         { label: t.adminDashboard.analyticsPage.stats.appointments, value: analytics?.total_appointments || 0, icon: Icons.calendar, color: "emerald" },
         { label: t.adminDashboard.analyticsPage.stats.session, value: analytics?.avg_session_minutes || 0, suffix: ` ${t.common.units.min}`, icon: Icons.clock, color: "amber" },
     ];
 
     const trafficSources = [
-        { source: t.adminDashboard.analyticsPage.traffic.direct, percentage: 45, icon: Icons.globe, color: "teal" },
+        { source: t.adminDashboard.analyticsPage.traffic.direct, percentage: 45, icon: Icons.globe, color: "amber" },
         { source: t.adminDashboard.analyticsPage.traffic.referral, percentage: 30, icon: Icons.link, color: "blue" },
         { source: t.adminDashboard.analyticsPage.traffic.social, percentage: 15, icon: Icons.share, color: "emerald" },
         { source: t.adminDashboard.analyticsPage.traffic.search, percentage: 10, icon: Icons.search, color: "amber" },
@@ -136,7 +136,7 @@ export default function AnalyticsPage() {
         return (
             <div className="min-h-screen flex items-center justify-center">
                 <div className="text-center">
-                    <div className="text-teal-500 mb-4 flex justify-center">{Icons.spinner}</div>
+                    <div className="text-amber-500 mb-4 flex justify-center">{Icons.spinner}</div>
                     <p className={isDark ? "text-gray-400" : "text-gray-600"}>{t.common.loading || "Loading..."}</p>
                 </div>
             </div>
@@ -153,12 +153,12 @@ export default function AnalyticsPage() {
                     minSize={0.4}
                     maxSize={1}
                     particleDensity={isDark ? 20 : 10}
-                    particleColor={isDark ? "20, 184, 166" : "13, 148, 136"}
+                    particleColor={isDark ? "245, 158, 11" : "217, 119, 6"}
                 />
                 {isDark && (
                     <>
-                        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-teal-500/5 rounded-full blur-3xl" />
-                        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-teal-500/5 rounded-full blur-3xl" />
+                        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-amber-500/5 rounded-full blur-3xl" />
+                        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-amber-500/5 rounded-full blur-3xl" />
                     </>
                 )}
             </div>
@@ -180,7 +180,7 @@ export default function AnalyticsPage() {
                                 className={cn(
                                     "px-3 md:px-4 py-1.5 md:py-2 rounded-lg md:rounded-xl text-xs md:text-sm font-medium transition-colors capitalize whitespace-nowrap",
                                     period === p
-                                        ? "bg-teal-500 text-white"
+                                        ? "bg-amber-500 text-white"
                                         : isDark
                                             ? "bg-white/5 text-gray-400 hover:bg-white/10"
                                             : "bg-gray-100 text-gray-600 hover:bg-gray-200"
@@ -195,9 +195,9 @@ export default function AnalyticsPage() {
                 {/* Stats */}
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-6 md:mb-8">
                     {stats.map((stat, idx) => (
-                        <GlowingCard key={idx} glowColor="teal" className="p-3 md:p-5" isDark={isDark}>
+                        <GlowingCard key={idx} glowColor="amber" className="p-3 md:p-5" isDark={isDark}>
                             <div className="flex items-start justify-between mb-2 md:mb-3">
-                                <div className="w-8 h-8 md:w-10 md:h-10 rounded-lg md:rounded-xl flex items-center justify-center bg-teal-500/10 text-teal-500">
+                                <div className="w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center bg-gradient-to-br from-[#38BDF8] to-[#0284C7] text-white shadow-[0_0_15px_rgba(14,165,233,0.5)] border border-sky-300/40">
                                     <span className="[&>svg]:w-4 [&>svg]:h-4 md:[&>svg]:w-5 md:[&>svg]:h-5">
                                         {stat.icon}
                                     </span>
@@ -217,7 +217,7 @@ export default function AnalyticsPage() {
                 {/* Charts - 2 Column Layout */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 mb-6 md:mb-8">
                     {/* Appointments Chart */}
-                    <GlowingCard glowColor="teal" className="p-4 md:p-6 overflow-visible" isDark={isDark}>
+                    <GlowingCard glowColor="amber" className="p-4 md:p-6 overflow-visible" isDark={isDark}>
                         <h3 className={cn("text-base md:text-lg font-semibold mb-4 md:mb-6", isDark ? "text-white" : "text-slate-900")}>
                             {language === "ar" ? "المواعيد الشهرية" : "Monthly Appointments"}
                         </h3>
@@ -233,7 +233,7 @@ export default function AnalyticsPage() {
                                                     initial={{ height: 0 }}
                                                     animate={{ height: `${Math.max(heightPercent, 2)}%` }}
                                                     transition={{ delay: idx * 0.05, duration: 0.5 }}
-                                                    className="w-full rounded-t-sm md:rounded-t-md bg-gradient-to-t from-teal-600 to-teal-400 hover:from-teal-500 hover:to-teal-300 transition-colors cursor-pointer"
+                                                    className="w-full rounded-t-sm md:rounded-t-md bg-gradient-to-t from-amber-600 to-amber-400 hover:from-amber-500 hover:to-amber-300 transition-colors cursor-pointer"
                                                     style={{ minHeight: '4px' }}
                                                 />
                                                 {/* Tooltip */}
@@ -259,14 +259,14 @@ export default function AnalyticsPage() {
                     </GlowingCard>
 
                     {/* Traffic Sources */}
-                    <GlowingCard glowColor="teal" className="p-4 md:p-6" isDark={isDark}>
+                    <GlowingCard glowColor="amber" className="p-4 md:p-6" isDark={isDark}>
                         <h3 className={cn("text-base md:text-lg font-semibold mb-4 md:mb-6", isDark ? "text-white" : "text-slate-900")}>{t.adminDashboard.analyticsPage.charts.traffic}</h3>
                         <div className="space-y-3 md:space-y-5">
                             {trafficSources.map((source, idx) => (
                                 <div key={idx}>
                                     <div className="flex items-center justify-between mb-1.5 md:mb-2">
                                         <div className="flex items-center gap-1.5 md:gap-2">
-                                            <div className="w-6 h-6 md:w-8 md:h-8 rounded-md md:rounded-lg flex items-center justify-center bg-teal-500/10 text-teal-500">
+                                            <div className="w-6 h-6 md:w-8 md:h-8 rounded-md md:rounded-lg flex items-center justify-center bg-amber-500/10 text-amber-500">
                                                 <span className="[&>svg]:w-3 [&>svg]:h-3 md:[&>svg]:w-4 md:[&>svg]:h-4">
                                                     {source.icon}
                                                 </span>
@@ -283,11 +283,11 @@ export default function AnalyticsPage() {
                 </div>
 
                 {/* Top Doctors Table */}
-                <GlowingCard glowColor="teal" className="p-4 md:p-6" isDark={isDark}>
+                <GlowingCard glowColor="amber" className="p-4 md:p-6" isDark={isDark}>
                     <div className="flex items-center justify-between mb-4 md:mb-6">
                         <h3 className={cn("text-base md:text-lg font-semibold", isDark ? "text-white" : "text-slate-900")}>{t.adminDashboard.analyticsPage.table.title}</h3>
                         {/* Mobile scroll indicator */}
-                        <div className="flex items-center gap-1 md:hidden text-teal-500">
+                        <div className="flex items-center gap-1 md:hidden text-amber-500">
                             <span className="text-[10px]">Scroll</span>
                             <svg className="w-4 h-4 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
@@ -295,7 +295,7 @@ export default function AnalyticsPage() {
                         </div>
                     </div>
                     {topDoctors.length > 0 ? (
-                        <div className="overflow-x-auto -mx-4 md:mx-0 scrollbar-thin scrollbar-thumb-teal-500/20 scrollbar-track-transparent">
+                        <div className="overflow-x-auto -mx-4 md:mx-0 scrollbar-thin scrollbar-thumb-amber-500/20 scrollbar-track-transparent">
                             <table className="w-full min-w-[500px]">
                                 <thead>
                                     <tr className={cn("border-b", isDark ? "border-white/5" : "border-gray-200")}>
@@ -316,14 +316,14 @@ export default function AnalyticsPage() {
                                             className={cn("border-b", isDark ? "border-white/5" : "border-gray-100")}
                                         >
                                             <td className="px-3 md:px-4 py-3 md:py-4">
-                                                <span className="w-6 h-6 md:w-8 md:h-8 rounded-full flex items-center justify-center font-bold text-xs md:text-sm bg-teal-500/20 text-teal-500">
+                                                <span className="w-6 h-6 md:w-8 md:h-8 rounded-full flex items-center justify-center font-bold text-xs md:text-sm bg-amber-500/20 text-amber-500">
                                                     {formatNumber(doctor.rank)}
                                                 </span>
                                             </td>
                                             <td className={cn("px-3 md:px-4 py-3 md:py-4 font-medium text-xs md:text-base", isDark ? "text-white" : "text-slate-900")}>{doctor.name}</td>
                                             <td className={cn("px-3 md:px-4 py-3 md:py-4 text-xs md:text-sm", isDark ? "text-gray-400" : "text-gray-600")}>{doctor.specialty}</td>
                                             <td className={cn("px-3 md:px-4 py-3 md:py-4 text-xs md:text-base", isDark ? "text-white" : "text-slate-900")}>{formatNumber(doctor.patients)}</td>
-                                            <td className="px-3 md:px-4 py-3 md:py-4 text-teal-500 font-medium text-xs md:text-base">{formatNumber(doctor.revenue.toLocaleString())} {t.common.units.egp}</td>
+                                            <td className="px-3 md:px-4 py-3 md:py-4 text-amber-500 font-medium text-xs md:text-base">{formatNumber(doctor.revenue.toLocaleString())} {t.common.units.egp}</td>
                                         </motion.tr>
                                     ))}
                                 </tbody>

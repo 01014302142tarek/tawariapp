@@ -394,7 +394,7 @@ export async function approveDoctor(doctorProfileId: string): Promise<{ success:
             const doctorName = profile.full_name || "Doctor";
             await sendEmail({
                 to: doctorEmail,
-                subject: "Your Tawari Account is Verified! | تم اعتماد حسابك في تواري",
+                subject: "Your Tabibi Account is Verified! | تم اعتماد حسابك في طبيبي",
                 html: getDoctorApprovalEmailHtml(doctorName, "en"),
                 text: getDoctorApprovalEmailText(doctorName, "en"),
             });
@@ -482,7 +482,7 @@ export async function rejectDoctor(
             const doctorName = profile.full_name || "Doctor";
             await sendEmail({
                 to: doctorEmail,
-                subject: "Update on Your Tawari Application | تحديث بخصوص طلبك في تواري",
+                subject: "Update on Your Tabibi Application | تحديث بخصوص طلبك في طبيبي",
                 html: getDoctorRejectionEmailHtml(doctorName, reason, "en"),
                 text: getDoctorRejectionEmailText(doctorName, reason, "en"),
             });

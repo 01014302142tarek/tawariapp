@@ -62,9 +62,9 @@ export function PrescriptionPromptModal({
                         {/* Icon */}
                         <div className={cn(
                             "w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4",
-                            isDark ? "bg-teal-500/10" : "bg-teal-50"
+                            isDark ? "bg-amber-500/10" : "bg-amber-50"
                         )}>
-                            <span className="text-teal-500">{Icons.prescription}</span>
+                            <span className="text-amber-500">{Icons.prescription}</span>
                         </div>
 
                         {/* Title */}
@@ -91,9 +91,9 @@ export function PrescriptionPromptModal({
                                 onClick={onAddPrescription}
                                 className={cn(
                                     "w-full px-4 py-3 rounded-xl font-medium transition-all",
-                                    "bg-teal-500 text-white hover:bg-teal-600",
+                                    "bg-amber-500 text-white hover:bg-amber-600",
                                     "flex items-center justify-center gap-2",
-                                    "shadow-lg shadow-teal-500/20 hover:shadow-teal-500/30"
+                                    "shadow-lg shadow-amber-500/20 hover:shadow-amber-500/30"
                                 )}
                             >
                                 {Icons.add}

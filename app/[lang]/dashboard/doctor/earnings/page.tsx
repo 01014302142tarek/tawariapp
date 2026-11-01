@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useI18n } from "@/app/i18n";
+import { useGlobalTheme } from "@/app/context/GlobalThemeContext";
 import { GlowingCard } from "@/components/ui/glowing-card";
 import { getDoctorEarnings, requestPayout } from "@/app/actions/payments";
 
@@ -69,6 +70,7 @@ interface EarningsData {
 export default function DoctorEarningsPage() {
     const router = useRouter();
     const { isRTL, language } = useI18n();
+    const { isDark } = useGlobalTheme();
 
     const [loading, setLoading] = useState(true);
     const [earnings, setEarnings] = useState<EarningsData | null>(null);
@@ -77,29 +79,11 @@ export default function DoctorEarningsPage() {
     const [withdrawing, setWithdrawing] = useState(false);
     const [withdrawError, setWithdrawError] = useState<string | null>(null);
     const [withdrawSuccess, setWithdrawSuccess] = useState(false);
-    const [isDark, setIsDark] = useState(false);
     const [bankDetails, setBankDetails] = useState({
         bankName: "",
         accountNumber: "",
         accountHolderName: "",
     });
-
-    // Detect dark mode
-    useEffect(() => {
-        const checkDarkMode = () => {
-            setIsDark(document.documentElement.classList.contains("dark"));
-        };
-        
-        checkDarkMode();
-        
-        const observer = new MutationObserver(checkDarkMode);
-        observer.observe(document.documentElement, {
-            attributes: true,
-            attributeFilter: ["class"],
-        });
-        
-        return () => observer.disconnect();
-    }, []);
 
     // Load earnings
     useEffect(() => {
@@ -155,8 +139,8 @@ export default function DoctorEarningsPage() {
                 };
             case "available":
                 return {
-                    color: "text-teal-400",
-                    bg: "bg-teal-500/20",
+                    color: "text-amber-400",
+                    bg: "bg-amber-500/20",
                     label: isRTL ? "متاح للسحب" : "Available",
                 };
             case "paid_out":
@@ -188,10 +172,10 @@ export default function DoctorEarningsPage() {
     // Loading state
     if (loading) {
         return (
-            <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+            <div className={cn("min-h-screen flex items-center justify-center", isDark ? "bg-slate-950 text-white" : "bg-gray-50 text-slate-900")}>
                 <div className="text-center">
-                    <div className="w-16 h-16 border-4 border-teal-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-                    <p className="text-white text-lg">
+                    <div className="w-16 h-16 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+                    <p className={cn("text-lg", isDark ? "text-white" : "text-slate-900")}>
                         {isRTL ? "جاري التحميل..." : "Loading..."}
                     </p>
                 </div>
@@ -200,28 +184,28 @@ export default function DoctorEarningsPage() {
     }
 
     return (
-        <div className={cn("min-h-screen bg-slate-950 py-8 px-4", isRTL && "rtl")}>
+        <div className={cn("min-h-screen py-8 px-4", isDark ? "bg-slate-950" : "bg-gray-50", isRTL && "rtl")}>
             <div className="max-w-2xl mx-auto">
                 {/* Header */}
                 <div className="mb-6">
                     <button
                         onClick={() => router.push(`/${language}/dashboard/doctor`)}
-                        className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors mb-4"
+                        className={cn("flex items-center gap-2 transition-colors mb-4", isDark ? "text-gray-400 hover:text-white" : "text-gray-600 hover:text-slate-900")}
                     >
                         <span className={isRTL ? "rotate-180" : ""}>{Icons.back}</span>
                         <span>{isRTL ? "العودة" : "Back"}</span>
                     </button>
-                    <h1 className="text-2xl font-bold text-white">
+                    <h1 className={cn("text-2xl font-bold", isDark ? "text-white" : "text-slate-900")}>
                         {isRTL ? "الأرباح" : "Earnings"}
                     </h1>
-                    <p className="text-gray-400 mt-1">
+                    <p className={cn("mt-1 text-sm sm:text-base", isDark ? "text-gray-400" : "text-gray-600")}>
                         {isRTL ? "تتبع أرباحك ومدفوعاتك" : "Track your earnings and payouts"}
                     </p>
                 </div>
 
                 {/* Error State */}
                 {error && (
-                    <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400">
+                    <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-red-500">
                         {error}
                     </div>
                 )}
@@ -229,66 +213,66 @@ export default function DoctorEarningsPage() {
                 {earnings && (
                     <>
                         {/* Summary Cards */}
-                        <div className="grid grid-cols-2 gap-4 mb-6">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
                             {/* Total Earnings */}
-                            <GlowingCard glowColor="teal" className="p-4" isDark>
+                            <GlowingCard glowColor="amber" className="p-4" isDark={isDark}>
                                 <div className="flex items-center gap-2 mb-2">
-                                    <span className="text-teal-400">{Icons.trending}</span>
-                                    <span className="text-gray-400 text-sm">
+                                    <span className="text-amber-500">{Icons.trending}</span>
+                                    <span className={cn("text-sm", isDark ? "text-gray-400" : "text-gray-600")}>
                                         {isRTL ? "إجمالي الأرباح" : "Total Earnings"}
                                     </span>
                                 </div>
-                                <p className="text-xl font-bold text-white">
+                                <p className={cn("text-xl font-bold", isDark ? "text-white" : "text-slate-900")}>
                                     {earnings.totalEarnings.toFixed(2)}
-                                    <span className="text-sm text-gray-400 ms-1">
+                                    <span className={cn("text-sm ms-1", isDark ? "text-gray-400" : "text-gray-500")}>
                                         {isRTL ? "ج.م" : "EGP"}
                                     </span>
                                 </p>
                             </GlowingCard>
 
                             {/* Available for Payout */}
-                            <GlowingCard glowColor="green" className="p-4" isDark>
+                            <GlowingCard glowColor="green" className="p-4" isDark={isDark}>
                                 <div className="flex items-center gap-2 mb-2">
-                                    <span className="text-green-400">{Icons.check}</span>
-                                    <span className="text-gray-400 text-sm">
+                                    <span className="text-emerald-500">{Icons.check}</span>
+                                    <span className={cn("text-sm", isDark ? "text-gray-400" : "text-gray-600")}>
                                         {isRTL ? "متاح للسحب" : "Available"}
                                     </span>
                                 </div>
-                                <p className="text-xl font-bold text-white">
+                                <p className={cn("text-xl font-bold", isDark ? "text-white" : "text-slate-900")}>
                                     {earnings.availableForPayout.toFixed(2)}
-                                    <span className="text-sm text-gray-400 ms-1">
+                                    <span className={cn("text-sm ms-1", isDark ? "text-gray-400" : "text-gray-500")}>
                                         {isRTL ? "ج.م" : "EGP"}
                                     </span>
                                 </p>
                             </GlowingCard>
 
                             {/* Pending */}
-                            <GlowingCard glowColor="amber" className="p-4" isDark>
+                            <GlowingCard glowColor="amber" className="p-4" isDark={isDark}>
                                 <div className="flex items-center gap-2 mb-2">
-                                    <span className="text-amber-400">{Icons.clock}</span>
-                                    <span className="text-gray-400 text-sm">
+                                    <span className="text-amber-500">{Icons.clock}</span>
+                                    <span className={cn("text-sm", isDark ? "text-gray-400" : "text-gray-600")}>
                                         {isRTL ? "قيد الانتظار" : "Pending"}
                                     </span>
                                 </div>
-                                <p className="text-xl font-bold text-white">
+                                <p className={cn("text-xl font-bold", isDark ? "text-white" : "text-slate-900")}>
                                     {earnings.pendingEarnings.toFixed(2)}
-                                    <span className="text-sm text-gray-400 ms-1">
+                                    <span className={cn("text-sm ms-1", isDark ? "text-gray-400" : "text-gray-500")}>
                                         {isRTL ? "ج.م" : "EGP"}
                                     </span>
                                 </p>
                             </GlowingCard>
 
                             {/* Paid Out */}
-                            <GlowingCard glowColor="blue" className="p-4" isDark>
+                            <GlowingCard glowColor="blue" className="p-4" isDark={isDark}>
                                 <div className="flex items-center gap-2 mb-2">
-                                    <span className="text-blue-400">{Icons.bank}</span>
-                                    <span className="text-gray-400 text-sm">
+                                    <span className="text-blue-500">{Icons.bank}</span>
+                                    <span className={cn("text-sm", isDark ? "text-gray-400" : "text-gray-600")}>
                                         {isRTL ? "تم صرفه" : "Paid Out"}
                                     </span>
                                 </div>
-                                <p className="text-xl font-bold text-white">
+                                <p className={cn("text-xl font-bold", isDark ? "text-white" : "text-slate-900")}>
                                     {earnings.paidOut.toFixed(2)}
-                                    <span className="text-sm text-gray-400 ms-1">
+                                    <span className={cn("text-sm ms-1", isDark ? "text-gray-400" : "text-gray-500")}>
                                         {isRTL ? "ج.م" : "EGP"}
                                     </span>
                                 </p>
@@ -297,13 +281,13 @@ export default function DoctorEarningsPage() {
 
                         {/* Request Payout Button */}
                         {earnings.availableForPayout > 0 && (
-                            <GlowingCard glowColor="teal" className="p-4 mb-6" isDark>
+                            <GlowingCard glowColor="amber" className="p-4 mb-6" isDark={isDark}>
                                 <div className="flex items-center justify-between">
                                     <div>
-                                        <p className="text-white font-medium">
+                                        <p className={cn("font-medium", isDark ? "text-white" : "text-slate-900")}>
                                             {isRTL ? "طلب سحب الأرباح" : "Request Payout"}
                                         </p>
-                                        <p className="text-gray-400 text-sm">
+                                        <p className={cn("text-sm", isDark ? "text-gray-400" : "text-gray-600")}>
                                             {isRTL
                                                 ? `لديك ${earnings.availableForPayout.toFixed(2)} ج.م متاح للسحب`
                                                 : `You have ${earnings.availableForPayout.toFixed(2)} EGP available`}
@@ -311,7 +295,7 @@ export default function DoctorEarningsPage() {
                                     </div>
                                     <button
                                         onClick={() => setShowWithdrawModal(true)}
-                                        className="px-4 py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-600 transition-colors flex items-center gap-2"
+                                        className="px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors flex items-center gap-2 shadow-sm"
                                     >
                                         {Icons.bank}
                                         <span>{isRTL ? "سحب" : "Withdraw"}</span>
@@ -322,19 +306,19 @@ export default function DoctorEarningsPage() {
 
                         {/* Recent Earnings */}
                         <div className="mb-4">
-                            <h2 className="text-lg font-semibold text-white">
+                            <h2 className={cn("text-lg font-semibold", isDark ? "text-white" : "text-slate-900")}>
                                 {isRTL ? "الأرباح الأخيرة" : "Recent Earnings"}
                             </h2>
                         </div>
 
                         {/* Empty State */}
                         {earnings.recentEarnings.length === 0 && (
-                            <GlowingCard glowColor="blue" className="p-8 text-center" isDark>
-                                <span className="text-gray-600 mx-auto block mb-4">{Icons.empty}</span>
-                                <h3 className="text-lg font-medium text-white mb-2">
+                            <GlowingCard glowColor="blue" className="p-8 text-center" isDark={isDark}>
+                                <span className={cn("mx-auto block mb-4", isDark ? "text-gray-600" : "text-gray-400")}>{Icons.empty}</span>
+                                <h3 className={cn("text-lg font-medium mb-2", isDark ? "text-white" : "text-slate-900")}>
                                     {isRTL ? "لا توجد أرباح بعد" : "No Earnings Yet"}
                                 </h3>
-                                <p className="text-gray-400">
+                                <p className={isDark ? "text-gray-400" : "text-gray-600"}>
                                     {isRTL
                                         ? "ستظهر أرباحك هنا بعد إتمام الاستشارات"
                                         : "Your earnings will appear here after completing consultations"}
@@ -355,27 +339,27 @@ export default function DoctorEarningsPage() {
                                             animate={{ opacity: 1, y: 0 }}
                                             transition={{ delay: index * 0.05 }}
                                         >
-                                            <GlowingCard glowColor="teal" className="p-4" isDark>
+                                            <GlowingCard glowColor="amber" className="p-4" isDark={isDark}>
                                                 <div className="flex items-center justify-between">
                                                     <div className="flex items-center gap-3">
-                                                        <div className="w-10 h-10 rounded-full bg-teal-500/20 flex items-center justify-center">
-                                                            <span className="text-teal-400">{Icons.user}</span>
+                                                        <div className="w-10 h-10 rounded-full bg-amber-500/20 flex items-center justify-center">
+                                                            <span className="text-amber-500">{Icons.user}</span>
                                                         </div>
                                                         <div>
-                                                            <p className="text-white font-medium">
+                                                            <p className={cn("font-medium", isDark ? "text-white" : "text-slate-900")}>
                                                                 {earning.patientName || (isRTL ? "مريض" : "Patient")}
                                                             </p>
-                                                            <p className="text-gray-500 text-xs">
+                                                            <p className={cn("text-xs", isDark ? "text-gray-500" : "text-gray-500")}>
                                                                 {formatDate(earning.createdAt)}
                                                             </p>
                                                         </div>
                                                     </div>
                                                     <div className="text-end">
-                                                        <p className="text-white font-bold">
+                                                        <p className={cn("font-bold", isDark ? "text-white" : "text-slate-900")}>
                                                             +{earning.amount.toFixed(2)} {isRTL ? "ج.م" : "EGP"}
                                                         </p>
                                                         <span className={cn(
-                                                            "inline-block text-xs px-2 py-0.5 rounded-full mt-1",
+                                                            "inline-block text-xs px-2 py-0.5 rounded-full mt-1 font-medium",
                                                             statusDisplay.bg,
                                                             statusDisplay.color
                                                         )}>
@@ -391,8 +375,8 @@ export default function DoctorEarningsPage() {
                         )}
 
                         {/* Platform Fee Note */}
-                        <div className="mt-6 p-4 bg-slate-800/50 rounded-xl border border-white/10">
-                            <p className="text-gray-400 text-sm">
+                        <div className={cn("mt-6 p-4 rounded-xl border", isDark ? "bg-slate-800/50 border-white/10" : "bg-amber-50/70 border-amber-200 shadow-xs")}>
+                            <p className={cn("text-sm", isDark ? "text-gray-400" : "text-amber-950")}>
                                 {isRTL
                                     ? "ملاحظة: يتم خصم رسوم المنصة (2.75% + 3 ج.م) من كل استشارة قبل احتساب صافي أرباحك."
                                     : "Note: Platform fee (2.75% + 3 EGP) is deducted from each consultation before calculating your net earnings."}
@@ -443,8 +427,8 @@ export default function DoctorEarningsPage() {
                                     </button>
                                 </div>
 
-                                <div className="mb-4 p-3 bg-teal-500/10 border border-teal-500/20 rounded-lg">
-                                    <p className="text-teal-400 text-sm">
+                                <div className="mb-4 p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg">
+                                    <p className="text-amber-400 text-sm">
                                         {isRTL
                                             ? `المبلغ المتاح للسحب: ${earnings?.availableForPayout.toFixed(2)} ج.م`
                                             : `Available for withdrawal: ${earnings?.availableForPayout.toFixed(2)} EGP`}
@@ -470,8 +454,8 @@ export default function DoctorEarningsPage() {
                                             className={cn(
                                                 "w-full px-4 py-3 border rounded-lg focus:outline-none",
                                                 isDark
-                                                    ? "bg-slate-800 border-white/10 text-white placeholder-gray-500 focus:border-teal-500"
-                                                    : "bg-gray-50 border-gray-200 text-slate-900 placeholder-gray-400 focus:border-teal-500"
+                                                    ? "bg-slate-800 border-white/10 text-white placeholder-gray-500 focus:border-amber-500"
+                                                    : "bg-gray-50 border-gray-200 text-slate-900 placeholder-gray-400 focus:border-amber-500"
                                             )}
                                         />
                                     </div>
@@ -487,8 +471,8 @@ export default function DoctorEarningsPage() {
                                             className={cn(
                                                 "w-full px-4 py-3 border rounded-lg focus:outline-none",
                                                 isDark
-                                                    ? "bg-slate-800 border-white/10 text-white placeholder-gray-500 focus:border-teal-500"
-                                                    : "bg-gray-50 border-gray-200 text-slate-900 placeholder-gray-400 focus:border-teal-500"
+                                                    ? "bg-slate-800 border-white/10 text-white placeholder-gray-500 focus:border-amber-500"
+                                                    : "bg-gray-50 border-gray-200 text-slate-900 placeholder-gray-400 focus:border-amber-500"
                                             )}
                                         />
                                     </div>
@@ -504,8 +488,8 @@ export default function DoctorEarningsPage() {
                                             className={cn(
                                                 "w-full px-4 py-3 border rounded-lg focus:outline-none",
                                                 isDark
-                                                    ? "bg-slate-800 border-white/10 text-white placeholder-gray-500 focus:border-teal-500"
-                                                    : "bg-gray-50 border-gray-200 text-slate-900 placeholder-gray-400 focus:border-teal-500"
+                                                    ? "bg-slate-800 border-white/10 text-white placeholder-gray-500 focus:border-amber-500"
+                                                    : "bg-gray-50 border-gray-200 text-slate-900 placeholder-gray-400 focus:border-amber-500"
                                             )}
                                         />
                                     </div>
@@ -526,7 +510,7 @@ export default function DoctorEarningsPage() {
                                     <button
                                         onClick={handleWithdraw}
                                         disabled={withdrawing || !bankDetails.bankName || !bankDetails.accountNumber || !bankDetails.accountHolderName}
-                                        className="flex-1 px-4 py-3 bg-teal-500 text-white rounded-lg hover:bg-teal-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                        className="flex-1 px-4 py-3 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                                     >
                                         {withdrawing ? (
                                             <>
