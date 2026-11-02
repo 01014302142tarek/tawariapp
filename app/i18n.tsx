@@ -2721,7 +2721,7 @@ interface I18nContextType {
 const I18nContext = createContext<I18nContextType | undefined>(undefined);
 
 // Single localStorage key for language preference
-const LANGUAGE_STORAGE_KEY = "tawari-app-language";
+const LANGUAGE_STORAGE_KEY = "tabibi-app-language";
 
 export function I18nProvider({ children, locale }: { children: React.ReactNode; locale: Language }) {
     const [language, setLanguageState] = useState<Language>(locale);

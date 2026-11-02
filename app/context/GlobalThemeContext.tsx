@@ -16,7 +16,7 @@ interface GlobalThemeContextType {
 const GlobalThemeContext = createContext<GlobalThemeContextType | undefined>(undefined);
 
 // Single localStorage key for the entire app
-const THEME_STORAGE_KEY = "tawari-app-theme";
+const THEME_STORAGE_KEY = "tabibi-app-theme";
 
 function getSystemTheme(): Theme {
     if (typeof window !== "undefined") {

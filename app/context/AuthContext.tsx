@@ -5,7 +5,7 @@ import { User, Session } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
 import { getCurrentUserProfile } from "@/app/actions/profile";
 
-const PROFILE_CACHE_KEY = "tawari_profile_cache";
+const PROFILE_CACHE_KEY = "tabibi_profile_cache";
 import {
     signInWithPassword as serverSignIn,
     signUpWithPassword as serverSignUp,
