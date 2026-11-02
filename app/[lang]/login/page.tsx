@@ -168,7 +168,7 @@ function LoginPageContent() {
 
     const handleGoogleSignIn = async () => {
         setError(null);
-        const { error } = await signInWithGoogle();
+        const { error } = await signInWithGoogle(redirectParam || `/${language}/dashboard`);
         if (error) {
             setError(language === 'ar' ? 'فشل تسجيل الدخول بواسطة Google' : 'Failed to sign in with Google');
         }

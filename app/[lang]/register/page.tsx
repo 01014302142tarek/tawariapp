@@ -301,7 +301,7 @@ export default function RegisterPage() {
 
     const handleGoogleSignUp = async () => {
         setError(null);
-        const { error } = await signInWithGoogle();
+        const { error } = await signInWithGoogle(`/${language}/dashboard`);
         if (error) {
             setError(language === 'ar' ? 'فشل التسجيل بواسطة Google' : 'Failed to sign up with Google');
         }

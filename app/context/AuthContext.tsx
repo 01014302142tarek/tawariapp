@@ -47,7 +47,7 @@ interface AuthContextType {
     refreshProfile: () => Promise<void>;
     signUp: (email: string, password: string, metadata?: { fullName?: string; phone?: string; role?: string }) => Promise<AuthResult>;
     signIn: (email: string, password: string, rememberMe?: boolean) => Promise<AuthResult>;
-    signInWithGoogle: () => Promise<{ error: Error | null }>;
+    signInWithGoogle: (redirectToPath?: string) => Promise<{ error: Error | null }>;
     signOut: () => Promise<void>;
     updateUserRole: (role: string) => Promise<{ error: Error | null }>;
 }
@@ -198,11 +198,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return { error: null };
     };
 
-    const signInWithGoogle = async () => {
+    const signInWithGoogle = async (redirectToPath?: string) => {
         const { error } = await supabase.auth.signInWithOAuth({
             provider: "google",
             options: {
-                redirectTo: `${window.location.origin}/auth/callback`,
+                redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(redirectToPath || (window.location.pathname.startsWith('/ar') ? '/ar/dashboard' : '/en/dashboard'))}`,
             },
         });
         return { error: error as Error | null };
