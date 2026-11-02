@@ -33,7 +33,7 @@ export async function GET(request: Request) {
     // If OAuth provider returned an explicit error (e.g., user denied access)
     if (errorParam) {
         console.error("[AuthCallback] OAuth provider returned error:", errorParam, errorDescription);
-        const errUrl = new URL(`${origin}/auth/auth-code-error`);
+        const errUrl = new URL(`${origin}/ar/auth-code-error`);
         if (errorDescription) {
             errUrl.searchParams.set("error_description", errorDescription);
         }
@@ -122,5 +122,5 @@ export async function GET(request: Request) {
     }
 
     // Return the user to an error page with instructions
-    return NextResponse.redirect(`${origin}/auth/auth-code-error`);
+    return NextResponse.redirect(`${origin}/ar/auth-code-error`);
 }
