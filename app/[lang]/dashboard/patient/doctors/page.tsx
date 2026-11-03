@@ -185,20 +185,17 @@ function DoctorsPageContent() {
         return () => clearTimeout(timer);
     }, [filters.search, filters.specialization, filters.sortBy, filters.availableNow, loadDoctors]);
 
-    // Auto-open booking view if book/doctor ID is passed in URL
-    useEffect(() => {
-        if ((!autoBookId && !autoBookSlug) || doctors.length === 0 || viewMode === "booking") return;
+    const loadSlotsForDate = useCallback(async (doctorId: string, date: string) => {
+        setBooking(prev => ({ ...prev, loadingSlots: true, selectedSlot: null }));
+        const result = await getAvailableSlots(doctorId, date, 30);
+        setBooking(prev => ({
+            ...prev,
+            availableSlots: result.slots || [],
+            loadingSlots: false,
+        }));
+    }, []);
 
-        const targetDoctor = doctors.find(
-            (d) => d.id === autoBookId || (autoBookSlug && d.slug === autoBookSlug)
-        );
-
-        if (targetDoctor) {
-            handleBookDoctor(targetDoctor);
-        }
-    }, [autoBookId, autoBookSlug, doctors, viewMode]);
-
-    const handleBookDoctor = (doctor: DoctorForBooking) => {
+    const handleBookDoctor = useCallback((doctor: DoctorForBooking) => {
         const tomorrow = new Date();
         tomorrow.setDate(tomorrow.getDate() + 1);
         const dateStr = tomorrow.toISOString().split("T")[0];
@@ -213,17 +210,20 @@ function DoctorsPageContent() {
         });
         setViewMode("booking");
         loadSlotsForDate(doctor.id, dateStr);
-    };
+    }, [loadSlotsForDate]);
 
-    const loadSlotsForDate = async (doctorId: string, date: string) => {
-        setBooking(prev => ({ ...prev, loadingSlots: true, selectedSlot: null }));
-        const result = await getAvailableSlots(doctorId, date, 30);
-        setBooking(prev => ({
-            ...prev,
-            availableSlots: result.slots || [],
-            loadingSlots: false,
-        }));
-    };
+    // Auto-open booking view if book/doctor ID is passed in URL
+    useEffect(() => {
+        if ((!autoBookId && !autoBookSlug) || doctors.length === 0 || viewMode === "booking") return;
+
+        const targetDoctor = doctors.find(
+            (d) => d.id === autoBookId || (autoBookSlug && d.slug === autoBookSlug)
+        );
+
+        if (targetDoctor) {
+            handleBookDoctor(targetDoctor);
+        }
+    }, [autoBookId, autoBookSlug, doctors, viewMode, handleBookDoctor]);
 
     const handleDateChange = (date: string) => {
         setBooking(prev => ({ ...prev, selectedDate: date }));

@@ -538,7 +538,6 @@ export async function assessSymptoms(input: {
     language?: "ar" | "en";
 }): Promise<TriageResponse> {
     const rawNormalized = normalizeMedicalText(input.message || "");
-    const isEn = input.language === "en";
 
     // 1. Check for Conversational Acknowledgments & Greetings & Inquiries
     const GREETING_WORDS = ["سلام عليكم", "السلام عليكم", "صباح الخير", "مساء الخير", "مرحبا", "اهلا", "اهلين", "هاي", "الو", "hello", "hi"].map(normalizeMedicalText);
