@@ -492,7 +492,11 @@ export default function DoctorProfileClient({ doctor, lang }: DoctorProfileClien
 
                                     {/* Book Button */}
                                     <Link
-                                        href={user ? `/${language}/dashboard/patient/doctors` : `/${language}/login?redirect=/dashboard/patient/doctors`}
+                                        href={
+                                            user
+                                                ? `/${language}/dashboard/patient/doctors?book=${doctor.id}`
+                                                : `/${language}/login?redirect=${encodeURIComponent(`/${language}/dashboard/patient/doctors?book=${doctor.id}`)}`
+                                        }
                                         className="block w-full bg-gradient-to-r from-blue-600 via-blue-500 to-blue-600 hover:from-blue-500 text-white font-bold py-3 px-6 rounded-xl transition-all text-center shadow-lg shadow-blue-500/25"
                                     >
                                         {t.bookNow}

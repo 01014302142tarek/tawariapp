@@ -873,52 +873,42 @@ export async function joinDoctorQueue(data: {
         const supabase = await createClient();
         const adminSupabase: any = await createServiceRoleClient();
 
-        // 1. Identify or fallback patient profile
-        let patientProfileId: string | null = null;
+        // 1. Strictly verify authenticated user
         const { data: { user } } = await supabase.auth.getUser();
-
-        if (user) {
-            // Get user's profile
-            const { data: profileData } = await adminSupabase
-                .from("profiles")
-                .select("id, role")
-                .eq("user_id", user.id)
-                .single();
-
-            const profile = profileData as { id: string; role: string } | null;
-            if (profile) {
-                // Find existing patient profile
-                const { data: patientData } = await adminSupabase
-                    .from("patient_profiles")
-                    .select("id")
-                    .eq("profile_id", profile.id)
-                    .single();
-
-                if (patientData?.id) {
-                    patientProfileId = patientData.id;
-                } else {
-                    // Create a patient profile record for this user so testing works regardless of role
-                    const { data: newPatient } = await adminSupabase
-                        .from("patient_profiles")
-                        .insert({ profile_id: profile.id })
-                        .select("id")
-                        .single();
-                    if (newPatient?.id) {
-                        patientProfileId = newPatient.id;
-                    }
-                }
-            }
+        if (!user) {
+            return { success: false, error: "Not authenticated" };
         }
 
-        // If still no patient profile, fallback to the first available patient profile in database
-        if (!patientProfileId) {
-            const { data: fallbackPatient } = await adminSupabase
+        // Get user profile
+        const { data: profileData } = await adminSupabase
+            .from("profiles")
+            .select("id, role")
+            .eq("user_id", user.id)
+            .single();
+
+        const profile = profileData as { id: string; role: string } | null;
+        if (!profile) {
+            return { success: false, error: "User profile not found" };
+        }
+
+        // Find or create patient profile for this authenticated user
+        let patientProfileId: string | null = null;
+        const { data: patientData } = await adminSupabase
+            .from("patient_profiles")
+            .select("id")
+            .eq("profile_id", profile.id)
+            .single();
+
+        if (patientData?.id) {
+            patientProfileId = patientData.id;
+        } else {
+            const { data: newPatient } = await adminSupabase
                 .from("patient_profiles")
+                .insert({ profile_id: profile.id })
                 .select("id")
-                .limit(1)
                 .single();
-            if (fallbackPatient?.id) {
-                patientProfileId = fallbackPatient.id;
+            if (newPatient?.id) {
+                patientProfileId = newPatient.id;
             }
         }
 
@@ -926,7 +916,7 @@ export async function joinDoctorQueue(data: {
             return { success: false, error: "Patient profile not found" };
         }
 
-        // 2. Ensure doctor exists and is online
+        // 2. Ensure doctor exists and is currently online
         const { data: doctorData } = await adminSupabase
             .from("doctor_profiles")
             .select("id, is_online, max_queue_size")
@@ -938,16 +928,8 @@ export async function joinDoctorQueue(data: {
             return { success: false, error: "Doctor profile not found" };
         }
 
-        // Auto-bring doctor online so patients can join and the doctor immediately sees the queue
         if (!doctor.is_online) {
-            await (adminSupabase as any)
-                .from("doctor_profiles")
-                .update({
-                    is_online: true,
-                    is_available_now: true,
-                    went_online_at: new Date().toISOString(),
-                })
-                .eq("id", data.doctorProfileId);
+            return { success: false, error: "Doctor is currently offline" };
         }
 
         // 3. Handle existing queue entry for this patient

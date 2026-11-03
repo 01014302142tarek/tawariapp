@@ -36,11 +36,37 @@ interface DoctorApplicationDetails extends PendingDoctor {
     }>;
 }
 
+
+async function verifyAdminCaller(supabase: Awaited<ReturnType<typeof createClient>>): Promise<{ isAdmin: boolean; error?: string }> {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+        return { isAdmin: false, error: "Not authenticated" };
+    }
+
+    const { data: callerProfileData } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("user_id", user.id)
+        .single();
+
+    const callerProfile = callerProfileData as { role: string } | null;
+    if (!callerProfile || callerProfile.role !== "admin") {
+        return { isAdmin: false, error: "Unauthorized - Admin access required" };
+    }
+
+    return { isAdmin: true };
+}
+
 /**
  * Get count of pending doctor verifications
  */
 export async function getPendingDoctorCount(): Promise<number> {
     const supabase = await createClient();
+
+    const { isAdmin } = await verifyAdminCaller(supabase);
+    if (!isAdmin) {
+        return 0;
+    }
 
     const { count, error } = await supabase
         .from("doctor_profiles")
@@ -557,6 +583,11 @@ export async function getVerificationStats(): Promise<{
 }> {
     const supabase = await createClient();
 
+    const { isAdmin } = await verifyAdminCaller(supabase);
+    if (!isAdmin) {
+        return { pending: 0, verified: 0, rejected: 0, total: 0 };
+    }
+
     const { data: rawData, error } = await supabase
         .from("doctor_profiles")
         .select("verification_status");
@@ -595,6 +626,12 @@ export interface AdminActivityItem {
  */
 export async function getRecentActivity(): Promise<AdminActivityItem[]> {
     const supabase = await createClient();
+
+    const { isAdmin } = await verifyAdminCaller(supabase);
+    if (!isAdmin) {
+        return [];
+    }
+
     const activities: AdminActivityItem[] = [];
 
     // Get recent user registrations (last 24 hours)

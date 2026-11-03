@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, { useState, useEffect, useCallback, useRef, Suspense } from "react";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { GlowingCard } from "@/components/ui/glowing-card";
@@ -104,10 +104,13 @@ interface Filters {
     availableNow: boolean;
 }
 
-export default function DoctorsPage() {
+function DoctorsPageContent() {
     const { t, isRTL, language } = useI18n();
     const { isDark, textPrimary, textSecondary, textMuted, inputBg, inputFocus, border } = useThemeStyles();
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const autoBookId = searchParams.get("book") || searchParams.get("doctor");
+    const autoBookSlug = searchParams.get("slug");
 
     const [mounted, setMounted] = useState(false);
     const [doctors, setDoctors] = useState<DoctorForBooking[]>([]);
@@ -181,6 +184,19 @@ export default function DoctorsPage() {
 
         return () => clearTimeout(timer);
     }, [filters.search, filters.specialization, filters.sortBy, filters.availableNow, loadDoctors]);
+
+    // Auto-open booking view if book/doctor ID is passed in URL
+    useEffect(() => {
+        if ((!autoBookId && !autoBookSlug) || doctors.length === 0 || viewMode === "booking") return;
+
+        const targetDoctor = doctors.find(
+            (d) => d.id === autoBookId || (autoBookSlug && d.slug === autoBookSlug)
+        );
+
+        if (targetDoctor) {
+            handleBookDoctor(targetDoctor);
+        }
+    }, [autoBookId, autoBookSlug, doctors, viewMode]);
 
     const handleBookDoctor = (doctor: DoctorForBooking) => {
         const tomorrow = new Date();
@@ -781,5 +797,18 @@ export default function DoctorsPage() {
                 )}
             </AnimatePresence>
         </div>
+    );
+}
+
+
+export default function DoctorsPage() {
+    return (
+        <Suspense fallback={
+            <div className="flex items-center justify-center min-h-[400px]">
+                <div className="w-10 h-10 border-4 border-amber-500/30 border-t-amber-500 rounded-full animate-spin" />
+            </div>
+        }>
+            <DoctorsPageContent />
+        </Suspense>
     );
 }

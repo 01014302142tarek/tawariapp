@@ -19,11 +19,13 @@ BEGIN
         split_part(NEW.email, '@', 1)
     );
 
-    -- Extract role; Google OAuth users are patients by default
-    v_role := COALESCE(
-        NEW.raw_user_meta_data->>'role',
-        'patient'
-    )::public.user_role;
+    -- Extract role: Strictly restrict self-signup to 'patient' or 'doctor'.
+    -- Privileged roles ('admin', etc.) can NEVER be self-assigned via user metadata.
+    IF LOWER(TRIM(COALESCE(NEW.raw_user_meta_data->>'role', 'patient'))) = 'doctor' THEN
+        v_role := 'doctor'::public.user_role;
+    ELSE
+        v_role := 'patient'::public.user_role;
+    END IF;
 
     -- Extract avatar (Google provides picture)
     v_avatar := COALESCE(

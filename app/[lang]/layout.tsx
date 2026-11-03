@@ -7,6 +7,7 @@ import { I18nProvider, Language } from "../i18n";
 import { ThemeProviderWrapper } from "../context/ThemeProviderWrapper";
 import { AuthProvider } from "../context/AuthContext";
 import { ToastProvider } from "@/components/ui/toast";
+import { AiTriageWidget } from "@/components/triage/AiTriageWidget";
 import { OrganizationJsonLd, MedicalServiceJsonLd, WebsiteJsonLd, LocalBusinessJsonLd } from "@/components/seo/JsonLd";
 import { siteConfig } from "@/lib/seo/config";
 import "../globals.css";
@@ -122,6 +123,7 @@ export default async function RootLayout({
             <I18nProvider locale={lang as Language}>
               <ToastProvider>
                 {children}
+                <AiTriageWidget />
               </ToastProvider>
             </I18nProvider>
           </ThemeProviderWrapper>
