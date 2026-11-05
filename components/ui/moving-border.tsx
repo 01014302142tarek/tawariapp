@@ -70,7 +70,7 @@ function MovingBorderGradient({ duration = 2000 }: { duration?: number }) {
                 position: "absolute",
                 inset: "-100%",
                 background:
-                    "conic-gradient(from 0deg, transparent 0 340deg, #f59e0b 360deg)",
+                    "conic-gradient(from 0deg, transparent 0 340deg, #FD614B 360deg)",
             }}
         />
     );

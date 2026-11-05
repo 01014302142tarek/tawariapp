@@ -144,21 +144,21 @@ export default function DoctorsCarousel({
               <div
                 className={`h-full rounded-3xl p-5 sm:p-6 transition-all duration-300 flex flex-col items-center text-center relative overflow-hidden group hover:-translate-y-1.5 ${
                   isDark
-                    ? "bg-gradient-to-b from-[#0F1D38]/95 via-[#0B152B]/98 to-[#060D1E]/98 border border-blue-500/30 hover:border-cyan-400/50 shadow-[0_10px_30px_rgba(3,11,26,0.6)] hover:shadow-[0_15px_40px_rgba(37,99,235,0.35)]"
-                    : "bg-white border-2 border-blue-100/80 hover:border-blue-400 shadow-[0_10px_30px_rgba(37,99,235,0.06)] hover:shadow-[0_15px_40px_rgba(37,99,235,0.15)]"
+                    ? "bg-[#08213D]/95 border border-[#044C87]/40 hover:border-[#FD614B]/60 shadow-[0_10px_30px_rgba(3,19,38,0.6)] hover:shadow-[0_15px_40px_rgba(4,76,135,0.35)]"
+                    : "bg-white border-2 border-[#D0E1F0] hover:border-[#FD614B] shadow-[0_10px_30px_rgba(4,76,135,0.06)] hover:shadow-[0_15px_40px_rgba(4,76,135,0.15)]"
                 }`}
               >
                 {/* Subtle top ambient glow inside the card */}
                 <div
                   className={`absolute top-0 inset-x-0 h-24 pointer-events-none ${
                     isDark
-                      ? "bg-gradient-to-b from-blue-500/10 to-transparent"
-                      : "bg-gradient-to-b from-blue-500/5 to-transparent"
+                      ? "bg-gradient-to-b from-[#044C87]/20 to-transparent"
+                      : "bg-gradient-to-b from-[#044C87]/10 to-transparent"
                   }`}
                 />
 
                 {/* Doctor Avatar with Elegant Gradient Ring and Online Status */}
-                <div className="relative w-28 h-28 rounded-full p-[2.5px] bg-gradient-to-tr from-blue-600 via-cyan-400 to-amber-400/80 shadow-[0_0_20px_rgba(56,189,248,0.25)] mb-4">
+                <div className="relative w-28 h-28 rounded-full p-[2.5px] bg-gradient-to-tr from-[#044C87] via-[#0C67B3] to-[#FD614B] shadow-[0_0_20px_rgba(4,76,135,0.35)] mb-4">
                   <div className={`relative w-full h-full rounded-full overflow-hidden ${isDark ? "bg-slate-900" : "bg-slate-100"}`}>
                     <Image
                       src={doctor.image}
@@ -182,8 +182,8 @@ export default function DoctorsCarousel({
                 <h3
                   className={`font-bold text-lg mb-1 transition-colors ${
                     isDark
-                      ? "text-white group-hover:text-cyan-300"
-                      : "text-slate-900 group-hover:text-blue-600"
+                      ? "text-[#FEFDFE] group-hover:text-[#FD614B]"
+                      : "text-[#042642] group-hover:text-[#FD614B]"
                   }`}
                 >
                   {isRTL ? doctor.nameAr : doctor.name}
@@ -192,7 +192,7 @@ export default function DoctorsCarousel({
                 {/* Specialty */}
                 <p
                   className={`text-xs sm:text-sm font-medium mb-3 min-h-[2.5rem] flex items-center justify-center ${
-                    isDark ? "text-blue-200/75" : "text-slate-600"
+                    isDark ? "text-[#CBD5E1]" : "text-[#334E68]"
                   }`}
                 >
                   {isRTL ? doctor.specialtyAr : doctor.specialty}
@@ -213,7 +213,7 @@ export default function DoctorsCarousel({
                   </div>
                   <span
                     className={`text-xs font-semibold ${
-                      isDark ? "text-blue-200/60" : "text-slate-500"
+                      isDark ? "text-[#94A3B8]" : "text-slate-500"
                     }`}
                   >
                     ({doctor.rating.toFixed(1)})
@@ -224,7 +224,7 @@ export default function DoctorsCarousel({
                 <div
                   className={`flex items-center justify-center gap-3 w-full mb-5 text-xs border-t pt-3 ${
                     isDark
-                      ? "text-blue-200/60 border-blue-900/40"
+                      ? "text-[#94A3B8] border-blue-900/40"
                       : "text-slate-500 border-slate-100"
                   }`}
                 >
@@ -233,12 +233,12 @@ export default function DoctorsCarousel({
                   </span>
                   <span
                     className={`w-1 h-1 rounded-full ${
-                      isDark ? "bg-blue-500/50" : "bg-slate-300"
+                      isDark ? "bg-[#044C87]/50" : "bg-slate-300"
                     }`}
                   />
                   <span
                     className={`font-semibold ${
-                      isDark ? "text-amber-300/90" : "text-amber-600 font-bold"
+                      isDark ? "text-[#FEFDFE] font-bold" : "text-[#044C87] font-bold"
                     }`}
                   >
                     {doctor.fee} {isRTL ? "ج.م" : "EGP"}
@@ -248,7 +248,7 @@ export default function DoctorsCarousel({
                 {/* Book Appointment CTA Button */}
                 <Link
                   href={`/${language}/doctors`}
-                  className="w-full mt-auto py-2.5 px-4 rounded-xl bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white font-semibold text-sm transition-all duration-300 shadow-md shadow-blue-500/25 hover:shadow-[0_0_20px_rgba(59,130,246,0.45)] hover:scale-[1.02] active:scale-[0.98] text-center block"
+                  className="w-full mt-auto py-2.5 px-4 rounded-xl bg-gradient-to-r from-[#FD614B] to-[#E84D37] hover:brightness-110 text-white font-bold text-sm transition-all duration-300 shadow-md shadow-[#FD614B]/25 hover:shadow-[0_0_20px_rgba(253,97,75,0.45)] hover:scale-[1.02] active:scale-[0.98] text-center block"
                 >
                   {isRTL ? "احجز موعد الآن" : "Book Appointment"}
                 </Link>
@@ -265,8 +265,8 @@ export default function DoctorsCarousel({
           aria-label={isRTL ? "الطبيب التالي" : "Previous Doctor"}
           className={`w-9 h-9 sm:w-11 sm:h-11 rounded-full flex items-center justify-center transition-all shadow-md hover:scale-105 active:scale-95 flex-shrink-0 cursor-pointer ${
             isDark
-              ? "bg-[#0E1F45]/90 hover:bg-blue-900 border border-blue-500/40 text-blue-300 hover:text-white shadow-[0_0_15px_rgba(37,99,235,0.25)]"
-              : "bg-white hover:bg-blue-50 border-2 border-blue-100 text-slate-700 hover:text-blue-600 shadow-md shadow-blue-100/50"
+              ? "bg-[#08213D] hover:bg-[#044C87] border border-[#044C87]/40 text-[#FEFDFE] shadow-[0_0_15px_rgba(4,76,135,0.25)]"
+              : "bg-white hover:bg-[#F4F8FC] border-2 border-[#D0E1F0] text-[#042642] hover:text-[#FD614B] shadow-md shadow-[#044C87]/10"
           }`}
         >
           <svg
@@ -288,12 +288,10 @@ export default function DoctorsCarousel({
               aria-label={`Go to slide ${idx + 1}`}
               className={`transition-all duration-300 rounded-full cursor-pointer ${
                 currentIndex === idx
-                  ? isDark
-                    ? "w-7 sm:w-8 h-2 sm:h-2.5 bg-amber-400 shadow-[0_0_12px_rgba(245,158,11,0.7)]"
-                    : "w-7 sm:w-8 h-2 sm:h-2.5 bg-blue-600 shadow-[0_0_10px_rgba(37,99,235,0.4)]"
+                  ? "w-7 sm:w-8 h-2 sm:h-2.5 bg-[#FD614B] shadow-[0_0_12px_rgba(253,97,75,0.7)]"
                   : isDark
-                  ? "w-2 sm:w-2.5 h-2 sm:h-2.5 bg-blue-900/60 hover:bg-blue-700/60"
-                  : "w-2 sm:w-2.5 h-2 sm:h-2.5 bg-slate-300 hover:bg-slate-400"
+                  ? "w-2 sm:w-2.5 h-2 sm:h-2.5 bg-[#044C87]/60 hover:bg-[#044C87]"
+                  : "w-2 sm:w-2.5 h-2 sm:h-2.5 bg-[#CBD5E1] hover:bg-[#94A3B8]"
               }`}
             />
           ))}
@@ -304,8 +302,8 @@ export default function DoctorsCarousel({
           aria-label={isRTL ? "الطبيب السابق" : "Next Doctor"}
           className={`w-9 h-9 sm:w-11 sm:h-11 rounded-full flex items-center justify-center transition-all shadow-md hover:scale-105 active:scale-95 flex-shrink-0 cursor-pointer ${
             isDark
-              ? "bg-[#0E1F45]/90 hover:bg-blue-900 border border-blue-500/40 text-blue-300 hover:text-white shadow-[0_0_15px_rgba(37,99,235,0.25)]"
-              : "bg-white hover:bg-blue-50 border-2 border-blue-100 text-slate-700 hover:text-blue-600 shadow-md shadow-blue-100/50"
+              ? "bg-[#08213D] hover:bg-[#044C87] border border-[#044C87]/40 text-[#FEFDFE] shadow-[0_0_15px_rgba(4,76,135,0.25)]"
+              : "bg-white hover:bg-[#F4F8FC] border-2 border-[#D0E1F0] text-[#042642] hover:text-[#FD614B] shadow-md shadow-[#044C87]/10"
           }`}
         >
           <svg

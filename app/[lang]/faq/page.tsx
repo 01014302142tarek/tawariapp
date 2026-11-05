@@ -250,16 +250,16 @@ export default function FAQPage() {
     const text = translations[language as keyof typeof translations] || translations.en;
 
     return (
-        <div className={`min-h-screen overflow-x-hidden ${isRTL ? 'font-cairo' : ''} ${isDark ? 'bg-[#060B18] text-white' : 'bg-gray-50 text-slate-900'}`} dir={isRTL ? 'rtl' : 'ltr'}>
+        <div className={`min-h-screen overflow-x-hidden ${isRTL ? 'font-cairo' : ''} ${isDark ? 'bg-[#031326] text-white' : 'bg-gray-50 text-slate-900'}`} dir={isRTL ? 'rtl' : 'ltr'}>
             {/* Background Effects */}
             <div className="fixed inset-0 overflow-hidden pointer-events-none">
-                <div className={`absolute inset-0 ${isDark ? 'bg-gradient-to-br from-[#0B1528] via-[#060B18] to-[#060B18]' : 'bg-gradient-to-br from-amber-50/50 via-white to-white'}`} />
-                <div className={`absolute top-1/4 -right-1/4 w-[600px] h-[600px] rounded-full blur-3xl ${isDark ? 'bg-amber-500/5' : 'bg-amber-500/5'}`} />
-                <div className={`absolute bottom-1/4 -left-1/4 w-[400px] h-[400px] rounded-full blur-3xl ${isDark ? 'bg-amber-500/5' : 'bg-amber-500/5'}`} />
+                <div className={`absolute inset-0 ${isDark ? 'bg-gradient-to-br from-[#042642] via-[#031326] to-[#060B18]' : 'bg-gradient-to-br from-amber-50/50 via-white to-white'}`} />
+                <div className={`absolute top-1/4 -right-1/4 w-[600px] h-[600px] rounded-full blur-3xl ${isDark ? 'bg-[#FD614B]/10' : 'bg-[#FD614B]/10'}`} />
+                <div className={`absolute bottom-1/4 -left-1/4 w-[400px] h-[400px] rounded-full blur-3xl ${isDark ? 'bg-[#FD614B]/10' : 'bg-[#FD614B]/10'}`} />
             </div>
 
             {/* Navigation */}
-            <nav className={`relative z-50 backdrop-blur-xl border-b ${isDark ? 'bg-[#060B18]/85 border-blue-500/20' : 'bg-white/80 border-gray-200'}`}>
+            <nav className={`relative z-50 backdrop-blur-xl border-b ${isDark ? 'bg-[#031326]/85 border-[#044C87]/40' : 'bg-white/80 border-gray-200'}`}>
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex items-center justify-between h-16 lg:h-20">
                         <Link href={`/${language}`} className="group hover:opacity-90 transition-opacity">
@@ -277,7 +277,7 @@ export default function FAQPage() {
                             </Link>
                             <Link
                                 href={`/${language}/get-started`}
-                                className="bg-gradient-to-r from-blue-600 via-blue-500 to-blue-600 hover:from-blue-500 text-white font-bold px-5 py-2 rounded-full text-sm transition-all shadow-lg shadow-blue-500/25"
+                                className="bg-gradient-to-r from-[#FD614B] to-[#E84D37] hover:brightness-110 text-white font-bold px-5 py-2 rounded-full text-sm transition-all shadow-lg shadow-[#FD614B]/30"
                             >
                                 {t.nav.getStarted}
                             </Link>
@@ -306,7 +306,7 @@ export default function FAQPage() {
                                 <LanguageToggle isDark={isDark} />
                                 <Link
                                     href={`/${language}/get-started`}
-                                    className="bg-gradient-to-r from-blue-600 via-blue-500 to-blue-600 hover:from-blue-500 text-white font-bold px-5 py-2.5 rounded-full text-center"
+                                    className="bg-gradient-to-r from-[#FD614B] to-[#E84D37] hover:brightness-110 text-white font-bold px-5 py-2.5 rounded-full text-center"
                                     onClick={() => setMobileMenuOpen(false)}
                                 >
                                     {t.nav.getStarted}
@@ -384,7 +384,7 @@ export default function FAQPage() {
                     <p className={`mb-4 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>{text.stillHaveQuestions}</p>
                     <Link
                         href={`/${language}/contact`}
-                        className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-600 via-blue-500 to-blue-600 hover:from-blue-500 text-white font-bold px-6 py-3 rounded-full transition-all shadow-lg shadow-blue-500/25"
+                        className="inline-flex items-center gap-2 bg-gradient-to-r from-[#FD614B] to-[#E84D37] hover:brightness-110 text-white font-bold px-6 py-3 rounded-full transition-all shadow-lg shadow-[#FD614B]/30"
                     >
                         {text.contactUs}
                     </Link>

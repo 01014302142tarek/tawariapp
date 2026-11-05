@@ -260,7 +260,6 @@ function LandingPageContent() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { t, isRTL, language } = useI18n();
   const { isDark } = useGlobalTheme();
-  const specialtyKeys = ['general', 'pediatrics', 'obgyn', 'internal', 'dermatology', 'mental', 'cardiology', 'orthopedics'] as const;
   const mainSpecialties = [
     { key: 'general', nameEn: 'General Medicine', nameAr: 'طب عام', icon: SpecialtyIcons.general },
     { key: 'cardiology', nameEn: 'Cardiology', nameAr: 'أمراض القلب', icon: SpecialtyIcons.cardiology },
@@ -270,20 +269,20 @@ function LandingPageContent() {
     { key: 'nutrition', nameEn: 'Nutrition', nameAr: 'التغذية العلاجية', icon: SpecialtyIcons.nutrition },
   ];
 
-  // Theme-aware class helpers - Ocean Sapphire & Gold Theme
-  const bgMain = isDark ? 'bg-[#060B18]' : 'bg-[#F0F7FF]';
-  const bgSection = isDark ? 'bg-[#060B18]' : 'bg-white';
-  const bgSectionAlt = isDark ? 'bg-gradient-to-b from-[#060B18] via-[#09132E] to-[#060B18]' : 'bg-gradient-to-b from-[#F0F7FF] to-[#E0EFFF]';
-  const textPrimary = isDark ? 'text-white' : 'text-[#0F172A]';
-  const textSecondary = isDark ? 'text-[#94A3B8]' : 'text-[#475569]';
-  const textMuted = isDark ? 'text-[#64748B]' : 'text-[#64748B]';
-  const borderColor = isDark ? 'border-blue-900/40' : 'border-blue-200';
-  const navBg = isDark ? 'bg-[#060B18]/90' : 'bg-[#F0F7FF]/92';
+  // Theme-aware class helpers - Azure Navy & Coral Red Theme
+  const bgMain = isDark ? 'bg-[#031326]' : 'bg-[#F4F8FC]';
+  const bgSection = isDark ? 'bg-[#031326]' : 'bg-white';
+  const bgSectionAlt = isDark ? 'bg-gradient-to-b from-[#031326] via-[#061D38] to-[#031326]' : 'bg-gradient-to-b from-[#F4F8FC] to-[#EBF3FA]';
+  const textPrimary = isDark ? 'text-[#FEFDFE]' : 'text-[#042642]';
+  const textSecondary = isDark ? 'text-[#CBD5E1]' : 'text-[#334E68]';
+  const textMuted = isDark ? 'text-[#94A3B8]' : 'text-[#627D98]';
+  const borderColor = isDark ? 'border-[#044C87]/35' : 'border-[#D0E1F0]';
+  const navBg = isDark ? 'bg-[#031326]/90' : 'bg-[#F4F8FC]/92';
 
-  // Glowing card styles - sapphire ocean & gold
+  // Glowing card styles - Azure Navy & Coral
   const glowCardClass = isDark
-    ? 'bg-[#0B152B]/85 border border-blue-500/35 hover:border-blue-400 hover:shadow-[0_0_20px_rgba(37,99,235,0.3)] hover:bg-[#0E1D3C]'
-    : 'bg-white border-2 border-blue-200 shadow-lg shadow-blue-100/50 hover:shadow-xl hover:shadow-blue-200/60 hover:border-blue-500';
+    ? 'bg-[#08213D]/85 border border-[#044C87]/40 hover:border-[#FD614B]/70 hover:shadow-[0_0_25px_rgba(253,97,75,0.25)] hover:bg-[#0B2C52]'
+    : 'bg-white border-2 border-[#D0E1F0] shadow-lg shadow-blue-100/50 hover:shadow-xl hover:shadow-[#FD614B]/20 hover:border-[#FD614B]';
 
   return (
     <div className={`min-h-screen ${bgMain} ${textPrimary} overflow-x-hidden transition-colors duration-300 ${isRTL ? 'font-cairo' : ''}`} dir={isRTL ? 'rtl' : 'ltr'}>
@@ -306,7 +305,7 @@ function LandingPageContent() {
               <ThemeToggle />
               <LanguageToggle />
               <Link href={`/${language}/login`} className={`${textSecondary} hover:${textPrimary} font-medium text-sm px-4 py-2 transition-colors`}>{t.nav.login}</Link>
-              <Link href={`/${language}/get-started`} className="bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white font-semibold px-5 py-2.5 rounded-full transition-all shadow-lg shadow-blue-500/30">{t.nav.getStarted}</Link>
+              <Link href={`/${language}/get-started`} className="bg-gradient-to-r from-[#FD614B] to-[#E84D37] hover:brightness-110 text-white font-semibold px-5 py-2.5 rounded-full transition-all shadow-lg shadow-[#FD614B]/30">{t.nav.getStarted}</Link>
             </div>
 
             <div className="flex lg:hidden items-center gap-2">
@@ -320,16 +319,16 @@ function LandingPageContent() {
           {mobileMenuOpen && (
             <div className={`lg:hidden py-4 border-t ${borderColor}`}>
               <div className="flex flex-col gap-4">
-                <Link href="#how-it-works" onClick={() => setMobileMenuOpen(false)} className={`${textSecondary} hover:text-blue-400 py-2`}>{t.nav.howItWorks}</Link>
-                <Link href="#specialties" onClick={() => setMobileMenuOpen(false)} className={`${textSecondary} hover:text-blue-400 py-2`}>{t.nav.specialties}</Link>
-                <Link href="#doctors" onClick={() => setMobileMenuOpen(false)} className={`${textSecondary} hover:text-blue-400 py-2`}>{t.nav.doctors}</Link>
-                <Link href="#for-doctors" onClick={() => setMobileMenuOpen(false)} className={`${textSecondary} hover:text-blue-400 py-2`}>{t.nav.forDoctors}</Link>
+                <Link href="#how-it-works" onClick={() => setMobileMenuOpen(false)} className={`${textSecondary} hover:text-[#FD614B] py-2`}>{t.nav.howItWorks}</Link>
+                <Link href="#specialties" onClick={() => setMobileMenuOpen(false)} className={`${textSecondary} hover:text-[#FD614B] py-2`}>{t.nav.specialties}</Link>
+                <Link href="#doctors" onClick={() => setMobileMenuOpen(false)} className={`${textSecondary} hover:text-[#FD614B] py-2`}>{t.nav.doctors}</Link>
+                <Link href="#for-doctors" onClick={() => setMobileMenuOpen(false)} className={`${textSecondary} hover:text-[#FD614B] py-2`}>{t.nav.forDoctors}</Link>
                 <div className={`flex flex-col gap-3 pt-4 border-t ${borderColor}`}>
                   <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
                     <LanguageToggle />
                     <Link href={`/${language}/login`} onClick={() => setMobileMenuOpen(false)} className={`${textSecondary} hover:${textPrimary} font-medium text-sm px-4 py-2 transition-colors`}>{t.nav.login}</Link>
                   </div>
-                  <Link href={`/${language}/get-started`} onClick={() => setMobileMenuOpen(false)} className="bg-blue-600 hover:bg-blue-500 text-white font-semibold px-5 py-2 rounded-full text-center">{t.nav.getStarted}</Link>
+                  <Link href={`/${language}/get-started`} onClick={() => setMobileMenuOpen(false)} className="bg-gradient-to-r from-[#FD614B] to-[#E84D37] hover:brightness-110 text-white font-semibold px-5 py-2 rounded-full text-center shadow-md shadow-[#FD614B]/30">{t.nav.getStarted}</Link>
                 </div>
               </div>
             </div>
@@ -339,12 +338,12 @@ function LandingPageContent() {
 
       {/* Hero Section */}
       <section className="relative min-h-screen flex items-center pt-20 overflow-hidden">
-        {/* Background & Sapphire/Gold Light Waves */}
+        {/* Background & Azure/Coral Light Waves */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className={`absolute inset-0 ${isDark ? 'bg-gradient-to-br from-[#0B1528] via-[#060B18] to-[#040813]' : 'bg-gradient-to-br from-blue-50 via-white to-white'}`} />
-          <div className={`absolute top-1/4 -right-1/4 w-[800px] h-[800px] ${isDark ? 'bg-blue-600/15' : 'bg-blue-200/30'} rounded-full blur-3xl`} />
-          <div className="absolute bottom-10 left-10 w-[500px] h-[500px] bg-blue-500/10 rounded-full blur-3xl" />
-          <div className="absolute top-1/3 left-1/4 w-[350px] h-[350px] bg-amber-500/10 rounded-full blur-3xl" />
+          <div className={`absolute inset-0 ${isDark ? 'bg-gradient-to-br from-[#061D38] via-[#031326] to-[#020B16]' : 'bg-gradient-to-br from-blue-50 via-white to-white'}`} />
+          <div className={`absolute top-1/4 -right-1/4 w-[800px] h-[800px] ${isDark ? 'bg-[#044C87]/20' : 'bg-blue-200/30'} rounded-full blur-3xl`} />
+          <div className="absolute bottom-10 left-10 w-[500px] h-[500px] bg-[#0C67B3]/15 rounded-full blur-3xl" />
+          <div className="absolute top-1/3 left-1/4 w-[350px] h-[350px] bg-[#FD614B]/10 rounded-full blur-3xl" />
 
           {/* Sweeping Light Ribbon Wave */}
           <svg className="absolute top-10 left-0 w-full h-[650px] opacity-35" viewBox="0 0 1440 650" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -352,15 +351,15 @@ function LandingPageContent() {
             <path d="M-100 290C320 140 720 520 1170 240C1340 130 1540 320 1600 260" stroke="url(#heroBlueStreak2)" strokeWidth="1.5" strokeOpacity="0.6" />
             <defs>
               <linearGradient id="heroBlueStreak1" x1="0" y1="0" x2="1440" y2="400" gradientUnits="userSpaceOnUse">
-                <stop stopColor="#3B82F6" stopOpacity="0" />
-                <stop offset="0.3" stopColor="#60A5FA" stopOpacity="0.9" />
-                <stop offset="0.6" stopColor="#2563EB" stopOpacity="0.95" />
-                <stop offset="1" stopColor="#1E3A8A" stopOpacity="0" />
+                <stop stopColor="#044C87" stopOpacity="0" />
+                <stop offset="0.3" stopColor="#0C67B3" stopOpacity="0.9" />
+                <stop offset="0.6" stopColor="#38BDF8" stopOpacity="0.95" />
+                <stop offset="1" stopColor="#044C87" stopOpacity="0" />
               </linearGradient>
               <linearGradient id="heroBlueStreak2" x1="0" y1="0" x2="1440" y2="400" gradientUnits="userSpaceOnUse">
-                <stop stopColor="#F59E0B" stopOpacity="0" />
-                <stop offset="0.5" stopColor="#FBBF24" stopOpacity="0.8" />
-                <stop offset="1" stopColor="#D97706" stopOpacity="0" />
+                <stop stopColor="#FD614B" stopOpacity="0" />
+                <stop offset="0.5" stopColor="#FF8270" stopOpacity="0.8" />
+                <stop offset="1" stopColor="#E84D37" stopOpacity="0" />
               </linearGradient>
             </defs>
           </svg>
@@ -369,13 +368,13 @@ function LandingPageContent() {
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-24">
           <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
             <div className={`text-center ${isRTL ? 'lg:text-right' : 'lg:text-left'}`}>
-              <div className={`inline-flex items-center gap-2 ${isDark ? 'bg-blue-500/10 border-blue-500/30' : 'bg-blue-50 border-blue-200'} border px-4 py-2 rounded-full mb-6`}>
-                <span className="relative flex h-2 w-2"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span><span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span></span>
-                <span className={`${isDark ? 'text-blue-400' : 'text-blue-600'} text-sm font-medium`}>{t.hero.badge}</span>
+              <div className={`inline-flex items-center gap-2 ${isDark ? 'bg-[#044C87]/20 border-[#044C87]/40 text-[#38BDF8]' : 'bg-blue-50 border-blue-200 text-[#044C87]'} border px-4 py-2 rounded-full mb-6`}>
+                <span className="relative flex h-2 w-2"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#FD614B] opacity-75"></span><span className="relative inline-flex rounded-full h-2 w-2 bg-[#FD614B]"></span></span>
+                <span className="text-sm font-medium">{t.hero.badge}</span>
               </div>
 
               <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black leading-[1.15] tracking-tight mb-6">
-                <span className={isDark ? "text-white drop-shadow-[0_2px_20px_rgba(37,99,235,0.4)]" : "text-slate-900 drop-shadow-sm"}>
+                <span className={isDark ? "text-white drop-shadow-[0_2px_20px_rgba(4,76,135,0.4)]" : "text-slate-900 drop-shadow-sm"}>
                   {isRTL ? "استشر طبيبك من البيت" : "Consult Your Doctor from Home"}
                 </span>
               </h1>
@@ -389,12 +388,12 @@ function LandingPageContent() {
               <div className={`flex flex-col sm:flex-row gap-4 justify-center ${isRTL ? 'lg:justify-end' : 'lg:justify-start'} mb-10`}>
                 <Link 
                   href={`/${language}/register`} 
-                  className="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-8 sm:px-10 py-3.5 sm:py-4 rounded-2xl font-bold text-base sm:text-lg text-white bg-gradient-to-r from-blue-600 via-blue-500 to-blue-600 hover:from-blue-500 hover:to-blue-400 border border-blue-400/50 shadow-[0_0_30px_rgba(37,99,235,0.65)] hover:shadow-[0_0_45px_rgba(59,130,246,0.9)] hover:scale-105 transition-all duration-300"
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-8 sm:px-10 py-3.5 sm:py-4 rounded-2xl font-bold text-base sm:text-lg text-white bg-gradient-to-r from-[#FD614B] via-[#FF7461] to-[#FD614B] hover:from-[#E84D37] hover:to-[#FD614B] border border-[#FD614B]/60 shadow-[0_0_30px_rgba(253,97,75,0.55)] hover:shadow-[0_0_45px_rgba(253,97,75,0.8)] hover:scale-105 transition-all duration-300"
                 >
                   {isRTL ? "ابدأ الآن" : "Start Now"}
                   {isRTL ? Icons.arrowLeft : Icons.arrow}
                 </Link>
-                <Link href="#how-it-works" className={`w-full sm:w-auto inline-flex items-center justify-center gap-2 ${isDark ? 'bg-blue-950/40 hover:bg-blue-900/50 border-blue-500/30 text-white' : 'bg-blue-50 hover:bg-blue-100 border-2 border-blue-200 text-blue-700'} border font-semibold text-base sm:text-lg px-6 sm:px-8 py-3.5 sm:py-4 rounded-2xl transition-colors`}>
+                <Link href="#how-it-works" className={`w-full sm:w-auto inline-flex items-center justify-center gap-2 ${isDark ? 'bg-[#08213D]/80 hover:bg-[#0D2C4F] border-[#044C87]/50 text-white' : 'bg-blue-50 hover:bg-blue-100 border-2 border-blue-200 text-[#044C87]'} border font-semibold text-base sm:text-lg px-6 sm:px-8 py-3.5 sm:py-4 rounded-2xl transition-colors`}>
                   {Icons.play}
                   {t.hero.ctaSecondary}
                 </Link>
@@ -426,12 +425,12 @@ function LandingPageContent() {
           {/* Section Header with Golden Accent Bar */}
           <div className="flex items-center justify-between gap-3 mb-6 sm:mb-8">
             <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
-              <span className="w-1.5 h-6 sm:h-7 bg-amber-400 rounded-full inline-block shrink-0 shadow-[0_0_10px_rgba(245,158,11,0.6)]" />
+              <span className="w-1.5 h-6 sm:h-7 bg-[#FD614B] rounded-full inline-block shrink-0 shadow-[0_0_12px_rgba(253,97,75,0.6)]" />
               <h2 className={`text-xl sm:text-2xl lg:text-3xl font-bold ${textPrimary} tracking-wide truncate sm:whitespace-normal`}>
                 {isRTL ? "أطباؤنا المتميزون" : "Our Distinguished Doctors"}
               </h2>
             </div>
-            <Link href={`/${language}/doctors`} className={`text-xs sm:text-sm font-semibold flex items-center gap-1 transition-colors shrink-0 whitespace-nowrap ${isDark ? "text-blue-400 hover:text-blue-300" : "text-blue-600 hover:text-blue-700"}`}>
+            <Link href={`/${language}/doctors`} className={`text-xs sm:text-sm font-semibold flex items-center gap-1 transition-colors shrink-0 whitespace-nowrap ${isDark ? "text-blue-400 hover:text-[#FD614B]" : "text-[#044C87] hover:text-[#FD614B]"}`}>
               {isRTL ? "عرض الكل" : "View All"}
               {Icons.chevron}
             </Link>
@@ -445,15 +444,15 @@ function LandingPageContent() {
       {/* Specialties - Medical Specialties */}
       <section id="specialties" className="py-12 lg:py-16 relative overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Section Header with Golden Accent Bar */}
+          {/* Section Header with Coral Accent Bar */}
           <div className="flex items-center justify-between gap-3 mb-6 sm:mb-8">
             <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
-              <span className="w-1.5 h-6 sm:h-7 bg-amber-400 rounded-full inline-block shrink-0 shadow-[0_0_10px_rgba(245,158,11,0.6)]" />
+              <span className="w-1.5 h-6 sm:h-7 bg-[#FD614B] rounded-full inline-block shrink-0 shadow-[0_0_12px_rgba(253,97,75,0.6)]" />
               <h2 className={`text-xl sm:text-2xl lg:text-3xl font-bold ${textPrimary} tracking-wide truncate sm:whitespace-normal`}>
                 {isRTL ? "التخصصات الطبية" : "Medical Specialties"}
               </h2>
             </div>
-            <Link href={`/${language}/doctors`} className={`text-xs sm:text-sm font-semibold flex items-center gap-1 transition-colors shrink-0 whitespace-nowrap ${isDark ? "text-blue-400 hover:text-blue-300" : "text-blue-600 hover:text-blue-700"}`}>
+            <Link href={`/${language}/doctors`} className={`text-xs sm:text-sm font-semibold flex items-center gap-1 transition-colors shrink-0 whitespace-nowrap ${isDark ? "text-blue-400 hover:text-[#FD614B]" : "text-[#044C87] hover:text-[#FD614B]"}`}>
               {isRTL ? "عرض الكل" : "View All"}
               {Icons.chevron}
             </Link>
@@ -467,18 +466,18 @@ function LandingPageContent() {
                 href={`/${language}/doctors?specialty=${spec.key}`}
                 className={`flex items-center gap-2 sm:gap-3 p-2.5 sm:p-4 rounded-full transition-all group cursor-pointer hover:-translate-y-0.5 min-w-0 ${
                   isDark
-                    ? "bg-[#0B1630]/90 hover:bg-[#0E1F45] border border-blue-500/50 hover:border-blue-400 shadow-[0_0_14px_rgba(37,99,235,0.25)] hover:shadow-[0_0_22px_rgba(59,130,246,0.45)]"
-                    : "bg-white hover:bg-blue-50/70 border border-blue-200 hover:border-blue-400 shadow-sm hover:shadow-md"
+                    ? "bg-[#08213D]/90 hover:bg-[#0C2E54] border border-[#044C87]/50 hover:border-[#FD614B]/60 shadow-[0_0_14px_rgba(4,76,135,0.25)] hover:shadow-[0_0_22px_rgba(253,97,75,0.3)]"
+                    : "bg-white hover:bg-blue-50/70 border border-[#D0E1F0] hover:border-[#FD614B] shadow-sm hover:shadow-md"
                 }`}
               >
                 <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center shrink-0 transition-transform group-hover:scale-110 ${
                   isDark
-                    ? "bg-blue-600/25 border border-blue-400/40 text-blue-300 group-hover:bg-blue-600 group-hover:text-white"
-                    : "bg-blue-50 border border-blue-200 text-blue-600 group-hover:bg-blue-600 group-hover:text-white"
+                    ? "bg-[#044C87]/30 border border-[#044C87]/40 text-[#38BDF8] group-hover:bg-[#FD614B] group-hover:text-white"
+                    : "bg-blue-50 border border-blue-200 text-[#044C87] group-hover:bg-[#FD614B] group-hover:text-white"
                 }`}>
                   {spec.icon}
                 </div>
-                <span className={`text-xs sm:text-sm font-semibold truncate ${isDark ? "text-white/95" : "text-slate-800"}`}>
+                <span className={`text-xs sm:text-sm font-semibold truncate ${isDark ? "text-[#FEFDFE]" : "text-slate-800"}`}>
                   {isRTL ? spec.nameAr : spec.nameEn}
                 </span>
               </Link>
@@ -631,23 +630,23 @@ function LandingPageContent() {
       {/* Final CTA */}
       <section className={`py-20 px-4 ${bgSection}`}>
         <div className="max-w-4xl mx-auto">
-          <div className="relative overflow-hidden bg-gradient-to-br from-blue-700 via-blue-800 to-slate-900 border border-blue-400/40 rounded-3xl p-8 md:p-12 text-center shadow-2xl shadow-blue-500/30">
+          <div className="relative overflow-hidden bg-gradient-to-br from-[#044C87] via-[#033660] to-[#021A30] border border-[#FD614B]/40 rounded-3xl p-8 md:p-12 text-center shadow-2xl shadow-[#044C87]/40">
             <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
             <div className="relative z-10">
               <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black mb-4 text-white">{t.cta.title}</h2>
               <p className="text-blue-100 text-lg mb-8 max-w-xl mx-auto">{t.cta.subtitle}</p>
-              <Link href={`/${language}/register`} className="inline-flex items-center gap-2 bg-white text-blue-900 font-bold text-lg px-10 py-4 rounded-2xl transition-all transform hover:scale-105 shadow-xl hover:bg-blue-50">
+              <Link href={`/${language}/register`} className="inline-flex items-center gap-2 bg-[#FD614B] hover:bg-[#E84D37] text-white font-bold text-lg px-10 py-4 rounded-2xl transition-all transform hover:scale-105 shadow-xl hover:shadow-[0_0_30px_rgba(253,97,75,0.6)]">
                 {t.cta.button}
                 {isRTL ? Icons.arrowLeft : Icons.arrow}
               </Link>
-              <p className="text-amber-300 text-sm mt-4 font-medium">{t.cta.note}</p>
+              <p className="text-[#CBD5E1] text-sm mt-4 font-medium">{t.cta.note}</p>
             </div>
           </div>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className={`${isDark ? 'bg-[#040813]' : 'bg-[#F0F7FF]'} border-t ${borderColor} py-16 px-4 transition-colors duration-300`}>
+      <footer className={`${isDark ? 'bg-[#020B16]' : 'bg-[#F4F8FC]'} border-t ${borderColor} py-16 px-4 transition-colors duration-300`}>
         <div className="max-w-7xl mx-auto">
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">
             <div className="lg:col-span-1">
@@ -659,25 +658,25 @@ function LandingPageContent() {
             <div>
               <h4 className={`font-bold mb-4 ${textPrimary}`}>{t.footer.forPatients}</h4>
               <div className="flex flex-col gap-3">
-                <Link href={`/${language}#doctors`} className={`${textSecondary} text-sm hover:text-blue-400 transition-colors`}>{t.footer.findDoctors}</Link>
-                <Link href={`/${language}#how-it-works`} className={`${textSecondary} text-sm hover:text-blue-400 transition-colors`}>{t.footer.howItWorks}</Link>
-                <Link href={`/${language}/faq`} className={`${textSecondary} text-sm hover:text-blue-400 transition-colors`}>{t.footer.faq}</Link>
+                <Link href={`/${language}#doctors`} className={`${textSecondary} text-sm hover:text-[#FD614B] transition-colors`}>{t.footer.findDoctors}</Link>
+                <Link href={`/${language}#how-it-works`} className={`${textSecondary} text-sm hover:text-[#FD614B] transition-colors`}>{t.footer.howItWorks}</Link>
+                <Link href={`/${language}/faq`} className={`${textSecondary} text-sm hover:text-[#FD614B] transition-colors`}>{t.footer.faq}</Link>
               </div>
             </div>
             <div>
               <h4 className={`font-bold mb-4 ${textPrimary}`}>{t.footer.forDoctorsTitle}</h4>
               <div className="flex flex-col gap-3">
-                <Link href={`/${language}/doctor-onboarding`} className={`${textSecondary} text-sm hover:text-blue-400 transition-colors`}>{t.footer.joinAsDoctor}</Link>
-                <Link href={`/${language}/faq`} className={`${textSecondary} text-sm hover:text-blue-400 transition-colors`}>{t.footer.doctorFaq}</Link>
+                <Link href={`/${language}/doctor-onboarding`} className={`${textSecondary} text-sm hover:text-[#FD614B] transition-colors`}>{t.footer.joinAsDoctor}</Link>
+                <Link href={`/${language}/faq`} className={`${textSecondary} text-sm hover:text-[#FD614B] transition-colors`}>{t.footer.doctorFaq}</Link>
               </div>
             </div>
             <div>
               <h4 className={`font-bold mb-4 ${textPrimary}`}>{t.footer.company}</h4>
               <div className="flex flex-col gap-3">
-                <Link href={`/${language}/about`} className={`${textSecondary} text-sm hover:text-blue-400 transition-colors`}>{t.footer.aboutUs}</Link>
-                <Link href={`/${language}/contact`} className={`${textSecondary} text-sm hover:text-blue-400 transition-colors`}>{t.footer.contact}</Link>
-                <Link href={`/${language}/privacy`} className={`${textSecondary} text-sm hover:text-blue-400 transition-colors`}>{t.footer.privacy}</Link>
-                <Link href={`/${language}/terms`} className={`${textSecondary} text-sm hover:text-blue-400 transition-colors`}>{t.footer.terms}</Link>
+                <Link href={`/${language}/about`} className={`${textSecondary} text-sm hover:text-[#FD614B] transition-colors`}>{t.footer.aboutUs}</Link>
+                <Link href={`/${language}/contact`} className={`${textSecondary} text-sm hover:text-[#FD614B] transition-colors`}>{t.footer.contact}</Link>
+                <Link href={`/${language}/privacy`} className={`${textSecondary} text-sm hover:text-[#FD614B] transition-colors`}>{t.footer.privacy}</Link>
+                <Link href={`/${language}/terms`} className={`${textSecondary} text-sm hover:text-[#FD614B] transition-colors`}>{t.footer.terms}</Link>
               </div>
             </div>
           </div>
@@ -689,7 +688,7 @@ function LandingPageContent() {
                 <div className="flex gap-2">
                   <div className={`w-10 h-6 ${isDark ? 'bg-white/10' : 'bg-slate-200'} rounded flex items-center justify-center text-xs font-bold ${textSecondary}`}>VISA</div>
                   <div className={`w-10 h-6 ${isDark ? 'bg-white/10' : 'bg-slate-200'} rounded flex items-center justify-center text-xs font-bold ${textSecondary}`}>MC</div>
-                  <div className={`w-10 h-6 ${isDark ? 'bg-red-500/20' : 'bg-red-100'} rounded flex items-center justify-center text-xs font-bold text-red-500`}>VC</div>
+                  <div className={`w-10 h-6 ${isDark ? 'bg-[#FD614B]/20' : 'bg-red-100'} rounded flex items-center justify-center text-xs font-bold text-[#FD614B]`}>VC</div>
                 </div>
               </div>
               <p className={`text-xs ${textMuted}`}>{t.footer.copyright}</p>

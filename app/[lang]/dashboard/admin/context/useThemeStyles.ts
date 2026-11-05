@@ -9,24 +9,24 @@ export function useThemeStyles() {
         isDark,
         theme,
         // Background
-        bgPrimary: isDark ? "bg-[#060B18]" : "bg-gray-50",
-        bgSecondary: isDark ? "bg-[#0B152B]" : "bg-white",
-        bgTertiary: isDark ? "bg-[#0F1D38]" : "bg-gray-100",
+        bgPrimary: isDark ? "bg-[#031326]" : "bg-[#F4F8FC]",
+        bgSecondary: isDark ? "bg-[#08213D]" : "bg-white",
+        bgTertiary: isDark ? "bg-[#0D2C4F]" : "bg-[#EBF3FA]",
 
         // Text
-        textPrimary: isDark ? "text-white" : "text-slate-900",
-        textSecondary: isDark ? "text-slate-300" : "text-gray-600",
-        textMuted: isDark ? "text-slate-400" : "text-gray-500",
+        textPrimary: isDark ? "text-[#FEFDFE]" : "text-[#042642]",
+        textSecondary: isDark ? "text-[#CBD5E1]" : "text-[#334E68]",
+        textMuted: isDark ? "text-[#94A3B8]" : "text-[#627D98]",
 
         // Borders
-        borderPrimary: isDark ? "border-blue-900/30" : "border-gray-200",
-        borderSecondary: isDark ? "border-blue-800/20" : "border-gray-100",
+        borderPrimary: isDark ? "border-[#044C87]/30" : "border-[#D0E1F0]",
+        borderSecondary: isDark ? "border-[#044C87]/20" : "border-[#E2E8F0]",
 
         // Cards
-        cardBg: isDark ? "bg-[#0B152B]/85" : "bg-white",
-        cardBorder: isDark ? "border-blue-500/20" : "border-gray-200",
+        cardBg: isDark ? "bg-[#08213D]/85" : "bg-white",
+        cardBorder: isDark ? "border-[#044C87]/35" : "border-[#D0E1F0]",
 
         // Hover states
-        hoverBg: isDark ? "hover:bg-blue-900/20" : "hover:bg-gray-100",
+        hoverBg: isDark ? "hover:bg-[#0C2A4D]" : "hover:bg-[#EBF3FA]",
     };
 }

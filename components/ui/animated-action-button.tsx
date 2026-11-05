@@ -8,14 +8,14 @@ import { cn } from "@/lib/utils";
 // Rotating gradient border animation
 function RotatingBorder({
     duration = 3000,
-    color = "amber"
+    color = "azure"
 }: {
     duration?: number;
-    color?: "amber" | "red"
+    color?: "azure" | "coral"
 }) {
     const gradientColors = {
-        red: "#ef4444",
-        amber: "#f59e0b",
+        coral: "#FD614B",
+        azure: "#0C67B3",
     };
 
     return (
@@ -36,10 +36,10 @@ function RotatingBorder({
 }
 
 // Pulsing glow effect
-function PulsingGlow({ color = "amber" }: { color?: "amber" | "red" }) {
+function PulsingGlow({ color = "azure" }: { color?: "azure" | "coral" }) {
     const glowColors = {
-        red: "bg-red-500/30",
-        amber: "bg-amber-500/30",
+        coral: "bg-[#FD614B]/35",
+        azure: "bg-[#044C87]/40",
     };
 
     return (
@@ -90,25 +90,25 @@ export function AnimatedActionButton({
     isLoading = false,
     loadingText,
 }: AnimatedActionButtonProps) {
-    const colors = variant === "urgent" ? "red" : "amber";
+    const colors = variant === "urgent" ? "coral" : "azure";
 
     const bgColors = {
-        amber: isDark
-            ? "bg-gradient-to-br from-[#161616] via-[#14120c] to-[#251a08]"
-            : "bg-gradient-to-br from-white via-amber-50/40 to-amber-100/50",
-        red: isDark
-            ? "bg-gradient-to-br from-slate-900 via-slate-900 to-red-950"
+        azure: isDark
+            ? "bg-gradient-to-br from-[#08213D] via-[#041527] to-[#044C87]/25"
+            : "bg-gradient-to-br from-white via-blue-50/40 to-blue-100/50",
+        coral: isDark
+            ? "bg-gradient-to-br from-[#08213D] via-[#041527] to-[#FD614B]/25"
             : "bg-gradient-to-br from-white via-white to-red-50",
     };
 
     const iconBgColors = {
-        amber: "bg-amber-500/20 text-amber-500 group-hover:bg-amber-500 group-hover:text-black",
-        red: "bg-red-500/20 text-red-500 group-hover:bg-red-500 group-hover:text-white",
+        azure: "bg-[#044C87]/20 text-[#0C67B3] group-hover:bg-[#044C87] group-hover:text-white",
+        coral: "bg-[#FD614B]/20 text-[#FD614B] group-hover:bg-[#FD614B] group-hover:text-white",
     };
 
     const borderColors = {
-        amber: isDark ? "border-amber-500/30" : "border-amber-300",
-        red: isDark ? "border-red-500/30" : "border-red-300",
+        azure: isDark ? "border-[#044C87]/40" : "border-[#D0E1F0]",
+        coral: isDark ? "border-[#FD614B]/40" : "border-[#FD614B]/30",
     };
 
     const content = (
@@ -156,7 +156,7 @@ export function AnimatedActionButton({
                         <h3 className={cn(
                             "font-bold text-base md:text-lg transition-colors",
                             isDark ? "text-white" : "text-slate-900",
-                            variant === "urgent" ? "group-hover:text-red-500" : "group-hover:text-amber-400"
+                            variant === "urgent" ? "group-hover:text-[#FD614B]" : "group-hover:text-[#38BDF8]"
                         )}>
                             {isLoading ? (
                                 <span className="flex items-center gap-2">
@@ -174,7 +174,7 @@ export function AnimatedActionButton({
                         {description && (
                             <p className={cn(
                                 "text-sm mt-0.5",
-                                isDark ? "text-gray-400" : "text-gray-600"
+                                isDark ? "text-[#CBD5E1]" : "text-gray-600"
                             )}>
                                 {description}
                             </p>
@@ -187,8 +187,8 @@ export function AnimatedActionButton({
                             "w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 transition-colors",
                             isDark ? "bg-white/10 text-white" : "bg-gray-100 text-gray-600",
                             variant === "urgent"
-                                ? "group-hover:bg-red-500 group-hover:text-white"
-                                : "group-hover:bg-amber-500 group-hover:text-black"
+                                ? "group-hover:bg-[#FD614B] group-hover:text-white"
+                                : "group-hover:bg-[#044C87] group-hover:text-white"
                         )}
                         animate={{ x: [0, 4, 0] }}
                         transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
@@ -236,11 +236,11 @@ export function AnimatedActionButtonCompact({
     disabled?: boolean;
     isLoading?: boolean;
 }) {
-    const colors = variant === "urgent" ? "red" : "amber";
+    const colors = variant === "urgent" ? "coral" : "azure";
 
     const bgColors = {
-        amber: "bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-black font-semibold shadow-lg shadow-amber-500/25",
-        red: "bg-red-500 hover:bg-red-600 text-white",
+        azure: "bg-gradient-to-r from-[#044C87] to-[#0C67B3] hover:from-[#0C67B3] hover:to-[#1378CE] text-white font-semibold shadow-lg shadow-[#044C87]/30",
+        coral: "bg-gradient-to-r from-[#FD614B] to-[#E84D37] hover:brightness-110 text-white font-semibold shadow-lg shadow-[#FD614B]/30",
     };
 
     const content = (

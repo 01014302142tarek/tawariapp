@@ -1,50 +1,52 @@
 @import "tailwindcss";
 
 :root {
-  /* Brand Colors — Ocean Sapphire & Gold Theme */
-  --primary: #2563EB;
-  --primary-light: #3B82F6;
-  --primary-dark: #1D4ED8;
-  --accent: #F59E0B;
-  --accent-light: #FCD34D;
-  --accent-blue: #38BDF8;
+  /* Brand Colors — Azure Navy & Coral Red Theme (Tenista Reference) */
+  --primary: #044C87;
+  --primary-light: #0C67B3;
+  --primary-dark: #022B50;
+  --accent: #FD614B;
+  --accent-light: #FF8270;
+  --accent-dark: #E84D37;
+  --accent-blue: #1378CE;
+  --snowy-white: #FEFDFE;
 
   /* Semantic */
   --success: #10B981;
   --warning: #F59E0B;
-  --error: #EF4444;
+  --error: #FD614B;
 }
 
 /* Dark Theme (default) */
 [data-theme="dark"], :root {
-  --background: #060B18;
-  --background-light: #0B132B;
-  --surface: #0E1A38;
-  --surface-light: #132347;
-  --border: #1E293B;
-  --border-light: #2563EB;
-  --foreground: #F8FAFC;
-  --foreground-muted: #94A3B8;
-  --foreground-subtle: #64748B;
-  --card-bg: rgba(11, 22, 48, 0.85);
-  --nav-bg: rgba(6, 11, 24, 0.92);
-  --glow-opacity: 0.45;
+  --background: #031326;
+  --background-light: #061D38;
+  --surface: #08213D;
+  --surface-light: #0D2C4F;
+  --border: rgba(4, 76, 135, 0.35);
+  --border-light: rgba(4, 76, 135, 0.6);
+  --foreground: #FEFDFE;
+  --foreground-muted: #CBD5E1;
+  --foreground-subtle: #94A3B8;
+  --card-bg: rgba(8, 33, 61, 0.85);
+  --nav-bg: rgba(3, 19, 38, 0.92);
+  --glow-opacity: 0.55;
 }
 
 /* Light Theme */
 [data-theme="light"] {
-  --background: #F0F7FF;
-  --background-light: #E0EFFF;
+  --background: #F4F8FC;
+  --background-light: #EBF3FA;
   --surface: #FFFFFF;
   --surface-light: #F8FAFC;
-  --border: #BFDBFE;
-  --border-light: #93C5FD;
-  --foreground: #0F172A;
-  --foreground-muted: #475569;
-  --foreground-subtle: #64748B;
-  --card-bg: rgba(255, 255, 255, 0.95);
-  --nav-bg: rgba(240, 247, 255, 0.92);
-  --glow-opacity: 0.5;
+  --border: #D0E1F0;
+  --border-light: #94C1E8;
+  --foreground: #042642;
+  --foreground-muted: #334E68;
+  --foreground-subtle: #627D98;
+  --card-bg: rgba(255, 255, 255, 0.96);
+  --nav-bg: rgba(244, 248, 252, 0.92);
+  --glow-opacity: 0.35;
 }
 
 @theme inline {
@@ -52,7 +54,10 @@
   --color-foreground: var(--foreground);
   --color-primary: var(--primary);
   --color-primary-light: var(--primary-light);
+  --color-primary-dark: var(--primary-dark);
   --color-accent: var(--accent);
+  --color-accent-light: var(--accent-light);
+  --color-accent-dark: var(--accent-dark);
   --color-surface: var(--surface);
   --color-surface-light: var(--surface-light);
   --color-border: var(--border);
@@ -110,7 +115,7 @@ html[dir="rtl"] body {
 
 /* Gradient Text */
 .gradient-text {
-  background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 50%, var(--primary-light) 100%);
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 50%, var(--accent) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -118,9 +123,10 @@ html[dir="rtl"] body {
 
 /* Glass Effect */
 .glass {
-  background: rgba(18, 18, 18, 0.75);
+  background: rgba(8, 33, 61, 0.75);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(4, 76, 135, 0.3);
 }
 
 /* Animations */
@@ -144,7 +150,7 @@ html[dir="rtl"] body {
 .hero-gradient {
   background: linear-gradient(to top,
       var(--background) 0%,
-      rgba(10, 10, 10, 0.8) 40%,
-      rgba(10, 10, 10, 0.4) 70%,
+      rgba(3, 19, 38, 0.8) 40%,
+      rgba(3, 19, 38, 0.4) 70%,
       transparent 100%);
 }

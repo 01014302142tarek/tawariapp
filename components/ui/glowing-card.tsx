@@ -7,15 +7,16 @@ import { cn } from "@/lib/utils";
 interface GlowingCardProps {
     children: React.ReactNode;
     className?: string;
-    glowColor?: "teal" | "amber" | "purple" | "blue" | "pink" | "green";
+    glowColor?: "teal" | "amber" | "purple" | "blue" | "pink" | "green" | "coral";
     isDark?: boolean;
 }
 
 const glowColorsDark = {
     teal: "from-cyan-500/25 via-blue-500/15 to-transparent",
-    amber: "from-amber-500/25 via-amber-400/15 to-transparent",
+    amber: "from-[#FD614B]/30 via-amber-400/15 to-transparent",
+    coral: "from-[#FD614B]/35 via-[#FF8270]/20 to-transparent",
     purple: "from-purple-500/20 via-purple-400/10 to-transparent",
-    blue: "from-blue-600/30 via-blue-500/15 to-transparent",
+    blue: "from-[#044C87]/40 via-[#0C67B3]/25 to-transparent",
     pink: "from-pink-500/20 via-pink-400/10 to-transparent",
     green: "from-emerald-500/20 via-emerald-400/10 to-transparent",
 };
@@ -23,17 +24,19 @@ const glowColorsDark = {
 const glowColorsLight = {
     teal: "from-cyan-100/70 via-blue-50/40 to-transparent",
     amber: "from-amber-100/70 via-amber-50/40 to-transparent",
+    coral: "from-red-100/70 via-orange-50/40 to-transparent",
     purple: "from-purple-100/60 via-purple-50/30 to-transparent",
-    blue: "from-blue-100/60 via-blue-50/30 to-transparent",
+    blue: "from-blue-100/70 via-slate-50/40 to-transparent",
     pink: "from-pink-100/60 via-pink-50/30 to-transparent",
     green: "from-emerald-100/60 via-emerald-50/30 to-transparent",
 };
 
 const borderColorsDark = {
     teal: "border-cyan-500/25 hover:border-cyan-400/60",
-    amber: "border-amber-500/30 hover:border-amber-400/60 shadow-[0_0_15px_rgba(245,158,11,0.15)]",
+    amber: "border-[#FD614B]/30 hover:border-[#FD614B]/60 shadow-[0_0_15px_rgba(253,97,75,0.2)]",
+    coral: "border-[#FD614B]/40 hover:border-[#FD614B]/80 shadow-[0_0_20px_rgba(253,97,75,0.3)]",
     purple: "border-purple-500/20 hover:border-purple-400/40",
-    blue: "border-blue-500/30 hover:border-blue-400/70 shadow-[0_0_15px_rgba(37,99,235,0.18)]",
+    blue: "border-[#044C87]/40 hover:border-[#0C67B3]/80 shadow-[0_0_20px_rgba(4,76,135,0.3)]",
     pink: "border-pink-500/20 hover:border-pink-400/40",
     green: "border-emerald-500/20 hover:border-emerald-400/40",
 };
@@ -41,8 +44,9 @@ const borderColorsDark = {
 const borderColorsLight = {
     teal: "border-cyan-200/80 hover:border-cyan-400 shadow-sm hover:shadow-md hover:shadow-cyan-100/50",
     amber: "border-amber-200/80 hover:border-amber-400 shadow-sm hover:shadow-md hover:shadow-amber-100/50",
+    coral: "border-red-200/80 hover:border-[#FD614B] shadow-sm hover:shadow-md hover:shadow-red-100/50",
     purple: "border-purple-200/80 hover:border-purple-400 shadow-sm hover:shadow-md hover:shadow-purple-100/50",
-    blue: "border-blue-200/80 hover:border-blue-400 shadow-sm hover:shadow-md hover:shadow-blue-100/50",
+    blue: "border-[#D0E1F0] hover:border-[#044C87] shadow-sm hover:shadow-md hover:shadow-blue-100/50",
     pink: "border-pink-200/80 hover:border-pink-400 shadow-sm hover:shadow-md hover:shadow-pink-100/50",
     green: "border-emerald-200/80 hover:border-emerald-400 shadow-sm hover:shadow-md hover:shadow-emerald-100/50",
 };

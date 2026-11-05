@@ -13,42 +13,42 @@ export function useThemeStyles() {
         setThemeMode,
 
         // Page backgrounds
-        pageBg: isDark ? "bg-[#060B18]" : "bg-gray-50",
+        pageBg: isDark ? "bg-[#031326]" : "bg-[#F4F8FC]",
 
         // Cards
-        cardBg: isDark ? "bg-[#0B152B]/80 border-blue-500/20" : "bg-white border-gray-200 shadow-sm",
-        cardHover: isDark ? "hover:bg-blue-900/20" : "hover:bg-gray-50",
+        cardBg: isDark ? "bg-[#08213D]/85 border-[#044C87]/35" : "bg-white border-[#D0E1F0] shadow-sm",
+        cardHover: isDark ? "hover:bg-[#0C2A4D]" : "hover:bg-[#EBF3FA]",
 
         // Text
-        textPrimary: isDark ? "text-white" : "text-slate-900",
-        textSecondary: isDark ? "text-slate-300" : "text-gray-600",
-        textMuted: isDark ? "text-slate-400" : "text-gray-500",
+        textPrimary: isDark ? "text-[#FEFDFE]" : "text-[#042642]",
+        textSecondary: isDark ? "text-[#CBD5E1]" : "text-[#334E68]",
+        textMuted: isDark ? "text-[#94A3B8]" : "text-[#627D98]",
 
         // Borders
-        border: isDark ? "border-blue-900/30" : "border-gray-200",
-        borderLight: isDark ? "border-blue-800/40" : "border-gray-300",
-        divider: isDark ? "divide-blue-900/30" : "divide-gray-200",
+        border: isDark ? "border-[#044C87]/30" : "border-[#D0E1F0]",
+        borderLight: isDark ? "border-[#044C87]/40" : "border-[#E2E8F0]",
+        divider: isDark ? "divide-[#044C87]/30" : "divide-[#E2E8F0]",
 
         // Inputs
         inputBg: isDark
-            ? "bg-[#0B1630] border-blue-500/30 text-white placeholder-gray-400"
-            : "bg-white border-gray-300 text-slate-900 placeholder-gray-400",
-        inputFocus: "focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/40",
+            ? "bg-[#061D38] border-[#044C87]/40 text-[#FEFDFE] placeholder-gray-400"
+            : "bg-white border-[#D0E1F0] text-[#042642] placeholder-gray-400",
+        inputFocus: "focus:outline-none focus:border-[#FD614B] focus:ring-1 focus:ring-[#FD614B]/40",
 
         // Buttons
         buttonSecondary: isDark
-            ? "bg-[#0B1630] text-blue-200 border border-blue-500/30 hover:text-white hover:border-blue-400"
-            : "bg-gray-100 text-gray-600 border border-gray-200 hover:text-gray-900 hover:bg-gray-200",
-        buttonSecondaryActive: "bg-blue-600 text-white border border-blue-400",
+            ? "bg-[#061D38] text-blue-100 border border-[#044C87]/40 hover:text-white hover:border-[#FD614B]"
+            : "bg-slate-100 text-slate-700 border border-slate-200 hover:text-slate-900 hover:bg-slate-200",
+        buttonSecondaryActive: "bg-[#FD614B] text-white border border-[#FD614B]",
 
         // Section headers
-        sectionHeader: isDark ? "text-white" : "text-slate-900",
+        sectionHeader: isDark ? "text-[#FEFDFE]" : "text-[#042642]",
 
         // Avatar border
-        avatarBorder: "border-amber-400/60 shadow-[0_0_10px_rgba(245,158,11,0.3)]",
+        avatarBorder: "border-[#FD614B]/70 shadow-[0_0_12px_rgba(253,97,75,0.35)]",
 
         // Empty states
-        emptyStateBg: isDark ? "bg-[#0B1630]" : "bg-gray-100",
-        emptyStateText: isDark ? "text-slate-400" : "text-gray-400",
+        emptyStateBg: isDark ? "bg-[#061D38]" : "bg-[#F4F8FC]",
+        emptyStateText: isDark ? "text-slate-400" : "text-slate-500",
     };
 }

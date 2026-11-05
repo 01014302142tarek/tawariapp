@@ -96,7 +96,7 @@ function UserTypeCard({
 }) {
     return (
         <div className={`group relative rounded-3xl p-6 md:p-8 transition-all duration-300 ${isDark
-                ? "bg-[#0B152B]/85 border-2 border-blue-500/35 hover:border-blue-400 hover:shadow-[0_0_30px_rgba(37,99,235,0.3)]"
+                ? "bg-[#08213D]/90 border-2 border-[#044C87]/40 hover:border-[#FD614B] hover:shadow-[0_0_30px_rgba(4,76,135,0.3)]"
                 : "bg-white border-2 border-blue-200 hover:border-blue-400 hover:shadow-xl shadow-lg"
             }`}>
             {/* Glow effect on hover */}
@@ -104,7 +104,7 @@ function UserTypeCard({
 
             <div className="relative z-10">
                 {/* Icon */}
-                <div className="w-16 h-16 md:w-20 md:h-20 rounded-2xl bg-gradient-to-br from-blue-600 to-blue-700 shadow-[0_0_20px_rgba(37,99,235,0.4)] flex items-center justify-center mb-6 group-hover:scale-105 transition-transform duration-300">
+                <div className="w-16 h-16 md:w-20 md:h-20 rounded-2xl bg-gradient-to-br from-[#044C87] to-[#022B50] shadow-[0_0_20px_rgba(4,76,135,0.4)] flex items-center justify-center mb-6 group-hover:scale-105 transition-transform duration-300">
                     <span className="text-white">
                         {icon}
                     </span>
@@ -126,7 +126,7 @@ function UserTypeCard({
                 {/* CTA Button */}
                 <Link
                     href={ctaLink}
-                    className="w-full flex items-center justify-center gap-2 py-3.5 px-6 rounded-2xl font-bold text-white transition-all duration-300 shadow-lg bg-gradient-to-r from-blue-600 via-blue-500 to-blue-600 hover:from-blue-500 hover:to-blue-400 shadow-blue-500/30"
+                    className="w-full flex items-center justify-center gap-2 py-3.5 px-6 rounded-2xl font-bold text-white transition-all duration-300 shadow-lg bg-gradient-to-r from-[#FD614B] to-[#E84D37] hover:brightness-110 shadow-[#FD614B]/30"
                 >
                     <span>{ctaText}</span>
                 </Link>
@@ -141,16 +141,16 @@ export default function GetStartedPage() {
     const isDark = theme === "dark";
 
     return (
-        <div className={`min-h-screen overflow-x-hidden ${isRTL ? 'font-cairo' : ''} ${isDark ? 'bg-[#060B18] text-white' : 'bg-[#F0F7FF] text-slate-900'}`} dir={isRTL ? 'rtl' : 'ltr'}>
+        <div className={`min-h-screen overflow-x-hidden ${isRTL ? 'font-cairo' : ''} ${isDark ? 'bg-[#031326] text-white' : 'bg-[#F0F7FF] text-slate-900'}`} dir={isRTL ? 'rtl' : 'ltr'}>
             {/* Background Effects */}
             <div className="fixed inset-0 overflow-hidden pointer-events-none">
-                <div className={`absolute inset-0 ${isDark ? 'bg-gradient-to-br from-[#0B1528] via-[#060B18] to-[#040813]' : 'bg-gradient-to-br from-blue-50 via-white to-white'}`} />
-                <div className={`absolute top-1/4 -right-1/4 w-[600px] h-[600px] rounded-full blur-3xl ${isDark ? 'bg-blue-600/15' : 'bg-blue-300/20'}`} />
-                <div className={`absolute bottom-1/4 -left-1/4 w-[400px] h-[400px] rounded-full blur-3xl ${isDark ? 'bg-amber-500/10' : 'bg-blue-200/20'}`} />
+                <div className={`absolute inset-0 ${isDark ? 'bg-gradient-to-br from-[#042642] via-[#031326] to-[#020B16]' : 'bg-gradient-to-br from-blue-50 via-white to-white'}`} />
+                <div className={`absolute top-1/4 -right-1/4 w-[600px] h-[600px] rounded-full blur-3xl ${isDark ? 'bg-[#044C87]/20' : 'bg-blue-300/20'}`} />
+                <div className={`absolute bottom-1/4 -left-1/4 w-[400px] h-[400px] rounded-full blur-3xl ${isDark ? 'bg-[#FD614B]/15' : 'bg-blue-200/20'}`} />
             </div>
 
             {/* Navigation */}
-            <nav className={`relative z-50 backdrop-blur-xl border-b ${isDark ? 'bg-[#060B18]/85 border-blue-900/30' : 'bg-white/80 border-blue-100'}`}>
+            <nav className={`relative z-50 backdrop-blur-xl border-b ${isDark ? 'bg-[#031326]/85 border-[#044C87]/30' : 'bg-white/80 border-blue-100'}`}>
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex items-center justify-between h-16 lg:h-20">
                         <Link href={`/${language}`} className="group hover:opacity-90 transition-opacity">
@@ -161,7 +161,7 @@ export default function GetStartedPage() {
                             <LanguageToggle isDark={isDark} />
                             <Link
                                 href={`/${language}/login`}
-                                className={`hidden sm:block font-medium text-sm px-4 py-2 transition-colors ${isDark ? 'text-blue-300 hover:text-white' : 'text-blue-600 hover:text-blue-900'}`}
+                                className={`hidden sm:block font-medium text-sm px-4 py-2 transition-colors ${isDark ? 'text-blue-300 hover:text-white' : 'text-[#044C87] hover:text-blue-900'}`}
                             >
                                 {t.nav.login}
                             </Link>
@@ -223,7 +223,7 @@ export default function GetStartedPage() {
                         {t.getStartedPage.alreadyHaveAccount}{" "}
                         <Link
                             href={`/${language}/login`}
-                            className={`${isDark ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-700'} font-semibold transition-colors`}
+                            className={`${isDark ? 'text-[#FD614B] hover:text-blue-300' : 'text-[#044C87] hover:text-blue-700'} font-semibold transition-colors`}
                         >
                             {t.getStartedPage.loginHere}
                         </Link>

@@ -592,7 +592,7 @@ const PhoneInput = ({
                         <button
                             type="button"
                             onClick={onVerify}
-                            className="px-2 py-1 text-xs font-medium rounded bg-gradient-to-r from-blue-600 via-blue-500 to-blue-600 hover:from-blue-500 text-white shadow-lg shadow-blue-500/25 transition-colors"
+                            className="px-2 py-1 text-xs font-medium rounded bg-gradient-to-r from-[#FD614B] to-[#E84D37] hover:brightness-110 text-white shadow-lg shadow-[#FD614B]/30 transition-colors"
                         >
                             {verifyButtonText || "Verify"}
                         </button>
@@ -790,7 +790,7 @@ const OTPDialog = ({
                             className={cn(
                                 "w-full py-2.5 rounded-lg font-medium transition-all",
                                 otp.length === 6 && !isVerifying
-                                    ? "bg-gradient-to-r from-blue-600 via-blue-500 to-blue-600 hover:from-blue-500 text-white shadow-lg shadow-blue-500/25"
+                                    ? "bg-gradient-to-r from-[#FD614B] to-[#E84D37] hover:brightness-110 text-white shadow-lg shadow-[#FD614B]/30"
                                     : isDark
                                         ? "bg-slate-800 text-gray-500 cursor-not-allowed"
                                         : "bg-gray-100 text-gray-400 cursor-not-allowed"
@@ -1967,7 +1967,7 @@ export default function DoctorOnboarding() {
                                 initial={{ width: 0 }}
                                 animate={{ width: `${progress}%` }}
                                 transition={{ duration: 0.3 }}
-                                className="h-full bg-gradient-to-r from-blue-600 via-blue-500 to-blue-400 rounded-full"
+                                className="h-full bg-gradient-to-r from-[#044C87] via-[#0C67B3] to-[#FD614B] rounded-full"
                             />
                         </div>
                         <span className={cn("text-xs font-medium min-w-[32px]", isDark ? "text-gray-400" : "text-gray-600")}>
@@ -2027,7 +2027,7 @@ export default function DoctorOnboarding() {
                             className={cn(
                                 "flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-all",
                                 canProceed() && !isSubmitting
-                                    ? "bg-gradient-to-r from-blue-600 via-blue-500 to-blue-600 hover:from-blue-500 text-white shadow-lg shadow-blue-500/25"
+                                    ? "bg-gradient-to-r from-[#FD614B] to-[#E84D37] hover:brightness-110 text-white shadow-lg shadow-[#FD614B]/30"
                                     : isDark
                                         ? "bg-slate-800 text-gray-500 cursor-not-allowed"
                                         : "bg-gray-100 text-gray-400 cursor-not-allowed"

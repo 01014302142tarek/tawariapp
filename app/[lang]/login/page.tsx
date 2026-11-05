@@ -112,7 +112,7 @@ function InputField({
                 dir={isRTL ? "rtl" : "ltr"}
                 style={isRTL ? { textAlign: 'right' } : undefined}
                 className={`w-full py-3.5 border rounded-2xl transition-all outline-none ${isDark
-                        ? "bg-[#0B1630]/80 border-blue-500/30 text-white placeholder-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/25"
+                        ? "bg-[#08213D] border-[#044C87]/40 text-[#FEFDFE] placeholder-gray-400 focus:border-[#FD614B] focus:ring-2 focus:ring-[#FD614B]/20"
                         : "bg-white border-blue-200 text-slate-900 placeholder-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
                     } ${isRTL ? 'pr-12 pl-12' : 'pl-12 pr-12'}`}
             />
@@ -207,23 +207,23 @@ function LoginPageContent() {
 
     if (authLoading) {
         return (
-            <div className={`min-h-screen flex items-center justify-center ${isDark ? 'bg-[#060B18]' : 'bg-[#F0F7FF]'}`}>
+            <div className={`min-h-screen flex items-center justify-center ${isDark ? 'bg-[#031326]' : 'bg-[#F0F7FF]'}`}>
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
             </div>
         );
     }
 
     return (
-        <div className={`min-h-screen overflow-x-hidden ${isRTL ? 'font-cairo' : ''} ${isDark ? 'bg-[#060B18] text-white' : 'bg-[#F0F7FF] text-slate-900'}`} dir={isRTL ? 'rtl' : 'ltr'}>
+        <div className={`min-h-screen overflow-x-hidden ${isRTL ? 'font-cairo' : ''} ${isDark ? 'bg-[#031326] text-white' : 'bg-[#F0F7FF] text-slate-900'}`} dir={isRTL ? 'rtl' : 'ltr'}>
             {/* Background Effects */}
             <div className="fixed inset-0 overflow-hidden pointer-events-none">
-                <div className={`absolute inset-0 ${isDark ? 'bg-gradient-to-br from-[#0B1528] via-[#060B18] to-[#040813]' : 'bg-gradient-to-br from-blue-50 via-white to-white'}`} />
-                <div className={`absolute top-1/4 -right-1/4 w-[600px] h-[600px] rounded-full blur-3xl ${isDark ? 'bg-blue-600/15' : 'bg-blue-300/20'}`} />
-                <div className={`absolute bottom-1/4 -left-1/4 w-[400px] h-[400px] rounded-full blur-3xl ${isDark ? 'bg-amber-500/10' : 'bg-blue-200/20'}`} />
+                <div className={`absolute inset-0 ${isDark ? 'bg-gradient-to-br from-[#042642] via-[#031326] to-[#020B16]' : 'bg-gradient-to-br from-blue-50 via-white to-white'}`} />
+                <div className={`absolute top-1/4 -right-1/4 w-[600px] h-[600px] rounded-full blur-3xl ${isDark ? 'bg-[#044C87]/20' : 'bg-blue-300/20'}`} />
+                <div className={`absolute bottom-1/4 -left-1/4 w-[400px] h-[400px] rounded-full blur-3xl ${isDark ? 'bg-[#FD614B]/15' : 'bg-blue-200/20'}`} />
             </div>
 
             {/* Navigation */}
-            <nav className={`relative z-50 backdrop-blur-xl border-b ${isDark ? 'bg-[#060B18]/85 border-blue-900/30' : 'bg-white/80 border-blue-100'}`}>
+            <nav className={`relative z-50 backdrop-blur-xl border-b ${isDark ? 'bg-[#031326]/85 border-[#044C87]/30' : 'bg-white/80 border-blue-100'}`}>
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex items-center justify-between h-16 lg:h-20">
                         <Link href={`/${language}`} className="group hover:opacity-90 transition-opacity">
@@ -292,7 +292,7 @@ function LoginPageContent() {
                                 />
                                 <span className={`text-sm ${isDark ? 'text-slate-300' : 'text-gray-600'}`}>{text.rememberMe}</span>
                             </label>
-                            <Link href={`/${language}/forgot-password`} className={`text-sm ${isDark ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-700'} font-medium transition-colors`}>
+                            <Link href={`/${language}/forgot-password`} className={`text-sm ${isDark ? 'text-[#FD614B] hover:brightness-110' : 'text-[#FD614B] hover:brightness-90'} font-medium transition-colors`}>
                                 {text.forgotPassword}
                             </Link>
                         </div>
@@ -301,7 +301,7 @@ function LoginPageContent() {
                         <button
                             type="submit"
                             disabled={isSubmitting}
-                            className="w-full py-3.5 rounded-2xl font-bold text-white bg-gradient-to-r from-blue-600 via-blue-500 to-blue-600 hover:from-blue-500 hover:to-blue-400 shadow-lg shadow-blue-500/30 transition-all disabled:opacity-70 disabled:cursor-not-allowed"
+                            className="w-full py-3.5 rounded-2xl font-bold text-white bg-gradient-to-r from-[#FD614B] to-[#E84D37] hover:brightness-110 shadow-lg shadow-[#FD614B]/30 transition-all disabled:opacity-70 disabled:cursor-not-allowed"
                         >
                             {isSubmitting ? (
                                 <span className="flex items-center justify-center gap-2">
@@ -327,7 +327,7 @@ function LoginPageContent() {
                             type="button"
                             onClick={handleGoogleSignIn}
                             className={`flex items-center justify-center gap-2 py-3 px-4 border rounded-2xl transition-all ${isDark
-                                ? 'bg-[#0B152B]/85 border-blue-500/30 hover:bg-[#0E1D3C] hover:border-blue-400'
+                                ? 'bg-[#08213D] border-[#044C87]/40 hover:bg-[#0D2C4F] hover:border-[#FD614B]/50'
                                 : 'bg-white border-blue-100 hover:bg-blue-50 hover:border-blue-200'
                             }`}
                         >
@@ -339,7 +339,7 @@ function LoginPageContent() {
                     {/* Register Link */}
                     <p className={`text-center text-sm mt-6 ${isDark ? 'text-slate-300' : 'text-gray-600'}`}>
                         {text.noAccount}{" "}
-                        <Link href={`/${language}/get-started`} className={`${isDark ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-700'} font-semibold`}>
+                        <Link href={`/${language}/get-started`} className={`${isDark ? 'text-[#FD614B] hover:brightness-110' : 'text-[#FD614B] hover:brightness-90'} font-semibold`}>
                             {text.registerLink}
                         </Link>
                     </p>
@@ -352,7 +352,7 @@ function LoginPageContent() {
 // Loading fallback component
 function LoginPageLoading() {
     return (
-        <div className="min-h-screen flex items-center justify-center bg-[#060B18]">
+        <div className="min-h-screen flex items-center justify-center bg-[#031326]">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
         </div>
     );

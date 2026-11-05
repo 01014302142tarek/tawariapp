@@ -179,18 +179,18 @@ function DoctorsPageContent() {
     const [availableOnly, setAvailableOnly] = useState(false);
 
     // Theme-aware class helpers
-    const bgMain = isDark ? 'bg-[#060B18]' : 'bg-[#F0F7FF]';
-    const textPrimary = isDark ? 'text-white' : 'text-slate-900';
-    const textSecondary = isDark ? 'text-slate-300' : 'text-slate-600';
-    const textMuted = isDark ? 'text-slate-400' : 'text-slate-500';
-    const borderColor = isDark ? 'border-blue-900/30' : 'border-blue-100';
-    const navBg = isDark ? 'bg-[#060B18]/90' : 'bg-[#F0F7FF]/92';
+    const bgMain = isDark ? 'bg-[#031326]' : 'bg-[#F4F8FC]';
+    const textPrimary = isDark ? 'text-[#FEFDFE]' : 'text-[#042642]';
+    const textSecondary = isDark ? 'text-[#CBD5E1]' : 'text-[#334E68]';
+    const textMuted = isDark ? 'text-[#94A3B8]' : 'text-[#627D98]';
+    const borderColor = isDark ? 'border-[#044C87]/35' : 'border-[#D0E1F0]';
+    const navBg = isDark ? 'bg-[#031326]/90' : 'bg-[#F4F8FC]/92';
     const cardBg = isDark
-        ? 'bg-[#0B152B]/85 border-2 border-blue-500/35 hover:border-blue-400 hover:shadow-[0_0_25px_rgba(37,99,235,0.25)]'
-        : 'bg-white border-2 border-blue-200 shadow-md hover:border-blue-400 hover:shadow-xl';
+        ? 'bg-[#08213D]/90 border border-[#044C87]/40 hover:border-[#FD614B]/60 hover:shadow-[0_0_20px_rgba(4,76,135,0.25)]'
+        : 'bg-white border-2 border-[#D0E1F0] shadow-md hover:border-[#FD614B] hover:shadow-xl';
     const inputBg = isDark
-        ? 'bg-[#0B1630] border-blue-500/30 text-white placeholder-gray-400 focus:border-blue-500'
-        : 'bg-white border-blue-200 text-slate-900 placeholder-gray-400 focus:border-blue-500';
+        ? 'bg-[#061D38] border-[#044C87]/40 text-[#FEFDFE] placeholder-gray-400 focus:border-[#FD614B]'
+        : 'bg-white border-[#D0E1F0] text-[#042642] placeholder-gray-400 focus:border-[#044C87]';
 
     // Track if initial specialty has been applied
     const initialSpecialtyApplied = useRef(false);
@@ -285,7 +285,7 @@ function DoctorsPageContent() {
                             <ThemeToggle />
                             <LanguageToggle />
                             <Link href={`/${language}/login`} className={`${textSecondary} hover:${textPrimary} font-medium text-sm px-4 py-2 transition-colors`}>{t.navLogin}</Link>
-                            <Link href={`/${language}/get-started`} className="bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white font-bold px-5 py-2.5 rounded-full transition-all shadow-lg shadow-blue-500/30">{t.navGetStarted}</Link>
+                            <Link href={`/${language}/get-started`} className="bg-gradient-to-r from-[#FD614B] to-[#E84D37] hover:brightness-110 text-white font-bold px-5 py-2.5 rounded-full transition-all shadow-lg shadow-[#FD614B]/30">{t.navGetStarted}</Link>
                         </div>
 
                         <div className="flex lg:hidden items-center gap-2">
@@ -308,7 +308,7 @@ function DoctorsPageContent() {
                                         <LanguageToggle />
                                         <Link href={`/${language}/login`} className={`${textSecondary} hover:${textPrimary} font-medium text-sm px-4 py-2 transition-colors`}>{t.navLogin}</Link>
                                     </div>
-                                    <Link href={`/${language}/get-started`} className="bg-gradient-to-r from-blue-600 to-blue-500 text-white font-bold px-5 py-2 rounded-full text-center shadow-lg shadow-blue-500/30">{t.navGetStarted}</Link>
+                                    <Link href={`/${language}/get-started`} className="bg-gradient-to-r from-[#FD614B] to-[#E84D37] text-white font-bold px-5 py-2 rounded-full text-center shadow-lg shadow-[#FD614B]/30">{t.navGetStarted}</Link>
                                 </div>
                             </div>
                         </div>
@@ -402,11 +402,11 @@ function DoctorsPageContent() {
                     {/* AI Triage Banner */}
                     <div className={`mb-8 p-4 sm:p-5 rounded-2xl border flex flex-col sm:flex-row items-center justify-between gap-4 transition-all ${
                         isDark
-                            ? 'bg-gradient-to-r from-emerald-950/60 via-[#0C1E32] to-[#0B152B] border-emerald-500/40 shadow-lg shadow-emerald-950/40'
+                            ? 'bg-gradient-to-r from-[#042642] via-[#08355B] to-[#042642] border border-[#044C87]/60 shadow-lg shadow-[#044C87]/20'
                             : 'bg-gradient-to-r from-emerald-50 via-teal-50 to-cyan-50 border-emerald-200 shadow-sm'
                     }`}>
                         <div className="flex items-center gap-3.5 text-center sm:text-start">
-                            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-emerald-500/25">
+                            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#FD614B] to-[#E84D37] text-white flex items-center justify-center shrink-0 shadow-md shadow-[#FD614B]/30">
                                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
                                 </svg>
@@ -426,7 +426,7 @@ function DoctorsPageContent() {
 
                         <Link
                             href={`/${language}/triage`}
-                            className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs sm:text-sm whitespace-nowrap shadow-md shadow-emerald-600/30 transition-all shrink-0"
+                            className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#FD614B] to-[#E84D37] hover:brightness-110 text-white font-bold text-xs sm:text-sm whitespace-nowrap shadow-md shadow-[#FD614B]/30 transition-all shrink-0"
                         >
                             {isRTL ? "اختار طبيبك الآن ←" : "Choose Doctor Now →"}
                         </Link>
@@ -459,7 +459,7 @@ function DoctorsPageContent() {
                                 >
                                     {/* Avatar */}
                                     <div className="relative mb-4">
-                                        <div className="relative w-24 h-24 mx-auto rounded-full overflow-hidden border-2 border-amber-400 shadow-[0_0_12px_rgba(245,158,11,0.35)] group-hover:scale-105 transition-all">
+                                        <div className="relative w-24 h-24 mx-auto rounded-full overflow-hidden border-2 border-[#FD614B]/60 shadow-[0_0_12px_rgba(253,97,75,0.35)] group-hover:scale-105 transition-all">
                                             {doctor.avatar_url ? (
                                                 <Image
                                                     src={doctor.avatar_url}
@@ -546,7 +546,7 @@ function DoctorsPageContent() {
                                                             ? `/${language}/dashboard/patient/doctors?book=${doctor.id}`
                                                             : `/${language}/login?redirect=${encodeURIComponent(`/${language}/dashboard/patient/doctors?book=${doctor.id}`)}`
                                                     }
-                                                    className="flex-1 bg-gradient-to-r from-blue-600 via-blue-500 to-blue-600 hover:from-blue-500 hover:to-blue-400 text-white font-bold text-sm py-2 rounded-xl transition-all text-center shadow-lg shadow-blue-500/30"
+                                                    className="flex-1 bg-gradient-to-r from-[#FD614B] to-[#E84D37] hover:brightness-110 text-white font-bold text-sm py-2 rounded-xl transition-all text-center shadow-lg shadow-[#FD614B]/30"
                                                 >
                                                     {t.bookNow}
                                                 </Link>

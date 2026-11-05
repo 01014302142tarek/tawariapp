@@ -93,32 +93,32 @@ export default function AboutPage() {
     ];
 
     return (
-        <div className={`min-h-screen overflow-x-hidden ${isRTL ? 'font-cairo' : ''} ${isDark ? 'bg-[#060B18] text-white' : 'bg-gray-50 text-slate-900'}`} dir={isRTL ? 'rtl' : 'ltr'}>
+        <div className={`min-h-screen overflow-x-hidden ${isRTL ? 'font-cairo' : ''} ${isDark ? 'bg-[#031326] text-white' : 'bg-gray-50 text-slate-900'}`} dir={isRTL ? 'rtl' : 'ltr'}>
             <div className="fixed inset-0 overflow-hidden pointer-events-none">
-                <div className={`absolute inset-0 ${isDark ? 'bg-gradient-to-br from-[#0B1528] via-[#060B18] to-[#060B18]' : 'bg-gradient-to-br from-blue-50/50 via-white to-white'}`} />
-                <div className={`absolute top-1/4 -right-1/4 w-[600px] h-[600px] rounded-full blur-3xl ${isDark ? 'bg-blue-600/10' : 'bg-blue-500/5'}`} />
-                <div className={`absolute bottom-1/4 -left-1/4 w-[400px] h-[400px] rounded-full blur-3xl ${isDark ? 'bg-amber-500/5' : 'bg-amber-500/5'}`} />
+                <div className={`absolute inset-0 ${isDark ? 'bg-gradient-to-br from-[#042642] via-[#031326] to-[#060B18]' : 'bg-gradient-to-br from-blue-50/50 via-white to-white'}`} />
+                <div className={`absolute top-1/4 -right-1/4 w-[600px] h-[600px] rounded-full blur-3xl ${isDark ? 'bg-[#044C87]/20' : 'bg-blue-500/5'}`} />
+                <div className={`absolute bottom-1/4 -left-1/4 w-[400px] h-[400px] rounded-full blur-3xl ${isDark ? 'bg-[#FD614B]/10' : 'bg-[#FD614B]/10'}`} />
             </div>
 
-            <nav className={`relative z-50 backdrop-blur-xl border-b ${isDark ? 'bg-[#060B18]/85 border-blue-500/20' : 'bg-white/80 border-gray-200'}`}>
+            <nav className={`relative z-50 backdrop-blur-xl border-b ${isDark ? 'bg-[#031326]/85 border-[#044C87]/40' : 'bg-white/80 border-gray-200'}`}>
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex items-center justify-between h-16 lg:h-20">
                         <Link href={`/${language}`} className="group hover:opacity-90 transition-opacity"><Logo isDark={isDark} /></Link>
                         <div className="hidden lg:flex items-center gap-3">
                             <LanguageToggle isDark={isDark} />
                             <Link href={`/${language}/login`} className={`font-medium text-sm px-4 py-2 transition-colors ${isDark ? 'text-gray-300 hover:text-white' : 'text-gray-600 hover:text-gray-900'}`}>{t.nav.login}</Link>
-                            <Link href={`/${language}/get-started`} className="bg-gradient-to-r from-blue-600 via-blue-500 to-blue-600 hover:from-blue-500 text-white font-bold px-5 py-2 rounded-full text-sm transition-all shadow-lg shadow-blue-500/25">{t.nav.getStarted}</Link>
+                            <Link href={`/${language}/get-started`} className="bg-gradient-to-r from-[#FD614B] to-[#E84D37] hover:brightness-110 text-white font-bold px-5 py-2 rounded-full text-sm transition-all shadow-lg shadow-[#FD614B]/30">{t.nav.getStarted}</Link>
                         </div>
                         <button className={`lg:hidden p-2 ${isDark ? 'text-gray-300 hover:text-white' : 'text-gray-600 hover:text-gray-900'}`} onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
                             {mobileMenuOpen ? Icons.close : Icons.menu}
                         </button>
                     </div>
                     {mobileMenuOpen && (
-                        <div className="lg:hidden py-4 border-t border-blue-500/20">
+                        <div className="lg:hidden py-4 border-t border-[#044C87]/40">
                             <div className="flex flex-col gap-3 items-start">
                                 <Link href={`/${language}/login`} className={`py-2 font-medium ${isDark ? 'text-gray-300 hover:text-blue-400' : 'text-gray-600 hover:text-blue-600'}`} onClick={() => setMobileMenuOpen(false)}>{t.nav.login}</Link>
                                 <LanguageToggle isDark={isDark} />
-                                <Link href={`/${language}/get-started`} className="bg-gradient-to-r from-blue-600 via-blue-500 to-blue-600 hover:from-blue-500 text-white font-bold px-5 py-2.5 rounded-full text-center" onClick={() => setMobileMenuOpen(false)}>{t.nav.getStarted}</Link>
+                                <Link href={`/${language}/get-started`} className="bg-gradient-to-r from-[#FD614B] to-[#E84D37] hover:brightness-110 text-white font-bold px-5 py-2.5 rounded-full text-center" onClick={() => setMobileMenuOpen(false)}>{t.nav.getStarted}</Link>
                             </div>
                         </div>
                     )}
@@ -153,7 +153,7 @@ export default function AboutPage() {
                         <div className="grid sm:grid-cols-2 gap-4">
                             {values.map((value, idx) => (
                                 <GlowingCard key={idx} isDark={isDark} glowColor={value.color} className="p-5 transition-all hover:scale-[1.02]">
-                                    <div className={`w-10 h-10 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 mb-3`}>
+                                    <div className={`w-10 h-10 rounded-lg bg-blue-500/10 border border-[#044C87]/40 flex items-center justify-center text-blue-400 mb-3`}>
                                         {value.icon}
                                     </div>
                                     <h3 className={`font-bold mb-2 ${isDark ? 'text-white' : 'text-slate-900'}`}>{value.title}</h3>
@@ -163,7 +163,7 @@ export default function AboutPage() {
                         </div>
                     </div>
 
-                    <div className={`rounded-2xl p-6 md:p-8 text-center ${isDark ? 'bg-gradient-to-br from-blue-900/20 to-blue-950/40 border border-blue-500/30 shadow-[0_0_20px_rgba(37,99,235,0.15)]' : 'bg-gradient-to-br from-blue-50 to-blue-100/50 border border-blue-200'}`}>
+                    <div className={`rounded-2xl p-6 md:p-8 text-center ${isDark ? 'bg-gradient-to-br from-blue-900/20 to-blue-950/40 border border-[#044C87]/40 shadow-[0_0_20px_rgba(37,99,235,0.15)]' : 'bg-gradient-to-br from-blue-50 to-blue-100/50 border border-blue-200'}`}>
                         <h2 className={`text-2xl font-bold mb-4 ${isDark ? 'text-white' : 'text-slate-900'}`}>{text.team}</h2>
                         <p className={`leading-relaxed ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>{text.teamText}</p>
                     </div>

@@ -8,31 +8,31 @@ export function useThemeStyles() {
     return {
         isDark,
         // Background
-        pageBg: isDark ? "bg-[#060B18]" : "bg-gray-50",
-        cardBg: isDark ? "bg-[#0B152B]/80 border-blue-500/20" : "bg-white",
+        pageBg: isDark ? "bg-[#031326]" : "bg-[#F4F8FC]",
+        cardBg: isDark ? "bg-[#08213D]/85 border-[#044C87]/35" : "bg-white border-[#D0E1F0] shadow-sm",
 
         // Text
-        textPrimary: isDark ? "text-white" : "text-slate-900",
-        textSecondary: isDark ? "text-slate-300" : "text-gray-700",
-        textMuted: isDark ? "text-slate-400" : "text-gray-600",
+        textPrimary: isDark ? "text-[#FEFDFE]" : "text-[#042642]",
+        textSecondary: isDark ? "text-[#CBD5E1]" : "text-[#334E68]",
+        textMuted: isDark ? "text-[#94A3B8]" : "text-[#627D98]",
 
         // Borders
-        border: isDark ? "border-blue-900/30" : "border-gray-200",
-        divider: isDark ? "border-blue-800/40" : "border-gray-200",
+        border: isDark ? "border-[#044C87]/30" : "border-[#D0E1F0]",
+        divider: isDark ? "border-[#044C87]/40" : "border-[#E2E8F0]",
 
         // Inputs
         inputBg: isDark
-            ? "bg-[#0B1630] border-blue-500/30 text-white placeholder:text-gray-400"
-            : "bg-white border-gray-200 text-gray-900 placeholder:text-gray-400",
+            ? "bg-[#061D38] border-[#044C87]/40 text-[#FEFDFE] placeholder:text-gray-400"
+            : "bg-white border-[#D0E1F0] text-[#042642] placeholder:text-gray-400",
         inputFocus: isDark
-            ? "focus:border-blue-500 focus:ring-blue-500/30"
-            : "focus:border-blue-500 focus:ring-blue-500/20",
+            ? "focus:border-[#FD614B] focus:ring-[#FD614B]/30"
+            : "focus:border-[#044C87] focus:ring-[#044C87]/20",
 
         // Cards
-        cardHover: isDark ? "hover:bg-blue-900/20" : "hover:bg-gray-50",
+        cardHover: isDark ? "hover:bg-[#0C2A4D]" : "hover:bg-[#EBF3FA]",
 
         // Accent
-        accent: "text-blue-400",
-        accentBg: "bg-blue-600/20",
+        accent: "text-[#FD614B]",
+        accentBg: "bg-[#FD614B]/15",
     };
 }

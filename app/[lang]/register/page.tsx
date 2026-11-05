@@ -372,23 +372,23 @@ export default function RegisterPage() {
 
     if (authLoading) {
         return (
-            <div className={`min-h-screen flex items-center justify-center ${isDark ? 'bg-[#060B18]' : 'bg-[#F0F7FF]'}`}>
+            <div className={`min-h-screen flex items-center justify-center ${isDark ? 'bg-[#031326]' : 'bg-[#F0F7FF]'}`}>
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
             </div>
         );
     }
 
     return (
-        <div className={`min-h-screen overflow-x-hidden ${isRTL ? 'font-cairo' : ''} ${isDark ? 'bg-[#060B18] text-white' : 'bg-[#F0F7FF] text-slate-900'}`} dir={isRTL ? 'rtl' : 'ltr'}>
+        <div className={`min-h-screen overflow-x-hidden ${isRTL ? 'font-cairo' : ''} ${isDark ? 'bg-[#031326] text-white' : 'bg-[#F0F7FF] text-slate-900'}`} dir={isRTL ? 'rtl' : 'ltr'}>
             {/* Background Effects */}
             <div className="fixed inset-0 overflow-hidden pointer-events-none">
-                <div className={`absolute inset-0 ${isDark ? 'bg-gradient-to-br from-[#0B1528] via-[#060B18] to-[#040813]' : 'bg-gradient-to-br from-blue-50 via-white to-white'}`} />
-                <div className={`absolute top-1/4 -right-1/4 w-[600px] h-[600px] rounded-full blur-3xl ${isDark ? 'bg-blue-600/15' : 'bg-blue-300/20'}`} />
-                <div className={`absolute bottom-1/4 -left-1/4 w-[400px] h-[400px] rounded-full blur-3xl ${isDark ? 'bg-amber-500/10' : 'bg-blue-200/20'}`} />
+                <div className={`absolute inset-0 ${isDark ? 'bg-gradient-to-br from-[#042642] via-[#031326] to-[#020B16]' : 'bg-gradient-to-br from-blue-50 via-white to-white'}`} />
+                <div className={`absolute top-1/4 -right-1/4 w-[600px] h-[600px] rounded-full blur-3xl ${isDark ? 'bg-[#044C87]/20' : 'bg-blue-300/20'}`} />
+                <div className={`absolute bottom-1/4 -left-1/4 w-[400px] h-[400px] rounded-full blur-3xl ${isDark ? 'bg-[#FD614B]/15' : 'bg-blue-200/20'}`} />
             </div>
 
             {/* Navigation */}
-            <nav className={`relative z-50 backdrop-blur-xl border-b ${isDark ? 'bg-[#060B18]/85 border-blue-900/30' : 'bg-white/80 border-blue-100'}`}>
+            <nav className={`relative z-50 backdrop-blur-xl border-b ${isDark ? 'bg-[#031326]/85 border-[#044C87]/30' : 'bg-white/80 border-blue-100'}`}>
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex items-center justify-between h-16 lg:h-20">
                         <Link href={`/${language}`} className="group hover:opacity-90 transition-opacity">
@@ -568,7 +568,7 @@ export default function RegisterPage() {
                                 type="button"
                                 onClick={() => setAgreedToTerms(!agreedToTerms)}
                                 className={`w-5 h-5 rounded border flex-shrink-0 flex items-center justify-center transition-all ${agreedToTerms
-                                    ? "bg-blue-600 border-blue-500 text-white shadow-sm"
+                                    ? "bg-[#FD614B] border-[#FD614B] text-white shadow-sm"
                                     : isDark
                                         ? "border-blue-900/60 bg-[#0B1630] hover:border-blue-500"
                                         : "border-gray-300 hover:border-gray-400"
@@ -578,11 +578,11 @@ export default function RegisterPage() {
                             </button>
                             <span className={`text-sm ${isDark ? 'text-slate-300' : 'text-gray-600'}`}>
                                 {text.termsPrefix}{" "}
-                                <Link href={`/${language}/terms`} className={`${isDark ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-700'} underline`}>
+                                <Link href={`/${language}/terms`} className={`${isDark ? 'text-[#FD614B] hover:brightness-110' : 'text-[#FD614B] hover:brightness-90'} underline`}>
                                     {text.termsLink}
                                 </Link>{" "}
                                 {text.and}{" "}
-                                <Link href={`/${language}/privacy`} className={`${isDark ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-700'} underline`}>
+                                <Link href={`/${language}/privacy`} className={`${isDark ? 'text-[#FD614B] hover:brightness-110' : 'text-[#FD614B] hover:brightness-90'} underline`}>
                                     {text.privacyLink}
                                 </Link>
                             </span>
@@ -606,7 +606,7 @@ export default function RegisterPage() {
                                 emailValidation.isValid &&
                                 phoneValidation.isValid &&
                                 passwordValidation.isValid
-                                    ? "bg-gradient-to-r from-blue-600 via-blue-500 to-blue-600 hover:from-blue-500 hover:to-blue-400 text-white shadow-lg shadow-blue-500/30"
+                                    ? "bg-gradient-to-r from-[#FD614B] to-[#E84D37] hover:brightness-110 text-white shadow-lg shadow-[#FD614B]/30"
                                     : isDark
                                         ? "bg-blue-950/40 text-blue-300/40 border border-blue-900/40 cursor-not-allowed"
                                         : "bg-slate-200 text-slate-400 border border-slate-300 cursor-not-allowed"
@@ -636,7 +636,7 @@ export default function RegisterPage() {
                             type="button"
                             onClick={handleGoogleSignUp}
                             className={`flex items-center justify-center gap-2 py-3 px-4 border rounded-2xl transition-all ${isDark
-                                ? "bg-[#0B152B]/85 border-blue-500/30 hover:bg-[#0E1D3C] hover:border-blue-400"
+                                ? "bg-[#08213D] border-[#044C87]/40 hover:bg-[#0D2C4F] hover:border-[#FD614B]/50"
                                 : "bg-white border-blue-100 hover:bg-blue-50 hover:border-blue-200"
                             }`}
                         >
@@ -648,7 +648,7 @@ export default function RegisterPage() {
                     {/* Login Link */}
                     <p className={`text-center text-sm mt-6 ${isDark ? 'text-slate-300' : 'text-gray-600'}`}>
                         {text.alreadyHave}{" "}
-                        <Link href={`/${language}/login`} className={`${isDark ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-700'} font-semibold`}>
+                        <Link href={`/${language}/login`} className={`${isDark ? 'text-[#FD614B] hover:brightness-110' : 'text-[#FD614B] hover:brightness-90'} font-semibold`}>
                             {text.loginLink}
                         </Link>
                     </p>

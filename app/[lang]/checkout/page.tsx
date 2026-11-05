@@ -238,7 +238,7 @@ function CheckoutPageContent() {
                     <p className={cn("mb-6", isDark ? "text-gray-400" : "text-gray-600")}>{error}</p>
                     <button
                         onClick={() => router.back()}
-                        className="px-6 py-2 bg-gradient-to-r from-blue-600 via-blue-500 to-blue-600 hover:from-blue-500 text-white rounded-xl shadow-lg shadow-blue-500/25 transition-all"
+                        className="px-6 py-2 bg-gradient-to-r from-[#FD614B] to-[#E84D37] hover:brightness-110 text-white rounded-xl shadow-lg shadow-[#FD614B]/30 transition-all"
                     >
                         {isRTL ? "العودة" : "Go Back"}
                     </button>
@@ -423,7 +423,7 @@ function CheckoutPageContent() {
                         "w-full py-4 rounded-xl font-semibold text-white transition-all flex items-center justify-center gap-3",
                         processing
                             ? "bg-gray-600 cursor-not-allowed"
-                            : "bg-gradient-to-r from-blue-600 via-blue-500 to-blue-600 hover:from-blue-500 text-white shadow-lg shadow-blue-500/25"
+                            : "bg-gradient-to-r from-[#FD614B] to-[#E84D37] hover:brightness-110 text-white shadow-lg shadow-[#FD614B]/30"
                     )}
                 >
                     {processing ? (

@@ -57,12 +57,12 @@ export default function TriagePage() {
 
     return (
         <div
-            className={`min-h-screen flex flex-col transition-colors duration-300 ${isDark ? "bg-slate-950 text-white" : "bg-slate-50 text-slate-900"
+            className={`min-h-screen flex flex-col transition-colors duration-300 ${isDark ? "bg-[#031326] text-[#FEFDFE]" : "bg-[#F4F8FC] text-[#042642]"
                 }`}
             dir={isRTL ? "rtl" : "ltr"}
         >
             {/* Header */}
-            <header className={`sticky top-0 z-40 border-b backdrop-blur-md ${isDark ? "bg-slate-950/80 border-slate-800" : "bg-white/80 border-slate-200"
+            <header className={`sticky top-0 z-40 border-b backdrop-blur-md ${isDark ? "bg-[#031326]/85 border-[#044C87]/30" : "bg-[#F4F8FC]/90 border-[#D0E1F0]"
                 }`}>
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
                     <div className="flex items-center gap-6">
@@ -70,11 +70,11 @@ export default function TriagePage() {
                             <Logo />
                         </Link>
                         <nav className="hidden md:flex items-center gap-5 text-sm font-medium text-slate-600 dark:text-slate-300">
-                            <Link href={`/${language}/doctors`} className="hover:text-emerald-500 transition-colors">
+                            <Link href={`/${language}/doctors`} className="hover:text-[#FD614B] transition-colors">
                                 {isRTL ? "الأطباء" : "Doctors"}
                             </Link>
-                            <Link href={`/${language}/dashboard/patient/urgent-care`} className="hover:text-amber-500 transition-colors flex items-center gap-1.5 text-amber-600 dark:text-amber-400">
-                                <span className="w-2 h-2 rounded-full bg-amber-500 animate-ping"></span>
+                            <Link href={`/${language}/dashboard/patient/urgent-care`} className="hover:text-[#FD614B] transition-colors flex items-center gap-1.5 text-[#FD614B]">
+                                <span className="w-2 h-2 rounded-full bg-[#FD614B] animate-ping"></span>
                                 {isRTL ? "طوارئ 24/7" : "Urgent Care 24/7"}
                             </Link>
                         </nav>
@@ -113,15 +113,15 @@ export default function TriagePage() {
             <main className="flex-1 max-w-4xl mx-auto w-full px-4 sm:px-6 py-10 space-y-10">
                 {/* Hero Header */}
                 <div className="text-center space-y-4">
-                    <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-xs font-bold uppercase tracking-wider">
-                        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                    <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#044C87]/15 text-[#FD614B] border border-[#FD614B]/30 text-xs font-bold uppercase tracking-wider">
+                        <span className="w-2 h-2 rounded-full bg-[#FD614B] animate-pulse"></span>
                         {isRTL ? "اختار طبيبك بسهولة 🤖" : "Choose Your Doctor with AI"}
                     </div>
 
                     <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight">
                         {isRTL ? "لو محتار ومش عارف أي تخصص تحجز؟" : "Not sure which specialist to book?"}
                         <br />
-                        <span className="bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 bg-clip-text text-transparent">
+                        <span className="bg-gradient-to-r from-[#0C67B3] via-[#FD614B] to-[#FF8270] bg-clip-text text-transparent">
                             {isRTL ? "اكتب أعراضك وهيساعدك تختار التخصص والدكتور الأنسب" : "Let AI guide you to the right doctor in seconds"}
                         </span>
                     </h1>
@@ -134,7 +134,7 @@ export default function TriagePage() {
                 </div>
 
                 {/* Input Card */}
-                <div className={`p-5 sm:p-6 rounded-3xl border shadow-xl transition-all ${isDark ? "bg-slate-900/90 border-slate-800" : "bg-white border-slate-200"
+                <div className={`p-5 sm:p-6 rounded-3xl border shadow-xl transition-all ${isDark ? "bg-[#08213D] border-[#044C87]/40 shadow-[0_0_30px_rgba(4,76,135,0.15)]" : "bg-white border-[#D0E1F0] shadow-xl"
                     }`}>
                     <label className="block text-sm font-bold mb-2">
                         {isRTL ? "ما هي الأعراض التي تشعر بها؟" : "What symptoms are you experiencing?"}
@@ -156,16 +156,16 @@ export default function TriagePage() {
                                     ? "مثال: عندي مغص في الجنب اليمين مع سخونية وترجيع من امبارح..."
                                     : "e.g. Sharp pain in the lower right abdomen with mild fever..."
                             }
-                            className={`w-full p-4 rounded-2xl border text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-emerald-500/50 resize-none transition-all ${isDark
-                                ? "bg-slate-950/60 border-slate-700 text-white placeholder-slate-500"
-                                : "bg-slate-50 border-slate-300 text-slate-900 placeholder-slate-400"
+                            className={`w-full p-4 rounded-2xl border text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-[#FD614B]/40 focus:border-[#FD614B] resize-none transition-all ${isDark
+                                ? "bg-[#031326] border-[#044C87]/40 text-[#FEFDFE] placeholder-slate-400"
+                                : "bg-[#F4F8FC] border-[#D0E1F0] text-[#042642] placeholder-slate-400"
                                 }`}
                         />
 
                         <button
                             onClick={() => handleSearch()}
                             disabled={!inputQuery.trim() || isLoading}
-                            className="mt-3 sm:mt-0 sm:absolute sm:bottom-3 sm:left-3 px-6 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold text-sm shadow-md disabled:opacity-40 transition-all flex items-center justify-center gap-2 w-full sm:w-auto"
+                            className="mt-3 sm:mt-0 sm:absolute sm:bottom-3 sm:left-3 px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#FD614B] to-[#E84D37] hover:brightness-110 text-white font-bold text-sm shadow-lg shadow-[#FD614B]/30 disabled:opacity-40 transition-all flex items-center justify-center gap-2 w-full sm:w-auto"
                         >
                             {isLoading ? (
                                 <>
@@ -197,8 +197,8 @@ export default function TriagePage() {
                                         handleSearch(item.text);
                                     }}
                                     className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${isDark
-                                        ? "bg-slate-800 border-slate-700 text-slate-300 hover:border-emerald-500"
-                                        : "bg-slate-100 border-slate-200 text-slate-700 hover:border-emerald-500"
+                                        ? "bg-[#031326] border-[#044C87]/40 text-[#CBD5E1] hover:border-[#FD614B] hover:text-[#FD614B]"
+                                        : "bg-[#F4F8FC] border-[#D0E1F0] text-[#334E68] hover:border-[#FD614B] hover:text-[#FD614B]"
                                         }`}
                                 >
                                     {item.label}
@@ -282,10 +282,10 @@ export default function TriagePage() {
                         {/* Routine Recommendation */}
                         {result.urgencyLevel === "routine" && (
                             <div className={`p-6 rounded-3xl border shadow-md space-y-4 ${isDark
-                                ? "bg-slate-900 border-slate-800 text-slate-100"
-                                : "bg-white border-slate-200 text-slate-900"
+                                ? "bg-[#08213D] border-[#044C87]/40 text-[#FEFDFE]"
+                                : "bg-white border-[#D0E1F0] text-[#042642]"
                                 }`}>
-                                <div className="flex items-center gap-3 text-emerald-600 dark:text-emerald-400 font-extrabold text-xl">
+                                <div className="flex items-center gap-3 text-[#0C67B3] dark:text-[#90C2F9] font-extrabold text-xl">
                                     <svg className="w-7 h-7 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
@@ -296,7 +296,7 @@ export default function TriagePage() {
                                     {isRTL ? result.summaryAr : result.summaryEn}
                                 </p>
 
-                                <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/40 text-xs sm:text-sm text-emerald-800 dark:text-emerald-300 font-medium">
+                                <div className="p-4 rounded-2xl bg-[#044C87]/10 dark:bg-[#044C87]/20 border border-[#044C87]/30 text-xs sm:text-sm text-[#044C87] dark:text-[#90C2F9] font-medium">
                                     💡 {isRTL ? result.adviceAr : result.adviceEn}
                                 </div>
                             </div>
@@ -311,7 +311,7 @@ export default function TriagePage() {
                                     </h3>
                                     <Link
                                         href={`/${language}/doctors?specialty=${encodeURIComponent(result.primarySpecialtyEn)}`}
-                                        className="text-sm font-semibold text-emerald-600 dark:text-emerald-400 hover:underline"
+                                        className="text-sm font-semibold text-[#FD614B] hover:underline"
                                     >
                                         {isRTL ? "عرض جميع الأطباء ←" : "View All Doctors →"}
                                     </Link>
@@ -322,8 +322,8 @@ export default function TriagePage() {
                                         <div
                                             key={doc.id}
                                             className={`p-5 rounded-3xl border flex flex-col justify-between transition-all hover:shadow-xl ${isDark
-                                                ? "bg-slate-900 border-slate-800 hover:border-emerald-500/50"
-                                                : "bg-white border-slate-200 hover:border-emerald-400"
+                                                ? "bg-[#08213D] border-[#044C87]/40 hover:border-[#FD614B]/60 hover:shadow-[0_0_20px_rgba(4,76,135,0.25)]"
+                                                : "bg-white border-[#D0E1F0] hover:border-[#FD614B] hover:shadow-xl"
                                                 }`}
                                         >
                                             <div className="space-y-3">
@@ -365,7 +365,7 @@ export default function TriagePage() {
 
                                                 <div className="text-xs text-slate-500 dark:text-slate-400 pt-2 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center">
                                                     <span>{isRTL ? "سعر الجلسة:" : "Session Fee:"}</span>
-                                                    <span className="font-extrabold text-sm text-emerald-600 dark:text-emerald-400">
+                                                    <span className="font-extrabold text-sm text-[#044C87] dark:text-[#FEFDFE] font-black">
                                                         {doc.consultationFee} EGP
                                                     </span>
                                                 </div>
@@ -377,7 +377,7 @@ export default function TriagePage() {
                                                         ? `/${language}/dashboard/patient/doctors?book=${doc.id}`
                                                         : `/${language}/login?redirect=${encodeURIComponent(`/${language}/dashboard/patient/doctors?book=${doc.id}`)}`
                                                 }
-                                                className="mt-4 w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs text-center transition-colors shadow-sm block"
+                                                className="mt-4 w-full py-2.5 rounded-xl bg-gradient-to-r from-[#FD614B] to-[#E84D37] hover:brightness-110 text-white font-bold text-xs text-center transition-all shadow-md shadow-[#FD614B]/25 block"
                                             >
                                                 {isRTL ? "حجز موعد استشارة" : "Book Consultation"}
                                             </Link>
