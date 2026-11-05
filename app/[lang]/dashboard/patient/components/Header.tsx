@@ -184,7 +184,7 @@ const UserDropdown = ({
                     isDark ? "hover:bg-white/5" : "hover:bg-gray-100"
                 )}
             >
-                <div className="relative w-9 h-9 md:w-10 md:h-10 rounded-full overflow-hidden border-2 border-amber-500/30 flex items-center justify-center bg-amber-500/10">
+                <div className="relative w-9 h-9 md:w-10 md:h-10 rounded-full overflow-hidden border-2 border-[#FD614B]/40 flex items-center justify-center bg-[#FD614B]/10">
                     {avatarUrl ? (
                         <Image
                             src={avatarUrl}
@@ -194,7 +194,7 @@ const UserDropdown = ({
                             sizes="(max-width: 768px) 36px, 40px"
                         />
                     ) : (
-                        <span className="text-sm font-semibold text-amber-500">{getInitials(name)}</span>
+                        <span className="text-sm font-semibold text-[#FD614B]">{getInitials(name)}</span>
                     )}
                 </div>
                 <div className="text-left hidden sm:block">
@@ -409,7 +409,7 @@ export default function Header({ onMenuClick }: { onMenuClick?: () => void }) {
     return (
         <header className={cn(
             "relative z-40 border-b backdrop-blur-xl transition-colors duration-300",
-            isDark ? "border-white/5 bg-slate-950/80" : "border-gray-200 bg-white/80"
+            isDark ? "border-white/5 bg-[#031326]/80" : "border-gray-200 bg-white/80"
         )}>
             <div className="px-4 md:px-8 py-3 md:py-4 flex items-center justify-between">
                 {/* Left: Mobile Menu + Date */}
@@ -450,9 +450,9 @@ export default function Header({ onMenuClick }: { onMenuClick?: () => void }) {
                             duration={2500}
                             className="px-2.5 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium cursor-pointer"
                             bgClassName={isDark ? "bg-blue-950/[0.85]" : "bg-blue-50"}
-                            containerClassName="bg-[linear-gradient(90deg,#f59e0b,#d97706,#b45309,#f59e0b)]"
+                            containerClassName="bg-[linear-gradient(90deg,#FD614B,#E84D37,#FD614B)]"
                         >
-                            <div className={cn("flex items-center gap-1.5 md:gap-2 text-xs sm:text-sm font-semibold whitespace-nowrap", isDark ? "text-amber-300" : "text-amber-800")}>
+                            <div className={cn("flex items-center gap-1.5 md:gap-2 text-xs sm:text-sm font-semibold whitespace-nowrap", isDark ? "text-[#FF8270]" : "text-[#A82B1B]")}>
                                 {Icons.video}
                                 <span className="hidden sm:inline">{isRTL ? "استشارة عاجلة" : "Urgent Care"}</span>
                             </div>

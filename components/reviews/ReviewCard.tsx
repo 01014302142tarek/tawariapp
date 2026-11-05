@@ -260,14 +260,14 @@ export default function ReviewCard({
                 <div
                     className={cn(
                         "mt-4 p-3 rounded-lg",
-                        isDark ? "bg-amber-950/30 border border-amber-500/20" : "bg-amber-50/80 border border-amber-200"
+                        isDark ? "bg-amber-950/30 border border-[#FD614B]/30" : "bg-[#FFF5F3]/80 border border-[#FFD0CA]"
                     )}
                 >
                     <div className="flex items-center gap-2 mb-2">
                         <svg
                             className={cn(
                                 "w-4 h-4",
-                                isDark ? "text-amber-400" : "text-amber-600"
+                                isDark ? "text-[#FD614B]" : "text-[#E84D37]"
                             )}
                             fill="none"
                             stroke="currentColor"
@@ -283,7 +283,7 @@ export default function ReviewCard({
                         <span
                             className={cn(
                                 "text-xs font-medium",
-                                isDark ? "text-amber-400" : "text-amber-700"
+                                isDark ? "text-[#FD614B]" : "text-[#C43825]"
                             )}
                         >
                             {isRTL ? "رد الطبيب" : "Doctor's Response"}
@@ -317,8 +317,8 @@ export default function ReviewCard({
                     className={cn(
                         "mt-3 text-sm font-medium transition-colors",
                         isDark
-                            ? "text-amber-400 hover:text-amber-300"
-                            : "text-amber-600 hover:text-amber-700"
+                            ? "text-[#FD614B] hover:text-[#FF8270]"
+                            : "text-[#E84D37] hover:text-[#C43825]"
                     )}
                 >
                     {isRTL ? "إضافة رد" : "Add Response"}
@@ -342,7 +342,7 @@ export default function ReviewCard({
                             isDark
                                 ? "bg-gray-700 border-gray-600 text-white placeholder-gray-400"
                                 : "bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-500",
-                            "focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500"
+                            "focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-[#FD614B]"
                         )}
                     />
                     <div className="flex justify-end gap-2">

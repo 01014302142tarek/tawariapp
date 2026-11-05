@@ -159,7 +159,7 @@ export function MultiSelectDays({
                 className={cn(
                     "w-full px-3 py-2 rounded-lg border text-left flex items-center justify-between transition-all",
                     isDark
-                        ? "bg-slate-800/50 border-slate-700 text-gray-200 hover:border-slate-600"
+                        ? "bg-[#0D2C4F]/50 border-[#044C87]/30 text-gray-200 hover:border-slate-600"
                         : "bg-white border-gray-300 text-gray-900 hover:border-gray-400",
                     isOpen && "ring-2 ring-amber-500/50"
                 )}
@@ -193,7 +193,7 @@ export function MultiSelectDays({
                     ref={dropdownRef}
                     className={cn(
                         "absolute z-[100] w-full mt-1 rounded-lg border shadow-xl",
-                        isDark ? "bg-slate-800 border-slate-700" : "bg-white border-gray-300"
+                        isDark ? "bg-[#0D2C4F] border-[#044C87]/30" : "bg-white border-gray-300"
                     )}
                     role="listbox"
                     aria-label="Select available days"
@@ -213,12 +213,12 @@ export function MultiSelectDays({
                                     type="checkbox"
                                     checked={isAllSelected}
                                     onChange={toggleSelectAll}
-                                    className="w-4 h-4 text-amber-500 rounded focus:ring-amber-500 focus:ring-2"
+                                    className="w-4 h-4 text-[#FD614B] rounded focus:ring-amber-500 focus:ring-2"
                                     aria-label="Select all days"
                                 />
                                 {isSomeSelected && !isAllSelected && (
                                     <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                                        <div className="w-2 h-2 bg-amber-500 rounded-sm" />
+                                        <div className="w-2 h-2 bg-[#FD614B] rounded-sm" />
                                     </div>
                                 )}
                             </div>
@@ -236,7 +236,7 @@ export function MultiSelectDays({
                         <div
                             className={cn(
                                 "my-2 border-t",
-                                isDark ? "border-slate-700" : "border-gray-200"
+                                isDark ? "border-[#044C87]/30" : "border-gray-200"
                             )}
                         />
 
@@ -249,14 +249,14 @@ export function MultiSelectDays({
                                     className={cn(
                                         "flex items-center gap-3 px-3 py-2 rounded-md cursor-pointer transition-colors",
                                         isDark ? "hover:bg-slate-700/50" : "hover:bg-gray-50",
-                                        isChecked && (isDark ? "bg-amber-500/10" : "bg-amber-50")
+                                        isChecked && (isDark ? "bg-[#FD614B]/10" : "bg-[#FFF5F3]")
                                     )}
                                 >
                                     <input
                                         type="checkbox"
                                         checked={isChecked}
                                         onChange={() => toggleDay(day.value)}
-                                        className="w-4 h-4 text-amber-500 rounded focus:ring-amber-500 focus:ring-2"
+                                        className="w-4 h-4 text-[#FD614B] rounded focus:ring-amber-500 focus:ring-2"
                                         aria-label={`Select ${day.label}`}
                                     />
                                     <span className={cn("text-sm", isDark ? "text-gray-200" : "text-gray-700")}>
@@ -271,7 +271,7 @@ export function MultiSelectDays({
                     <div
                         className={cn(
                             "flex items-center justify-end gap-2 p-3 border-t",
-                            isDark ? "border-slate-700" : "border-gray-200"
+                            isDark ? "border-[#044C87]/30" : "border-gray-200"
                         )}
                     >
                         <button
@@ -291,7 +291,7 @@ export function MultiSelectDays({
                             onClick={handleOk}
                             className={cn(
                                 "px-4 py-1.5 rounded-md text-sm font-medium transition-colors",
-                                "bg-amber-500 hover:bg-amber-600 text-white"
+                                "bg-[#FD614B] hover:bg-[#E84D37] text-white"
                             )}
                         >
                             OK

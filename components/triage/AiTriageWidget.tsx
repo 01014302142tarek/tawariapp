@@ -340,7 +340,7 @@ export function AiTriageWidget() {
                                                                             </div>
                                                                         )}
                                                                         {doc.isAvailableNow && (
-                                                                            <span className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-emerald-500 border-2 border-white dark:border-slate-800"></span>
+                                                                            <span className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-emerald-500 border-2 border-white dark:border-[#044C87]/30"></span>
                                                                         )}
                                                                     </div>
 
@@ -351,7 +351,7 @@ export function AiTriageWidget() {
                                                                         <p className="text-[11px] text-slate-400 truncate">
                                                                             {isRTL ? doc.specialtyAr : doc.specialty}
                                                                         </p>
-                                                                        <div className="flex items-center gap-1.5 text-[10px] text-amber-400 font-medium">
+                                                                        <div className="flex items-center gap-1.5 text-[10px] text-[#FD614B] font-medium">
                                                                             <span>★ {doc.ratingAverage.toFixed(1)}</span>
                                                                             <span className="text-slate-500">•</span>
                                                                             <span className="text-slate-300 dark:text-slate-300 font-semibold">{doc.consultationFee} EGP</span>

@@ -113,9 +113,9 @@ const Icons = {
 const Badge = ({ children, variant = "default", className }: { children: React.ReactNode; variant?: "default" | "success" | "warning" | "primary"; className?: string }) => {
     const variants = {
         default: "bg-slate-700/50 text-slate-300",
-        success: "bg-amber-500/10 text-amber-400 border border-amber-500/20",
-        warning: "bg-amber-500/10 text-amber-400 border border-amber-500/20",
-        primary: "bg-amber-500/10 text-amber-400 border border-amber-500/20",
+        success: "bg-[#FD614B]/10 text-[#FD614B] border border-[#FD614B]/20",
+        warning: "bg-[#FD614B]/10 text-[#FD614B] border border-[#FD614B]/20",
+        primary: "bg-[#FD614B]/10 text-[#FD614B] border border-[#FD614B]/20",
     };
     return (
         <span className={cn("px-2.5 py-1 rounded-full text-xs font-medium", variants[variant], className)}>
@@ -141,11 +141,11 @@ const Avatar = ({ src, alt, size = "md", status }: { src: string; alt: string; s
     const imageSizes = { sm: "32px", md: "48px", lg: "56px" };
     return (
         <div className="relative">
-            <div className={cn("rounded-full overflow-hidden border-2 border-amber-500/30", sizes[size])}>
+            <div className={cn("rounded-full overflow-hidden border-2 border-[#FD614B]/40", sizes[size])}>
                 <Image src={src} alt={alt} fill className="object-cover" sizes={imageSizes[size]} />
             </div>
             {status === "online" && (
-                <span className="absolute bottom-0 right-0 w-3 h-3 bg-amber-500 border-2 border-slate-900 rounded-full" />
+                <span className="absolute bottom-0 right-0 w-3 h-3 bg-[#FD614B] border-2 border-slate-900 rounded-full" />
             )}
         </div>
     );
@@ -155,7 +155,7 @@ const Avatar = ({ src, alt, size = "md", status }: { src: string; alt: string; s
 const ProgressBar = ({ value, max, isDark = true }: { value: number; max: number; isDark?: boolean }) => {
     const percentage = (value / max) * 100;
     return (
-        <div className={cn("w-full h-2 rounded-full overflow-hidden", isDark ? "bg-slate-800" : "bg-gray-200")}>
+        <div className={cn("w-full h-2 rounded-full overflow-hidden", isDark ? "bg-[#0D2C4F]" : "bg-gray-200")}>
             <motion.div
                 initial={{ width: 0 }}
                 animate={{ width: `${percentage}%` }}
@@ -315,13 +315,13 @@ export default function Doctor2Dashboard({
                     minSize={0.4}
                     maxSize={1}
                     particleDensity={isDark ? 25 : 15}
-                    particleColor={isDark ? "245, 158, 11" : "217, 119, 6"}
+                    particleColor={isDark ? "253, 97, 75" : "4, 76, 135"}
                 />
                 {/* Gradient orbs - dark mode only */}
                 {isDark && (
                     <>
-                        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-amber-500/5 rounded-full blur-3xl" />
-                        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-amber-500/5 rounded-full blur-3xl" />
+                        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-[#FD614B]/10 rounded-full blur-3xl" />
+                        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-[#FD614B]/10 rounded-full blur-3xl" />
                     </>
                 )}
             </div>
@@ -332,7 +332,7 @@ export default function Doctor2Dashboard({
                 <section className="mb-6 md:mb-8">
                     <h2 className={cn("text-2xl md:text-3xl font-bold mb-2 flex items-center gap-3", isDark ? "text-white" : "text-slate-900")}>
                         {doctorName ? (isRTL ? `${greeting}، ${doctorName}` : `${greeting}, ${doctorName}`) : greeting}
-                        <svg className="w-6 h-6 md:w-8 md:h-8 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-6 h-6 md:w-8 md:h-8 text-[#FD614B]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 00-3 0m-6-3V11m0-5.5v-1a1.5 1.5 0 013 0v1m0 0V11m0-5.5a1.5 1.5 0 013 0v3m0 0V11" />
                         </svg>
                     </h2>
@@ -379,9 +379,9 @@ export default function Doctor2Dashboard({
                             { label: t.doctorDashboard.stats.revenueToday, value: dashboardData?.stats.revenueToday || 0, suffix: isRTL ? " ج.م" : " EGP", icon: Icons.money, decimals: 0 },
                             { label: t.doctorDashboard.stats.rating, value: dashboardData?.stats.avgRating || 0, suffix: isRTL ? "/٥" : "/5", icon: Icons.star, decimals: 1 },
                         ].map((stat, idx) => (
-                            <GlowingCard key={idx} isDark={isDark} glowColor="amber" className="p-3 md:p-5">
+                            <GlowingCard key={idx} isDark={isDark} glowColor="coral" className="p-3 md:p-5">
                                 <div className="flex items-start justify-between mb-2 md:mb-3">
-                                    <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-br from-[#38BDF8] to-[#0284C7] flex items-center justify-center text-white shadow-[0_0_15px_rgba(14,165,233,0.5)] border border-sky-300/40">
+                                    <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-br from-[#044C87] to-[#0C67B3] flex items-center justify-center text-white shadow-[0_0_15px_rgba(4,76,135,0.4)] border border-[#0C67B3]/40">
                                         <span className="[&>svg]:w-4 [&>svg]:h-4 md:[&>svg]:w-5 md:[&>svg]:h-5">
                                             {stat.icon}
                                         </span>
@@ -405,13 +405,13 @@ export default function Doctor2Dashboard({
                     {/* Left Column - Appointments & Messages */}
                     <div className="lg:col-span-2 space-y-4 md:space-y-6">
                         {/* Appointments */}
-                        <GlowingCard isDark={isDark} glowColor="amber" className="p-4 md:p-6">
+                        <GlowingCard isDark={isDark} glowColor="coral" className="p-4 md:p-6">
                             <SectionHeader
                                 title={t.doctorDashboard.sections.todayAppointments}
                                 subtitle={`${formatNumber(appointments.filter(a => a.status === "scheduled" || a.status === "in_waiting_room").length)} ${t.doctorDashboard.sections.scheduled}`}
                                 isDark={isDark}
                                 action={
-                                    <Link href={`/${language}/dashboard/doctor/appointments`} className="text-amber-500 hover:text-amber-400 text-sm font-medium transition-colors">
+                                    <Link href={`/${language}/dashboard/doctor/appointments`} className="text-[#FD614B] hover:text-[#FD614B] text-sm font-medium transition-colors">
                                         {t.common.viewAll} →
                                     </Link>
                                 }
@@ -425,12 +425,12 @@ export default function Doctor2Dashboard({
                                         className={cn(
                                             "flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 p-3 md:p-4 rounded-xl border transition-all cursor-pointer hover:scale-[1.01]",
                                             apt.status === "in-progress"
-                                                ? "bg-amber-500/5 border-amber-500/30"
+                                                ? "bg-[#FD614B]/10 border-[#FD614B]/40"
                                                 : apt.status === "completed"
-                                                    ? "bg-amber-500/5 border-amber-500/10"
+                                                    ? "bg-[#FD614B]/10 border-[#FD614B]/15"
                                                     : isDark
-                                                        ? "bg-white/[0.02] border-white/5 hover:border-amber-500/20"
-                                                        : "bg-gray-50 border-gray-200 hover:border-amber-500/30"
+                                                        ? "bg-white/[0.02] border-white/5 hover:border-[#FD614B]/30"
+                                                        : "bg-gray-50 border-gray-200 hover:border-[#FD614B]/40"
                                         )}
                                     >
                                         <div className="flex items-center gap-3 w-full sm:w-auto">
@@ -449,7 +449,7 @@ export default function Doctor2Dashboard({
                                                 {apt.status === "in-progress" ? t.doctorDashboard.status.inProgress : apt.status === "completed" ? t.doctorDashboard.status.completed : t.doctorDashboard.status.upcoming}
                                             </Badge>
                                             {apt.status === "upcoming" && (
-                                                <button className="p-1.5 md:p-2 rounded-lg bg-amber-500/10 hover:bg-amber-500 text-amber-500 hover:text-white transition-all">
+                                                <button className="p-1.5 md:p-2 rounded-lg bg-[#FD614B]/10 hover:bg-[#FD614B] text-[#FD614B] hover:text-white transition-all">
                                                     <svg className="w-3.5 h-3.5 md:w-4 md:h-4" fill="currentColor" viewBox="0 0 24 24">
                                                         <path d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
                                                     </svg>
@@ -462,15 +462,15 @@ export default function Doctor2Dashboard({
                         </GlowingCard>
 
                         {/* Recent Messages */}
-                        <GlowingCard isDark={isDark} glowColor="amber" className="p-4 md:p-6">
+                        <GlowingCard isDark={isDark} glowColor="coral" className="p-4 md:p-6">
                             <SectionHeader
                                 title={t.doctorDashboard.sections.recentMessages}
                                 subtitle={t.doctorDashboard.sections.patientConversations}
                                 isDark={isDark}
                                 action={
                                     <div className="flex items-center gap-2">
-                                        <span className="w-2 h-2 bg-amber-500 rounded-full animate-pulse" />
-                                        <span className="text-amber-500 text-xs font-medium">{formatNumber(recentMessages.filter(m => m.unread).length)} {t.doctorDashboard.sections.unread}</span>
+                                        <span className="w-2 h-2 bg-[#FD614B] rounded-full animate-pulse" />
+                                        <span className="text-[#FD614B] text-xs font-medium">{formatNumber(recentMessages.filter(m => m.unread).length)} {t.doctorDashboard.sections.unread}</span>
                                     </div>
                                 }
                             />
@@ -482,16 +482,16 @@ export default function Doctor2Dashboard({
                                         className={cn(
                                             "flex items-start gap-3 p-3 rounded-xl border transition-all cursor-pointer hover:scale-[1.01]",
                                             msg.unread
-                                                ? "bg-amber-500/5 border-amber-500/20"
+                                                ? "bg-[#FD614B]/10 border-[#FD614B]/30"
                                                 : isDark
-                                                    ? "bg-white/[0.02] border-white/5 hover:border-amber-500/20"
-                                                    : "bg-gray-50 border-gray-200 hover:border-amber-500/30"
+                                                    ? "bg-white/[0.02] border-white/5 hover:border-[#FD614B]/30"
+                                                    : "bg-gray-50 border-gray-200 hover:border-[#FD614B]/40"
                                         )}
                                     >
                                         <div className="relative">
                                             <Avatar src={msg.image} alt={msg.patient} size="sm" />
                                             {msg.unread && (
-                                                <span className="absolute -top-1 -right-1 w-3 h-3 bg-amber-500 border-2 border-slate-900 rounded-full" />
+                                                <span className="absolute -top-1 -right-1 w-3 h-3 bg-[#FD614B] border-2 border-slate-900 rounded-full" />
                                             )}
                                         </div>
                                         <div className="flex-1 min-w-0">
@@ -518,7 +518,7 @@ export default function Doctor2Dashboard({
                         </GlowingCard>
 
                         {/* Health Tips to Share */}
-                        <GlowingCard isDark={isDark} glowColor="amber" className="p-4 md:p-6">
+                        <GlowingCard isDark={isDark} glowColor="coral" className="p-4 md:p-6">
                             <SectionHeader
                                 title={t.doctorDashboard.sections.healthTips}
                                 subtitle={t.doctorDashboard.sections.dailyRecommendations}
@@ -537,7 +537,7 @@ export default function Doctor2Dashboard({
                                         )}
                                     >
                                         <div className="flex items-start gap-3">
-                                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#38BDF8] to-[#0284C7] flex items-center justify-center text-white shadow-[0_0_12px_rgba(14,165,233,0.4)] border border-sky-300/30 flex-shrink-0">
+                                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#044C87] to-[#0C67B3] flex items-center justify-center text-white shadow-[0_0_12px_rgba(14,165,233,0.4)] border border-sky-300/30 flex-shrink-0">
                                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
                                                 </svg>
@@ -546,7 +546,7 @@ export default function Doctor2Dashboard({
                                                 <p className={cn("font-semibold text-sm truncate", isDark ? "text-white" : "text-slate-900")}>{tip.title}</p>
                                                 <p className={cn("text-xs leading-relaxed line-clamp-2 mt-1", isDark ? "text-gray-400" : "text-gray-600")}>{tip.tip}</p>
                                             </div>
-                                            <button className="p-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500 text-amber-500 hover:text-white transition-all flex-shrink-0">
+                                            <button className="p-1.5 rounded-lg bg-[#FD614B]/10 hover:bg-[#FD614B] text-[#FD614B] hover:text-white transition-all flex-shrink-0">
                                                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
                                                 </svg>
@@ -561,7 +561,7 @@ export default function Doctor2Dashboard({
                     {/* Right Column - Performance, Tasks & Tips */}
                     <div className="space-y-4 md:space-y-6">
                         {/* Performance */}
-                        <GlowingCard isDark={isDark} glowColor="amber" className="p-4 md:p-6">
+                        <GlowingCard isDark={isDark} glowColor="coral" className="p-4 md:p-6">
                             <SectionHeader title={t.doctorDashboard.sections.weeklyPerformance} isDark={isDark} />
                             <div className="space-y-5">
                                 {[
@@ -589,7 +589,7 @@ export default function Doctor2Dashboard({
                                         {isOnline ? (
                                             <>
                                                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75" />
-                                                <span className="relative inline-flex rounded-full h-3 w-3 bg-amber-500" />
+                                                <span className="relative inline-flex rounded-full h-3 w-3 bg-[#FD614B]" />
                                             </>
                                         ) : (
                                             <span className="relative inline-flex rounded-full h-3 w-3 bg-gray-400" />
@@ -603,7 +603,7 @@ export default function Doctor2Dashboard({
                                                     : (isRTL ? "غير متصل" : "You're Offline")}
                                             </p>
                                             {isSyncing && (
-                                                <span className="w-3 h-3 border border-amber-500 border-t-transparent rounded-full animate-spin" />
+                                                <span className="w-3 h-3 border border-[#FD614B] border-t-transparent rounded-full animate-spin" />
                                             )}
                                         </div>
                                         <p className={cn("text-xs", isDark ? "text-gray-500" : "text-gray-600")}>
@@ -621,13 +621,13 @@ export default function Doctor2Dashboard({
                         </GlowingCard>
 
                         {/* Pending Tasks */}
-                        <GlowingCard isDark={isDark} glowColor="amber" className="p-4 md:p-6">
+                        <GlowingCard isDark={isDark} glowColor="coral" className="p-4 md:p-6">
                             <SectionHeader
                                 title={t.doctorDashboard.sections.pendingTasks}
                                 subtitle={`${formatNumber(pendingTasks.length)} ${t.doctorDashboard.sections.items}`}
                                 isDark={isDark}
                                 action={
-                                    <button className="text-amber-500 hover:text-amber-400 text-sm font-medium transition-colors">
+                                    <button className="text-[#FD614B] hover:text-[#FD614B] text-sm font-medium transition-colors">
                                         {t.common.viewAll} →
                                     </button>
                                 }
@@ -640,14 +640,14 @@ export default function Doctor2Dashboard({
                                         className={cn(
                                             "flex items-center gap-3 p-3 rounded-xl border transition-all cursor-pointer hover:scale-[1.01]",
                                             isDark
-                                                ? "bg-white/[0.02] border-white/5 hover:border-amber-500/20"
-                                                : "bg-gray-50 border-gray-200 hover:border-amber-500/30"
+                                                ? "bg-white/[0.02] border-white/5 hover:border-[#FD614B]/30"
+                                                : "bg-gray-50 border-gray-200 hover:border-[#FD614B]/40"
                                         )}
                                     >
                                         <div className={cn(
                                             "w-2 h-2 rounded-full flex-shrink-0",
                                             task.priority === "high" ? "bg-red-500" :
-                                                task.priority === "medium" ? "bg-amber-500" : "bg-amber-500"
+                                                task.priority === "medium" ? "bg-[#FD614B]" : "bg-[#FD614B]"
                                         )} />
                                         <div className="flex-1 min-w-0">
                                             <p className={cn("font-medium text-sm truncate", isDark ? "text-white" : "text-slate-900")}>{task.title}</p>
@@ -663,13 +663,13 @@ export default function Doctor2Dashboard({
 
                         {/* Patient Reviews */}
                         {profile && isDoctorProfile(profile) && profile.doctorProfile && (
-                            <GlowingCard isDark={isDark} glowColor="amber" className="p-4 md:p-6">
+                            <GlowingCard isDark={isDark} glowColor="coral" className="p-4 md:p-6">
                                 <SectionHeader
                                     title={isRTL ? "تقييمات المرضى" : "Patient Reviews"}
                                     subtitle={isRTL ? "آراء المرضى عن خدماتك" : "What patients say about you"}
                                     isDark={isDark}
                                     action={
-                                        <Link href={`/${language}/dashboard/doctor/reviews`} className="text-amber-500 hover:text-amber-400 text-sm font-medium transition-colors">
+                                        <Link href={`/${language}/dashboard/doctor/reviews`} className="text-[#FD614B] hover:text-[#FD614B] text-sm font-medium transition-colors">
                                             {t.common.viewAll} →
                                         </Link>
                                     }
@@ -701,15 +701,15 @@ export default function Doctor2Dashboard({
                                 <Link href={action.href}>
                                     <GlowingCard
                                         isDark={isDark}
-                                        glowColor="amber"
+                                        glowColor="coral"
                                         className="p-3 md:p-5 cursor-pointer group h-full"
                                     >
-                                        <div className="w-9 h-9 md:w-12 md:h-12 rounded-full bg-gradient-to-br from-[#38BDF8] to-[#0284C7] flex items-center justify-center text-white shadow-[0_0_15px_rgba(14,165,233,0.4)] border border-sky-300/30 mb-2 md:mb-4 group-hover:scale-110 transition-transform">
+                                        <div className="w-9 h-9 md:w-12 md:h-12 rounded-full bg-gradient-to-br from-[#044C87] to-[#0C67B3] flex items-center justify-center text-white shadow-[0_0_15px_rgba(14,165,233,0.4)] border border-sky-300/30 mb-2 md:mb-4 group-hover:scale-110 transition-transform">
                                             <span className="[&>svg]:w-4 [&>svg]:h-4 md:[&>svg]:w-5 md:[&>svg]:h-5">
                                                 {action.icon}
                                             </span>
                                         </div>
-                                        <h3 className={cn("font-semibold text-xs md:text-base mb-0.5 md:mb-1 group-hover:text-amber-500 transition-colors leading-tight", isDark ? "text-white" : "text-slate-900")}>
+                                        <h3 className={cn("font-semibold text-xs md:text-base mb-0.5 md:mb-1 group-hover:text-[#FD614B] transition-colors leading-tight", isDark ? "text-white" : "text-slate-900")}>
                                             {action.title}
                                         </h3>
                                         <p className={cn("text-[10px] md:text-sm leading-tight line-clamp-2 hidden sm:block", isDark ? "text-gray-500" : "text-gray-600")}>

@@ -398,21 +398,21 @@ export default function MessagesPage({
             <div className={cn(
                 "fixed md:relative z-40 md:z-0 h-full w-[280px] md:w-80 border-r flex flex-col transition-transform duration-300 md:translate-x-0",
                 border,
-                isDark ? "bg-slate-950" : "bg-white",
+                isDark ? "bg-[#031326]" : "bg-white",
                 showSidebar ? "translate-x-0" : (isRTL ? "translate-x-full md:translate-x-0" : "-translate-x-full md:translate-x-0")
             )}>
                 {/* Header */}
                 <div className={cn("p-3 md:p-4 border-b", border)}>
                     <div className="flex items-center justify-between mb-3 md:mb-4">
                         <h1 className={cn("text-lg md:text-xl font-bold flex items-center gap-2", textPrimary)}>
-                            <span className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-gradient-to-br from-[#38BDF8] to-[#0284C7] flex items-center justify-center text-white shadow-[0_0_15px_rgba(14,165,233,0.5)] border border-sky-300/40">
+                            <span className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-gradient-to-br from-[#044C87] to-[#0C67B3] flex items-center justify-center text-white shadow-[0_0_15px_rgba(4,76,135,0.4)] border border-[#0C67B3]/40">
                                 {Icons.message}
                             </span>
                             {t.patientDashboard.messagesPage.sidebarTitle}
                         </h1>
                         <button
                             onClick={() => setShowNewChatModal(true)}
-                            className="p-2 rounded-lg bg-amber-500/10 text-amber-500 hover:bg-amber-500 hover:text-white transition-all"
+                            className="p-2 rounded-lg bg-[#FD614B]/10 text-[#FD614B] hover:bg-[#FD614B] hover:text-white transition-all"
                             title={isRTL ? "محادثة جديدة" : "New Chat"}
                         >
                             {Icons.plus}
@@ -443,7 +443,7 @@ export default function MessagesPage({
                 <div className="flex-1 overflow-y-auto">
                     {loading ? (
                         <div className="flex items-center justify-center h-32">
-                            <span className="text-amber-500">{Icons.spinner}</span>
+                            <span className="text-[#FD614B]">{Icons.spinner}</span>
                         </div>
                     ) : filteredConversations.length === 0 ? (
                         <div className="flex flex-col items-center justify-center h-32 px-4">
@@ -453,7 +453,7 @@ export default function MessagesPage({
                             </p>
                             <button
                                 onClick={() => setShowNewChatModal(true)}
-                                className="mt-3 text-sm text-amber-500 hover:underline"
+                                className="mt-3 text-sm text-[#FD614B] hover:underline"
                             >
                                 {isRTL ? "ابدأ محادثة جديدة" : "Start a new chat"}
                             </button>
@@ -467,12 +467,12 @@ export default function MessagesPage({
                                     "flex items-center gap-2 md:gap-3 p-3 md:p-4 cursor-pointer transition-colors",
                                     isRTL ? "border-r-2" : "border-l-2",
                                     selectedConversation?.id === conv.id
-                                        ? "bg-amber-500/5 border-amber-500"
+                                        ? "bg-[#FD614B]/10 border-[#FD614B]"
                                         : cn("border-transparent", isDark ? "hover:bg-white/[0.02]" : "hover:bg-gray-50")
                                 )}
                             >
                                 <div className="relative flex-shrink-0">
-                                    <div className="w-10 h-10 md:w-12 md:h-12 rounded-full overflow-hidden border-2 border-amber-500/30">
+                                    <div className="w-10 h-10 md:w-12 md:h-12 rounded-full overflow-hidden border-2 border-[#FD614B]/40">
                                         {conv.participant_avatar ? (
                                             <Image
                                                 src={conv.participant_avatar}
@@ -491,7 +491,7 @@ export default function MessagesPage({
                                         )}
                                     </div>
                                     {conv.unread_count > 0 && (
-                                        <span className="absolute -top-1 -right-1 w-4 h-4 md:w-5 md:h-5 bg-amber-500 text-white text-[10px] md:text-xs font-bold rounded-full flex items-center justify-center">
+                                        <span className="absolute -top-1 -right-1 w-4 h-4 md:w-5 md:h-5 bg-[#FD614B] text-white text-[10px] md:text-xs font-bold rounded-full flex items-center justify-center">
                                             {conv.unread_count}
                                         </span>
                                     )}
@@ -505,7 +505,7 @@ export default function MessagesPage({
                                             {formatTime(conv.last_message_at)}
                                         </span>
                                     </div>
-                                    <p className={cn("text-[10px] md:text-xs text-amber-500")}>
+                                    <p className={cn("text-[10px] md:text-xs text-[#FD614B]")}>
                                         {isRTL ? "طبيب" : "Doctor"}
                                     </p>
                                     {conv.last_message && (
@@ -528,7 +528,7 @@ export default function MessagesPage({
                         <div className={cn(
                             "p-3 md:p-4 border-b flex items-center justify-between backdrop-blur-xl",
                             border,
-                            isDark ? "bg-slate-950/80" : "bg-white/80"
+                            isDark ? "bg-[#031326]/80" : "bg-white/80"
                         )}>
                             <div className="flex items-center gap-2 md:gap-3">
                                 <button
@@ -540,7 +540,7 @@ export default function MessagesPage({
                                 >
                                     {Icons.users}
                                 </button>
-                                <div className="relative w-8 h-8 md:w-10 md:h-10 rounded-full overflow-hidden border-2 border-amber-500/30">
+                                <div className="relative w-8 h-8 md:w-10 md:h-10 rounded-full overflow-hidden border-2 border-[#FD614B]/40">
                                     {selectedConversation.participant_avatar ? (
                                         <Image
                                             src={selectedConversation.participant_avatar}
@@ -562,12 +562,12 @@ export default function MessagesPage({
                                     <h2 className={cn("font-semibold text-sm md:text-base", textPrimary)}>
                                         {selectedConversation.participant_name}
                                     </h2>
-                                    <p className="text-[10px] md:text-xs text-amber-500">
+                                    <p className="text-[10px] md:text-xs text-[#FD614B]">
                                         {isRTL ? "طبيب" : "Doctor"}
                                     </p>
                                 </div>
                             </div>
-                            <button className="p-2 md:p-2.5 rounded-lg md:rounded-xl bg-amber-500/10 text-amber-500 hover:bg-amber-500 hover:text-white transition-all">
+                            <button className="p-2 md:p-2.5 rounded-lg md:rounded-xl bg-[#FD614B]/10 text-[#FD614B] hover:bg-[#FD614B] hover:text-white transition-all">
                                 {Icons.video}
                             </button>
                         </div>
@@ -576,7 +576,7 @@ export default function MessagesPage({
                         <div className="flex-1 overflow-y-auto p-3 md:p-6 space-y-3 md:space-y-4">
                             {loadingMessages ? (
                                 <div className="flex items-center justify-center h-full">
-                                    <span className="text-amber-500">{Icons.spinner}</span>
+                                    <span className="text-[#FD614B]">{Icons.spinner}</span>
                                 </div>
                             ) : messages.length === 0 ? (
                                 <div className="flex flex-col items-center justify-center h-full">
@@ -609,9 +609,9 @@ export default function MessagesPage({
                                                 className={cn(
                                                     "max-w-[85%] md:max-w-[70%] rounded-2xl px-3 md:px-4 py-2 md:py-3",
                                                     isOwnMessage
-                                                        ? cn("bg-amber-500 text-white", isRTL ? "rounded-bl-md" : "rounded-br-md")
+                                                        ? cn("bg-[#FD614B] text-white", isRTL ? "rounded-bl-md" : "rounded-br-md")
                                                         : cn(
-                                                            isDark ? "bg-slate-800 text-white" : "bg-gray-200 text-slate-900",
+                                                            isDark ? "bg-[#0D2C4F] text-white" : "bg-gray-200 text-slate-900",
                                                             isRTL ? "rounded-br-md" : "rounded-bl-md"
                                                         )
                                                 )}
@@ -639,7 +639,7 @@ export default function MessagesPage({
                                                             ) : (
                                                                 <div className={cn(
                                                                     "w-full h-24 rounded-lg flex items-center justify-center",
-                                                                    isOwnMessage ? "bg-amber-600" : isDark ? "bg-slate-700" : "bg-gray-300"
+                                                                    isOwnMessage ? "bg-[#E84D37]" : isDark ? "bg-slate-700" : "bg-gray-300"
                                                                 )}>
                                                                     <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin opacity-50" />
                                                                 </div>
@@ -652,7 +652,7 @@ export default function MessagesPage({
                                                                 className={cn(
                                                                     "flex items-center gap-2 p-2 rounded-lg transition-colors",
                                                                     isOwnMessage
-                                                                        ? "bg-amber-600 hover:bg-amber-700"
+                                                                        ? "bg-[#E84D37] hover:bg-amber-700"
                                                                         : isDark
                                                                             ? "bg-slate-700 hover:bg-slate-600"
                                                                             : "bg-gray-300 hover:bg-gray-400",
@@ -723,7 +723,7 @@ export default function MessagesPage({
                                         exit={{ opacity: 0, height: 0 }}
                                         className={cn(
                                             "mb-2 p-2 rounded-lg flex items-center gap-2",
-                                            isDark ? "bg-slate-800" : "bg-gray-100"
+                                            isDark ? "bg-[#0D2C4F]" : "bg-gray-100"
                                         )}
                                     >
                                         {filePreview ? (
@@ -786,8 +786,8 @@ export default function MessagesPage({
                                     className={cn(
                                         "p-2 md:p-3 rounded-lg md:rounded-xl transition-colors flex-shrink-0",
                                         isDark
-                                            ? "hover:bg-slate-700 text-slate-400 hover:text-amber-400"
-                                            : "hover:bg-gray-100 text-gray-500 hover:text-amber-500",
+                                            ? "hover:bg-slate-700 text-slate-400 hover:text-[#FD614B]"
+                                            : "hover:bg-gray-100 text-gray-500 hover:text-[#FD614B]",
                                         "disabled:opacity-50 disabled:cursor-not-allowed"
                                     )}
                                     title={isRTL ? "إرفاق ملف" : "Attach file"}
@@ -839,7 +839,7 @@ export default function MessagesPage({
                         </p>
                         <button
                             onClick={() => setShowNewChatModal(true)}
-                            className="mt-3 px-4 py-2 bg-amber-500/10 text-amber-500 rounded-lg hover:bg-amber-500 hover:text-white transition-all"
+                            className="mt-3 px-4 py-2 bg-[#FD614B]/10 text-[#FD614B] rounded-lg hover:bg-[#FD614B] hover:text-white transition-all"
                         >
                             {isRTL ? "ابدأ محادثة جديدة" : "Start a new chat"}
                         </button>
@@ -863,7 +863,7 @@ export default function MessagesPage({
                             exit={{ scale: 0.95, opacity: 0 }}
                             className={cn(
                                 "w-full max-w-md rounded-2xl p-6",
-                                isDark ? "bg-slate-900" : "bg-white"
+                                isDark ? "bg-[#08213D]" : "bg-white"
                             )}
                             onClick={(e) => e.stopPropagation()}
                         >
@@ -902,7 +902,7 @@ export default function MessagesPage({
                                                 isDark ? "hover:bg-white/5" : "hover:bg-gray-50"
                                             )}
                                         >
-                                            <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-amber-500/30 flex-shrink-0">
+                                            <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-[#FD614B]/40 flex-shrink-0">
                                                 {contact.avatar_url ? (
                                                     <Image
                                                         src={contact.avatar_url}
@@ -922,7 +922,7 @@ export default function MessagesPage({
                                             </div>
                                             <div className={cn("text-start", isRTL ? "text-right" : "text-left")}>
                                                 <p className={cn("font-medium", textPrimary)}>{contact.full_name}</p>
-                                                <p className="text-xs text-amber-500">
+                                                <p className="text-xs text-[#FD614B]">
                                                     {isRTL ? "طبيب" : "Doctor"}
                                                 </p>
                                             </div>

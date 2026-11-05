@@ -82,7 +82,7 @@ const NotificationIcons: Record<NotificationType, React.ReactNode> = {
 // Get icon background color based on notification type - All using main amber color
 const getIconBgColor = (type: NotificationType, isDark: boolean): string => {
     // Unified amber color for all notification types
-    return isDark ? "bg-amber-500/20 text-amber-400" : "bg-amber-100 text-amber-600";
+    return isDark ? "bg-[#FD614B]/20 text-[#FD614B]" : "bg-[#FFE8E4] text-[#E84D37]";
 };
 
 // Format relative time
@@ -285,7 +285,7 @@ export default function NotificationDropdown({ isDark, dashboardType }: Notifica
             >
                 {BellIcon}
                 {unreadCount > 0 && (
-                    <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 bg-amber-500 text-white text-[10px] md:text-xs font-bold rounded-full flex items-center justify-center shadow-lg shadow-amber-500/50">
+                    <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 bg-[#FD614B] text-white text-[10px] md:text-xs font-bold rounded-full flex items-center justify-center shadow-lg shadow-[#FD614B]/50">
                         {unreadCount > 9 ? "9+" : unreadCount}
                     </span>
                 )}
@@ -303,7 +303,7 @@ export default function NotificationDropdown({ isDark, dashboardType }: Notifica
                             "fixed inset-x-3 top-16 sm:absolute sm:inset-x-auto sm:top-full sm:mt-2 sm:w-96 rounded-2xl shadow-2xl overflow-hidden z-[100] border backdrop-blur-xl",
                             isRTL ? "sm:left-0 sm:right-auto" : "sm:right-0 sm:left-auto",
                             isDark
-                                ? "bg-slate-900/95 border-white/10"
+                                ? "bg-[#08213D]/95 border-white/10"
                                 : "bg-white/95 border-gray-200"
                         )}
                     >
@@ -329,8 +329,8 @@ export default function NotificationDropdown({ isDark, dashboardType }: Notifica
                                     className={cn(
                                         "text-xs font-medium transition-colors",
                                         isDark
-                                            ? "text-amber-400 hover:text-amber-300"
-                                            : "text-amber-600 hover:text-amber-700",
+                                            ? "text-[#FD614B] hover:text-[#FF8270]"
+                                            : "text-[#E84D37] hover:text-[#C43825]",
                                         isMarkingAll && "opacity-50 cursor-not-allowed"
                                     )}
                                 >
@@ -391,8 +391,8 @@ export default function NotificationDropdown({ isDark, dashboardType }: Notifica
                                                 : "hover:bg-gray-50",
                                             !notification.is_read &&
                                                 (isDark
-                                                    ? "bg-amber-500/5"
-                                                    : "bg-amber-50/50")
+                                                    ? "bg-[#FD614B]/10"
+                                                    : "bg-[#FFF5F3]")
                                         )}
                                     >
                                         {/* Icon */}
@@ -439,7 +439,7 @@ export default function NotificationDropdown({ isDark, dashboardType }: Notifica
 
                                         {/* Unread indicator */}
                                         {!notification.is_read && (
-                                            <div className="w-2 h-2 rounded-full bg-amber-500 flex-shrink-0 mt-2" />
+                                            <div className="w-2 h-2 rounded-full bg-[#FD614B] flex-shrink-0 mt-2" />
                                         )}
                                     </button>
                                 ))
@@ -460,8 +460,8 @@ export default function NotificationDropdown({ isDark, dashboardType }: Notifica
                                     className={cn(
                                         "block text-center text-sm font-medium transition-colors",
                                         isDark
-                                            ? "text-amber-400 hover:text-amber-300"
-                                            : "text-amber-600 hover:text-amber-700"
+                                            ? "text-[#FD614B] hover:text-[#FF8270]"
+                                            : "text-[#E84D37] hover:text-[#C43825]"
                                     )}
                                 >
                                     {viewAllLabel}

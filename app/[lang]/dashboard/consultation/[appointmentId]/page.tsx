@@ -349,9 +349,9 @@ export default function ConsultationPage() {
     // Loading state
     if (loading) {
         return (
-            <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+            <div className="min-h-screen bg-[#031326] flex items-center justify-center">
                 <div className="text-center">
-                    <div className="w-16 h-16 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+                    <div className="w-16 h-16 border-4 border-[#FD614B] border-t-transparent rounded-full animate-spin mx-auto mb-4" />
                     <p className="text-white text-lg">{t.common?.loading || "Loading consultation..."}</p>
                 </div>
             </div>
@@ -361,7 +361,7 @@ export default function ConsultationPage() {
     // Error state
     if (error) {
         return (
-            <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
+            <div className="min-h-screen bg-[#031326] flex items-center justify-center p-4">
                 <div className="text-center max-w-md">
                     <div className="w-16 h-16 rounded-full bg-red-500/20 flex items-center justify-center mx-auto mb-4">
                         <svg className="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -374,7 +374,7 @@ export default function ConsultationPage() {
                     <p className="text-gray-400 mb-6">{error}</p>
                     <button
                         onClick={() => router.back()}
-                        className="px-6 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors"
+                        className="px-6 py-2 bg-[#FD614B] text-white rounded-lg hover:bg-[#E84D37] transition-colors"
                     >
                         {t.common?.goBack || "Go Back"}
                     </button>
@@ -384,13 +384,13 @@ export default function ConsultationPage() {
     }
 
     return (
-        <div className={cn("h-screen bg-slate-950 flex flex-col overflow-hidden", isRTL && "rtl")}>
+        <div className={cn("h-screen bg-[#031326] flex flex-col overflow-hidden", isRTL && "rtl")}>
             {/* Header */}
-            <header className="h-14 flex-shrink-0 bg-slate-900/80 backdrop-blur border-b border-white/10 flex items-center justify-between px-4 z-10">
+            <header className="h-14 flex-shrink-0 bg-[#08213D]/80 backdrop-blur border-b border-white/10 flex items-center justify-between px-4 z-10">
                 <div className="flex items-center gap-3">
                     <div className={cn(
                         "w-3 h-3 rounded-full",
-                        callJoined ? "bg-green-500 animate-pulse" : "bg-amber-500 animate-pulse"
+                        callJoined ? "bg-green-500 animate-pulse" : "bg-[#FD614B] animate-pulse"
                     )} />
                     <span className="text-white font-medium">
                         {callJoined
@@ -443,7 +443,7 @@ export default function ConsultationPage() {
                             exit={{ scale: 0.9, opacity: 0 }}
                             className={cn(
                                 "rounded-2xl p-6 max-w-md w-full border",
-                                isDark ? "bg-slate-900 border-white/10" : "bg-white border-gray-200"
+                                isDark ? "bg-[#08213D] border-white/10" : "bg-white border-gray-200"
                             )}
                         >
                             <div className="text-center">
@@ -464,7 +464,7 @@ export default function ConsultationPage() {
                                         className={cn(
                                             "flex-1 px-4 py-2.5 rounded-xl transition-colors",
                                             isDark
-                                                ? "bg-slate-800 text-white hover:bg-slate-700"
+                                                ? "bg-[#0D2C4F] text-white hover:bg-slate-700"
                                                 : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                                         )}
                                     >

@@ -683,7 +683,7 @@ export function QueueVideoCall({
                             exit={{ scale: 0.9, opacity: 0 }}
                             className={cn(
                                 "rounded-2xl p-6 max-w-sm w-full",
-                                isDark ? "bg-slate-800" : "bg-white"
+                                isDark ? "bg-[#0D2C4F]" : "bg-white"
                             )}
                             onClick={(e) => e.stopPropagation()}
                         >
@@ -745,7 +745,7 @@ export function QueueVideoCall({
             {!webrtcUrl && (
             <div className={cn(
                 "p-4 border-b flex items-center justify-between",
-                isDark ? "bg-slate-900 border-white/10" : "bg-white border-gray-200"
+                isDark ? "bg-[#08213D] border-white/10" : "bg-white border-gray-200"
             )}>
                 <div className="flex items-center gap-4">
                     <button
@@ -753,7 +753,7 @@ export function QueueVideoCall({
                         className={cn(
                             "p-2 rounded-lg transition-colors",
                             isDark
-                                ? "hover:bg-slate-800 text-slate-400"
+                                ? "hover:bg-[#0D2C4F] text-slate-400"
                                 : "hover:bg-gray-100 text-gray-600"
                         )}
                     >
@@ -778,7 +778,7 @@ export function QueueVideoCall({
                             href={`${webrtcUrl}#userInfo.displayName="${encodeURIComponent(webrtcUserName || (userRole === "doctor" ? "Doctor" : "Patient"))}"&config.disableDeepLinking=true&config.prejoinPageEnabled=false&config.prejoinConfig.enabled=false&config.requireDisplayName=false&config.enableLobby=false&config.startWithAudioMuted=false&config.startWithVideoMuted=false&interfaceConfig.SHOW_JITSI_WATERMARK=false&interfaceConfig.SHOW_WATERMARK_FOR_GUESTS=false&interfaceConfig.MOBILE_APP_PROMO=false&interfaceConfig.HIDE_DEEP_LINKING_LOGO=true&interfaceConfig.SHOW_CHROME_EXTENSION_BANNER=false`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="px-2.5 py-1.5 sm:px-3 sm:py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs sm:text-sm font-medium transition-colors flex items-center gap-1.5 border border-white/10"
+                            className="px-2.5 py-1.5 sm:px-3 sm:py-2 bg-[#0D2C4F] hover:bg-slate-700 text-slate-200 rounded-lg text-xs sm:text-sm font-medium transition-colors flex items-center gap-1.5 border border-white/10"
                             title={isRTL ? "فتح في نافذة كاملة بدون تطبيقات" : "Open in Full Window"}
                         >
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -808,7 +808,7 @@ export function QueueVideoCall({
             <div className="flex-1 relative min-h-0 overflow-hidden">
                 {/* Loading State */}
                 {loading && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-slate-900 z-10">
+                    <div className="absolute inset-0 flex items-center justify-center bg-[#08213D] z-10">
                         <div className="text-center">
                             {Icons.loading}
                             <p className="text-white mt-4">
@@ -820,10 +820,10 @@ export function QueueVideoCall({
 
                 {/* Consultation Ended State (for patients) - Show review modal if appointment ID available */}
                 {consultationEnded && userRole === "patient" && postCallPhase !== "review_prompt" && !createdAppointmentId && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-slate-900 z-10 overflow-auto">
+                    <div className="absolute inset-0 flex items-center justify-center bg-[#08213D] z-10 overflow-auto">
                         <div className="text-center max-w-md mx-auto p-6 my-auto">
-                            <div className="w-16 h-16 rounded-full bg-amber-500/10 flex items-center justify-center mx-auto mb-4">
-                                <svg className="w-8 h-8 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <div className="w-16 h-16 rounded-full bg-[#FD614B]/10 flex items-center justify-center mx-auto mb-4">
+                                <svg className="w-8 h-8 text-[#FD614B]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>
                             </div>
@@ -837,7 +837,7 @@ export function QueueVideoCall({
                             </p>
                             <button
                                 onClick={handleCallEnded}
-                                className="px-6 py-2 bg-amber-500 text-white rounded-lg font-medium hover:bg-amber-600 transition-colors"
+                                className="px-6 py-2 bg-[#FD614B] text-white rounded-lg font-medium hover:bg-[#E84D37] transition-colors"
                             >
                                 {isRTL ? "العودة للأطباء المتاحين" : "Back to Available Doctors"}
                             </button>
@@ -847,7 +847,7 @@ export function QueueVideoCall({
 
                 {/* Error State */}
                 {error && callState === "error" && !consultationEnded && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-slate-900 z-10 overflow-auto">
+                    <div className="absolute inset-0 flex items-center justify-center bg-[#08213D] z-10 overflow-auto">
                         <div className="text-center max-w-md mx-auto p-6 my-auto">
                             <div className="w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center mx-auto mb-4">
                                 <svg className="w-8 h-8 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -867,7 +867,7 @@ export function QueueVideoCall({
                                 </button>
                                 <button
                                     onClick={initializeCall}
-                                    className="px-4 py-2 bg-amber-500 text-white rounded-lg font-medium hover:bg-amber-600 transition-colors"
+                                    className="px-4 py-2 bg-[#FD614B] text-white rounded-lg font-medium hover:bg-[#E84D37] transition-colors"
                                 >
                                     {isRTL ? "إعادة المحاولة" : "Retry"}
                                 </button>
@@ -897,7 +897,7 @@ export function QueueVideoCall({
                 ) : (
                     <div
                         ref={containerRef}
-                        className="absolute inset-0 bg-slate-900"
+                        className="absolute inset-0 bg-[#08213D]"
                         style={{
                             minHeight: "400px",
                             display: postCallPhase !== "none" ? "none" : "block"

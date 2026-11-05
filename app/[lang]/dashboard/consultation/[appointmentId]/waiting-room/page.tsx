@@ -22,7 +22,7 @@ const WaitingDots = () => (
                     repeat: Infinity,
                     delay: i * 0.2,
                 }}
-                className="w-2 h-2 rounded-full bg-amber-500"
+                className="w-2 h-2 rounded-full bg-[#FD614B]"
             />
         ))}
     </span>
@@ -31,7 +31,7 @@ const WaitingDots = () => (
 // Pulse ring animation
 const PulseRing = ({ delay = 0 }: { delay?: number }) => (
     <motion.div
-        className="absolute inset-0 rounded-full border-2 border-amber-500/30"
+        className="absolute inset-0 rounded-full border-2 border-[#FD614B]/40"
         initial={{ scale: 1, opacity: 0.5 }}
         animate={{ scale: 2, opacity: 0 }}
         transition={{
@@ -204,7 +204,7 @@ export default function WaitingRoomPage() {
                     <p className={cn("mb-6", isDark ? "text-gray-400" : "text-gray-600")}>{error}</p>
                     <button
                         onClick={() => router.back()}
-                        className="px-6 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors shadow-sm"
+                        className="px-6 py-2 bg-[#FD614B] text-white rounded-lg hover:bg-[#E84D37] transition-colors shadow-sm"
                     >
                         {labels.goBack}
                     </button>
@@ -229,7 +229,7 @@ export default function WaitingRoomPage() {
                         animate={{ scale: [1, 1.05, 1] }}
                         transition={{ duration: 2, repeat: Infinity }}
                     >
-                        <svg className="w-12 h-12 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-12 h-12 text-[#FD614B]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
                         </svg>
                     </motion.div>
@@ -269,32 +269,32 @@ export default function WaitingRoomPage() {
                         isDark ? "bg-white/5 border-white/10" : "bg-white border-slate-200 shadow-xs"
                     )}>
                         <p className={cn("text-xs mb-1", isDark ? "text-gray-500" : "text-gray-500")}>{labels.waitingFor}</p>
-                        <p className="text-amber-500 font-semibold">{formatWaitingTime(waitingTime)}</p>
+                        <p className="text-[#FD614B] font-semibold">{formatWaitingTime(waitingTime)}</p>
                     </div>
                 </div>
 
                 {/* Tips */}
                 <div className={cn(
                     "p-4 rounded-xl border text-start mb-8",
-                    isDark ? "bg-amber-500/10 border-amber-500/20 text-gray-400" : "bg-amber-50 border-amber-200 text-amber-950"
+                    isDark ? "bg-[#FD614B]/10 border-[#FD614B]/30 text-gray-400" : "bg-[#FFF5F3] border-[#FFD0CA] text-amber-950"
                 )}>
-                    <h3 className={cn("font-medium mb-3 flex items-center gap-2", isDark ? "text-amber-400" : "text-amber-900")}>
-                        <svg className="w-5 h-5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <h3 className={cn("font-medium mb-3 flex items-center gap-2", isDark ? "text-[#FD614B]" : "text-amber-900")}>
+                        <svg className="w-5 h-5 text-[#FD614B]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 18v-5.25m0 0a6.01 6.01 0 001.5-.189m-1.5.189a6.01 6.01 0 01-1.5-.189m3.75 7.478a12.06 12.06 0 01-4.5 0m3.75 2.383a14.406 14.406 0 01-3 0M14.25 18v-.192c0-.983.658-1.823 1.508-2.316a7.5 7.5 0 10-7.517 0c.85.493 1.509 1.333 1.509 2.316V18" />
                         </svg>
                         {labels.tips}
                     </h3>
                     <ul className={cn("space-y-2 text-sm", isDark ? "text-gray-400" : "text-slate-700")}>
                         <li className="flex items-start gap-2">
-                            <span className="text-amber-500 mt-0.5">1.</span>
+                            <span className="text-[#FD614B] mt-0.5">1.</span>
                             {labels.tip1}
                         </li>
                         <li className="flex items-start gap-2">
-                            <span className="text-amber-500 mt-0.5">2.</span>
+                            <span className="text-[#FD614B] mt-0.5">2.</span>
                             {labels.tip2}
                         </li>
                         <li className="flex items-start gap-2">
-                            <span className="text-amber-500 mt-0.5">3.</span>
+                            <span className="text-[#FD614B] mt-0.5">3.</span>
                             {labels.tip3}
                         </li>
                     </ul>

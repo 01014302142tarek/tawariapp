@@ -69,7 +69,7 @@ const Icons = {
 const ProgressBar = ({ value, max, isDark = true }: { value: number; max: number; color?: string; isDark?: boolean }) => {
     const percentage = (value / max) * 100;
     return (
-        <div className={cn("w-full h-2 rounded-full overflow-hidden", isDark ? "bg-slate-800" : "bg-gray-200")}>
+        <div className={cn("w-full h-2 rounded-full overflow-hidden", isDark ? "bg-[#0D2C4F]" : "bg-gray-200")}>
             <motion.div
                 initial={{ width: 0 }}
                 animate={{ width: `${percentage}%` }}
@@ -136,7 +136,7 @@ export default function AnalyticsPage() {
         return (
             <div className="min-h-screen flex items-center justify-center">
                 <div className="text-center">
-                    <div className="text-amber-500 mb-4 flex justify-center">{Icons.spinner}</div>
+                    <div className="text-[#FD614B] mb-4 flex justify-center">{Icons.spinner}</div>
                     <p className={isDark ? "text-gray-400" : "text-gray-600"}>{t.common.loading || "Loading..."}</p>
                 </div>
             </div>
@@ -153,12 +153,12 @@ export default function AnalyticsPage() {
                     minSize={0.4}
                     maxSize={1}
                     particleDensity={isDark ? 20 : 10}
-                    particleColor={isDark ? "245, 158, 11" : "217, 119, 6"}
+                    particleColor={isDark ? "253, 97, 75" : "4, 76, 135"}
                 />
                 {isDark && (
                     <>
-                        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-amber-500/5 rounded-full blur-3xl" />
-                        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-amber-500/5 rounded-full blur-3xl" />
+                        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-[#FD614B]/10 rounded-full blur-3xl" />
+                        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-[#FD614B]/10 rounded-full blur-3xl" />
                     </>
                 )}
             </div>
@@ -180,7 +180,7 @@ export default function AnalyticsPage() {
                                 className={cn(
                                     "px-3 md:px-4 py-1.5 md:py-2 rounded-lg md:rounded-xl text-xs md:text-sm font-medium transition-colors capitalize whitespace-nowrap",
                                     period === p
-                                        ? "bg-amber-500 text-white"
+                                        ? "bg-[#FD614B] text-white"
                                         : isDark
                                             ? "bg-white/5 text-gray-400 hover:bg-white/10"
                                             : "bg-gray-100 text-gray-600 hover:bg-gray-200"
@@ -195,9 +195,9 @@ export default function AnalyticsPage() {
                 {/* Stats */}
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-6 md:mb-8">
                     {stats.map((stat, idx) => (
-                        <GlowingCard key={idx} glowColor="amber" className="p-3 md:p-5" isDark={isDark}>
+                        <GlowingCard key={idx} glowColor="coral" className="p-3 md:p-5" isDark={isDark}>
                             <div className="flex items-start justify-between mb-2 md:mb-3">
-                                <div className="w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center bg-gradient-to-br from-[#38BDF8] to-[#0284C7] text-white shadow-[0_0_15px_rgba(14,165,233,0.5)] border border-sky-300/40">
+                                <div className="w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center bg-gradient-to-br from-[#044C87] to-[#0C67B3] text-white shadow-[0_0_15px_rgba(4,76,135,0.4)] border border-[#0C67B3]/40">
                                     <span className="[&>svg]:w-4 [&>svg]:h-4 md:[&>svg]:w-5 md:[&>svg]:h-5">
                                         {stat.icon}
                                     </span>
@@ -217,7 +217,7 @@ export default function AnalyticsPage() {
                 {/* Charts - 2 Column Layout */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 mb-6 md:mb-8">
                     {/* Appointments Chart */}
-                    <GlowingCard glowColor="amber" className="p-4 md:p-6 overflow-visible" isDark={isDark}>
+                    <GlowingCard glowColor="coral" className="p-4 md:p-6 overflow-visible" isDark={isDark}>
                         <h3 className={cn("text-base md:text-lg font-semibold mb-4 md:mb-6", isDark ? "text-white" : "text-slate-900")}>
                             {language === "ar" ? "المواعيد الشهرية" : "Monthly Appointments"}
                         </h3>
@@ -238,7 +238,7 @@ export default function AnalyticsPage() {
                                                 />
                                                 {/* Tooltip */}
                                                 <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                                                    <div className="bg-slate-800 text-white text-xs px-2 py-1 rounded whitespace-nowrap">
+                                                    <div className="bg-[#0D2C4F] text-white text-xs px-2 py-1 rounded whitespace-nowrap">
                                                         {formatNumber(data.value)}
                                                     </div>
                                                 </div>
@@ -259,14 +259,14 @@ export default function AnalyticsPage() {
                     </GlowingCard>
 
                     {/* Traffic Sources */}
-                    <GlowingCard glowColor="amber" className="p-4 md:p-6" isDark={isDark}>
+                    <GlowingCard glowColor="coral" className="p-4 md:p-6" isDark={isDark}>
                         <h3 className={cn("text-base md:text-lg font-semibold mb-4 md:mb-6", isDark ? "text-white" : "text-slate-900")}>{t.adminDashboard.analyticsPage.charts.traffic}</h3>
                         <div className="space-y-3 md:space-y-5">
                             {trafficSources.map((source, idx) => (
                                 <div key={idx}>
                                     <div className="flex items-center justify-between mb-1.5 md:mb-2">
                                         <div className="flex items-center gap-1.5 md:gap-2">
-                                            <div className="w-6 h-6 md:w-8 md:h-8 rounded-md md:rounded-lg flex items-center justify-center bg-amber-500/10 text-amber-500">
+                                            <div className="w-6 h-6 md:w-8 md:h-8 rounded-md md:rounded-lg flex items-center justify-center bg-[#FD614B]/10 text-[#FD614B]">
                                                 <span className="[&>svg]:w-3 [&>svg]:h-3 md:[&>svg]:w-4 md:[&>svg]:h-4">
                                                     {source.icon}
                                                 </span>
@@ -283,11 +283,11 @@ export default function AnalyticsPage() {
                 </div>
 
                 {/* Top Doctors Table */}
-                <GlowingCard glowColor="amber" className="p-4 md:p-6" isDark={isDark}>
+                <GlowingCard glowColor="coral" className="p-4 md:p-6" isDark={isDark}>
                     <div className="flex items-center justify-between mb-4 md:mb-6">
                         <h3 className={cn("text-base md:text-lg font-semibold", isDark ? "text-white" : "text-slate-900")}>{t.adminDashboard.analyticsPage.table.title}</h3>
                         {/* Mobile scroll indicator */}
-                        <div className="flex items-center gap-1 md:hidden text-amber-500">
+                        <div className="flex items-center gap-1 md:hidden text-[#FD614B]">
                             <span className="text-[10px]">Scroll</span>
                             <svg className="w-4 h-4 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
@@ -316,14 +316,14 @@ export default function AnalyticsPage() {
                                             className={cn("border-b", isDark ? "border-white/5" : "border-gray-100")}
                                         >
                                             <td className="px-3 md:px-4 py-3 md:py-4">
-                                                <span className="w-6 h-6 md:w-8 md:h-8 rounded-full flex items-center justify-center font-bold text-xs md:text-sm bg-amber-500/20 text-amber-500">
+                                                <span className="w-6 h-6 md:w-8 md:h-8 rounded-full flex items-center justify-center font-bold text-xs md:text-sm bg-[#FD614B]/20 text-[#FD614B]">
                                                     {formatNumber(doctor.rank)}
                                                 </span>
                                             </td>
                                             <td className={cn("px-3 md:px-4 py-3 md:py-4 font-medium text-xs md:text-base", isDark ? "text-white" : "text-slate-900")}>{doctor.name}</td>
                                             <td className={cn("px-3 md:px-4 py-3 md:py-4 text-xs md:text-sm", isDark ? "text-gray-400" : "text-gray-600")}>{doctor.specialty}</td>
                                             <td className={cn("px-3 md:px-4 py-3 md:py-4 text-xs md:text-base", isDark ? "text-white" : "text-slate-900")}>{formatNumber(doctor.patients)}</td>
-                                            <td className="px-3 md:px-4 py-3 md:py-4 text-amber-500 font-medium text-xs md:text-base">{formatNumber(doctor.revenue.toLocaleString())} {t.common.units.egp}</td>
+                                            <td className="px-3 md:px-4 py-3 md:py-4 text-[#FD614B] font-medium text-xs md:text-base">{formatNumber(doctor.revenue.toLocaleString())} {t.common.units.egp}</td>
                                         </motion.tr>
                                     ))}
                                 </tbody>

@@ -66,22 +66,22 @@ function PaymentSuccessContent() {
     }, [transactionId]);
 
     return (
-        <div className={cn("min-h-screen bg-slate-950 flex items-center justify-center p-4", isRTL && "rtl")}>
+        <div className={cn("min-h-screen bg-[#031326] flex items-center justify-center p-4", isRTL && "rtl")}>
             <motion.div
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.5 }}
                 className="max-w-md w-full"
             >
-                <GlowingCard glowColor="amber" className="p-8 text-center" isDark>
+                <GlowingCard glowColor="coral" className="p-8 text-center" isDark>
                     {/* Success Icon */}
                     <motion.div
                         initial={{ scale: 0 }}
                         animate={{ scale: 1 }}
                         transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
-                        className="w-20 h-20 rounded-full bg-amber-500/20 flex items-center justify-center mx-auto mb-6"
+                        className="w-20 h-20 rounded-full bg-[#FD614B]/20 flex items-center justify-center mx-auto mb-6"
                     >
-                        <span className="text-amber-400">{Icons.check}</span>
+                        <span className="text-[#FD614B]">{Icons.check}</span>
                     </motion.div>
 
                     {/* Success Message */}
@@ -106,13 +106,13 @@ function PaymentSuccessContent() {
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.4 }}
-                            className="bg-slate-800/50 rounded-xl p-4 mb-6"
+                            className="bg-[#0D2C4F]/50 rounded-xl p-4 mb-6"
                         >
                             <div className="flex justify-between items-center">
                                 <span className="text-gray-400">
                                     {isRTL ? "المبلغ المدفوع" : "Amount Paid"}
                                 </span>
-                                <span className="text-amber-400 font-bold text-xl">
+                                <span className="text-[#FD614B] font-bold text-xl">
                                     {amount.toFixed(2)} {isRTL ? "ج.م" : "EGP"}
                                 </span>
                             </div>
@@ -138,7 +138,7 @@ function PaymentSuccessContent() {
                     >
                         <button
                             onClick={() => router.push(`/${language}/dashboard/patient/appointments`)}
-                            className="w-full py-3 bg-amber-500 text-white rounded-xl font-medium hover:bg-amber-600 transition-colors flex items-center justify-center gap-2"
+                            className="w-full py-3 bg-[#FD614B] text-white rounded-xl font-medium hover:bg-[#E84D37] transition-colors flex items-center justify-center gap-2"
                         >
                             {Icons.calendar}
                             <span>{isRTL ? "عرض مواعيدي" : "View My Appointments"}</span>
@@ -146,7 +146,7 @@ function PaymentSuccessContent() {
 
                         <button
                             onClick={() => router.push(`/${language}/dashboard/patient`)}
-                            className="w-full py-3 bg-slate-800 text-white rounded-xl font-medium hover:bg-slate-700 transition-colors flex items-center justify-center gap-2"
+                            className="w-full py-3 bg-[#0D2C4F] text-white rounded-xl font-medium hover:bg-slate-700 transition-colors flex items-center justify-center gap-2"
                         >
                             {Icons.home}
                             <span>{isRTL ? "العودة للرئيسية" : "Back to Dashboard"}</span>
@@ -172,8 +172,8 @@ function PaymentSuccessContent() {
 
 function PaymentSuccessLoading() {
     return (
-        <div className="min-h-screen bg-slate-950 flex items-center justify-center">
-            <div className="w-16 h-16 border-4 border-amber-500 border-t-transparent rounded-full animate-spin" />
+        <div className="min-h-screen bg-[#031326] flex items-center justify-center">
+            <div className="w-16 h-16 border-4 border-[#FD614B] border-t-transparent rounded-full animate-spin" />
         </div>
     );
 }

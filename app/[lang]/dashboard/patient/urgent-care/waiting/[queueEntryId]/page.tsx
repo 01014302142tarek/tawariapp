@@ -91,7 +91,7 @@ const AnimatedPosition: React.FC<{ position: number }> = ({ position }) => {
 // ============================================
 // Pulsing Dot Animation
 // ============================================
-const PulsingDot: React.FC<{ color?: string }> = ({ color = "bg-amber-500" }) => {
+const PulsingDot: React.FC<{ color?: string }> = ({ color = "bg-[#FD614B]" }) => {
     return (
         <span className="relative flex h-3 w-3">
             <span className={cn(
@@ -302,7 +302,7 @@ export default function WaitingRoomPage() {
         return (
             <div className={cn("min-h-screen p-4 sm:p-6 flex items-center justify-center", isRTL && "rtl")}>
                 <div className="text-center">
-                    <div className="w-12 h-12 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+                    <div className="w-12 h-12 border-4 border-[#FD614B] border-t-transparent rounded-full animate-spin mx-auto mb-4" />
                     <p className={isDark ? "text-slate-400" : "text-slate-600"}>
                         {isRTL ? "جاري التحميل..." : "Loading..."}
                     </p>
@@ -340,7 +340,7 @@ export default function WaitingRoomPage() {
                     </p>
                     <button
                         onClick={handleBack}
-                        className="px-6 py-2 bg-amber-500 text-white rounded-lg font-medium hover:bg-amber-600 transition-colors shadow-sm"
+                        className="px-6 py-2 bg-[#FD614B] text-white rounded-lg font-medium hover:bg-[#E84D37] transition-colors shadow-sm"
                     >
                         {isRTL ? "العودة للأطباء المتاحين" : "Back to Available Doctors"}
                     </button>
@@ -367,7 +367,7 @@ export default function WaitingRoomPage() {
                             exit={{ scale: 0.9, opacity: 0 }}
                             className={cn(
                                 "rounded-2xl p-6 max-w-sm w-full border shadow-xl",
-                                isDark ? "bg-slate-800 border-white/10" : "bg-white border-slate-200"
+                                isDark ? "bg-[#0D2C4F] border-white/10" : "bg-white border-slate-200"
                             )}
                             onClick={(e) => e.stopPropagation()}
                         >
@@ -417,7 +417,7 @@ export default function WaitingRoomPage() {
                         {isRTL ? "غرفة الانتظار" : "Waiting Room"}
                     </h1>
                     <div className="flex items-center gap-2 text-sm">
-                        <PulsingDot color={isConnected ? "bg-green-500" : "bg-amber-500"} />
+                        <PulsingDot color={isConnected ? "bg-green-500" : "bg-[#FD614B]"} />
                         <span className={isDark ? "text-slate-400" : "text-slate-600"}>
                             {isConnected ? (isRTL ? "متصل" : "Connected") : (isRTL ? "جاري الاتصال..." : "Connecting...")}
                         </span>
@@ -430,7 +430,7 @@ export default function WaitingRoomPage() {
                     animate={{ opacity: 1, y: 0 }}
                     className={cn(
                         "rounded-2xl p-4 sm:p-8 text-center mb-6 border",
-                        isDark ? "bg-slate-800/50 border-white/10" : "bg-white border-slate-200 shadow-sm"
+                        isDark ? "bg-[#0D2C4F]/50 border-white/10" : "bg-white border-slate-200 shadow-sm"
                     )}
                 >
                     {/* Position Display */}
@@ -453,7 +453,7 @@ export default function WaitingRoomPage() {
 
                     {/* Doctor Info */}
                     {doctorInfo && (
-                        <div className={cn("rounded-xl p-4 flex items-center gap-4 border", isDark ? "bg-slate-900/50 border-white/5" : "bg-slate-50 border-slate-200")}>
+                        <div className={cn("rounded-xl p-4 flex items-center gap-4 border", isDark ? "bg-[#08213D]/50 border-white/5" : "bg-slate-50 border-slate-200")}>
                             {doctorInfo.avatar_url ? (
                                 <Image
                                     src={doctorInfo.avatar_url}
@@ -484,11 +484,11 @@ export default function WaitingRoomPage() {
                     transition={{ delay: 0.1 }}
                     className={cn(
                         "rounded-xl p-4 mb-6 border",
-                        isDark ? "bg-slate-800/30 border-white/5" : "bg-white border-slate-200 shadow-xs"
+                        isDark ? "bg-[#0D2C4F]/30 border-white/5" : "bg-white border-slate-200 shadow-xs"
                     )}
                 >
                     <div className="flex items-start gap-3">
-                        <div className="text-amber-500 mt-0.5 shrink-0">
+                        <div className="text-[#FD614B] mt-0.5 shrink-0">
                             {entry.position === 1 ? Icons.phone : Icons.clock}
                         </div>
                         <div>
@@ -513,23 +513,23 @@ export default function WaitingRoomPage() {
                     transition={{ delay: 0.2 }}
                     className={cn(
                         "rounded-xl p-4 mb-8 border",
-                        isDark ? "bg-amber-500/10 border-amber-500/20 text-slate-300" : "bg-amber-50/80 border-amber-200 text-amber-950"
+                        isDark ? "bg-[#FD614B]/10 border-[#FD614B]/30 text-slate-300" : "bg-[#FFF5F3]/80 border-[#FFD0CA] text-amber-950"
                     )}
                 >
-                    <h4 className={cn("font-semibold mb-2", isDark ? "text-amber-400" : "text-amber-900")}>
+                    <h4 className={cn("font-semibold mb-2", isDark ? "text-[#FD614B]" : "text-amber-900")}>
                         {isRTL ? "نصائح للاستشارة" : "Tips for your consultation"}
                     </h4>
                     <ul className={cn("text-sm space-y-2", isDark ? "text-slate-400" : "text-slate-700")}>
                         <li className="flex items-start gap-2">
-                            <span className="text-amber-500 mt-0.5 shrink-0">{Icons.check}</span>
+                            <span className="text-[#FD614B] mt-0.5 shrink-0">{Icons.check}</span>
                             <span>{isRTL ? "تأكد من أن الكاميرا والميكروفون يعملان" : "Make sure your camera and microphone are working"}</span>
                         </li>
                         <li className="flex items-start gap-2">
-                            <span className="text-amber-500 mt-0.5 shrink-0">{Icons.check}</span>
+                            <span className="text-[#FD614B] mt-0.5 shrink-0">{Icons.check}</span>
                             <span>{isRTL ? "اختر مكاناً هادئاً وذا إضاءة جيدة" : "Choose a quiet, well-lit location"}</span>
                         </li>
                         <li className="flex items-start gap-2">
-                            <span className="text-amber-500 mt-0.5 shrink-0">{Icons.check}</span>
+                            <span className="text-[#FD614B] mt-0.5 shrink-0">{Icons.check}</span>
                             <span>{isRTL ? "جهز أي تقارير طبية أو أدوية للمناقشة" : "Have any medical reports or medications ready to discuss"}</span>
                         </li>
                     </ul>
@@ -544,7 +544,7 @@ export default function WaitingRoomPage() {
                     className={cn(
                         "w-full px-6 py-3 rounded-xl font-medium transition-colors flex items-center justify-center gap-2 border",
                         isDark
-                            ? "bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-white border-white/5"
+                            ? "bg-[#0D2C4F] text-slate-400 hover:bg-slate-700 hover:text-white border-white/5"
                             : "bg-white text-slate-700 hover:bg-slate-50 border-slate-200 shadow-xs"
                     )}
                 >

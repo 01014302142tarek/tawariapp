@@ -186,7 +186,7 @@ export default function PatientsPage() {
         return (
             <div className="min-h-screen flex items-center justify-center">
                 <div className="text-center">
-                    <div className="text-amber-500 mb-4 flex justify-center">{Icons.spinner}</div>
+                    <div className="text-[#FD614B] mb-4 flex justify-center">{Icons.spinner}</div>
                     <p className={isDark ? "text-gray-400" : "text-gray-600"}>{t.common.loading || "Loading..."}</p>
                 </div>
             </div>
@@ -203,12 +203,12 @@ export default function PatientsPage() {
                     minSize={0.4}
                     maxSize={1}
                     particleDensity={isDark ? 20 : 10}
-                    particleColor={isDark ? "245, 158, 11" : "217, 119, 6"}
+                    particleColor={isDark ? "253, 97, 75" : "4, 76, 135"}
                 />
                 {isDark && (
                     <>
-                        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-amber-500/5 rounded-full blur-3xl" />
-                        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-amber-500/5 rounded-full blur-3xl" />
+                        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-[#FD614B]/10 rounded-full blur-3xl" />
+                        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-[#FD614B]/10 rounded-full blur-3xl" />
                     </>
                 )}
             </div>
@@ -227,9 +227,9 @@ export default function PatientsPage() {
                 {/* Stats Row */}
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-6 md:mb-8">
                     {stats.map((stat, idx) => (
-                        <GlowingCard key={idx} glowColor="amber" className="p-3 md:p-4" isDark={isDark}>
+                        <GlowingCard key={idx} glowColor="coral" className="p-3 md:p-4" isDark={isDark}>
                             <div className="flex items-center gap-2 md:gap-3">
-                                <div className="w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center bg-gradient-to-br from-[#38BDF8] to-[#0284C7] text-white shadow-[0_0_15px_rgba(14,165,233,0.5)] border border-sky-300/40">
+                                <div className="w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center bg-gradient-to-br from-[#044C87] to-[#0C67B3] text-white shadow-[0_0_15px_rgba(4,76,135,0.4)] border border-[#0C67B3]/40">
                                     <span className="[&>svg]:w-4 [&>svg]:h-4 md:[&>svg]:w-5 md:[&>svg]:h-5">
                                         {stat.icon}
                                     </span>
@@ -246,7 +246,7 @@ export default function PatientsPage() {
                 </div>
 
                 {/* Search and Filters */}
-                <GlowingCard glowColor="amber" className="p-3 md:p-4 mb-4 md:mb-6" isDark={isDark}>
+                <GlowingCard glowColor="coral" className="p-3 md:p-4 mb-4 md:mb-6" isDark={isDark}>
                     <div className="flex flex-col gap-4">
                         {/* Search Bar */}
                         <div className="flex-1 relative">
@@ -261,8 +261,8 @@ export default function PatientsPage() {
                                     "w-full py-2.5 rounded-xl border outline-none transition-colors",
                                     isRTL ? "pr-10 pl-4" : "pl-10 pr-4",
                                     isDark
-                                        ? "bg-slate-800/50 border-white/10 text-white placeholder-gray-500 focus:border-amber-500/50"
-                                        : "bg-gray-50 border-gray-200 text-slate-900 placeholder-gray-400 focus:border-amber-500"
+                                        ? "bg-[#0D2C4F]/50 border-white/10 text-white placeholder-gray-500 focus:border-[#FD614B]/50"
+                                        : "bg-gray-50 border-gray-200 text-slate-900 placeholder-gray-400 focus:border-[#FD614B]"
                                 )}
                             />
                         </div>
@@ -285,7 +285,7 @@ export default function PatientsPage() {
                                         className={cn(
                                             "px-3 py-1.5 rounded-lg text-xs font-medium transition-colors capitalize",
                                             statusFilter === status
-                                                ? "bg-amber-500 text-white"
+                                                ? "bg-[#FD614B] text-white"
                                                 : isDark
                                                     ? "bg-white/5 text-gray-400 hover:bg-white/10"
                                                     : "bg-gray-100 text-gray-600 hover:bg-gray-200"
@@ -312,7 +312,7 @@ export default function PatientsPage() {
                                         className={cn(
                                             "px-3 py-1.5 rounded-lg text-xs font-medium transition-colors capitalize",
                                             genderFilter === gender
-                                                ? "bg-amber-500 text-white"
+                                                ? "bg-[#FD614B] text-white"
                                                 : isDark
                                                     ? "bg-white/5 text-gray-400 hover:bg-white/10"
                                                     : "bg-gray-100 text-gray-600 hover:bg-gray-200"
@@ -342,7 +342,7 @@ export default function PatientsPage() {
                                     className={cn(
                                         "px-3 py-1.5 rounded-lg text-xs font-medium transition-colors outline-none",
                                         isDark
-                                            ? "bg-white/5 text-gray-300 border border-white/10 hover:bg-white/10 [&>option]:bg-slate-900 [&>option]:text-white"
+                                            ? "bg-white/5 text-gray-300 border border-white/10 hover:bg-white/10 [&>option]:bg-[#08213D] [&>option]:text-white"
                                             : "bg-gray-100 text-gray-600 border border-gray-200 hover:bg-gray-200"
                                     )}
                                 >
@@ -365,7 +365,7 @@ export default function PatientsPage() {
                 {loading ? (
                     <div className="flex items-center justify-center py-20">
                         <div className="text-center">
-                            <div className="text-amber-500 mb-4 flex justify-center">{Icons.spinner}</div>
+                            <div className="text-[#FD614B] mb-4 flex justify-center">{Icons.spinner}</div>
                             <p className={isDark ? "text-gray-400" : "text-gray-600"}>{t.common.loading || "Loading..."}</p>
                         </div>
                     </div>
@@ -382,11 +382,11 @@ export default function PatientsPage() {
                                     animate={{ opacity: 1, x: 0 }}
                                     transition={{ delay: idx * 0.05 }}
                                 >
-                                    <GlowingCard glowColor="amber" className="p-3 md:p-5" isDark={isDark}>
+                                    <GlowingCard glowColor="coral" className="p-3 md:p-5" isDark={isDark}>
                                         <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4">
                                             {/* Patient Info */}
                                             <div className="flex items-center gap-3 md:gap-4 flex-1">
-                                                <div className="relative w-10 h-10 md:w-14 md:h-14 rounded-lg md:rounded-xl overflow-hidden border-2 border-amber-500/30 flex-shrink-0">
+                                                <div className="relative w-10 h-10 md:w-14 md:h-14 rounded-lg md:rounded-xl overflow-hidden border-2 border-[#FD614B]/40 flex-shrink-0">
                                                     {patient.avatar_url ? (
                                                         <Image
                                                             src={patient.avatar_url}
@@ -512,7 +512,7 @@ export default function PatientsPage() {
                                                 className={cn(
                                                     "w-8 h-8 rounded-lg text-sm font-medium transition-colors",
                                                     currentPage === pageNum
-                                                        ? "bg-amber-500 text-white"
+                                                        ? "bg-[#FD614B] text-white"
                                                         : isDark
                                                             ? "hover:bg-white/10 text-gray-400"
                                                             : "hover:bg-gray-100 text-gray-600"

@@ -124,7 +124,7 @@ export default function ConsultationsPage() {
         return (
             <div className="p-4 md:p-6 lg:p-8 flex items-center justify-center min-h-[400px]">
                 <div className="text-center">
-                    <div className="text-amber-500 mb-4">{Icons.spinner}</div>
+                    <div className="text-[#FD614B] mb-4">{Icons.spinner}</div>
                     <p className={textMuted}>{t.common.loading || "Loading..."}</p>
                 </div>
             </div>
@@ -137,7 +137,7 @@ export default function ConsultationsPage() {
             <div className="flex items-center justify-between mb-6 md:mb-8">
                 <div>
                     <h1 className={cn("text-xl md:text-2xl font-bold flex items-center gap-2 md:gap-3", textPrimary)}>
-                        <span className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-br from-[#38BDF8] to-[#0284C7] flex items-center justify-center text-white shadow-[0_0_15px_rgba(14,165,233,0.5)] border border-sky-300/40">
+                        <span className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-br from-[#044C87] to-[#0C67B3] flex items-center justify-center text-white shadow-[0_0_15px_rgba(4,76,135,0.4)] border border-[#0C67B3]/40">
                             {Icons.video}
                         </span>
                         {t.doctorDashboard.consultationsPage.title}
@@ -149,7 +149,7 @@ export default function ConsultationsPage() {
             {/* Quick Actions */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 mb-6 md:mb-8">
                 {/* Start New Call */}
-                <GlowingCard isDark={isDark} glowColor="amber" className="p-4 md:p-6">
+                <GlowingCard isDark={isDark} glowColor="coral" className="p-4 md:p-6">
                     <h2 className={cn("text-base md:text-lg font-semibold mb-2 md:mb-4", textPrimary)}>{t.doctorDashboard.consultationsPage.newConsultation.title}</h2>
                     <p className={cn("text-xs md:text-sm mb-4 md:mb-6", textMuted)}>{t.doctorDashboard.consultationsPage.newConsultation.subtitle}</p>
                     <button
@@ -168,7 +168,7 @@ export default function ConsultationsPage() {
                 </GlowingCard>
 
                 {/* Join by Code */}
-                <GlowingCard isDark={isDark} glowColor="amber" className="p-4 md:p-6">
+                <GlowingCard isDark={isDark} glowColor="coral" className="p-4 md:p-6">
                     <h2 className={cn("text-base md:text-lg font-semibold mb-2 md:mb-4", textPrimary)}>{t.doctorDashboard.consultationsPage.joinRoom.title}</h2>
                     <p className={cn("text-xs md:text-sm mb-4 md:mb-6", textMuted)}>{t.doctorDashboard.consultationsPage.joinRoom.subtitle}</p>
                     <div className="flex gap-2 md:gap-3">
@@ -190,7 +190,7 @@ export default function ConsultationsPage() {
                                     router.push(`/${params.lang}/dashboard/consultation/${roomCode.trim()}`);
                                 }
                             }}
-                            className="px-4 md:px-6 py-3 md:py-3.5 bg-amber-500/10 text-amber-500 hover:bg-amber-500 hover:text-white font-semibold rounded-xl border border-amber-500/20 transition-all text-sm md:text-base"
+                            className="px-4 md:px-6 py-3 md:py-3.5 bg-[#FD614B]/10 text-[#FD614B] hover:bg-[#FD614B] hover:text-white font-semibold rounded-xl border border-[#FD614B]/30 transition-all text-sm md:text-base"
                         >
                             {t.doctorDashboard.consultationsPage.joinRoom.button}
                         </button>
@@ -202,14 +202,14 @@ export default function ConsultationsPage() {
             {activeConsultations.length > 0 && (
                 <section className="mb-6 md:mb-8">
                     <h2 className={cn("text-base md:text-lg font-semibold mb-3 md:mb-4 flex items-center gap-2", textPrimary)}>
-                        <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+                        <span className="w-2 h-2 rounded-full bg-[#FD614B] animate-pulse"></span>
                         {t.doctorDashboard.consultationsPage.active.title}
                     </h2>
                     {activeConsultations.map((consultation) => (
-                        <GlowingCard key={consultation.id} isDark={isDark} glowColor="amber" className="p-4 md:p-6 border-amber-500/30 mb-3">
+                        <GlowingCard key={consultation.id} isDark={isDark} glowColor="coral" className="p-4 md:p-6 border-[#FD614B]/40 mb-3">
                             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 md:gap-6">
                                 <div className="relative">
-                                    <div className="w-14 h-14 md:w-16 md:h-16 rounded-full overflow-hidden border-2 border-amber-500">
+                                    <div className="w-14 h-14 md:w-16 md:h-16 rounded-full overflow-hidden border-2 border-[#FD614B]">
                                         {consultation.patient_avatar ? (
                                             <Image
                                                 src={consultation.patient_avatar}
@@ -224,7 +224,7 @@ export default function ConsultationsPage() {
                                             </div>
                                         )}
                                     </div>
-                                    <span className="absolute -bottom-1 -right-1 w-4 h-4 md:w-5 md:h-5 bg-amber-500 rounded-full flex items-center justify-center">
+                                    <span className="absolute -bottom-1 -right-1 w-4 h-4 md:w-5 md:h-5 bg-[#FD614B] rounded-full flex items-center justify-center">
                                         <span className="w-1.5 h-1.5 md:w-2 md:h-2 bg-white rounded-full animate-ping"></span>
                                     </span>
                                 </div>
@@ -234,7 +234,7 @@ export default function ConsultationsPage() {
                                         <p className={cn("text-sm", textMuted)}>{consultation.consultation_type}</p>
                                     )}
                                     <div className="flex flex-wrap items-center gap-3 md:gap-4 mt-2 text-xs md:text-sm">
-                                        <span className="text-amber-500 flex items-center gap-1">
+                                        <span className="text-[#FD614B] flex items-center gap-1">
                                             {Icons.clock}
                                             {consultation.status === "in_waiting_room"
                                                 ? (language === "ar" ? "في غرفة الانتظار" : "In Waiting Room")
@@ -251,7 +251,7 @@ export default function ConsultationsPage() {
                                         onClick={() => handleStartOrRejoin(consultation.appointment_id, consultation.status)}
                                         disabled={startingId === consultation.appointment_id}
                                         className={cn(
-                                            "flex-1 sm:flex-none px-4 md:px-6 py-2.5 md:py-3 bg-amber-500 text-white font-semibold rounded-xl hover:bg-amber-400 transition-all text-sm md:text-base flex items-center justify-center gap-2",
+                                            "flex-1 sm:flex-none px-4 md:px-6 py-2.5 md:py-3 bg-[#FD614B] text-white font-semibold rounded-xl hover:bg-amber-400 transition-all text-sm md:text-base flex items-center justify-center gap-2",
                                             startingId === consultation.appointment_id && "opacity-70 cursor-not-allowed"
                                         )}
                                     >
@@ -280,7 +280,7 @@ export default function ConsultationsPage() {
                     {t.doctorDashboard.consultationsPage.history.title}
                 </h2>
                 {historyConsultations.length > 0 ? (
-                    <GlowingCard isDark={isDark} glowColor="amber" className="p-0 overflow-hidden">
+                    <GlowingCard isDark={isDark} glowColor="coral" className="p-0 overflow-hidden">
                         <div className={divider}>
                             {historyConsultations.map((item, idx) => (
                                 <motion.div
@@ -290,7 +290,7 @@ export default function ConsultationsPage() {
                                     transition={{ delay: idx * 0.05 }}
                                     className={cn("flex items-center gap-3 md:gap-4 p-3 md:p-4 transition-colors cursor-pointer", cardHover)}
                                 >
-                                    <div className="relative w-10 h-10 md:w-12 md:h-12 rounded-full overflow-hidden border-2 border-amber-500/30">
+                                    <div className="relative w-10 h-10 md:w-12 md:h-12 rounded-full overflow-hidden border-2 border-[#FD614B]/40">
                                         {item.patient_avatar ? (
                                             <Image
                                                 src={item.patient_avatar}
@@ -315,7 +315,7 @@ export default function ConsultationsPage() {
                                     </div>
                                     <div className="text-right">
                                         {item.duration_minutes ? (
-                                            <span className="text-xs md:text-sm text-amber-500">
+                                            <span className="text-xs md:text-sm text-[#FD614B]">
                                                 {formatNumber(item.duration_minutes)} {t.doctorDashboard.consultationsPage.timeLabels.min}
                                             </span>
                                         ) : (

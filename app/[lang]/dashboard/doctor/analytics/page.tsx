@@ -114,7 +114,7 @@ export default function AnalyticsPage() {
         return (
             <div className="min-h-screen flex items-center justify-center">
                 <div className="text-center">
-                    <div className="text-amber-500 mb-4 flex justify-center">
+                    <div className="text-[#FD614B] mb-4 flex justify-center">
                         <svg className="w-6 h-6 animate-spin" fill="none" viewBox="0 0 24 24">
                             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
@@ -132,7 +132,7 @@ export default function AnalyticsPage() {
             {/* Header */}
             <div className="mb-6 md:mb-8">
                 <h1 className={cn("text-xl md:text-2xl font-bold flex items-center gap-2 md:gap-3", textPrimary)}>
-                    <span className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-br from-[#38BDF8] to-[#0284C7] flex items-center justify-center text-white shadow-[0_0_15px_rgba(14,165,233,0.5)] border border-sky-300/40">
+                    <span className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-br from-[#044C87] to-[#0C67B3] flex items-center justify-center text-white shadow-[0_0_15px_rgba(4,76,135,0.4)] border border-[#0C67B3]/40">
                         {Icons.chart}
                     </span>
                     {t.doctorDashboard.analyticsPage.title}
@@ -148,14 +148,14 @@ export default function AnalyticsPage() {
                     { label: t.doctorDashboard.analyticsPage.stats.revenue, value: stats.totalRevenue, change: `${stats.revenueChange >= 0 ? "+" : ""}${stats.revenueChange}%`, icon: Icons.money },
                     { label: t.doctorDashboard.analyticsPage.stats.avgRating, value: stats.avgRating || 0, change: stats.avgRating > 0 ? `${stats.avgRating.toFixed(1)}` : "-", icon: Icons.star },
                 ].map((stat, idx) => (
-                    <GlowingCard key={idx} isDark={isDark} glowColor="amber" className="p-3 md:p-5">
+                    <GlowingCard key={idx} isDark={isDark} glowColor="coral" className="p-3 md:p-5">
                         <div className="flex items-start justify-between mb-2 md:mb-3">
-                            <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-br from-[#38BDF8] to-[#0284C7] flex items-center justify-center text-white shadow-[0_0_15px_rgba(14,165,233,0.5)] border border-sky-300/40">
+                            <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-br from-[#044C87] to-[#0C67B3] flex items-center justify-center text-white shadow-[0_0_15px_rgba(4,76,135,0.4)] border border-[#0C67B3]/40">
                                 <span className="[&>svg]:w-4 [&>svg]:h-4 md:[&>svg]:w-5 md:[&>svg]:h-5">
                                     {stat.icon}
                                 </span>
                             </div>
-                            <span className="flex items-center gap-0.5 md:gap-1 text-xs md:text-sm text-amber-500">
+                            <span className="flex items-center gap-0.5 md:gap-1 text-xs md:text-sm text-[#FD614B]">
                                 {Icons.trendUp}
                                 {formatNumber(stat.change)}
                             </span>
@@ -171,7 +171,7 @@ export default function AnalyticsPage() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6 mb-6 md:mb-8">
                 {/* Weekly Consultations Chart */}
                 <div className="lg:col-span-2">
-                    <GlowingCard isDark={isDark} glowColor="amber" className="p-4 md:p-6 h-full">
+                    <GlowingCard isDark={isDark} glowColor="coral" className="p-4 md:p-6 h-full">
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4 md:mb-6">
                             <div>
                                 <h2 className={cn("text-base md:text-lg font-semibold", textPrimary)}>{t.doctorDashboard.analyticsPage.charts.weekly.title}</h2>
@@ -179,7 +179,7 @@ export default function AnalyticsPage() {
                             </div>
                             <div className="text-left sm:text-right">
                                 <p className={cn("text-xl md:text-2xl font-bold", textPrimary)}>{formatNumber(totalWeeklyConsultations)}</p>
-                                <p className="text-xs md:text-sm text-amber-500">{t.doctorDashboard.analyticsPage.charts.weekly.total}</p>
+                                <p className="text-xs md:text-sm text-[#FD614B]">{t.doctorDashboard.analyticsPage.charts.weekly.total}</p>
                             </div>
                         </div>
 
@@ -199,7 +199,7 @@ export default function AnalyticsPage() {
                                             >
                                                 <div className={cn(
                                                     "absolute -top-7 left-1/2 -translate-x-1/2 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10",
-                                                    isDark ? "bg-slate-800 text-white" : "bg-gray-800 text-white"
+                                                    isDark ? "bg-[#0D2C4F] text-white" : "bg-gray-800 text-white"
                                                 )}>
                                                     {formatNumber(data.consultations)}
                                                 </div>
@@ -215,7 +215,7 @@ export default function AnalyticsPage() {
 
                 {/* Patient Satisfaction */}
                 <div>
-                    <GlowingCard isDark={isDark} glowColor="amber" className="p-4 md:p-6 h-full">
+                    <GlowingCard isDark={isDark} glowColor="coral" className="p-4 md:p-6 h-full">
                         <h2 className={cn("text-base md:text-lg font-semibold mb-4 md:mb-6", textPrimary)}>{t.doctorDashboard.analyticsPage.charts.satisfaction.title}</h2>
 
                         <div className="text-center mb-4 md:mb-6">
@@ -238,7 +238,7 @@ export default function AnalyticsPage() {
                                         strokeWidth="10"
                                         fill="none"
                                         strokeLinecap="round"
-                                        className="text-amber-500"
+                                        className="text-[#FD614B]"
                                         initial={{ strokeDasharray: "0 327" }}
                                         animate={{ strokeDasharray: `${Math.round((satisfaction.overall / 100) * 327)} 327` }}
                                         transition={{ duration: 1.5, ease: "easeOut" }}
@@ -269,7 +269,7 @@ export default function AnalyticsPage() {
             </div>
 
             {/* Top Diagnoses */}
-            <GlowingCard isDark={isDark} glowColor="amber" className="p-4 md:p-6">
+            <GlowingCard isDark={isDark} glowColor="coral" className="p-4 md:p-6">
                 <h2 className={cn("text-base md:text-lg font-semibold mb-4 md:mb-6", textPrimary)}>{t.doctorDashboard.analyticsPage.diagnoses.title}</h2>
                 {topDiagnoses.length > 0 ? (
                     <div className="space-y-3 md:space-y-4">
@@ -283,7 +283,7 @@ export default function AnalyticsPage() {
                                         <span className={cn("text-xs md:text-sm font-medium", textPrimary)}>{diagnosesMap[diagnosis.name] || diagnosis.name}</span>
                                         <span className={cn("text-xs md:text-sm hidden sm:inline", textSecondary)}>{formatNumber(diagnosis.count)} {t.doctorDashboard.analyticsPage.diagnoses.patients}</span>
                                     </div>
-                                    <div className={cn("w-full h-1.5 md:h-2 rounded-full overflow-hidden", isDark ? "bg-slate-800" : "bg-gray-200")}>
+                                    <div className={cn("w-full h-1.5 md:h-2 rounded-full overflow-hidden", isDark ? "bg-[#0D2C4F]" : "bg-gray-200")}>
                                         <motion.div
                                             initial={{ width: 0 }}
                                             animate={{ width: `${diagnosis.percentage}%` }}
@@ -293,7 +293,7 @@ export default function AnalyticsPage() {
                                     </div>
                                 </div>
                                 <div className="w-10 md:w-12 text-right">
-                                    <span className="text-xs md:text-sm text-amber-500">{formatNumber(diagnosis.percentage)}%</span>
+                                    <span className="text-xs md:text-sm text-[#FD614B]">{formatNumber(diagnosis.percentage)}%</span>
                                 </div>
                             </div>
                         ))}

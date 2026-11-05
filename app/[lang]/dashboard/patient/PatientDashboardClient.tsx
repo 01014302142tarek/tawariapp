@@ -60,7 +60,7 @@ const Icons = {
         </svg>
     ),
     hand: (
-        <svg className="w-8 h-8 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg className="w-8 h-8 text-[#FD614B]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 00-3 0m-6-3V11m0-5.5v-1a1.5 1.5 0 013 0v1m0 0V11m0-5.5a1.5 1.5 0 013 0v3m0 0V11" />
         </svg>
     ),
@@ -88,8 +88,8 @@ const Badge = ({ children, variant = "default", className }: { children: React.R
     const variants = {
         default: "bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-300",
         success: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20",
-        warning: "bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20",
-        primary: "bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20",
+        warning: "bg-[#FD614B]/10 text-[#FD614B] border border-[#FD614B]/20",
+        primary: "bg-[#FD614B]/10 text-[#FD614B] border border-[#FD614B]/20",
     };
     return (
         <span className={cn("px-2.5 py-1 rounded-full text-xs font-medium", variants[variant], className)}>
@@ -294,13 +294,13 @@ export default function PatientDashboard({
                     minSize={0.4}
                     maxSize={1}
                     particleDensity={isDark ? 25 : 15}
-                    particleColor={isDark ? "245, 158, 11" : "217, 119, 6"}
+                    particleColor={isDark ? "253, 97, 75" : "4, 76, 135"}
                 />
                 {/* Gradient orbs - dark mode only */}
                 {isDark && (
                     <>
-                        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-amber-500/5 rounded-full blur-3xl" />
-                        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-amber-500/5 rounded-full blur-3xl" />
+                        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-[#FD614B]/10 rounded-full blur-3xl" />
+                        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-[#FD614B]/10 rounded-full blur-3xl" />
                     </>
                 )}
             </div>
@@ -367,9 +367,9 @@ export default function PatientDashboard({
                             { label: t.patientDashboard.stats.activePrescriptions, value: stats.activePrescriptions, icon: Icons.prescription },
                             { label: t.patientDashboard.stats.unreadMessages, value: stats.unreadMessages, icon: Icons.message },
                         ].map((stat, idx) => (
-                            <GlowingCard key={idx} glowColor="amber" className="p-3 md:p-5" isDark={isDark}>
+                            <GlowingCard key={idx} glowColor="coral" className="p-3 md:p-5" isDark={isDark}>
                                 <div className="flex items-start justify-between mb-2 md:mb-3">
-                                    <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-br from-[#38BDF8] to-[#0284C7] flex items-center justify-center text-white shadow-[0_0_15px_rgba(14,165,233,0.5)] border border-sky-300/40">
+                                    <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-br from-[#044C87] to-[#0C67B3] flex items-center justify-center text-white shadow-[0_0_15px_rgba(4,76,135,0.4)] border border-[#0C67B3]/40">
                                         <span className="[&>svg]:w-4 [&>svg]:h-4 md:[&>svg]:w-5 md:[&>svg]:h-5">
                                             {stat.icon}
                                         </span>
@@ -395,18 +395,18 @@ export default function PatientDashboard({
                 <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-6 mb-6 md:mb-8">
                     {/* Next Appointment */}
                     <div className="xl:col-span-2">
-                        <GlowingCard glowColor="amber" className="p-4 md:p-6" isDark={isDark}>
+                        <GlowingCard glowColor="coral" className="p-4 md:p-6" isDark={isDark}>
                             <SectionHeader title={t.patientDashboard.sections.nextAppointment} subtitle={t.patientDashboard.sections.upcomingVisit} isDark={isDark} />
 
                             {nextAppointment ? (
                                 <div className={cn(
                                     "p-3 md:p-5 rounded-xl border",
-                                    isDark ? "bg-amber-500/5 border-amber-500/20" : "bg-amber-50/50 border-amber-200"
+                                    isDark ? "bg-[#FD614B]/10 border-[#FD614B]/30" : "bg-[#FFF5F3] border-[#FFD0CA]"
                                 )}>
                                     <div className="flex flex-col gap-3 sm:gap-4">
                                         {/* Doctor info row */}
                                         <div className="flex items-start gap-3">
-                                            <div className="relative w-12 h-12 sm:w-16 sm:h-16 rounded-lg sm:rounded-xl overflow-hidden border-2 border-amber-500/30 flex-shrink-0 flex items-center justify-center bg-amber-500/10">
+                                            <div className="relative w-12 h-12 sm:w-16 sm:h-16 rounded-lg sm:rounded-xl overflow-hidden border-2 border-[#FD614B]/40 flex-shrink-0 flex items-center justify-center bg-[#FD614B]/10">
                                                 {nextAppointment.avatarUrl ? (
                                                     <Image
                                                         src={nextAppointment.avatarUrl}
@@ -416,7 +416,7 @@ export default function PatientDashboard({
                                                         sizes="(max-width: 640px) 48px, 64px"
                                                     />
                                                 ) : (
-                                                    <span className="text-lg sm:text-xl font-semibold text-amber-500">{getInitials(nextAppointment.doctor)}</span>
+                                                    <span className="text-lg sm:text-xl font-semibold text-[#FD614B]">{getInitials(nextAppointment.doctor)}</span>
                                                 )}
                                             </div>
                                             <div className="flex-1 min-w-0">
@@ -428,13 +428,13 @@ export default function PatientDashboard({
                                                 </p>
                                                 {/* Date/Time - visible on sm+ */}
                                                 <div className="hidden sm:flex items-center gap-4 mt-3">
-                                                    <div className="flex items-center gap-2 text-amber-500">
+                                                    <div className="flex items-center gap-2 text-[#FD614B]">
                                                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
                                                         </svg>
                                                         <span className="text-sm font-medium">{nextAppointment.date}</span>
                                                     </div>
-                                                    <div className="flex items-center gap-2 text-amber-500">
+                                                    <div className="flex items-center gap-2 text-[#FD614B]">
                                                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
                                                         </svg>
@@ -447,13 +447,13 @@ export default function PatientDashboard({
                                         {/* Mobile: Date/Time/Location row */}
                                         <div className="flex sm:hidden items-center justify-between text-xs">
                                             <div className="flex items-center gap-3">
-                                                <div className="flex items-center gap-1 text-amber-500">
+                                                <div className="flex items-center gap-1 text-[#FD614B]">
                                                     <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
                                                     </svg>
                                                     <span className="font-medium">{nextAppointment.date}</span>
                                                 </div>
-                                                <div className="flex items-center gap-1 text-amber-500">
+                                                <div className="flex items-center gap-1 text-[#FD614B]">
                                                     <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
                                                     </svg>
@@ -509,7 +509,7 @@ export default function PatientDashboard({
                                     "p-6 md:p-8 rounded-xl border text-center",
                                     isDark ? "bg-white/[0.02] border-white/5" : "bg-gray-50 border-gray-200"
                                 )}>
-                                    <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-amber-500/10 flex items-center justify-center text-amber-500">
+                                    <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-[#FD614B]/10 flex items-center justify-center text-[#FD614B]">
                                         {Icons.calendar}
                                     </div>
                                     <h3 className={cn("text-lg font-semibold mb-2", isDark ? "text-white" : "text-slate-900")}>
@@ -567,7 +567,7 @@ export default function PatientDashboard({
 
                     {/* Recent Activity */}
                     <div>
-                        <GlowingCard glowColor="amber" className="p-4 md:p-6" isDark={isDark}>
+                        <GlowingCard glowColor="coral" className="p-4 md:p-6" isDark={isDark}>
                             <SectionHeader title={t.adminDashboard.sections.recentActivity} isDark={isDark} />
                             {recentActivity.length > 0 ? (
                                 <div className="space-y-4">
@@ -578,7 +578,7 @@ export default function PatientDashboard({
                                             animate={{ opacity: 1, x: 0 }}
                                             className="flex items-start gap-3"
                                         >
-                                            <div className="w-9 h-9 rounded-lg bg-amber-500/10 flex items-center justify-center text-amber-500 flex-shrink-0">
+                                            <div className="w-9 h-9 rounded-lg bg-[#FD614B]/10 flex items-center justify-center text-[#FD614B] flex-shrink-0">
                                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d={
                                                         activity.type === "appointment" ? "M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" :
@@ -620,16 +620,16 @@ export default function PatientDashboard({
                             >
                                 <Link href={action.href}>
                                     <GlowingCard
-                                        glowColor="amber"
+                                        glowColor="coral"
                                         className="p-3 md:p-5 cursor-pointer group h-full"
                                         isDark={isDark}
                                     >
-                                        <div className="w-9 h-9 md:w-12 md:h-12 rounded-full bg-gradient-to-br from-[#38BDF8] to-[#0284C7] flex items-center justify-center text-white shadow-[0_0_15px_rgba(14,165,233,0.4)] border border-sky-300/30 mb-2 md:mb-4 group-hover:scale-110 transition-transform">
+                                        <div className="w-9 h-9 md:w-12 md:h-12 rounded-full bg-gradient-to-br from-[#044C87] to-[#0C67B3] flex items-center justify-center text-white shadow-[0_0_15px_rgba(14,165,233,0.4)] border border-sky-300/30 mb-2 md:mb-4 group-hover:scale-110 transition-transform">
                                             <span className="[&>svg]:w-4 [&>svg]:h-4 md:[&>svg]:w-5 md:[&>svg]:h-5">
                                                 {action.icon}
                                             </span>
                                         </div>
-                                        <h3 className={cn("font-semibold text-xs md:text-base mb-0.5 md:mb-1 group-hover:text-amber-500 transition-colors leading-tight", isDark ? "text-white" : "text-slate-900")}>
+                                        <h3 className={cn("font-semibold text-xs md:text-base mb-0.5 md:mb-1 group-hover:text-[#FD614B] transition-colors leading-tight", isDark ? "text-white" : "text-slate-900")}>
                                             {action.title}
                                         </h3>
                                         <p className={cn("text-[10px] md:text-sm leading-tight line-clamp-2 hidden sm:block", isDark ? "text-gray-500" : "text-gray-600")}>

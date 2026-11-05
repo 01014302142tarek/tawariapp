@@ -141,8 +141,8 @@ export function QuickPrescriptionForm({
     const inputClasses = cn(
         "w-full px-3 py-2 rounded-lg border transition-colors text-sm",
         isDark
-            ? "bg-slate-700 border-slate-600 text-white placeholder-slate-400 focus:border-amber-500"
-            : "bg-white border-gray-300 text-gray-900 placeholder-gray-400 focus:border-amber-500",
+            ? "bg-slate-700 border-slate-600 text-white placeholder-slate-400 focus:border-[#FD614B]"
+            : "bg-white border-gray-300 text-gray-900 placeholder-gray-400 focus:border-[#FD614B]",
         "focus:outline-none focus:ring-2 focus:ring-amber-500/20"
     );
 
@@ -167,14 +167,14 @@ export function QuickPrescriptionForm({
                         transition={{ type: "spring", damping: 25, stiffness: 300 }}
                         className={cn(
                             "rounded-2xl shadow-2xl max-w-2xl w-full my-8",
-                            isDark ? "bg-slate-800" : "bg-white",
+                            isDark ? "bg-[#0D2C4F]" : "bg-white",
                             isRTL && "rtl"
                         )}
                     >
                         {/* Header */}
                         <div className={cn(
                             "flex items-center justify-between p-4 border-b",
-                            isDark ? "border-slate-700" : "border-gray-200"
+                            isDark ? "border-[#044C87]/30" : "border-gray-200"
                         )}>
                             <div>
                                 <h3 className={cn(
@@ -224,7 +224,7 @@ export function QuickPrescriptionForm({
                                         <div className="flex items-center justify-between mb-3">
                                             <span className={cn(
                                                 "text-sm font-medium",
-                                                isDark ? "text-amber-400" : "text-amber-600"
+                                                isDark ? "text-[#FD614B]" : "text-[#E84D37]"
                                             )}>
                                                 {isRTL ? `الدواء ${index + 1}` : `Medication ${index + 1}`}
                                             </span>
@@ -320,8 +320,8 @@ export function QuickPrescriptionForm({
                                     "w-full mt-4 px-4 py-2 rounded-lg border-2 border-dashed transition-colors",
                                     "flex items-center justify-center gap-2 text-sm",
                                     isDark
-                                        ? "border-slate-600 text-slate-400 hover:border-amber-500 hover:text-amber-400"
-                                        : "border-gray-300 text-gray-500 hover:border-amber-500 hover:text-amber-600"
+                                        ? "border-slate-600 text-slate-400 hover:border-[#FD614B] hover:text-[#FD614B]"
+                                        : "border-gray-300 text-gray-500 hover:border-[#FD614B] hover:text-[#E84D37]"
                                 )}
                             >
                                 {Icons.add}
@@ -332,7 +332,7 @@ export function QuickPrescriptionForm({
                         {/* Footer */}
                         <div className={cn(
                             "flex items-center justify-end gap-3 p-4 border-t",
-                            isDark ? "border-slate-700" : "border-gray-200"
+                            isDark ? "border-[#044C87]/30" : "border-gray-200"
                         )}>
                             <button
                                 onClick={onCancel}
@@ -351,7 +351,7 @@ export function QuickPrescriptionForm({
                                 disabled={saving}
                                 className={cn(
                                     "px-6 py-2 rounded-lg font-medium transition-all",
-                                    "bg-amber-500 text-white hover:bg-amber-600",
+                                    "bg-[#FD614B] text-white hover:bg-[#E84D37]",
                                     "flex items-center gap-2",
                                     "shadow-lg shadow-amber-500/20",
                                     saving && "opacity-50 cursor-not-allowed"

@@ -68,14 +68,14 @@ const typeStyles: Record<ToastType, { bg: string; icon: string; border: string }
         border: "border-red-500/20",
     },
     warning: {
-        bg: "bg-amber-500/10",
-        icon: "text-amber-500",
-        border: "border-amber-500/20",
+        bg: "bg-[#FD614B]/10",
+        icon: "text-[#FD614B]",
+        border: "border-[#FD614B]/30",
     },
     info: {
-        bg: "bg-amber-500/10",
-        icon: "text-amber-500",
-        border: "border-amber-500/20",
+        bg: "bg-[#FD614B]/10",
+        icon: "text-[#FD614B]",
+        border: "border-[#FD614B]/30",
     },
 };
 
@@ -229,10 +229,10 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
                         >
                             <div className={cn(
                                 "rounded-2xl p-6 shadow-2xl border",
-                                isDark ? "bg-slate-900 border-white/10" : "bg-white border-gray-200"
+                                isDark ? "bg-[#08213D] border-white/10" : "bg-white border-gray-200"
                             )}>
                                 <div className="flex items-center gap-3 mb-4">
-                                    <div className="w-10 h-10 rounded-full bg-amber-500/10 flex items-center justify-center text-amber-500">
+                                    <div className="w-10 h-10 rounded-full bg-[#FD614B]/10 flex items-center justify-center text-[#FD614B]">
                                         {Icons.warning}
                                     </div>
                                     <h3 className={cn("text-lg font-semibold", isDark ? "text-white" : "text-slate-900")}>

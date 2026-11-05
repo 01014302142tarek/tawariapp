@@ -75,7 +75,7 @@ export default function Sidebar2() {
     return (
         <aside className={cn(
             "fixed left-0 top-0 h-screen w-64 border-r flex flex-col z-40 transition-colors duration-300",
-            isDark ? "bg-slate-950 border-white/5" : "bg-white border-gray-200"
+            isDark ? "bg-[#031326] border-white/5" : "bg-white border-gray-200"
         )}>
             {/* Logo */}
             <div className={cn(
@@ -108,7 +108,7 @@ export default function Sidebar2() {
                                     {item.icon}
                                     <span className="font-medium text-sm flex-1">{item.name}</span>
                                     {item.count && (
-                                        <span className="w-5 h-5 flex items-center justify-center text-xs font-bold text-white bg-amber-500 rounded-full">
+                                        <span className="w-5 h-5 flex items-center justify-center text-xs font-bold text-white bg-[#FD614B] rounded-full">
                                             {item.count}
                                         </span>
                                     )}

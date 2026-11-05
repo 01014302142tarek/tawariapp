@@ -217,12 +217,12 @@ export default function AdminReviewsPage() {
                     minSize={0.4}
                     maxSize={1}
                     particleDensity={isDark ? 20 : 10}
-                    particleColor={isDark ? "245, 158, 11" : "217, 119, 6"}
+                    particleColor={isDark ? "253, 97, 75" : "4, 76, 135"}
                 />
                 {isDark && (
                     <>
-                        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-amber-500/5 rounded-full blur-3xl" />
-                        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-amber-500/5 rounded-full blur-3xl" />
+                        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-[#FD614B]/10 rounded-full blur-3xl" />
+                        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-[#FD614B]/10 rounded-full blur-3xl" />
                     </>
                 )}
             </div>
@@ -243,9 +243,9 @@ export default function AdminReviewsPage() {
                 {/* Stats Row */}
                 <div className="grid grid-cols-3 gap-3 md:gap-4 mb-6 md:mb-8">
                     {statsConfig.map((stat, idx) => (
-                        <GlowingCard key={idx} glowColor="amber" className="p-3 md:p-4" isDark={isDark}>
+                        <GlowingCard key={idx} glowColor="coral" className="p-3 md:p-4" isDark={isDark}>
                             <div className="flex items-center gap-2 md:gap-3">
-                                <div className="w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center bg-gradient-to-br from-[#38BDF8] to-[#0284C7] text-white shadow-[0_0_15px_rgba(14,165,233,0.5)] border border-sky-300/40">
+                                <div className="w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center bg-gradient-to-br from-[#044C87] to-[#0C67B3] text-white shadow-[0_0_15px_rgba(4,76,135,0.4)] border border-[#0C67B3]/40">
                                     <span className="[&>svg]:w-4 [&>svg]:h-4 md:[&>svg]:w-5 md:[&>svg]:h-5">
                                         {stat.icon}
                                     </span>
@@ -264,7 +264,7 @@ export default function AdminReviewsPage() {
                 </div>
 
                 {/* Search and Filters */}
-                <GlowingCard glowColor="amber" className="p-3 md:p-4 mb-4 md:mb-6" isDark={isDark}>
+                <GlowingCard glowColor="coral" className="p-3 md:p-4 mb-4 md:mb-6" isDark={isDark}>
                     <div className="flex flex-col md:flex-row gap-4">
                         <div className="flex-1 relative">
                             <div className={cn("absolute top-1/2 -translate-y-1/2 text-gray-500", isRTL ? "right-3" : "left-3")}>{Icons.search}</div>
@@ -277,8 +277,8 @@ export default function AdminReviewsPage() {
                                     "w-full py-2.5 rounded-xl border outline-none transition-colors",
                                     isRTL ? "pr-10 pl-4" : "pl-10 pr-4",
                                     isDark
-                                        ? "bg-slate-800/50 border-white/10 text-white placeholder-gray-500 focus:border-amber-500/50"
-                                        : "bg-gray-50 border-gray-200 text-slate-900 placeholder-gray-400 focus:border-amber-500"
+                                        ? "bg-[#0D2C4F]/50 border-white/10 text-white placeholder-gray-500 focus:border-[#FD614B]/50"
+                                        : "bg-gray-50 border-gray-200 text-slate-900 placeholder-gray-400 focus:border-[#FD614B]"
                                 )}
                             />
                         </div>
@@ -290,7 +290,7 @@ export default function AdminReviewsPage() {
                                     className={cn(
                                         "px-4 py-2.5 rounded-xl text-sm font-medium transition-colors capitalize",
                                         filter === f
-                                            ? "bg-amber-500 text-white"
+                                            ? "bg-[#FD614B] text-white"
                                             : isDark
                                                 ? "bg-white/5 text-gray-400 hover:bg-white/10"
                                                 : "bg-gray-100 text-gray-600 hover:bg-gray-200"
@@ -306,11 +306,11 @@ export default function AdminReviewsPage() {
                 {/* Loading State */}
                 {isLoading ? (
                     <div className="flex items-center justify-center py-20">
-                        <div className="animate-spin w-8 h-8 border-2 border-amber-500 border-t-transparent rounded-full" />
+                        <div className="animate-spin w-8 h-8 border-2 border-[#FD614B] border-t-transparent rounded-full" />
                     </div>
                 ) : filteredReviews.length === 0 ? (
-                    <GlowingCard glowColor="amber" className="p-12 text-center" isDark={isDark}>
-                        <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-amber-500/10 flex items-center justify-center text-amber-500">
+                    <GlowingCard glowColor="coral" className="p-12 text-center" isDark={isDark}>
+                        <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[#FD614B]/10 flex items-center justify-center text-[#FD614B]">
                             {Icons.star}
                         </div>
                         <h3 className={cn("text-lg font-semibold mb-2", isDark ? "text-white" : "text-slate-900")}>
@@ -332,14 +332,14 @@ export default function AdminReviewsPage() {
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: idx * 0.05 }}
                             >
-                                <GlowingCard glowColor="amber" className="p-4 md:p-6" isDark={isDark}>
+                                <GlowingCard glowColor="coral" className="p-4 md:p-6" isDark={isDark}>
                                     <div className="flex flex-col md:flex-row md:items-start gap-4">
                                         {/* Left: Review Content */}
                                         <div className="flex-1">
                                             {/* Header */}
                                             <div className="flex items-start justify-between gap-3 mb-3">
                                                 <div className="flex items-center gap-3">
-                                                    <div className="relative w-10 h-10 rounded-full overflow-hidden border-2 border-amber-500/30">
+                                                    <div className="relative w-10 h-10 rounded-full overflow-hidden border-2 border-[#FD614B]/40">
                                                         <Image
                                                             src={review.patient?.profile?.avatar_url || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop&crop=face"}
                                                             alt={getPatientName(review)}
@@ -375,8 +375,8 @@ export default function AdminReviewsPage() {
 
                                             {/* Doctor Response */}
                                             {review.doctor_response && (
-                                                <div className={cn("p-3 rounded-lg mb-3", isDark ? "bg-amber-900/30" : "bg-amber-50")}>
-                                                    <p className={cn("text-xs font-medium mb-1", isDark ? "text-amber-400" : "text-amber-700")}>
+                                                <div className={cn("p-3 rounded-lg mb-3", isDark ? "bg-amber-900/30" : "bg-[#FFF5F3]")}>
+                                                    <p className={cn("text-xs font-medium mb-1", isDark ? "text-[#FD614B]" : "text-[#C43825]")}>
                                                         {isRTL ? "رد الطبيب:" : "Doctor's Response:"}
                                                     </p>
                                                     <p className={cn("text-sm", isDark ? "text-gray-300" : "text-gray-600")}>
@@ -473,7 +473,7 @@ export default function AdminReviewsPage() {
                             onClick={(e) => e.stopPropagation()}
                             className={cn(
                                 "w-full max-w-md rounded-2xl p-6",
-                                isDark ? "bg-slate-900 border border-white/10" : "bg-white"
+                                isDark ? "bg-[#08213D] border border-white/10" : "bg-white"
                             )}
                         >
                             <h3 className={cn("text-lg font-semibold mb-4", isDark ? "text-white" : "text-slate-900")}>
@@ -508,7 +508,7 @@ export default function AdminReviewsPage() {
                                 className={cn(
                                     "w-full p-3 rounded-xl border outline-none transition-colors mb-4 resize-none",
                                     isDark
-                                        ? "bg-slate-800 border-white/10 text-white placeholder-gray-500 focus:border-red-500/50"
+                                        ? "bg-[#0D2C4F] border-white/10 text-white placeholder-gray-500 focus:border-red-500/50"
                                         : "bg-gray-50 border-gray-200 text-slate-900 placeholder-gray-400 focus:border-red-500"
                                 )}
                             />

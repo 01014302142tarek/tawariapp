@@ -422,20 +422,20 @@ export function NativeWebRTCCall({
     const targetDisplayName = remoteUserName || (userRole === "doctor" ? (isRTL ? "المريض" : "Patient") : (isRTL ? "الطبيب" : "Doctor"));
 
     return (
-        <div className="relative w-full h-full bg-slate-950 flex flex-col overflow-hidden select-none">
+        <div className="relative w-full h-full bg-[#031326] flex flex-col overflow-hidden select-none">
             {/* Top Bar Overlay */}
             <div className="absolute top-0 inset-x-0 z-30 p-4 bg-gradient-to-b from-black/80 via-black/40 to-transparent flex items-center justify-between pointer-events-none">
                 <div className="flex items-center gap-3 pointer-events-auto">
                     <button
                         onClick={onEndCall}
-                        className="p-2 rounded-xl bg-slate-900/80 hover:bg-slate-800 text-slate-300 border border-white/10 backdrop-blur transition-colors"
+                        className="p-2 rounded-xl bg-[#08213D]/80 hover:bg-[#0D2C4F] text-slate-300 border border-white/10 backdrop-blur transition-colors"
                         title={isRTL ? "رجوع" : "Back"}
                     >
                         <svg className={cn("w-5 h-5", isRTL && "rotate-180")} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
                         </svg>
                     </button>
-                    <div className="w-10 h-10 rounded-full bg-slate-800 border border-white/10 flex items-center justify-center font-bold text-white text-sm">
+                    <div className="w-10 h-10 rounded-full bg-[#0D2C4F] border border-white/10 flex items-center justify-center font-bold text-white text-sm">
                         {targetDisplayName.charAt(0)}
                     </div>
                     <div>
@@ -473,8 +473,8 @@ export function NativeWebRTCCall({
 
             {/* Permission / Hardware Error Screen */}
             {permissionError && (
-                <div className="absolute inset-0 z-40 bg-slate-950 flex items-center justify-center p-6 text-center">
-                    <div className="max-w-md bg-slate-900 border border-white/10 rounded-2xl p-6 shadow-2xl">
+                <div className="absolute inset-0 z-40 bg-[#031326] flex items-center justify-center p-6 text-center">
+                    <div className="max-w-md bg-[#08213D] border border-white/10 rounded-2xl p-6 shadow-2xl">
                         <div className="w-14 h-14 rounded-full bg-red-500/20 text-red-400 flex items-center justify-center mx-auto mb-4">
                             <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
@@ -488,7 +488,7 @@ export function NativeWebRTCCall({
                         </p>
                         <button
                             onClick={initCall}
-                            className="w-full py-2.5 px-4 bg-amber-500 hover:bg-amber-600 text-white font-medium rounded-xl transition-colors"
+                            className="w-full py-2.5 px-4 bg-[#FD614B] hover:bg-[#E84D37] text-white font-medium rounded-xl transition-colors"
                         >
                             {isRTL ? "إعادة المحاولة والموافقة" : "Retry & Allow"}
                         </button>
@@ -511,7 +511,7 @@ export function NativeWebRTCCall({
 
                 {/* Remote Placeholder when not connected or camera turned off */}
                 {(!connected || remoteVideoOff) && (
-                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-900/90 text-center p-6">
+                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#08213D]/90 text-center p-6">
                         <div className="relative mb-4">
                             <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-gradient-to-tr from-amber-500 to-amber-300 flex items-center justify-center text-slate-950 font-bold text-3xl sm:text-4xl shadow-xl shadow-amber-500/20">
                                 {targetDisplayName.charAt(0)}
@@ -532,7 +532,7 @@ export function NativeWebRTCCall({
                 )}
 
                 {/* Floating Self-View (Picture-in-Picture) */}
-                <div className="absolute top-20 right-4 sm:top-20 sm:right-6 w-24 h-36 sm:w-36 sm:h-52 rounded-2xl overflow-hidden shadow-2xl border-2 border-white/20 bg-slate-900 z-20 transition-all">
+                <div className="absolute top-20 right-4 sm:top-20 sm:right-6 w-24 h-36 sm:w-36 sm:h-52 rounded-2xl overflow-hidden shadow-2xl border-2 border-white/20 bg-[#08213D] z-20 transition-all">
                     <video
                         ref={localVideoRef}
                         autoPlay
@@ -545,7 +545,7 @@ export function NativeWebRTCCall({
                         )}
                     />
                     {isVideoOff && (
-                        <div className="w-full h-full flex flex-col items-center justify-center bg-slate-800 text-slate-400">
+                        <div className="w-full h-full flex flex-col items-center justify-center bg-[#0D2C4F] text-slate-400">
                             <svg className="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3l18 18" />
@@ -561,7 +561,7 @@ export function NativeWebRTCCall({
 
             {/* Bottom Floating Call Controls */}
             <div className="absolute bottom-6 inset-x-0 z-30 flex items-center justify-center px-4 pointer-events-none">
-                <div className="flex items-center gap-3 sm:gap-4 bg-slate-900/90 backdrop-blur-xl px-5 py-3 rounded-2xl border border-white/10 shadow-2xl pointer-events-auto">
+                <div className="flex items-center gap-3 sm:gap-4 bg-[#08213D]/90 backdrop-blur-xl px-5 py-3 rounded-2xl border border-white/10 shadow-2xl pointer-events-auto">
                     {/* Toggle Microphone */}
                     <button
                         onClick={toggleAudio}
@@ -569,7 +569,7 @@ export function NativeWebRTCCall({
                             "w-12 h-12 rounded-xl flex items-center justify-center text-white transition-all transform active:scale-95",
                             isAudioMuted
                                 ? "bg-red-500 hover:bg-red-600 shadow-lg shadow-red-500/30"
-                                : "bg-slate-800 hover:bg-slate-700 border border-white/10"
+                                : "bg-[#0D2C4F] hover:bg-slate-700 border border-white/10"
                         )}
                         title={isAudioMuted ? (isRTL ? "تشغيل الميكروفون" : "Unmute") : (isRTL ? "كتم الميكروفون" : "Mute")}
                     >
@@ -592,7 +592,7 @@ export function NativeWebRTCCall({
                             "w-12 h-12 rounded-xl flex items-center justify-center text-white transition-all transform active:scale-95",
                             isVideoOff
                                 ? "bg-red-500 hover:bg-red-600 shadow-lg shadow-red-500/30"
-                                : "bg-slate-800 hover:bg-slate-700 border border-white/10"
+                                : "bg-[#0D2C4F] hover:bg-slate-700 border border-white/10"
                         )}
                         title={isVideoOff ? (isRTL ? "تشغيل الكاميرا" : "Turn Video On") : (isRTL ? "إيقاف الكاميرا" : "Turn Video Off")}
                     >
@@ -612,7 +612,7 @@ export function NativeWebRTCCall({
                     {hasMultipleCameras && (
                         <button
                             onClick={switchCamera}
-                            className="w-12 h-12 rounded-xl bg-slate-800 hover:bg-slate-700 border border-white/10 text-white flex items-center justify-center transition-all transform active:scale-95"
+                            className="w-12 h-12 rounded-xl bg-[#0D2C4F] hover:bg-slate-700 border border-white/10 text-white flex items-center justify-center transition-all transform active:scale-95"
                             title={isRTL ? "تبديل الكاميرا (أمامية/خلفية)" : "Flip Camera"}
                         >
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

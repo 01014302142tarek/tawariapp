@@ -50,8 +50,8 @@ const Badge = ({ children, variant = "default", isDark = true }: { children: Rea
     const variants = {
         default: isDark ? "bg-slate-700/50 text-slate-300" : "bg-gray-100 text-slate-700 border border-gray-200",
         success: "bg-green-500/10 text-green-700 dark:text-green-400 border border-green-500/20",
-        warning: "bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20",
-        primary: "bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20",
+        warning: "bg-[#FD614B]/10 text-[#FD614B] border border-[#FD614B]/20",
+        primary: "bg-[#FD614B]/10 text-[#FD614B] border border-[#FD614B]/20",
         error: "bg-red-500/10 text-red-700 dark:text-red-400 border border-red-500/20",
     };
     return (
@@ -227,7 +227,7 @@ export default function AppointmentsPage({
     if (loading) {
         return (
             <div className="p-4 md:p-6 lg:p-8 flex items-center justify-center min-h-[60vh]">
-                <div className="animate-spin w-8 h-8 border-2 border-amber-500 border-t-transparent rounded-full" />
+                <div className="animate-spin w-8 h-8 border-2 border-[#FD614B] border-t-transparent rounded-full" />
             </div>
         );
     }
@@ -254,7 +254,7 @@ export default function AppointmentsPage({
                         >
                             <div className={cn(
                                 "rounded-2xl p-6 shadow-2xl border",
-                                isDark ? "bg-slate-900 border-white/10" : "bg-white border-gray-200"
+                                isDark ? "bg-[#08213D] border-white/10" : "bg-white border-gray-200"
                             )}>
                                 <div className="flex items-center gap-3 mb-4">
                                     <button
@@ -281,7 +281,7 @@ export default function AppointmentsPage({
                                     className={cn(
                                         "w-full p-3 rounded-lg border resize-none h-24 mb-4 focus:outline-none focus:ring-2 focus:ring-amber-500",
                                         isDark
-                                            ? "bg-slate-800 border-white/10 text-white placeholder-gray-500"
+                                            ? "bg-[#0D2C4F] border-white/10 text-white placeholder-gray-500"
                                             : "bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400"
                                     )}
                                     dir={isRTL ? "rtl" : "ltr"}
@@ -323,7 +323,7 @@ export default function AppointmentsPage({
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 md:mb-8">
                 <div>
                     <h1 className={cn("text-xl md:text-2xl font-bold flex items-center gap-2 md:gap-3", textPrimary)}>
-                        <span className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-br from-[#38BDF8] to-[#0284C7] flex items-center justify-center text-white shadow-[0_0_15px_rgba(14,165,233,0.5)] border border-sky-300/40">
+                        <span className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-br from-[#044C87] to-[#0C67B3] flex items-center justify-center text-white shadow-[0_0_15px_rgba(4,76,135,0.4)] border border-[#0C67B3]/40">
                             {Icons.calendar}
                         </span>
                         {t.patientDashboard.appointmentsPage.title}
@@ -348,7 +348,7 @@ export default function AppointmentsPage({
                         className={cn(
                             "px-3 md:px-4 py-1.5 md:py-2 rounded-lg text-xs md:text-sm font-medium transition-all whitespace-nowrap flex-shrink-0",
                             activeFilter === filter.key
-                                ? "bg-amber-500 text-white"
+                                ? "bg-[#FD614B] text-white"
                                 : isDark
                                     ? "bg-white/5 text-gray-400 hover:bg-white/10"
                                     : "bg-gray-100 text-gray-600 hover:bg-gray-200"
@@ -361,8 +361,8 @@ export default function AppointmentsPage({
 
             {/* Appointments List */}
             {filteredAppointments.length === 0 ? (
-                <GlowingCard glowColor="amber" className="p-12 text-center" isDark={isDark}>
-                    <div className={cn("w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4", isDark ? "bg-slate-900" : "bg-gray-100", textMuted)}>
+                <GlowingCard glowColor="coral" className="p-12 text-center" isDark={isDark}>
+                    <div className={cn("w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4", isDark ? "bg-[#08213D]" : "bg-gray-100", textMuted)}>
                         {Icons.calendar}
                     </div>
                     <h3 className={cn("text-lg font-medium mb-2", textPrimary)}>
@@ -379,10 +379,10 @@ export default function AppointmentsPage({
                             key={apt.id}
                             initial={false}
                         >
-                            <GlowingCard glowColor="amber" className="p-3 md:p-5" isDark={isDark}>
+                            <GlowingCard glowColor="coral" className="p-3 md:p-5" isDark={isDark}>
                                 <div className="flex flex-col sm:flex-row sm:items-center gap-3 md:gap-4">
                                     <div className="flex items-center gap-3 md:gap-4">
-                                        <div className="relative w-12 h-12 md:w-14 md:h-14 rounded-lg md:rounded-xl overflow-hidden border-2 border-amber-500/30 flex-shrink-0">
+                                        <div className="relative w-12 h-12 md:w-14 md:h-14 rounded-lg md:rounded-xl overflow-hidden border-2 border-[#FD614B]/40 flex-shrink-0">
                                             {apt.doctor?.avatar_url ? (
                                                 <Image
                                                     src={apt.doctor.avatar_url}
@@ -392,7 +392,7 @@ export default function AppointmentsPage({
                                                     sizes="(max-width: 768px) 48px, 56px"
                                                 />
                                             ) : (
-                                                <div className={cn("w-full h-full flex items-center justify-center text-xl font-bold", isDark ? "bg-amber-500/10 text-amber-400" : "bg-amber-50 text-amber-600")}>
+                                                <div className={cn("w-full h-full flex items-center justify-center text-xl font-bold", isDark ? "bg-[#FD614B]/10 text-[#FD614B]" : "bg-[#FFF5F3] text-[#E84D37]")}>
                                                     {apt.doctor?.full_name.charAt(0) || "D"}
                                                 </div>
                                             )}
@@ -456,7 +456,7 @@ export default function AppointmentsPage({
                                     {/* Actions */}
                                     {actionLoading === apt.id ? (
                                         <div className="flex items-center justify-center py-2">
-                                            <div className="animate-spin w-5 h-5 border-2 border-amber-500 border-t-transparent rounded-full" />
+                                            <div className="animate-spin w-5 h-5 border-2 border-[#FD614B] border-t-transparent rounded-full" />
                                         </div>
                                     ) : (
                                         <>
@@ -464,7 +464,7 @@ export default function AppointmentsPage({
                                                 <div className="flex gap-2 sm:flex-shrink-0">
                                                     <button
                                                         onClick={() => handleJoinWaitingRoom(apt.id)}
-                                                        className="flex-1 sm:flex-initial px-4 py-2 rounded-lg bg-amber-500 hover:bg-amber-600 text-white text-sm font-medium transition-colors flex items-center justify-center gap-2"
+                                                        className="flex-1 sm:flex-initial px-4 py-2 rounded-lg bg-[#FD614B] hover:bg-[#E84D37] text-white text-sm font-medium transition-colors flex items-center justify-center gap-2"
                                                     >
                                                         {Icons.video}
                                                         {isRTL ? "انضم للانتظار" : "Join Waiting"}
@@ -485,7 +485,7 @@ export default function AppointmentsPage({
                                                 <div className="flex gap-2 sm:flex-shrink-0">
                                                     <button
                                                         onClick={() => router.push(`/${language}/dashboard/consultation/${apt.id}/waiting-room`)}
-                                                        className="flex-1 sm:flex-initial px-4 py-2 rounded-lg bg-amber-500 hover:bg-amber-600 text-white text-sm font-medium transition-colors flex items-center justify-center gap-2"
+                                                        className="flex-1 sm:flex-initial px-4 py-2 rounded-lg bg-[#FD614B] hover:bg-[#E84D37] text-white text-sm font-medium transition-colors flex items-center justify-center gap-2"
                                                     >
                                                         {Icons.clock}
                                                         {isRTL ? "العودة لغرفة الانتظار" : "Back to Waiting Room"}
@@ -496,7 +496,7 @@ export default function AppointmentsPage({
                                                 <div className="flex gap-2 sm:flex-shrink-0">
                                                     <button
                                                         onClick={() => handleJoinConsultation(apt.id)}
-                                                        className="flex-1 sm:flex-initial px-4 py-2 rounded-lg bg-amber-500 hover:bg-amber-600 text-white text-sm font-medium transition-colors flex items-center justify-center gap-2"
+                                                        className="flex-1 sm:flex-initial px-4 py-2 rounded-lg bg-[#FD614B] hover:bg-[#E84D37] text-white text-sm font-medium transition-colors flex items-center justify-center gap-2"
                                                     >
                                                         {Icons.video}
                                                         {isRTL ? "انضم للاستشارة" : "Join Call"}

@@ -146,7 +146,7 @@ const UserDropdown = ({
                 )}
             >
                 <div className="relative">
-                    <div className="w-9 h-9 md:w-10 md:h-10 rounded-full overflow-hidden border-2 border-amber-500/30">
+                    <div className="w-9 h-9 md:w-10 md:h-10 rounded-full overflow-hidden border-2 border-[#FD614B]/40">
                         <Image
                             src={image}
                             alt={name}
@@ -366,7 +366,7 @@ export default function Header({ onMenuClick }: { onMenuClick?: () => void }) {
     return (
         <header className={cn(
             "relative z-40 border-b backdrop-blur-xl transition-colors duration-300",
-            isDark ? "border-white/5 bg-slate-950/80" : "border-gray-200 bg-white/80"
+            isDark ? "border-white/5 bg-[#031326]/80" : "border-gray-200 bg-white/80"
         )}>
             <div className="px-4 md:px-8 py-3 md:py-4 flex items-center justify-between">
                 {/* Left: Mobile Menu + Date */}

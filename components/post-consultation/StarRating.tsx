@@ -69,8 +69,8 @@ export function StarRating({
                         whileTap={{ scale: 0.9 }}
                         className={cn(
                             "group transition-colors duration-150 focus:outline-none",
-                            isActive ? "text-amber-400" : "text-gray-300",
-                            !disabled && "cursor-pointer hover:text-amber-400",
+                            isActive ? "text-[#FD614B]" : "text-gray-300",
+                            !disabled && "cursor-pointer hover:text-[#FD614B]",
                             disabled && "cursor-default opacity-70"
                         )}
                     >

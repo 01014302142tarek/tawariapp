@@ -55,16 +55,16 @@ export function PrescriptionPromptModal({
                         transition={{ type: "spring", damping: 25, stiffness: 300 }}
                         className={cn(
                             "rounded-2xl p-6 max-w-md w-full shadow-2xl",
-                            isDark ? "bg-slate-800" : "bg-white",
+                            isDark ? "bg-[#0D2C4F]" : "bg-white",
                             isRTL && "rtl"
                         )}
                     >
                         {/* Icon */}
                         <div className={cn(
                             "w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4",
-                            isDark ? "bg-amber-500/10" : "bg-amber-50"
+                            isDark ? "bg-[#FD614B]/10" : "bg-[#FFF5F3]"
                         )}>
-                            <span className="text-amber-500">{Icons.prescription}</span>
+                            <span className="text-[#FD614B]">{Icons.prescription}</span>
                         </div>
 
                         {/* Title */}
@@ -91,7 +91,7 @@ export function PrescriptionPromptModal({
                                 onClick={onAddPrescription}
                                 className={cn(
                                     "w-full px-4 py-3 rounded-xl font-medium transition-all",
-                                    "bg-amber-500 text-white hover:bg-amber-600",
+                                    "bg-[#FD614B] text-white hover:bg-[#E84D37]",
                                     "flex items-center justify-center gap-2",
                                     "shadow-lg shadow-amber-500/20 hover:shadow-amber-500/30"
                                 )}

@@ -364,14 +364,14 @@ export function QueueChat({
                         className={cn(
                             "w-[calc(100vw-2rem)] sm:w-80 max-w-80 rounded-2xl border shadow-2xl overflow-hidden",
                             isDark
-                                ? "bg-slate-900 border-white/10"
+                                ? "bg-[#08213D] border-white/10"
                                 : "bg-white border-gray-200"
                         )}
                     >
                         {/* Header */}
                         <div className={cn(
                             "p-3 border-b flex items-center justify-between",
-                            isDark ? "border-white/10 bg-slate-800/50" : "border-gray-200 bg-gray-50"
+                            isDark ? "border-white/10 bg-[#0D2C4F]/50" : "border-gray-200 bg-gray-50"
                         )}>
                             <div className="flex items-center gap-2">
                                 {recipientAvatar ? (
@@ -429,11 +429,11 @@ export function QueueChat({
                                 >
                                     <div className={cn(
                                         "h-64 overflow-y-auto p-3 space-y-2",
-                                        isDark ? "bg-slate-950" : "bg-white"
+                                        isDark ? "bg-[#031326]" : "bg-white"
                                     )}>
                                         {loading ? (
                                             <div className="flex items-center justify-center h-full">
-                                                <div className="w-6 h-6 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" />
+                                                <div className="w-6 h-6 border-2 border-[#FD614B] border-t-transparent rounded-full animate-spin" />
                                             </div>
                                         ) : messages.length === 0 ? (
                                             <div className="flex items-center justify-center h-full">
@@ -465,9 +465,9 @@ export function QueueChat({
                                                             className={cn(
                                                                 "max-w-[80%] rounded-xl px-3 py-2",
                                                                 isOwnMessage
-                                                                    ? "bg-amber-500 text-white rounded-br-sm"
+                                                                    ? "bg-[#FD614B] text-white rounded-br-sm"
                                                                     : isDark
-                                                                        ? "bg-slate-800 text-white rounded-bl-sm"
+                                                                        ? "bg-[#0D2C4F] text-white rounded-bl-sm"
                                                                         : "bg-gray-100 text-slate-900 rounded-bl-sm"
                                                             )}
                                                         >
@@ -495,7 +495,7 @@ export function QueueChat({
                                                                         ) : (
                                                                             <div className={cn(
                                                                                 "w-full h-20 rounded-lg flex items-center justify-center",
-                                                                                isOwnMessage ? "bg-amber-600" : isDark ? "bg-slate-700" : "bg-gray-200"
+                                                                                isOwnMessage ? "bg-[#E84D37]" : isDark ? "bg-slate-700" : "bg-gray-200"
                                                                             )}>
                                                                                 <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin opacity-50" />
                                                                             </div>
@@ -509,7 +509,7 @@ export function QueueChat({
                                                                             className={cn(
                                                                                 "flex items-center gap-2 p-2 rounded-lg transition-colors",
                                                                                 isOwnMessage
-                                                                                    ? "bg-amber-600 hover:bg-amber-700"
+                                                                                    ? "bg-[#E84D37] hover:bg-amber-700"
                                                                                     : isDark
                                                                                         ? "bg-slate-700 hover:bg-slate-600"
                                                                                         : "bg-gray-200 hover:bg-gray-300",
@@ -583,7 +583,7 @@ export function QueueChat({
                                                     exit={{ opacity: 0, height: 0 }}
                                                     className={cn(
                                                         "mb-2 p-2 rounded-lg flex items-center gap-2",
-                                                        isDark ? "bg-slate-800" : "bg-gray-100"
+                                                        isDark ? "bg-[#0D2C4F]" : "bg-gray-100"
                                                     )}
                                                 >
                                                     {filePreview ? (
@@ -655,8 +655,8 @@ export function QueueChat({
                                                 className={cn(
                                                     "p-2 rounded-lg transition-colors flex-shrink-0",
                                                     isDark
-                                                        ? "hover:bg-slate-700 text-slate-400 hover:text-amber-400"
-                                                        : "hover:bg-gray-200 text-gray-500 hover:text-amber-500",
+                                                        ? "hover:bg-slate-700 text-slate-400 hover:text-[#FD614B]"
+                                                        : "hover:bg-gray-200 text-gray-500 hover:text-[#FD614B]",
                                                     "disabled:opacity-50 disabled:cursor-not-allowed"
                                                 )}
                                                 title={isRTL ? "إرفاق ملف" : "Attach file"}
@@ -679,15 +679,15 @@ export function QueueChat({
                                                 className={cn(
                                                     "flex-1 px-3 py-2 rounded-lg text-sm border transition-colors resize-none overflow-hidden",
                                                     isDark
-                                                        ? "bg-slate-800 border-slate-700 text-white placeholder:text-slate-500 focus:border-amber-500"
-                                                        : "bg-gray-50 border-gray-200 text-slate-900 placeholder:text-gray-400 focus:border-amber-500"
+                                                        ? "bg-[#0D2C4F] border-[#044C87]/30 text-white placeholder:text-slate-500 focus:border-[#FD614B]"
+                                                        : "bg-gray-50 border-gray-200 text-slate-900 placeholder:text-gray-400 focus:border-[#FD614B]"
                                                 )}
                                                 style={{ minHeight: "38px", maxHeight: "100px" }}
                                             />
                                             <button
                                                 type="submit"
                                                 disabled={(!newMessage.trim() && !selectedFile) || sending || uploading}
-                                                className="px-3 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
+                                                className="px-3 py-2 bg-[#FD614B] text-white rounded-lg hover:bg-[#E84D37] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
                                             >
                                                 {sending || uploading ? (
                                                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />

@@ -87,7 +87,7 @@ const NotificationIcons: Record<NotificationType, React.ReactNode> = {
 // Get icon background color based on notification type - All using main amber color
 const getIconBgColor = (type: NotificationType, isDark: boolean): string => {
     // Unified amber color for all notification types
-    return isDark ? "bg-amber-500/20 text-amber-400" : "bg-amber-100 text-amber-600";
+    return isDark ? "bg-[#FD614B]/20 text-[#FD614B]" : "bg-[#FFE8E4] text-[#E84D37]";
 };
 
 // Format relative time
@@ -325,8 +325,8 @@ export default function NotificationsPage({ isDark, dashboardType }: Notificatio
                         className={cn(
                             "px-4 py-2 text-sm font-medium rounded-xl transition-all duration-200",
                             isDark
-                                ? "bg-amber-500/20 text-amber-400 hover:bg-amber-500/30 border border-amber-500/30"
-                                : "bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200",
+                                ? "bg-[#FD614B]/20 text-[#FD614B] hover:bg-[#FD614B]/30 border border-[#FD614B]/40"
+                                : "bg-[#FFF5F3] text-[#C43825] hover:bg-[#FFE8E4] border border-[#FFD0CA]",
                             markingAllRead && "opacity-50 cursor-not-allowed"
                         )}
                     >
@@ -346,10 +346,10 @@ export default function NotificationsPage({ isDark, dashboardType }: Notificatio
                             "px-4 py-2 text-sm font-medium rounded-xl transition-all duration-200",
                             filter === option.value
                                 ? isDark
-                                    ? "bg-amber-500 text-white shadow-lg shadow-amber-500/30"
-                                    : "bg-amber-500 text-white shadow-lg shadow-amber-500/20"
+                                    ? "bg-[#FD614B] text-white shadow-lg shadow-amber-500/30"
+                                    : "bg-[#FD614B] text-white shadow-lg shadow-amber-500/20"
                                 : isDark
-                                    ? "bg-slate-800/50 text-gray-400 hover:bg-slate-800 hover:text-white border border-white/5"
+                                    ? "bg-[#0D2C4F]/50 text-gray-400 hover:bg-[#0D2C4F] hover:text-white border border-white/5"
                                     : "bg-white text-gray-600 hover:bg-gray-50 hover:text-gray-900 border border-gray-200"
                         )}
                     >
@@ -417,7 +417,7 @@ export default function NotificationsPage({ isDark, dashboardType }: Notificatio
                                         isDark
                                             ? "border-white/5 hover:bg-white/5"
                                             : "border-gray-100 hover:bg-gray-50/80",
-                                        !notification.is_read && (isDark ? "bg-amber-500/5 border-amber-500/10" : "bg-amber-50/50 border-amber-200/50")
+                                        !notification.is_read && (isDark ? "bg-[#FD614B]/10 border-[#FD614B]/15" : "bg-[#FFF5F3] border-[#FFD0CA]/50")
                                     )}
                                     onClick={() => handleNotificationClick(notification)}
                                 >
@@ -448,7 +448,7 @@ export default function NotificationsPage({ isDark, dashboardType }: Notificatio
                                                 </p>
                                             </div>
                                             {!notification.is_read && (
-                                                <div className="w-2.5 h-2.5 rounded-full bg-amber-500 flex-shrink-0 mt-2" />
+                                                <div className="w-2.5 h-2.5 rounded-full bg-[#FD614B] flex-shrink-0 mt-2" />
                                             )}
                                         </div>
                                         <div className="flex items-center justify-between mt-3">
@@ -491,7 +491,7 @@ export default function NotificationsPage({ isDark, dashboardType }: Notificatio
                                     className={cn(
                                         "px-6 py-2.5 text-sm font-medium rounded-xl transition-all duration-200 border",
                                         isDark
-                                            ? "bg-slate-800/50 text-gray-400 hover:bg-slate-800 hover:text-white border-white/10"
+                                            ? "bg-[#0D2C4F]/50 text-gray-400 hover:bg-[#0D2C4F] hover:text-white border-white/10"
                                             : "bg-white text-gray-600 hover:bg-gray-50 hover:text-gray-900 border-gray-200",
                                         loading && "opacity-50 cursor-not-allowed"
                                     )}

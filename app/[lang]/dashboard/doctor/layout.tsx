@@ -18,7 +18,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
         <div
             className={cn(
                 "min-h-screen transition-colors duration-300",
-                isDark ? "bg-slate-950" : "bg-gray-50",
+                isDark ? "bg-[#031326]" : "bg-gray-50",
                 isRTL ? "font-cairo" : ""
             )}
             dir={isRTL ? "rtl" : "ltr"}

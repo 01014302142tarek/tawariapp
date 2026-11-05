@@ -363,7 +363,7 @@ export default function MessagesPage({
     if (loading && conversations.length === 0) {
         return (
             <div className="flex items-center justify-center min-h-[60vh]">
-                <div className="animate-spin w-8 h-8 border-2 border-amber-500 border-t-transparent rounded-full" />
+                <div className="animate-spin w-8 h-8 border-2 border-[#FD614B] border-t-transparent rounded-full" />
             </div>
         );
     }
@@ -375,7 +375,7 @@ export default function MessagesPage({
                 <button
                     onClick={() => setShowConversations(!showConversations)}
                     className={cn(
-                        "fixed bottom-4 z-50 md:hidden w-14 h-14 rounded-full bg-amber-500 text-white shadow-lg shadow-amber-500/30 flex items-center justify-center",
+                        "fixed bottom-4 z-50 md:hidden w-14 h-14 rounded-full bg-[#FD614B] text-white shadow-lg shadow-amber-500/30 flex items-center justify-center",
                         isRTL ? "left-4" : "right-4",
                         showConversations && "rotate-180"
                     )}
@@ -390,7 +390,7 @@ export default function MessagesPage({
             <div className={cn(
                 "fixed md:relative inset-y-0 z-40 w-72 md:w-80 border-r flex flex-col transition-transform duration-300 md:translate-x-0",
                 border,
-                isDark ? "bg-slate-950" : "bg-white",
+                isDark ? "bg-[#031326]" : "bg-white",
                 isRTL ? "right-0" : "left-0",
                 showConversations
                     ? "translate-x-0"
@@ -400,7 +400,7 @@ export default function MessagesPage({
                 <div className={cn("p-3 md:p-4 border-b", border)}>
                     <div className="flex items-center justify-between mb-3 md:mb-4">
                         <h1 className={cn("text-lg md:text-xl font-bold flex items-center gap-2", textPrimary)}>
-                            <span className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-gradient-to-br from-[#38BDF8] to-[#0284C7] flex items-center justify-center text-white shadow-[0_0_15px_rgba(14,165,233,0.5)] border border-sky-300/40">
+                            <span className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-gradient-to-br from-[#044C87] to-[#0C67B3] flex items-center justify-center text-white shadow-[0_0_15px_rgba(4,76,135,0.4)] border border-[#0C67B3]/40">
                                 {Icons.message}
                             </span>
                             {t.doctorDashboard.messagesPage.sidebarTitle}
@@ -408,7 +408,7 @@ export default function MessagesPage({
                         <div className="flex items-center gap-2">
                             <button
                                 onClick={() => setShowNewChat(true)}
-                                className="p-2 rounded-lg bg-amber-500/10 text-amber-500 hover:bg-amber-500 hover:text-white transition-colors"
+                                className="p-2 rounded-lg bg-[#FD614B]/10 text-[#FD614B] hover:bg-[#FD614B] hover:text-white transition-colors"
                             >
                                 {Icons.plus}
                             </button>
@@ -461,12 +461,12 @@ export default function MessagesPage({
                                     "flex items-center gap-3 p-3 md:p-4 cursor-pointer transition-colors",
                                     isRTL ? "border-r-2" : "border-l-2",
                                     selectedConversation?.id === conv.id
-                                        ? "bg-amber-500/5 border-amber-500"
+                                        ? "bg-[#FD614B]/10 border-[#FD614B]"
                                         : cn("border-transparent", isDark ? "hover:bg-white/[0.02]" : "hover:bg-gray-50")
                                 )}
                             >
                                 <div className="relative">
-                                    <div className="w-10 h-10 md:w-12 md:h-12 rounded-full overflow-hidden border-2 border-amber-500/30">
+                                    <div className="w-10 h-10 md:w-12 md:h-12 rounded-full overflow-hidden border-2 border-[#FD614B]/40">
                                         {conv.participant_avatar ? (
                                             <Image
                                                 src={conv.participant_avatar}
@@ -476,13 +476,13 @@ export default function MessagesPage({
                                                 sizes="(max-width: 768px) 40px, 48px"
                                             />
                                         ) : (
-                                            <div className={cn("w-full h-full flex items-center justify-center text-sm font-bold", isDark ? "bg-amber-500/10 text-amber-400" : "bg-amber-50 text-amber-600")}>
+                                            <div className={cn("w-full h-full flex items-center justify-center text-sm font-bold", isDark ? "bg-[#FD614B]/10 text-[#FD614B]" : "bg-[#FFF5F3] text-[#E84D37]")}>
                                                 {conv.participant_name.charAt(0)}
                                             </div>
                                         )}
                                     </div>
                                     {conv.unread_count > 0 && (
-                                        <span className="absolute -top-1 -right-1 w-4 h-4 md:w-5 md:h-5 bg-amber-500 text-white text-[10px] md:text-xs font-bold rounded-full flex items-center justify-center">
+                                        <span className="absolute -top-1 -right-1 w-4 h-4 md:w-5 md:h-5 bg-[#FD614B] text-white text-[10px] md:text-xs font-bold rounded-full flex items-center justify-center">
                                             {conv.unread_count}
                                         </span>
                                     )}
@@ -513,7 +513,7 @@ export default function MessagesPage({
                 {selectedConversation ? (
                     <>
                         {/* Chat Header */}
-                        <div className={cn("p-3 md:p-4 border-b flex items-center justify-between backdrop-blur-xl", border, isDark ? "bg-slate-950/80" : "bg-white/80")}>
+                        <div className={cn("p-3 md:p-4 border-b flex items-center justify-between backdrop-blur-xl", border, isDark ? "bg-[#031326]/80" : "bg-white/80")}>
                             <div className="flex items-center gap-2 md:gap-3">
                                 <button
                                     onClick={() => setShowConversations(true)}
@@ -523,7 +523,7 @@ export default function MessagesPage({
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
                                     </svg>
                                 </button>
-                                <div className="relative w-8 h-8 md:w-10 md:h-10 rounded-full overflow-hidden border-2 border-amber-500/30">
+                                <div className="relative w-8 h-8 md:w-10 md:h-10 rounded-full overflow-hidden border-2 border-[#FD614B]/40">
                                     {selectedConversation.participant_avatar ? (
                                         <Image
                                             src={selectedConversation.participant_avatar}
@@ -533,7 +533,7 @@ export default function MessagesPage({
                                             sizes="(max-width: 768px) 32px, 40px"
                                         />
                                     ) : (
-                                        <div className={cn("w-full h-full flex items-center justify-center text-sm font-bold", isDark ? "bg-amber-500/10 text-amber-400" : "bg-amber-50 text-amber-600")}>
+                                        <div className={cn("w-full h-full flex items-center justify-center text-sm font-bold", isDark ? "bg-[#FD614B]/10 text-[#FD614B]" : "bg-[#FFF5F3] text-[#E84D37]")}>
                                             {selectedConversation.participant_name.charAt(0)}
                                         </div>
                                     )}
@@ -552,7 +552,7 @@ export default function MessagesPage({
                             {loadingMessages ? (
                                 <div className="flex items-center justify-center h-full">
                                     <div className="text-center space-y-3">
-                                        <div className="animate-spin w-8 h-8 md:w-10 md:h-10 border-2 border-amber-500 border-t-transparent rounded-full mx-auto" />
+                                        <div className="animate-spin w-8 h-8 md:w-10 md:h-10 border-2 border-[#FD614B] border-t-transparent rounded-full mx-auto" />
                                         <p className={cn("text-xs md:text-sm", textMuted)}>
                                             {isRTL ? "جاري تحميل الرسائل..." : "Loading messages..."}
                                         </p>
@@ -586,9 +586,9 @@ export default function MessagesPage({
                                                 className={cn(
                                                     "max-w-[85%] md:max-w-[70%] rounded-2xl px-3 md:px-4 py-2 md:py-3",
                                                     isOwnMessage
-                                                        ? "bg-amber-500 text-white rounded-br-md"
+                                                        ? "bg-[#FD614B] text-white rounded-br-md"
                                                         : isDark
-                                                            ? "bg-slate-800 text-white rounded-bl-md"
+                                                            ? "bg-[#0D2C4F] text-white rounded-bl-md"
                                                             : "bg-gray-200 text-slate-900 rounded-bl-md"
                                                 )}
                                             >
@@ -615,7 +615,7 @@ export default function MessagesPage({
                                                             ) : (
                                                                 <div className={cn(
                                                                     "w-full h-24 rounded-lg flex items-center justify-center",
-                                                                    isOwnMessage ? "bg-amber-600" : isDark ? "bg-slate-700" : "bg-gray-300"
+                                                                    isOwnMessage ? "bg-[#E84D37]" : isDark ? "bg-slate-700" : "bg-gray-300"
                                                                 )}>
                                                                     <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin opacity-50" />
                                                                 </div>
@@ -628,7 +628,7 @@ export default function MessagesPage({
                                                                 className={cn(
                                                                     "flex items-center gap-2 p-2 rounded-lg transition-colors",
                                                                     isOwnMessage
-                                                                        ? "bg-amber-600 hover:bg-amber-700"
+                                                                        ? "bg-[#E84D37] hover:bg-amber-700"
                                                                         : isDark
                                                                             ? "bg-slate-700 hover:bg-slate-600"
                                                                             : "bg-gray-300 hover:bg-gray-400",
@@ -697,7 +697,7 @@ export default function MessagesPage({
                                         exit={{ opacity: 0, height: 0 }}
                                         className={cn(
                                             "mb-2 p-2 rounded-lg flex items-center gap-2",
-                                            isDark ? "bg-slate-800" : "bg-gray-100"
+                                            isDark ? "bg-[#0D2C4F]" : "bg-gray-100"
                                         )}
                                     >
                                         {filePreview ? (
@@ -766,8 +766,8 @@ export default function MessagesPage({
                                     className={cn(
                                         "p-2 md:p-3 rounded-xl transition-colors flex-shrink-0",
                                         isDark
-                                            ? "hover:bg-slate-700 text-slate-400 hover:text-amber-400"
-                                            : "hover:bg-gray-100 text-gray-500 hover:text-amber-500",
+                                            ? "hover:bg-slate-700 text-slate-400 hover:text-[#FD614B]"
+                                            : "hover:bg-gray-100 text-gray-500 hover:text-[#FD614B]",
                                         "disabled:opacity-50 disabled:cursor-not-allowed"
                                     )}
                                     title={isRTL ? "إرفاق ملف" : "Attach file"}
@@ -801,7 +801,7 @@ export default function MessagesPage({
                 ) : (
                     <div className="flex-1 flex items-center justify-center">
                         <div className="text-center">
-                            <div className={cn("w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4", isDark ? "bg-slate-800" : "bg-gray-100", textMuted)}>
+                            <div className={cn("w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4", isDark ? "bg-[#0D2C4F]" : "bg-gray-100", textMuted)}>
                                 {Icons.message}
                             </div>
                             <p className={textMuted}>{isRTL ? "اختر محادثة أو ابدأ محادثة جديدة" : "Select a conversation or start a new one"}</p>
@@ -819,7 +819,7 @@ export default function MessagesPage({
                     />
                     <div className={cn(
                         "fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md z-50 rounded-2xl border p-4",
-                        isDark ? "bg-slate-900 border-white/10" : "bg-white border-gray-200"
+                        isDark ? "bg-[#08213D] border-white/10" : "bg-white border-gray-200"
                     )}>
                         <div className="flex items-center justify-between mb-4">
                             <h2 className={cn("text-lg font-semibold", textPrimary)}>
@@ -849,11 +849,11 @@ export default function MessagesPage({
                                             isDark ? "hover:bg-white/5" : "hover:bg-gray-50"
                                         )}
                                     >
-                                        <div className="w-10 h-10 rounded-full overflow-hidden border border-amber-500/20">
+                                        <div className="w-10 h-10 rounded-full overflow-hidden border border-[#FD614B]/30">
                                             {contact.avatar_url ? (
                                                 <Image src={contact.avatar_url} alt={contact.full_name} width={40} height={40} className="object-cover" />
                                             ) : (
-                                                <div className={cn("w-full h-full flex items-center justify-center text-sm font-bold", isDark ? "bg-amber-500/10 text-amber-400" : "bg-amber-50 text-amber-600")}>
+                                                <div className={cn("w-full h-full flex items-center justify-center text-sm font-bold", isDark ? "bg-[#FD614B]/10 text-[#FD614B]" : "bg-[#FFF5F3] text-[#E84D37]")}>
                                                     {contact.full_name.charAt(0)}
                                                 </div>
                                             )}

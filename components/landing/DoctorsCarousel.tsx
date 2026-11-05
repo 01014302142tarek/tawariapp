@@ -159,7 +159,7 @@ export default function DoctorsCarousel({
 
                 {/* Doctor Avatar with Elegant Gradient Ring and Online Status */}
                 <div className="relative w-28 h-28 rounded-full p-[2.5px] bg-gradient-to-tr from-[#044C87] via-[#0C67B3] to-[#FD614B] shadow-[0_0_20px_rgba(4,76,135,0.35)] mb-4">
-                  <div className={`relative w-full h-full rounded-full overflow-hidden ${isDark ? "bg-slate-900" : "bg-slate-100"}`}>
+                  <div className={`relative w-full h-full rounded-full overflow-hidden ${isDark ? "bg-[#08213D]" : "bg-slate-100"}`}>
                     <Image
                       src={doctor.image}
                       alt={doctor.name}
@@ -200,7 +200,7 @@ export default function DoctorsCarousel({
 
                 {/* 5 Gold Stars & Rating */}
                 <div className="flex items-center justify-center gap-1.5 mb-4">
-                  <div className="flex items-center gap-1 text-amber-400">
+                  <div className="flex items-center gap-1 text-[#FD614B]">
                     {[1, 2, 3, 4, 5].map((s) => (
                       <svg
                         key={s}

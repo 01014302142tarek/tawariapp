@@ -133,14 +133,14 @@ export default function DoctorEarningsPage() {
         switch (status) {
             case "pending":
                 return {
-                    color: "text-amber-400",
-                    bg: "bg-amber-500/20",
+                    color: "text-[#FD614B]",
+                    bg: "bg-[#FD614B]/20",
                     label: isRTL ? "قيد الانتظار" : "Pending",
                 };
             case "available":
                 return {
-                    color: "text-amber-400",
-                    bg: "bg-amber-500/20",
+                    color: "text-[#FD614B]",
+                    bg: "bg-[#FD614B]/20",
                     label: isRTL ? "متاح للسحب" : "Available",
                 };
             case "paid_out":
@@ -172,9 +172,9 @@ export default function DoctorEarningsPage() {
     // Loading state
     if (loading) {
         return (
-            <div className={cn("min-h-screen flex items-center justify-center", isDark ? "bg-slate-950 text-white" : "bg-gray-50 text-slate-900")}>
+            <div className={cn("min-h-screen flex items-center justify-center", isDark ? "bg-[#031326] text-white" : "bg-gray-50 text-slate-900")}>
                 <div className="text-center">
-                    <div className="w-16 h-16 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+                    <div className="w-16 h-16 border-4 border-[#FD614B] border-t-transparent rounded-full animate-spin mx-auto mb-4" />
                     <p className={cn("text-lg", isDark ? "text-white" : "text-slate-900")}>
                         {isRTL ? "جاري التحميل..." : "Loading..."}
                     </p>
@@ -184,7 +184,7 @@ export default function DoctorEarningsPage() {
     }
 
     return (
-        <div className={cn("min-h-screen py-8 px-4", isDark ? "bg-slate-950" : "bg-gray-50", isRTL && "rtl")}>
+        <div className={cn("min-h-screen py-8 px-4", isDark ? "bg-[#031326]" : "bg-gray-50", isRTL && "rtl")}>
             <div className="max-w-2xl mx-auto">
                 {/* Header */}
                 <div className="mb-6">
@@ -215,9 +215,9 @@ export default function DoctorEarningsPage() {
                         {/* Summary Cards */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
                             {/* Total Earnings */}
-                            <GlowingCard glowColor="amber" className="p-4" isDark={isDark}>
+                            <GlowingCard glowColor="coral" className="p-4" isDark={isDark}>
                                 <div className="flex items-center gap-2 mb-2">
-                                    <span className="text-amber-500">{Icons.trending}</span>
+                                    <span className="text-[#FD614B]">{Icons.trending}</span>
                                     <span className={cn("text-sm", isDark ? "text-gray-400" : "text-gray-600")}>
                                         {isRTL ? "إجمالي الأرباح" : "Total Earnings"}
                                     </span>
@@ -247,9 +247,9 @@ export default function DoctorEarningsPage() {
                             </GlowingCard>
 
                             {/* Pending */}
-                            <GlowingCard glowColor="amber" className="p-4" isDark={isDark}>
+                            <GlowingCard glowColor="coral" className="p-4" isDark={isDark}>
                                 <div className="flex items-center gap-2 mb-2">
-                                    <span className="text-amber-500">{Icons.clock}</span>
+                                    <span className="text-[#FD614B]">{Icons.clock}</span>
                                     <span className={cn("text-sm", isDark ? "text-gray-400" : "text-gray-600")}>
                                         {isRTL ? "قيد الانتظار" : "Pending"}
                                     </span>
@@ -281,7 +281,7 @@ export default function DoctorEarningsPage() {
 
                         {/* Request Payout Button */}
                         {earnings.availableForPayout > 0 && (
-                            <GlowingCard glowColor="amber" className="p-4 mb-6" isDark={isDark}>
+                            <GlowingCard glowColor="coral" className="p-4 mb-6" isDark={isDark}>
                                 <div className="flex items-center justify-between">
                                     <div>
                                         <p className={cn("font-medium", isDark ? "text-white" : "text-slate-900")}>
@@ -295,7 +295,7 @@ export default function DoctorEarningsPage() {
                                     </div>
                                     <button
                                         onClick={() => setShowWithdrawModal(true)}
-                                        className="px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors flex items-center gap-2 shadow-sm"
+                                        className="px-4 py-2 bg-[#FD614B] text-white rounded-lg hover:bg-[#E84D37] transition-colors flex items-center gap-2 shadow-sm"
                                     >
                                         {Icons.bank}
                                         <span>{isRTL ? "سحب" : "Withdraw"}</span>
@@ -339,11 +339,11 @@ export default function DoctorEarningsPage() {
                                             animate={{ opacity: 1, y: 0 }}
                                             transition={{ delay: index * 0.05 }}
                                         >
-                                            <GlowingCard glowColor="amber" className="p-4" isDark={isDark}>
+                                            <GlowingCard glowColor="coral" className="p-4" isDark={isDark}>
                                                 <div className="flex items-center justify-between">
                                                     <div className="flex items-center gap-3">
-                                                        <div className="w-10 h-10 rounded-full bg-amber-500/20 flex items-center justify-center">
-                                                            <span className="text-amber-500">{Icons.user}</span>
+                                                        <div className="w-10 h-10 rounded-full bg-[#FD614B]/20 flex items-center justify-center">
+                                                            <span className="text-[#FD614B]">{Icons.user}</span>
                                                         </div>
                                                         <div>
                                                             <p className={cn("font-medium", isDark ? "text-white" : "text-slate-900")}>
@@ -375,7 +375,7 @@ export default function DoctorEarningsPage() {
                         )}
 
                         {/* Platform Fee Note */}
-                        <div className={cn("mt-6 p-4 rounded-xl border", isDark ? "bg-slate-800/50 border-white/10" : "bg-amber-50/70 border-amber-200 shadow-xs")}>
+                        <div className={cn("mt-6 p-4 rounded-xl border", isDark ? "bg-[#0D2C4F]/50 border-white/10" : "bg-[#FFF5F3]/70 border-[#FFD0CA] shadow-xs")}>
                             <p className={cn("text-sm", isDark ? "text-gray-400" : "text-amber-950")}>
                                 {isRTL
                                     ? "ملاحظة: يتم خصم رسوم المنصة (2.75% + 3 ج.م) من كل استشارة قبل احتساب صافي أرباحك."
@@ -394,7 +394,7 @@ export default function DoctorEarningsPage() {
                         animate={{ opacity: 1, scale: 1 }}
                         className={cn(
                             "w-full max-w-md rounded-2xl border p-6",
-                            isDark ? "bg-slate-900 border-white/10" : "bg-white border-gray-200"
+                            isDark ? "bg-[#08213D] border-white/10" : "bg-white border-gray-200"
                         )}
                     >
                         {withdrawSuccess ? (
@@ -427,8 +427,8 @@ export default function DoctorEarningsPage() {
                                     </button>
                                 </div>
 
-                                <div className="mb-4 p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg">
-                                    <p className="text-amber-400 text-sm">
+                                <div className="mb-4 p-3 bg-[#FD614B]/10 border border-[#FD614B]/30 rounded-lg">
+                                    <p className="text-[#FD614B] text-sm">
                                         {isRTL
                                             ? `المبلغ المتاح للسحب: ${earnings?.availableForPayout.toFixed(2)} ج.م`
                                             : `Available for withdrawal: ${earnings?.availableForPayout.toFixed(2)} EGP`}
@@ -454,8 +454,8 @@ export default function DoctorEarningsPage() {
                                             className={cn(
                                                 "w-full px-4 py-3 border rounded-lg focus:outline-none",
                                                 isDark
-                                                    ? "bg-slate-800 border-white/10 text-white placeholder-gray-500 focus:border-amber-500"
-                                                    : "bg-gray-50 border-gray-200 text-slate-900 placeholder-gray-400 focus:border-amber-500"
+                                                    ? "bg-[#0D2C4F] border-white/10 text-white placeholder-gray-500 focus:border-[#FD614B]"
+                                                    : "bg-gray-50 border-gray-200 text-slate-900 placeholder-gray-400 focus:border-[#FD614B]"
                                             )}
                                         />
                                     </div>
@@ -471,8 +471,8 @@ export default function DoctorEarningsPage() {
                                             className={cn(
                                                 "w-full px-4 py-3 border rounded-lg focus:outline-none",
                                                 isDark
-                                                    ? "bg-slate-800 border-white/10 text-white placeholder-gray-500 focus:border-amber-500"
-                                                    : "bg-gray-50 border-gray-200 text-slate-900 placeholder-gray-400 focus:border-amber-500"
+                                                    ? "bg-[#0D2C4F] border-white/10 text-white placeholder-gray-500 focus:border-[#FD614B]"
+                                                    : "bg-gray-50 border-gray-200 text-slate-900 placeholder-gray-400 focus:border-[#FD614B]"
                                             )}
                                         />
                                     </div>
@@ -488,8 +488,8 @@ export default function DoctorEarningsPage() {
                                             className={cn(
                                                 "w-full px-4 py-3 border rounded-lg focus:outline-none",
                                                 isDark
-                                                    ? "bg-slate-800 border-white/10 text-white placeholder-gray-500 focus:border-amber-500"
-                                                    : "bg-gray-50 border-gray-200 text-slate-900 placeholder-gray-400 focus:border-amber-500"
+                                                    ? "bg-[#0D2C4F] border-white/10 text-white placeholder-gray-500 focus:border-[#FD614B]"
+                                                    : "bg-gray-50 border-gray-200 text-slate-900 placeholder-gray-400 focus:border-[#FD614B]"
                                             )}
                                         />
                                     </div>
@@ -510,7 +510,7 @@ export default function DoctorEarningsPage() {
                                     <button
                                         onClick={handleWithdraw}
                                         disabled={withdrawing || !bankDetails.bankName || !bankDetails.accountNumber || !bankDetails.accountHolderName}
-                                        className="flex-1 px-4 py-3 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                        className="flex-1 px-4 py-3 bg-[#FD614B] text-white rounded-lg hover:bg-[#E84D37] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                                     >
                                         {withdrawing ? (
                                             <>

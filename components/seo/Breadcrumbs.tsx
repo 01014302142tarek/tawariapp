@@ -80,7 +80,7 @@ export function Breadcrumbs({ items, className = "" }: BreadcrumbsProps) {
                                     <Link
                                         href={item.href}
                                         className={`hover:underline transition-colors ${
-                                            isDark ? "hover:text-amber-400" : "hover:text-amber-600"
+                                            isDark ? "hover:text-[#FD614B]" : "hover:text-[#E84D37]"
                                         }`}
                                     >
                                         {label}

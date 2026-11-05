@@ -97,7 +97,7 @@ export default function PatientReviewsPage() {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 md:mb-8">
                 <div>
                     <h1 className={cn("text-xl md:text-2xl font-bold flex items-center gap-2 md:gap-3", textPrimary)}>
-                        <span className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-br from-[#38BDF8] to-[#0284C7] flex items-center justify-center text-white shadow-[0_0_15px_rgba(14,165,233,0.5)] border border-sky-300/40">
+                        <span className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-br from-[#044C87] to-[#0C67B3] flex items-center justify-center text-white shadow-[0_0_15px_rgba(4,76,135,0.4)] border border-[#0C67B3]/40">
                             {Icons.star}
                         </span>
                         {isRTL ? "تقييماتي" : "My Reviews"}
@@ -111,9 +111,9 @@ export default function PatientReviewsPage() {
             {/* Stats Cards */}
             <div className="grid grid-cols-3 gap-3 md:gap-4 mb-6 md:mb-8">
                 {/* Total Reviews */}
-                <GlowingCard glowColor="amber" className="p-4 md:p-5" isDark={isDark}>
+                <GlowingCard glowColor="coral" className="p-4 md:p-5" isDark={isDark}>
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-gradient-to-br from-[#38BDF8] to-[#0284C7] flex items-center justify-center text-white shadow-[0_0_15px_rgba(14,165,233,0.5)] border border-sky-300/40">
+                        <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-gradient-to-br from-[#044C87] to-[#0C67B3] flex items-center justify-center text-white shadow-[0_0_15px_rgba(4,76,135,0.4)] border border-[#0C67B3]/40">
                             {Icons.star}
                         </div>
                         <div>
@@ -128,9 +128,9 @@ export default function PatientReviewsPage() {
                 </GlowingCard>
 
                 {/* Average Rating */}
-                <GlowingCard glowColor="amber" className="p-4 md:p-5" isDark={isDark}>
+                <GlowingCard glowColor="coral" className="p-4 md:p-5" isDark={isDark}>
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-gradient-to-br from-[#38BDF8] to-[#0284C7] flex items-center justify-center text-white shadow-[0_0_15px_rgba(14,165,233,0.5)] border border-sky-300/40">
+                        <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-gradient-to-br from-[#044C87] to-[#0C67B3] flex items-center justify-center text-white shadow-[0_0_15px_rgba(4,76,135,0.4)] border border-[#0C67B3]/40">
                             <svg className="w-5 h-5 md:w-6 md:h-6" fill="currentColor" viewBox="0 0 24 24">
                                 <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
                             </svg>
@@ -147,9 +147,9 @@ export default function PatientReviewsPage() {
                 </GlowingCard>
 
                 {/* With Responses */}
-                <GlowingCard glowColor="amber" className="p-4 md:p-5" isDark={isDark}>
+                <GlowingCard glowColor="coral" className="p-4 md:p-5" isDark={isDark}>
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-gradient-to-br from-[#38BDF8] to-[#0284C7] flex items-center justify-center text-white shadow-[0_0_15px_rgba(14,165,233,0.5)] border border-sky-300/40">
+                        <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-gradient-to-br from-[#044C87] to-[#0C67B3] flex items-center justify-center text-white shadow-[0_0_15px_rgba(4,76,135,0.4)] border border-[#0C67B3]/40">
                             {Icons.check}
                         </div>
                         <div>
@@ -172,7 +172,7 @@ export default function PatientReviewsPage() {
                             key={i}
                             className={cn(
                                 "rounded-xl p-4 border animate-pulse",
-                                isDark ? "bg-slate-800/50 border-white/5" : "bg-white border-gray-200"
+                                isDark ? "bg-[#0D2C4F]/50 border-white/5" : "bg-white border-gray-200"
                             )}
                         >
                             <div className="flex items-center gap-3">
@@ -186,8 +186,8 @@ export default function PatientReviewsPage() {
                     ))}
                 </div>
             ) : reviews.length === 0 ? (
-                <GlowingCard glowColor="amber" className="p-12 text-center" isDark={isDark}>
-                    <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-amber-500/10 flex items-center justify-center text-amber-500">
+                <GlowingCard glowColor="coral" className="p-12 text-center" isDark={isDark}>
+                    <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[#FD614B]/10 flex items-center justify-center text-[#FD614B]">
                         {Icons.star}
                     </div>
                     <h3 className={cn("text-lg font-semibold mb-2", textPrimary)}>
@@ -208,12 +208,12 @@ export default function PatientReviewsPage() {
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: idx * 0.05 }}
                         >
-                            <GlowingCard glowColor="amber" className="p-4 md:p-5" isDark={isDark}>
+                            <GlowingCard glowColor="coral" className="p-4 md:p-5" isDark={isDark}>
                                 {/* Doctor Info */}
                                 <div className="flex items-start justify-between gap-3 mb-3">
                                     <div className="flex items-center gap-3">
                                         <div className={cn(
-                                            "w-12 h-12 rounded-full overflow-hidden flex-shrink-0 border-2 border-amber-500/30",
+                                            "w-12 h-12 rounded-full overflow-hidden flex-shrink-0 border-2 border-[#FD614B]/40",
                                             isDark ? "bg-slate-700" : "bg-gray-100"
                                         )}>
                                             {getDoctorAvatar(review) ? (
@@ -278,13 +278,13 @@ export default function PatientReviewsPage() {
                                 {review.doctor_response && (
                                     <div className={cn(
                                         "mt-3 p-3 rounded-lg",
-                                        isDark ? "bg-amber-900/30" : "bg-amber-50"
+                                        isDark ? "bg-amber-900/30" : "bg-[#FFF5F3]"
                                     )}>
                                         <div className="flex items-center gap-2 mb-2">
                                             <svg
                                                 className={cn(
                                                     "w-4 h-4",
-                                                    isDark ? "text-amber-400" : "text-amber-600"
+                                                    isDark ? "text-[#FD614B]" : "text-[#E84D37]"
                                                 )}
                                                 fill="none"
                                                 stroke="currentColor"
@@ -299,7 +299,7 @@ export default function PatientReviewsPage() {
                                             </svg>
                                             <span className={cn(
                                                 "text-xs font-medium",
-                                                isDark ? "text-amber-400" : "text-amber-700"
+                                                isDark ? "text-[#FD614B]" : "text-[#C43825]"
                                             )}>
                                                 {isRTL ? "رد الطبيب" : "Doctor's Response"}
                                             </span>

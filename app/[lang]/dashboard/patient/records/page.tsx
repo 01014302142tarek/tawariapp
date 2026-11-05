@@ -116,8 +116,8 @@ const Badge = ({ children, variant = "default" }: { children: React.ReactNode; v
     const { isDark } = useThemeStyles();
     const variants = {
         default: isDark ? "bg-slate-700/50 text-slate-300" : "bg-gray-200 text-gray-700",
-        success: "bg-amber-500/10 text-amber-500 border border-amber-500/20",
-        warning: "bg-amber-500/10 text-amber-500 border border-amber-500/20",
+        success: "bg-[#FD614B]/10 text-[#FD614B] border border-[#FD614B]/30",
+        warning: "bg-[#FD614B]/10 text-[#FD614B] border border-[#FD614B]/30",
         danger: "bg-red-500/10 text-red-500 border border-red-500/20",
     };
     return (
@@ -454,7 +454,7 @@ export default function RecordsPage() {
                                     "w-full px-4 py-3 rounded-xl border transition-colors",
                                     inputBg,
                                     inputFocus,
-                                    isDark ? "[&>option]:bg-slate-900 [&>option]:text-white" : "[&>option]:bg-white [&>option]:text-gray-900"
+                                    isDark ? "[&>option]:bg-[#08213D] [&>option]:text-white" : "[&>option]:bg-white [&>option]:text-gray-900"
                                 )}
                             >
                                 <option value="general">{isRTL ? "عام" : "General"}</option>
@@ -511,7 +511,7 @@ export default function RecordsPage() {
                                 onClick={() => fileInputRef.current?.click()}
                                 className={cn(
                                     "border-2 border-dashed rounded-xl p-4 text-center cursor-pointer transition-colors",
-                                    isDark ? "border-gray-600 hover:border-amber-500" : "border-gray-300 hover:border-amber-500"
+                                    isDark ? "border-gray-600 hover:border-[#FD614B]" : "border-gray-300 hover:border-[#FD614B]"
                                 )}
                             >
                                 <input
@@ -523,7 +523,7 @@ export default function RecordsPage() {
                                     className="hidden"
                                 />
                                 <div className="flex flex-col items-center gap-2">
-                                    <span className="text-amber-500">{Icons.upload}</span>
+                                    <span className="text-[#FD614B]">{Icons.upload}</span>
                                     <span className={cn("text-sm", textMuted)}>
                                         {isRTL ? "اضغط لرفع الملفات (PDF, صور)" : "Click to upload files (PDF, Images)"}
                                     </span>
@@ -541,7 +541,7 @@ export default function RecordsPage() {
                                             isDark ? "bg-white/5" : "bg-gray-100"
                                         )}>
                                             <div className="flex items-center gap-2 min-w-0">
-                                                <span className="text-amber-500">{Icons.paperclip}</span>
+                                                <span className="text-[#FD614B]">{Icons.paperclip}</span>
                                                 <span className={cn("text-sm truncate", textPrimary)}>{file.name}</span>
                                                 <span className={cn("text-xs flex-shrink-0", textMuted)}>
                                                     ({(file.size / 1024 / 1024).toFixed(1)}MB)
@@ -625,7 +625,7 @@ export default function RecordsPage() {
                                 onClick={() => fileInputRef.current?.click()}
                                 className={cn(
                                     "border-2 border-dashed rounded-xl p-4 text-center cursor-pointer transition-colors",
-                                    isDark ? "border-gray-600 hover:border-amber-500" : "border-gray-300 hover:border-amber-500"
+                                    isDark ? "border-gray-600 hover:border-[#FD614B]" : "border-gray-300 hover:border-[#FD614B]"
                                 )}
                             >
                                 <input
@@ -636,7 +636,7 @@ export default function RecordsPage() {
                                     className="hidden"
                                 />
                                 <div className="flex flex-col items-center gap-2">
-                                    <span className="text-amber-500">{Icons.upload}</span>
+                                    <span className="text-[#FD614B]">{Icons.upload}</span>
                                     <span className={cn("text-sm", textMuted)}>
                                         {isRTL ? "اضغط لرفع ملف النتيجة" : "Click to upload lab report"}
                                     </span>
@@ -653,7 +653,7 @@ export default function RecordsPage() {
                                         isDark ? "bg-white/5" : "bg-gray-100"
                                     )}>
                                         <div className="flex items-center gap-2 min-w-0">
-                                            <span className="text-amber-500">{Icons.paperclip}</span>
+                                            <span className="text-[#FD614B]">{Icons.paperclip}</span>
                                             <span className={cn("text-sm truncate", textPrimary)}>{selectedFiles[0].name}</span>
                                             <span className={cn("text-xs flex-shrink-0", textMuted)}>
                                                 ({(selectedFiles[0].size / 1024 / 1024).toFixed(1)}MB)
@@ -699,7 +699,7 @@ export default function RecordsPage() {
                                     "w-full px-4 py-3 rounded-xl border transition-colors",
                                     inputBg,
                                     inputFocus,
-                                    isDark ? "[&>option]:bg-slate-900 [&>option]:text-white" : "[&>option]:bg-white [&>option]:text-gray-900"
+                                    isDark ? "[&>option]:bg-[#08213D] [&>option]:text-white" : "[&>option]:bg-white [&>option]:text-gray-900"
                                 )}
                             >
                                 <option value="mild">{isRTL ? "خفيفة" : "Mild"}</option>
@@ -747,7 +747,7 @@ export default function RecordsPage() {
                                     "w-full px-4 py-3 rounded-xl border transition-colors",
                                     inputBg,
                                     inputFocus,
-                                    isDark ? "[&>option]:bg-slate-900 [&>option]:text-white" : "[&>option]:bg-white [&>option]:text-gray-900"
+                                    isDark ? "[&>option]:bg-[#08213D] [&>option]:text-white" : "[&>option]:bg-white [&>option]:text-gray-900"
                                 )}
                             >
                                 <option value="active">{isRTL ? "نشطة" : "Active"}</option>
@@ -808,14 +808,14 @@ export default function RecordsPage() {
             <div className="mb-6 md:mb-8">
                 <div className="flex items-center justify-between mb-2">
                     <h1 className={cn("text-xl md:text-2xl font-bold flex items-center gap-2 md:gap-3", textPrimary)}>
-                        <span className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-br from-[#38BDF8] to-[#0284C7] flex items-center justify-center text-white shadow-[0_0_15px_rgba(14,165,233,0.5)] border border-sky-300/40">
+                        <span className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-br from-[#044C87] to-[#0C67B3] flex items-center justify-center text-white shadow-[0_0_15px_rgba(4,76,135,0.4)] border border-[#0C67B3]/40">
                             {Icons.folder}
                         </span>
                         {t.patientDashboard.recordsPage.title}
                     </h1>
                     <button
                         onClick={() => setShowAddModal(true)}
-                        className="flex items-center gap-2 px-4 py-2 bg-amber-500 text-white rounded-xl hover:bg-amber-600 transition-colors"
+                        className="flex items-center gap-2 px-4 py-2 bg-[#FD614B] text-white rounded-xl hover:bg-[#E84D37] transition-colors"
                     >
                         {Icons.plus}
                         <span className="hidden sm:inline">{isRTL ? "إضافة" : "Add"}</span>
@@ -833,9 +833,9 @@ export default function RecordsPage() {
                         { label: isRTL ? "الحساسية" : "Allergies", value: summary.allergiesCount, icon: Icons.allergy },
                         { label: isRTL ? "الحالات" : "Conditions", value: summary.conditionsCount, icon: Icons.condition },
                     ].map((stat, idx) => (
-                        <GlowingCard key={idx} glowColor="amber" className="p-3 md:p-4" isDark={isDark}>
+                        <GlowingCard key={idx} glowColor="coral" className="p-3 md:p-4" isDark={isDark}>
                             <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#38BDF8] to-[#0284C7] flex items-center justify-center text-white shadow-[0_0_15px_rgba(14,165,233,0.5)] border border-sky-300/40 flex-shrink-0">
+                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#044C87] to-[#0C67B3] flex items-center justify-center text-white shadow-[0_0_15px_rgba(4,76,135,0.4)] border border-[#0C67B3]/40 flex-shrink-0">
                                     <span className="[&>svg]:w-5 [&>svg]:h-5">{stat.icon}</span>
                                 </div>
                                 <div>
@@ -857,7 +857,7 @@ export default function RecordsPage() {
                         className={cn(
                             "px-3 md:px-4 py-1.5 md:py-2 rounded-lg text-xs md:text-sm font-medium transition-all whitespace-nowrap flex-shrink-0",
                             activeTab === tab.id
-                                ? "bg-amber-500 text-white"
+                                ? "bg-[#FD614B] text-white"
                                 : isDark
                                     ? "bg-white/5 text-gray-400 hover:bg-white/10"
                                     : "bg-gray-100 text-gray-600 hover:bg-gray-200"
@@ -871,7 +871,7 @@ export default function RecordsPage() {
             {/* Content */}
             {loading ? (
                 <div className="flex items-center justify-center h-64">
-                    <span className="text-amber-500">{Icons.spinner}</span>
+                    <span className="text-[#FD614B]">{Icons.spinner}</span>
                 </div>
             ) : (
                 <div className="space-y-2 md:space-y-3">
@@ -885,7 +885,7 @@ export default function RecordsPage() {
                                 </p>
                                 <button
                                     onClick={() => setShowAddModal(true)}
-                                    className="mt-4 text-amber-500 hover:underline"
+                                    className="mt-4 text-[#FD614B] hover:underline"
                                 >
                                     {isRTL ? "إضافة سجل جديد" : "Add your first record"}
                                 </button>
@@ -898,9 +898,9 @@ export default function RecordsPage() {
                                     animate={{ opacity: 1, y: 0 }}
                                     transition={{ delay: idx * 0.05 }}
                                 >
-                                    <GlowingCard glowColor="amber" className="p-3 md:p-4" isDark={isDark}>
+                                    <GlowingCard glowColor="coral" className="p-3 md:p-4" isDark={isDark}>
                                         <div className="flex items-start gap-3 md:gap-4">
-                                            <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg md:rounded-xl flex items-center justify-center bg-amber-500/10 text-amber-500 flex-shrink-0">
+                                            <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg md:rounded-xl flex items-center justify-center bg-[#FD614B]/10 text-[#FD614B] flex-shrink-0">
                                                 <span className="[&>svg]:w-5 [&>svg]:h-5 md:[&>svg]:w-6 md:[&>svg]:h-6">
                                                     {Icons.document}
                                                 </span>
@@ -910,7 +910,7 @@ export default function RecordsPage() {
                                                     <h3 className={cn("font-medium text-sm md:text-base", textPrimary)}>{record.title}</h3>
                                                     <Badge>{getRecordTypeLabel(record.record_type)}</Badge>
                                                     {record.attachments && record.attachments.length > 0 && (
-                                                        <span className="flex items-center gap-0.5 text-xs text-amber-500">
+                                                        <span className="flex items-center gap-0.5 text-xs text-[#FD614B]">
                                                             {Icons.paperclip}
                                                             <span>{record.attachments.length}</span>
                                                         </span>
@@ -951,7 +951,7 @@ export default function RecordsPage() {
                                 </p>
                                 <button
                                     onClick={() => setShowAddModal(true)}
-                                    className="mt-4 text-amber-500 hover:underline"
+                                    className="mt-4 text-[#FD614B] hover:underline"
                                 >
                                     {isRTL ? "إضافة نتيجة جديدة" : "Add your first lab result"}
                                 </button>
@@ -964,9 +964,9 @@ export default function RecordsPage() {
                                     animate={{ opacity: 1, y: 0 }}
                                     transition={{ delay: idx * 0.05 }}
                                 >
-                                    <GlowingCard glowColor="amber" className="p-3 md:p-4" isDark={isDark}>
+                                    <GlowingCard glowColor="coral" className="p-3 md:p-4" isDark={isDark}>
                                         <div className="flex items-start gap-3 md:gap-4">
-                                            <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg md:rounded-xl flex items-center justify-center bg-amber-500/10 text-amber-500 flex-shrink-0">
+                                            <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg md:rounded-xl flex items-center justify-center bg-[#FD614B]/10 text-[#FD614B] flex-shrink-0">
                                                 <span className="[&>svg]:w-5 [&>svg]:h-5 md:[&>svg]:w-6 md:[&>svg]:h-6">
                                                     {Icons.lab}
                                                 </span>
@@ -975,7 +975,7 @@ export default function RecordsPage() {
                                                 <div className="flex flex-wrap items-center gap-1.5 md:gap-2 mb-1">
                                                     <h3 className={cn("font-medium text-sm md:text-base", textPrimary)}>{result.test_name}</h3>
                                                     {result.document_url && (
-                                                        <span className="flex items-center text-xs text-amber-500">
+                                                        <span className="flex items-center text-xs text-[#FD614B]">
                                                             {Icons.paperclip}
                                                         </span>
                                                     )}
@@ -998,7 +998,7 @@ export default function RecordsPage() {
                                                         }}
                                                         className={cn(
                                                             "p-1.5 md:p-2 rounded-lg transition-colors",
-                                                            isDark ? "hover:bg-white/10 text-amber-400" : "hover:bg-gray-100 text-amber-500"
+                                                            isDark ? "hover:bg-white/10 text-[#FD614B]" : "hover:bg-gray-100 text-[#FD614B]"
                                                         )}
                                                         title={isRTL ? "عرض الملف" : "View document"}
                                                     >
@@ -1032,7 +1032,7 @@ export default function RecordsPage() {
                                 </p>
                                 <button
                                     onClick={() => setShowAddModal(true)}
-                                    className="mt-4 text-amber-500 hover:underline"
+                                    className="mt-4 text-[#FD614B] hover:underline"
                                 >
                                     {isRTL ? "إضافة حساسية" : "Add an allergy"}
                                 </button>
@@ -1045,9 +1045,9 @@ export default function RecordsPage() {
                                     animate={{ opacity: 1, y: 0 }}
                                     transition={{ delay: idx * 0.05 }}
                                 >
-                                    <GlowingCard glowColor="amber" className="p-3 md:p-4" isDark={isDark}>
+                                    <GlowingCard glowColor="coral" className="p-3 md:p-4" isDark={isDark}>
                                         <div className="flex items-start gap-3 md:gap-4">
-                                            <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg md:rounded-xl flex items-center justify-center bg-amber-500/10 text-amber-500 flex-shrink-0">
+                                            <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg md:rounded-xl flex items-center justify-center bg-[#FD614B]/10 text-[#FD614B] flex-shrink-0">
                                                 <span className="[&>svg]:w-5 [&>svg]:h-5 md:[&>svg]:w-6 md:[&>svg]:h-6">
                                                     {Icons.allergy}
                                                 </span>
@@ -1086,7 +1086,7 @@ export default function RecordsPage() {
                                 </p>
                                 <button
                                     onClick={() => setShowAddModal(true)}
-                                    className="mt-4 text-amber-500 hover:underline"
+                                    className="mt-4 text-[#FD614B] hover:underline"
                                 >
                                     {isRTL ? "إضافة حالة صحية" : "Add a condition"}
                                 </button>
@@ -1099,9 +1099,9 @@ export default function RecordsPage() {
                                     animate={{ opacity: 1, y: 0 }}
                                     transition={{ delay: idx * 0.05 }}
                                 >
-                                    <GlowingCard glowColor="amber" className="p-3 md:p-4" isDark={isDark}>
+                                    <GlowingCard glowColor="coral" className="p-3 md:p-4" isDark={isDark}>
                                         <div className="flex items-start gap-3 md:gap-4">
-                                            <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg md:rounded-xl flex items-center justify-center bg-amber-500/10 text-amber-500 flex-shrink-0">
+                                            <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg md:rounded-xl flex items-center justify-center bg-[#FD614B]/10 text-[#FD614B] flex-shrink-0">
                                                 <span className="[&>svg]:w-5 [&>svg]:h-5 md:[&>svg]:w-6 md:[&>svg]:h-6">
                                                     {Icons.condition}
                                                 </span>
@@ -1134,7 +1134,7 @@ export default function RecordsPage() {
                                                         "text-xs px-2 py-1.5 rounded-lg border",
                                                         inputBg,
                                                         inputFocus,
-                                                        isDark ? "[&>option]:bg-slate-900 [&>option]:text-white" : "[&>option]:bg-white [&>option]:text-gray-900"
+                                                        isDark ? "[&>option]:bg-[#08213D] [&>option]:text-white" : "[&>option]:bg-white [&>option]:text-gray-900"
                                                     )}
                                                 >
                                                     <option value="active">{isRTL ? "نشطة" : "Active"}</option>
@@ -1167,7 +1167,7 @@ export default function RecordsPage() {
                             exit={{ scale: 0.95, opacity: 0 }}
                             className={cn(
                                 "w-full max-w-md rounded-2xl p-6 max-h-[90vh] overflow-y-auto",
-                                isDark ? "bg-slate-900" : "bg-white"
+                                isDark ? "bg-[#08213D]" : "bg-white"
                             )}
                             onClick={(e) => e.stopPropagation()}
                         >
@@ -1222,7 +1222,7 @@ export default function RecordsPage() {
                                     className={cn(
                                         "flex-1 py-3 rounded-xl font-medium transition-colors flex items-center justify-center gap-2",
                                         isFormValid() && !addingItem
-                                            ? "bg-amber-500 hover:bg-amber-600 text-white"
+                                            ? "bg-[#FD614B] hover:bg-[#E84D37] text-white"
                                             : "bg-gray-300 text-gray-500 cursor-not-allowed"
                                     )}
                                 >

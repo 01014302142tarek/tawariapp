@@ -43,7 +43,7 @@ const borderColorsDark = {
 
 const borderColorsLight = {
     teal: "border-cyan-200/80 hover:border-cyan-400 shadow-sm hover:shadow-md hover:shadow-cyan-100/50",
-    amber: "border-amber-200/80 hover:border-amber-400 shadow-sm hover:shadow-md hover:shadow-amber-100/50",
+    amber: "border-[#FFD0CA]/80 hover:border-amber-400 shadow-sm hover:shadow-md hover:shadow-amber-100/50",
     coral: "border-red-200/80 hover:border-[#FD614B] shadow-sm hover:shadow-md hover:shadow-red-100/50",
     purple: "border-purple-200/80 hover:border-purple-400 shadow-sm hover:shadow-md hover:shadow-purple-100/50",
     blue: "border-[#D0E1F0] hover:border-[#044C87] shadow-sm hover:shadow-md hover:shadow-blue-100/50",

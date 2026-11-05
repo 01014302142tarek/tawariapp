@@ -113,7 +113,7 @@ export function ReviewPromptModal({
                         transition={{ type: "spring", damping: 25, stiffness: 300 }}
                         className={cn(
                             "rounded-2xl shadow-2xl max-w-md w-full",
-                            isDark ? "bg-slate-800" : "bg-white",
+                            isDark ? "bg-[#0D2C4F]" : "bg-white",
                             isRTL && "rtl"
                         )}
                     >
@@ -124,7 +124,7 @@ export function ReviewPromptModal({
                                     initial={{ scale: 0 }}
                                     animate={{ scale: 1 }}
                                     transition={{ type: "spring", damping: 15 }}
-                                    className="text-amber-400 mx-auto mb-4"
+                                    className="text-[#FD614B] mx-auto mb-4"
                                 >
                                     {Icons.success}
                                 </motion.div>
@@ -148,7 +148,7 @@ export function ReviewPromptModal({
                                 {/* Header */}
                                 <div className={cn(
                                     "flex items-center justify-between p-4 border-b",
-                                    isDark ? "border-slate-700" : "border-gray-200"
+                                    isDark ? "border-[#044C87]/30" : "border-gray-200"
                                 )}>
                                     <h3 className={cn(
                                         "text-lg font-semibold",
@@ -190,7 +190,7 @@ export function ReviewPromptModal({
                                         <p className={cn(
                                             "mt-2 text-sm font-medium h-5",
                                             rating > 0
-                                                ? (isDark ? "text-amber-400" : "text-amber-500")
+                                                ? (isDark ? "text-[#FD614B]" : "text-[#FD614B]")
                                                 : "text-transparent"
                                         )}>
                                             {getRatingLabel()}
@@ -216,8 +216,8 @@ export function ReviewPromptModal({
                                             className={cn(
                                                 "w-full px-4 py-3 rounded-xl border transition-colors resize-none",
                                                 isDark
-                                                    ? "bg-slate-700 border-slate-600 text-white placeholder-slate-500 focus:border-amber-500"
-                                                    : "bg-white border-gray-300 text-gray-900 placeholder-gray-400 focus:border-amber-500",
+                                                    ? "bg-slate-700 border-slate-600 text-white placeholder-slate-500 focus:border-[#FD614B]"
+                                                    : "bg-white border-gray-300 text-gray-900 placeholder-gray-400 focus:border-[#FD614B]",
                                                 "focus:outline-none focus:ring-2 focus:ring-amber-500/20"
                                             )}
                                         />
@@ -234,7 +234,7 @@ export function ReviewPromptModal({
                                 {/* Footer */}
                                 <div className={cn(
                                     "flex items-center justify-between gap-3 p-4 border-t",
-                                    isDark ? "border-slate-700" : "border-gray-200"
+                                    isDark ? "border-[#044C87]/30" : "border-gray-200"
                                 )}>
                                     <button
                                         onClick={onSkip}
@@ -253,12 +253,12 @@ export function ReviewPromptModal({
                                         disabled={submitting || rating === 0}
                                         className={cn(
                                             "px-6 py-2 rounded-xl font-medium transition-all",
-                                            "bg-amber-500 text-white",
+                                            "bg-[#FD614B] text-white",
                                             "flex items-center gap-2",
                                             "shadow-lg shadow-amber-500/20",
                                             (submitting || rating === 0)
                                                 ? "opacity-50 cursor-not-allowed"
-                                                : "hover:bg-amber-600 hover:shadow-amber-500/30"
+                                                : "hover:bg-[#E84D37] hover:shadow-amber-500/30"
                                         )}
                                     >
                                         {submitting ? Icons.loading : Icons.send}

@@ -78,7 +78,7 @@ const Toggle = ({ enabled, onChange, isDark, disabled }: { enabled: boolean; onC
         disabled={disabled}
         className={cn(
             "relative h-6 w-11 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2",
-            enabled ? "bg-amber-500" : isDark ? "bg-slate-600" : "bg-gray-300",
+            enabled ? "bg-[#FD614B]" : isDark ? "bg-slate-600" : "bg-gray-300",
             isDark ? "focus:ring-offset-slate-900" : "focus:ring-offset-white",
             disabled && "opacity-50 cursor-not-allowed"
         )}
@@ -116,16 +116,16 @@ const SettingsSection = ({
     disabled?: boolean;
 }) => {
     return (
-        <GlowingCard glowColor="amber" className="p-4 md:p-6" isDark={isDark}>
+        <GlowingCard glowColor="coral" className="p-4 md:p-6" isDark={isDark}>
             <div className="flex items-center justify-between gap-2 md:gap-3 mb-4 md:mb-6">
                 <div className="flex items-center gap-2 md:gap-3">
-                    <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-br from-[#38BDF8] to-[#0284C7] flex items-center justify-center text-white shadow-[0_0_15px_rgba(14,165,233,0.5)] border border-sky-300/40">
+                    <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-br from-[#044C87] to-[#0C67B3] flex items-center justify-center text-white shadow-[0_0_15px_rgba(4,76,135,0.4)] border border-[#0C67B3]/40">
                         {icon}
                     </div>
                     <h2 className={cn("text-base md:text-lg font-semibold", isDark ? "text-white" : "text-slate-900")}>{title}</h2>
                 </div>
                 {disabled && (
-                    <span className="text-xs px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-500">
+                    <span className="text-xs px-2 py-0.5 rounded-full bg-[#FD614B]/20 text-[#FD614B]">
                         {isRTL ? "للعرض فقط" : "View Only"}
                     </span>
                 )}
@@ -345,10 +345,10 @@ export default function SettingsPage() {
         return (
             <div className={cn(
                 "min-h-screen flex items-center justify-center",
-                isDark ? "bg-slate-950" : "bg-gray-50"
+                isDark ? "bg-[#031326]" : "bg-gray-50"
             )}>
                 <div className="flex flex-col items-center gap-4">
-                    <div className="w-8 h-8 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" />
+                    <div className="w-8 h-8 border-2 border-[#FD614B] border-t-transparent rounded-full animate-spin" />
                     <p className={cn("text-sm", isDark ? "text-gray-400" : "text-gray-600")}>
                         {isRTL ? "جارٍ التحميل..." : "Loading..."}
                     </p>
@@ -367,12 +367,12 @@ export default function SettingsPage() {
                     minSize={0.4}
                     maxSize={1}
                     particleDensity={isDark ? 20 : 10}
-                    particleColor={isDark ? "245, 158, 11" : "217, 119, 6"}
+                    particleColor={isDark ? "253, 97, 75" : "4, 76, 135"}
                 />
                 {isDark && (
                     <>
-                        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-amber-500/5 rounded-full blur-3xl" />
-                        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-amber-500/5 rounded-full blur-3xl" />
+                        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-[#FD614B]/10 rounded-full blur-3xl" />
+                        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-[#FD614B]/10 rounded-full blur-3xl" />
                     </>
                 )}
             </div>
@@ -396,7 +396,7 @@ export default function SettingsPage() {
                                     ? "bg-emerald-500 text-white"
                                     : saveStatus === "error"
                                         ? "bg-red-500 text-white"
-                                        : "bg-amber-500 hover:bg-amber-600 text-white",
+                                        : "bg-[#FD614B] hover:bg-[#E84D37] text-white",
                                 isSaving && "opacity-70 cursor-not-allowed"
                             )}
                         >
@@ -428,9 +428,9 @@ export default function SettingsPage() {
                     </h3>
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
                         {/* Profile Section */}
-                        <GlowingCard glowColor="amber" className="p-4 md:p-6" isDark={isDark}>
+                        <GlowingCard glowColor="coral" className="p-4 md:p-6" isDark={isDark}>
                             <div className="flex items-center gap-2 md:gap-3 mb-4 md:mb-6">
-                                <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-br from-[#38BDF8] to-[#0284C7] flex items-center justify-center text-white shadow-[0_0_15px_rgba(14,165,233,0.5)] border border-sky-300/40">
+                                <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-br from-[#044C87] to-[#0C67B3] flex items-center justify-center text-white shadow-[0_0_15px_rgba(4,76,135,0.4)] border border-[#0C67B3]/40">
                                     {Icons.user}
                                 </div>
                                 <h2 className={cn("text-base md:text-lg font-semibold", isDark ? "text-white" : "text-slate-900")}>
@@ -449,8 +449,8 @@ export default function SettingsPage() {
                                         className={cn(
                                             "w-full px-4 py-3 rounded-xl border transition-colors focus:outline-none focus:ring-2 focus:ring-amber-500/20",
                                             isDark
-                                                ? "bg-white/5 border-white/10 text-white focus:border-amber-500"
-                                                : "bg-gray-50 border-gray-200 text-gray-900 focus:border-amber-500"
+                                                ? "bg-white/5 border-white/10 text-white focus:border-[#FD614B]"
+                                                : "bg-gray-50 border-gray-200 text-gray-900 focus:border-[#FD614B]"
                                         )}
                                     />
                                 </div>
@@ -477,9 +477,9 @@ export default function SettingsPage() {
                         </GlowingCard>
 
                         {/* Security Section */}
-                        <GlowingCard glowColor="amber" className="p-4 md:p-6" isDark={isDark}>
+                        <GlowingCard glowColor="coral" className="p-4 md:p-6" isDark={isDark}>
                             <div className="flex items-center gap-2 md:gap-3 mb-4 md:mb-6">
-                                <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-br from-[#38BDF8] to-[#0284C7] flex items-center justify-center text-white shadow-[0_0_15px_rgba(14,165,233,0.5)] border border-sky-300/40">
+                                <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-br from-[#044C87] to-[#0C67B3] flex items-center justify-center text-white shadow-[0_0_15px_rgba(4,76,135,0.4)] border border-[#0C67B3]/40">
                                     {Icons.shield}
                                 </div>
                                 <h2 className={cn("text-base md:text-lg font-semibold", isDark ? "text-white" : "text-slate-900")}>
@@ -511,7 +511,7 @@ export default function SettingsPage() {
                                 >
                                     <div className="flex items-center gap-2">
                                         <p className="font-medium">{isRTL ? "المصادقة الثنائية" : "Two-Factor Authentication"}</p>
-                                        <span className="text-xs px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-500">
+                                        <span className="text-xs px-2 py-0.5 rounded-full bg-[#FD614B]/20 text-[#FD614B]">
                                             {isRTL ? "قريباً" : "Coming Soon"}
                                         </span>
                                     </div>
@@ -523,9 +523,9 @@ export default function SettingsPage() {
                         </GlowingCard>
 
                         {/* Personal Notifications */}
-                        <GlowingCard glowColor="amber" className="p-4 md:p-6 lg:col-span-2" isDark={isDark}>
+                        <GlowingCard glowColor="coral" className="p-4 md:p-6 lg:col-span-2" isDark={isDark}>
                             <div className="flex items-center gap-2 md:gap-3 mb-4 md:mb-6">
-                                <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-br from-[#38BDF8] to-[#0284C7] flex items-center justify-center text-white shadow-[0_0_15px_rgba(14,165,233,0.5)] border border-sky-300/40">
+                                <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-br from-[#044C87] to-[#0C67B3] flex items-center justify-center text-white shadow-[0_0_15px_rgba(4,76,135,0.4)] border border-[#0C67B3]/40">
                                     {Icons.bell}
                                 </div>
                                 <h2 className={cn("text-base md:text-lg font-semibold", isDark ? "text-white" : "text-slate-900")}>
@@ -567,7 +567,7 @@ export default function SettingsPage() {
                         <h3 className={cn("text-lg font-semibold", isDark ? "text-white" : "text-slate-900")}>
                             {isRTL ? "إعدادات المنصة" : "Platform Settings"}
                         </h3>
-                        <span className={cn("text-xs px-2 py-1 rounded-full", isDark ? "bg-amber-500/20 text-amber-400" : "bg-amber-100 text-amber-700")}>
+                        <span className={cn("text-xs px-2 py-1 rounded-full", isDark ? "bg-[#FD614B]/20 text-[#FD614B]" : "bg-[#FFE8E4] text-[#C43825]")}>
                             {isRTL ? "للعرض فقط - يتطلب تنفيذ الخادم" : "View Only - Requires Backend"}
                         </span>
                     </div>
@@ -580,9 +580,9 @@ export default function SettingsPage() {
                 </div>
 
                 {/* Platform Info */}
-                <GlowingCard glowColor="amber" className="p-4 md:p-6" isDark={isDark}>
+                <GlowingCard glowColor="coral" className="p-4 md:p-6" isDark={isDark}>
                     <div className="flex items-center gap-2 md:gap-3 mb-4 md:mb-6">
-                        <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-br from-[#38BDF8] to-[#0284C7] flex items-center justify-center text-white shadow-[0_0_15px_rgba(14,165,233,0.5)] border border-sky-300/40">
+                        <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-br from-[#044C87] to-[#0C67B3] flex items-center justify-center text-white shadow-[0_0_15px_rgba(4,76,135,0.4)] border border-[#0C67B3]/40">
                             {Icons.info}
                         </div>
                         <h2 className={cn("text-base md:text-lg font-semibold", isDark ? "text-white" : "text-slate-900")}>{t.adminDashboard.settingsPage.sections.info}</h2>
@@ -627,7 +627,7 @@ export default function SettingsPage() {
                     <div className={cn(
                         "relative w-full max-w-md rounded-2xl border p-6 shadow-xl",
                         isDark
-                            ? "bg-slate-900 border-white/10"
+                            ? "bg-[#08213D] border-white/10"
                             : "bg-white border-gray-200"
                     )}>
                         {/* Header */}
@@ -676,8 +676,8 @@ export default function SettingsPage() {
                                                 className={cn(
                                                     "w-full px-4 py-3 rounded-xl border transition-colors focus:outline-none focus:ring-2 focus:ring-amber-500/20 pr-12",
                                                     isDark
-                                                        ? "bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-amber-500"
-                                                        : "bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-400 focus:border-amber-500"
+                                                        ? "bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-[#FD614B]"
+                                                        : "bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-400 focus:border-[#FD614B]"
                                                 )}
                                             />
                                             <button
@@ -707,8 +707,8 @@ export default function SettingsPage() {
                                                 className={cn(
                                                     "w-full px-4 py-3 rounded-xl border transition-colors focus:outline-none focus:ring-2 focus:ring-amber-500/20 pr-12",
                                                     isDark
-                                                        ? "bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-amber-500"
-                                                        : "bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-400 focus:border-amber-500"
+                                                        ? "bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-[#FD614B]"
+                                                        : "bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-400 focus:border-[#FD614B]"
                                                 )}
                                             />
                                             <button
@@ -753,7 +753,7 @@ export default function SettingsPage() {
                                         disabled={passwordSaving || !newPassword || !confirmPassword}
                                         className={cn(
                                             "flex-1 px-4 py-2.5 rounded-xl font-medium transition-colors flex items-center justify-center gap-2",
-                                            "bg-amber-500 hover:bg-amber-600 text-white",
+                                            "bg-[#FD614B] hover:bg-[#E84D37] text-white",
                                             (passwordSaving || !newPassword || !confirmPassword) && "opacity-60 cursor-not-allowed"
                                         )}
                                     >

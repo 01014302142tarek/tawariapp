@@ -88,15 +88,15 @@ export default function PaymentHistoryPage() {
         switch (status) {
             case "completed":
                 return {
-                    color: "text-amber-400",
-                    bg: "bg-amber-500/20",
+                    color: "text-[#FD614B]",
+                    bg: "bg-[#FD614B]/20",
                     icon: Icons.check,
                     label: isRTL ? "مكتمل" : "Completed",
                 };
             case "pending":
                 return {
-                    color: "text-amber-400",
-                    bg: "bg-amber-500/20",
+                    color: "text-[#FD614B]",
+                    bg: "bg-[#FD614B]/20",
                     icon: Icons.clock,
                     label: isRTL ? "قيد الانتظار" : "Pending",
                 };
@@ -158,9 +158,9 @@ export default function PaymentHistoryPage() {
     // Loading state
     if (loading) {
         return (
-            <div className={cn("min-h-screen flex items-center justify-center", isDark ? "bg-slate-950 text-white" : "bg-gray-50 text-slate-900")}>
+            <div className={cn("min-h-screen flex items-center justify-center", isDark ? "bg-[#031326] text-white" : "bg-gray-50 text-slate-900")}>
                 <div className="text-center">
-                    <div className="w-16 h-16 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+                    <div className="w-16 h-16 border-4 border-[#FD614B] border-t-transparent rounded-full animate-spin mx-auto mb-4" />
                     <p className={cn("text-lg", isDark ? "text-white" : "text-slate-900")}>
                         {isRTL ? "جاري التحميل..." : "Loading..."}
                     </p>
@@ -170,7 +170,7 @@ export default function PaymentHistoryPage() {
     }
 
     return (
-        <div className={cn("min-h-screen py-8 px-4", isDark ? "bg-slate-950" : "bg-gray-50", isRTL && "rtl")}>
+        <div className={cn("min-h-screen py-8 px-4", isDark ? "bg-[#031326]" : "bg-gray-50", isRTL && "rtl")}>
             <div className="max-w-2xl mx-auto">
                 {/* Header */}
                 <div className="mb-6">
@@ -190,7 +190,7 @@ export default function PaymentHistoryPage() {
                 </div>
 
                 {/* Summary Card */}
-                <GlowingCard glowColor="amber" className="p-5 mb-6" isDark={isDark}>
+                <GlowingCard glowColor="coral" className="p-5 mb-6" isDark={isDark}>
                     <div className="flex items-center justify-between">
                         <div>
                             <p className={cn("text-sm", isDark ? "text-gray-400" : "text-gray-600")}>
@@ -200,8 +200,8 @@ export default function PaymentHistoryPage() {
                                 {totalPaid.toFixed(2)} {isRTL ? "ج.م" : "EGP"}
                             </p>
                         </div>
-                        <div className="w-14 h-14 rounded-full bg-amber-500/20 flex items-center justify-center">
-                            <span className="text-amber-500">{Icons.receipt}</span>
+                        <div className="w-14 h-14 rounded-full bg-[#FD614B]/20 flex items-center justify-center">
+                            <span className="text-[#FD614B]">{Icons.receipt}</span>
                         </div>
                     </div>
                     <div className={cn("mt-4 pt-4 border-t flex gap-4 text-sm", isDark ? "border-white/10" : "border-slate-200")}>
@@ -211,7 +211,7 @@ export default function PaymentHistoryPage() {
                         </div>
                         <div>
                             <span className={isDark ? "text-gray-400" : "text-gray-600"}>{isRTL ? "مكتملة" : "Completed"}</span>
-                            <span className="text-amber-500 font-medium ms-2">
+                            <span className="text-[#FD614B] font-medium ms-2">
                                 {transactions.filter((t) => t.status === "completed").length}
                             </span>
                         </div>

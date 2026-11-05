@@ -163,7 +163,7 @@ export default function Sidebar({ isMobileOpen, onClose }: { isMobileOpen?: bool
                         : (isRTL ? "translate-x-full md:translate-x-0" : "-translate-x-full md:translate-x-0"),
                     "transition-transform duration-300 md:transition-none",
                     isDark
-                        ? "bg-slate-950/95 border-white/10"
+                        ? "bg-[#031326]/95 border-white/10"
                         : "bg-white/95 border-gray-200/80"
                 )}
             >
@@ -214,8 +214,8 @@ export default function Sidebar({ isMobileOpen, onClose }: { isMobileOpen?: bool
                                                 "flex items-center py-2.5 rounded-xl transition-all duration-200 relative mx-3",
                                                 isActive
                                                     ? isDark
-                                                        ? "bg-gradient-to-r from-blue-600/25 to-blue-600/5 text-blue-400 font-semibold shadow-[inset_0_0_12px_rgba(37,99,235,0.15)]"
-                                                        : "bg-gradient-to-r from-blue-600/15 to-blue-600/5 text-blue-600 font-semibold"
+                                                        ? "bg-gradient-to-r from-[#044C87]/40 to-[#044C87]/10 text-[#FEFDFE] font-semibold border-s-2 border-[#FD614B] shadow-[inset_0_0_12px_rgba(4,76,135,0.25)]"
+                                                        : "bg-gradient-to-r from-[#044C87]/15 to-[#044C87]/5 text-[#044C87] font-semibold border-s-2 border-[#FD614B]"
                                                     : isHighlighted && !isActive
                                                         ? isDark
                                                             ? "text-blue-400 hover:text-blue-300 hover:bg-blue-500/10"

@@ -96,8 +96,8 @@ export default function PendingReviews({
                         className={cn(
                             "text-xs font-medium px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5",
                             isDark
-                                ? "text-amber-400 hover:bg-amber-900/30"
-                                : "text-amber-600 hover:bg-amber-50"
+                                ? "text-[#FD614B] hover:bg-amber-900/30"
+                                : "text-[#E84D37] hover:bg-[#FFF5F3]"
                         )}
                     >
                         {showAll ? (
@@ -132,8 +132,8 @@ export default function PendingReviews({
                         className={cn(
                             "rounded-xl p-4 border",
                             isDark
-                                ? "bg-gradient-to-r from-amber-950/30 to-zinc-900/60 border-amber-500/20"
-                                : "bg-gradient-to-r from-amber-50 to-white border-amber-200"
+                                ? "bg-gradient-to-r from-amber-950/30 to-zinc-900/60 border-[#FD614B]/30"
+                                : "bg-gradient-to-r from-amber-50 to-white border-[#FFD0CA]"
                         )}
                     >
                         {selectedAppointment?.id === appointment.id ? (
@@ -152,15 +152,15 @@ export default function PendingReviews({
                                             "w-10 h-10 rounded-full flex items-center justify-center",
                                             isDark
                                                 ? "bg-amber-900/50"
-                                                : "bg-amber-100"
+                                                : "bg-[#FFE8E4]"
                                         )}
                                     >
                                         <svg
                                             className={cn(
                                                 "w-5 h-5",
                                                 isDark
-                                                    ? "text-amber-400"
-                                                    : "text-amber-600"
+                                                    ? "text-[#FD614B]"
+                                                    : "text-[#E84D37]"
                                             )}
                                             fill="none"
                                             stroke="currentColor"

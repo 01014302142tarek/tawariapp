@@ -53,7 +53,7 @@ function PaymentFailedContent() {
         ];
 
     return (
-        <div className={cn("min-h-screen bg-slate-950 flex items-center justify-center p-4", isRTL && "rtl")}>
+        <div className={cn("min-h-screen bg-[#031326] flex items-center justify-center p-4", isRTL && "rtl")}>
             <motion.div
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -92,7 +92,7 @@ function PaymentFailedContent() {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.4 }}
-                        className="bg-slate-800/50 rounded-xl p-4 mb-6 text-start"
+                        className="bg-[#0D2C4F]/50 rounded-xl p-4 mb-6 text-start"
                     >
                         <p className="text-gray-400 text-sm mb-3">
                             {isRTL ? "أسباب محتملة:" : "Possible reasons:"}
@@ -116,7 +116,7 @@ function PaymentFailedContent() {
                     >
                         <button
                             onClick={() => router.back()}
-                            className="w-full py-3 bg-amber-500 text-white rounded-xl font-medium hover:bg-amber-600 transition-colors flex items-center justify-center gap-2"
+                            className="w-full py-3 bg-[#FD614B] text-white rounded-xl font-medium hover:bg-[#E84D37] transition-colors flex items-center justify-center gap-2"
                         >
                             {Icons.refresh}
                             <span>{isRTL ? "حاول مرة أخرى" : "Try Again"}</span>
@@ -124,7 +124,7 @@ function PaymentFailedContent() {
 
                         <button
                             onClick={() => router.push(`/${language}/dashboard/patient`)}
-                            className="w-full py-3 bg-slate-800 text-white rounded-xl font-medium hover:bg-slate-700 transition-colors flex items-center justify-center gap-2"
+                            className="w-full py-3 bg-[#0D2C4F] text-white rounded-xl font-medium hover:bg-slate-700 transition-colors flex items-center justify-center gap-2"
                         >
                             {Icons.home}
                             <span>{isRTL ? "العودة للرئيسية" : "Back to Dashboard"}</span>
@@ -156,7 +156,7 @@ function PaymentFailedContent() {
 
 function PaymentFailedLoading() {
     return (
-        <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+        <div className="min-h-screen bg-[#031326] flex items-center justify-center">
             <div className="w-16 h-16 border-4 border-red-500 border-t-transparent rounded-full animate-spin" />
         </div>
     );

@@ -189,7 +189,7 @@ export default function PaymentPage() {
         return (
             <div className={cn("min-h-screen p-4 sm:p-6 flex items-center justify-center", isRTL && "rtl")}>
                 <div className="text-center">
-                    <div className="w-12 h-12 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+                    <div className="w-12 h-12 border-4 border-[#FD614B] border-t-transparent rounded-full animate-spin mx-auto mb-4" />
                     <p className={isDark ? "text-slate-400" : "text-slate-600"}>
                         {isRTL ? "جاري التحميل..." : "Loading..."}
                     </p>
@@ -227,7 +227,7 @@ export default function PaymentPage() {
                     </p>
                     <button
                         onClick={handleBack}
-                        className="px-6 py-2 bg-amber-500 text-white rounded-lg font-medium hover:bg-amber-600 transition-colors shadow-sm"
+                        className="px-6 py-2 bg-[#FD614B] text-white rounded-lg font-medium hover:bg-[#E84D37] transition-colors shadow-sm"
                     >
                         {isRTL ? "اختر طبيباً آخر" : "Choose Another Doctor"}
                     </button>
@@ -267,7 +267,7 @@ export default function PaymentPage() {
                     animate={{ opacity: 1, y: 0 }}
                     className={cn(
                         "rounded-2xl p-4 sm:p-6 mb-6 border",
-                        isDark ? "bg-slate-800/50 border-white/10" : "bg-white border-slate-200 shadow-sm"
+                        isDark ? "bg-[#0D2C4F]/50 border-white/10" : "bg-white border-slate-200 shadow-sm"
                     )}
                 >
                     <div className="flex items-start gap-4">
@@ -289,7 +289,7 @@ export default function PaymentPage() {
                             {/* Online indicator */}
                             <div className={cn(
                                 "absolute -bottom-0.5 -right-0.5 w-4 h-4 sm:w-5 sm:h-5 rounded-full border-2 bg-green-500",
-                                isDark ? "border-slate-800" : "border-white"
+                                isDark ? "border-[#044C87]/30" : "border-white"
                             )} />
                         </div>
 
@@ -304,7 +304,7 @@ export default function PaymentPage() {
 
                             {/* Stats */}
                             <div className="flex flex-wrap items-center gap-3 sm:gap-4 mt-2 text-sm">
-                                <div className="flex items-center gap-1 text-amber-500 font-medium">
+                                <div className="flex items-center gap-1 text-[#FD614B] font-medium">
                                     {Icons.star}
                                     <span>{doctor.rating_average.toFixed(1)}</span>
                                     <span className={isDark ? "text-slate-500" : "text-slate-400"}>({doctor.rating_count})</span>
@@ -331,7 +331,7 @@ export default function PaymentPage() {
                     transition={{ delay: 0.1 }}
                     className={cn(
                         "rounded-2xl p-4 sm:p-6 mb-6 border",
-                        isDark ? "bg-slate-800/50 border-white/10" : "bg-white border-slate-200 shadow-sm"
+                        isDark ? "bg-[#0D2C4F]/50 border-white/10" : "bg-white border-slate-200 shadow-sm"
                     )}
                 >
                     <label className={cn("block font-medium mb-2", isDark ? "text-white" : "text-slate-900")}>
@@ -347,7 +347,7 @@ export default function PaymentPage() {
                         className={cn(
                             "w-full rounded-xl p-4 resize-none focus:outline-none focus:ring-2 focus:ring-amber-500/50 border transition-colors",
                             isDark
-                                ? "bg-slate-900/50 border-white/10 text-white placeholder-slate-500"
+                                ? "bg-[#08213D]/50 border-white/10 text-white placeholder-slate-500"
                                 : "bg-slate-50 border-slate-200 text-slate-900 placeholder-slate-400"
                         )}
                         rows={3}
@@ -365,7 +365,7 @@ export default function PaymentPage() {
                     transition={{ delay: 0.2 }}
                     className={cn(
                         "rounded-2xl p-4 sm:p-6 mb-6 border",
-                        isDark ? "bg-slate-800/50 border-white/10" : "bg-white border-slate-200 shadow-sm"
+                        isDark ? "bg-[#0D2C4F]/50 border-white/10" : "bg-white border-slate-200 shadow-sm"
                     )}
                 >
                     <h3 className={cn("font-semibold mb-4 flex items-center gap-2", isDark ? "text-white" : "text-slate-900")}>
@@ -396,18 +396,18 @@ export default function PaymentPage() {
                     transition={{ delay: 0.3 }}
                     className={cn(
                         "rounded-xl p-4 mb-6 border",
-                        isDark ? "bg-amber-500/10 border-amber-500/30 text-amber-200" : "bg-amber-50 border-amber-200 text-amber-900"
+                        isDark ? "bg-[#FD614B]/10 border-[#FD614B]/40 text-amber-200" : "bg-[#FFF5F3] border-[#FFD0CA] text-amber-900"
                     )}
                 >
                     <div className="flex items-start gap-3">
-                        <div className="text-amber-500 mt-0.5 shrink-0">
+                        <div className="text-[#FD614B] mt-0.5 shrink-0">
                             {Icons.shield}
                         </div>
                         <div>
                             <p className={cn("font-medium", isDark ? "text-amber-200" : "text-amber-900")}>
                                 {isRTL ? "وضع الاختبار" : "Test Mode"}
                             </p>
-                            <p className={cn("text-sm", isDark ? "text-amber-200/70" : "text-amber-800")}>
+                            <p className={cn("text-sm", isDark ? "text-amber-200/70" : "text-[#A82B1B]")}>
                                 {isRTL
                                     ? "هذه صفحة دفع تجريبية. لن يتم خصم أي مبالغ حقيقية."
                                     : "This is a demo payment page. No real charges will be made."}
@@ -439,7 +439,7 @@ export default function PaymentPage() {
                         disabled={processing}
                         className={cn(
                             "flex-1 px-6 py-3 rounded-xl font-medium transition-colors disabled:opacity-50",
-                            isDark ? "bg-slate-800 text-white hover:bg-slate-700" : "bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200"
+                            isDark ? "bg-[#0D2C4F] text-white hover:bg-slate-700" : "bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200"
                         )}
                     >
                         {isRTL ? "إلغاء" : "Cancel"}
@@ -447,7 +447,7 @@ export default function PaymentPage() {
                     <button
                         onClick={handleCompletePayment}
                         disabled={processing}
-                        className="flex-1 px-6 py-3 bg-amber-500 text-white rounded-xl font-medium hover:bg-amber-600 transition-colors disabled:opacity-50 flex items-center justify-center gap-2 shadow-sm"
+                        className="flex-1 px-6 py-3 bg-[#FD614B] text-white rounded-xl font-medium hover:bg-[#E84D37] transition-colors disabled:opacity-50 flex items-center justify-center gap-2 shadow-sm"
                     >
                         {processing ? (
                             <>

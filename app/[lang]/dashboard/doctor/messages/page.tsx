@@ -28,7 +28,7 @@ async function DoctorMessagesData() {
 function DoctorMessagesFallback() {
     return (
         <div className="flex items-center justify-center min-h-[60vh]">
-            <div className="animate-spin w-8 h-8 border-2 border-amber-500 border-t-transparent rounded-full" />
+            <div className="animate-spin w-8 h-8 border-2 border-[#FD614B] border-t-transparent rounded-full" />
         </div>
     );
 }

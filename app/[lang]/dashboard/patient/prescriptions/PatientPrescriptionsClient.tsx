@@ -50,7 +50,7 @@ const Badge = ({ variant, children, isDark = true }: { variant: string; children
         completed: isDark ? "bg-slate-700/50 text-slate-300" : "bg-gray-100 text-slate-700 border border-gray-200",
         cancelled: "bg-red-500/10 text-red-700 dark:text-red-400 border border-red-500/20",
         success: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20",
-        warning: "bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20",
+        warning: "bg-[#FD614B]/10 text-[#FD614B] border border-[#FD614B]/20",
         danger: "bg-red-500/10 text-red-700 dark:text-red-400 border border-red-500/20",
         default: isDark ? "bg-slate-700/50 text-slate-300" : "bg-gray-100 text-slate-700 border border-gray-200",
     };
@@ -178,7 +178,7 @@ export default function PrescriptionsPage({
     if (loading) {
         return (
             <div className="p-4 md:p-6 lg:p-8 flex items-center justify-center min-h-[60vh]">
-                <div className="animate-spin w-8 h-8 border-2 border-amber-500 border-t-transparent rounded-full" />
+                <div className="animate-spin w-8 h-8 border-2 border-[#FD614B] border-t-transparent rounded-full" />
             </div>
         );
     }
@@ -188,7 +188,7 @@ export default function PrescriptionsPage({
             {/* Header */}
             <div className="mb-6 md:mb-8">
                 <h1 className={cn("text-xl md:text-2xl font-bold flex items-center gap-2 md:gap-3", textPrimary)}>
-                    <span className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-br from-[#38BDF8] to-[#0284C7] flex items-center justify-center text-white shadow-[0_0_15px_rgba(14,165,233,0.5)] border border-sky-300/40">
+                    <span className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-br from-[#044C87] to-[#0C67B3] flex items-center justify-center text-white shadow-[0_0_15px_rgba(4,76,135,0.4)] border border-[#0C67B3]/40">
                         {Icons.prescription}
                     </span>
                     {t.patientDashboard.prescriptionsPage.title}
@@ -205,7 +205,7 @@ export default function PrescriptionsPage({
                         className={cn(
                             "px-3 md:px-4 py-1.5 md:py-2 rounded-lg text-xs md:text-sm font-medium transition-all whitespace-nowrap flex-shrink-0",
                             activeFilter === filter.key
-                                ? "bg-amber-500 text-white"
+                                ? "bg-[#FD614B] text-white"
                                 : isDark
                                     ? "bg-white/5 text-gray-400 hover:bg-white/10"
                                     : "bg-gray-100 text-gray-600 hover:bg-gray-200"
@@ -218,8 +218,8 @@ export default function PrescriptionsPage({
 
             {/* Prescriptions List */}
             {filteredPrescriptions.length === 0 ? (
-                <GlowingCard glowColor="amber" className="p-12 text-center" isDark={isDark}>
-                    <div className={cn("w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4", isDark ? "bg-slate-900" : "bg-gray-100", textMuted)}>
+                <GlowingCard glowColor="coral" className="p-12 text-center" isDark={isDark}>
+                    <div className={cn("w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4", isDark ? "bg-[#08213D]" : "bg-gray-100", textMuted)}>
                         {Icons.prescription}
                     </div>
                     <h3 className={cn("text-lg font-medium mb-2", textPrimary)}>
@@ -238,16 +238,16 @@ export default function PrescriptionsPage({
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: idx * 0.1 }}
                         >
-                            <GlowingCard glowColor="amber" className="p-4 md:p-5" isDark={isDark}>
+                            <GlowingCard glowColor="coral" className="p-4 md:p-5" isDark={isDark}>
                                 {/* Mobile Layout */}
                                 <div className="md:hidden">
                                     {/* Header: Icon + Name + Badge */}
                                     <div className="flex items-start gap-3 mb-3">
                                         <div className={cn(
                                             "w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0",
-                                            rx.status === "active" ? "bg-amber-500/10 text-amber-500" :
+                                            rx.status === "active" ? "bg-[#FD614B]/10 text-[#FD614B]" :
                                                 rx.status === "cancelled" ? "bg-red-500/10 text-red-500" :
-                                                    isDark ? "bg-slate-800 text-gray-400" : "bg-gray-100 text-gray-500"
+                                                    isDark ? "bg-[#0D2C4F] text-gray-400" : "bg-gray-100 text-gray-500"
                                         )}>
                                             {Icons.pill}
                                         </div>
@@ -346,7 +346,7 @@ export default function PrescriptionsPage({
                                         <button
                                             onClick={() => handleRequestRenewal(rx.id)}
                                             disabled={actionLoading === rx.id}
-                                            className="flex items-center justify-center gap-2 w-full px-4 py-2.5 bg-amber-500 hover:bg-amber-600 text-white text-sm font-medium rounded-xl transition-colors shadow-lg shadow-amber-500/20 disabled:opacity-50"
+                                            className="flex items-center justify-center gap-2 w-full px-4 py-2.5 bg-[#FD614B] hover:bg-[#E84D37] text-white text-sm font-medium rounded-xl transition-colors shadow-lg shadow-amber-500/20 disabled:opacity-50"
                                         >
                                             {actionLoading === rx.id ? (
                                                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -364,9 +364,9 @@ export default function PrescriptionsPage({
                                     <div className="col-span-4 flex items-center gap-4">
                                         <div className={cn(
                                             "w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0",
-                                            rx.status === "active" ? "bg-amber-500/10 text-amber-500" :
+                                            rx.status === "active" ? "bg-[#FD614B]/10 text-[#FD614B]" :
                                                 rx.status === "cancelled" ? "bg-red-500/10 text-red-500" :
-                                                    isDark ? "bg-slate-800 text-gray-400" : "bg-gray-100 text-gray-500"
+                                                    isDark ? "bg-[#0D2C4F] text-gray-400" : "bg-gray-100 text-gray-500"
                                         )}>
                                             {Icons.pill}
                                         </div>
@@ -394,7 +394,7 @@ export default function PrescriptionsPage({
                                                 />
                                             </div>
                                         ) : (
-                                            <div className={cn("w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0", isDark ? "bg-amber-500/10 text-amber-400" : "bg-amber-50 text-amber-600")}>
+                                            <div className={cn("w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0", isDark ? "bg-[#FD614B]/10 text-[#FD614B]" : "bg-[#FFF5F3] text-[#E84D37]")}>
                                                 {rx.doctor?.full_name.charAt(0) || "D"}
                                             </div>
                                         )}
@@ -455,7 +455,7 @@ export default function PrescriptionsPage({
                                             <button
                                                 onClick={() => handleRequestRenewal(rx.id)}
                                                 disabled={actionLoading === rx.id}
-                                                className="flex items-center gap-2 px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-sm font-medium rounded-lg transition-colors shadow-lg shadow-amber-500/20 disabled:opacity-50"
+                                                className="flex items-center gap-2 px-4 py-2 bg-[#FD614B] hover:bg-[#E84D37] text-white text-sm font-medium rounded-lg transition-colors shadow-lg shadow-amber-500/20 disabled:opacity-50"
                                             >
                                                 {actionLoading === rx.id ? (
                                                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />

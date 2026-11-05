@@ -306,7 +306,7 @@ function DoctorsPageContent() {
     if (!mounted) {
         return (
             <div className="p-4 md:p-6 lg:p-8 flex items-center justify-center min-h-[60vh]">
-                <div className="animate-spin w-8 h-8 border-2 border-amber-500 border-t-transparent rounded-full" />
+                <div className="animate-spin w-8 h-8 border-2 border-[#FD614B] border-t-transparent rounded-full" />
             </div>
         );
     }
@@ -323,7 +323,7 @@ function DoctorsPageContent() {
                         {/* Header */}
                         <div className="mb-6 md:mb-8">
                             <h1 className={cn("text-xl md:text-2xl font-bold flex items-center gap-2 md:gap-3", textPrimary)}>
-                                <span className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-br from-[#38BDF8] to-[#0284C7] flex items-center justify-center text-white shadow-[0_0_15px_rgba(14,165,233,0.5)] border border-sky-300/40">
+                                <span className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-br from-[#044C87] to-[#0C67B3] flex items-center justify-center text-white shadow-[0_0_15px_rgba(4,76,135,0.4)] border border-[#0C67B3]/40">
                                     {Icons.users}
                                 </span>
                                 {t.patientDashboard.doctorsPage.title}
@@ -371,8 +371,8 @@ function DoctorsPageContent() {
                                     className={cn(
                                         "flex items-center gap-2 px-4 py-3 rounded-xl border transition-colors",
                                         showFilters
-                                            ? "bg-amber-500 text-white border-amber-500"
-                                            : cn(inputBg, border, textSecondary, "hover:border-amber-500")
+                                            ? "bg-[#FD614B] text-white border-[#FD614B]"
+                                            : cn(inputBg, border, textSecondary, "hover:border-[#FD614B]")
                                     )}
                                 >
                                     {Icons.filter}
@@ -392,7 +392,7 @@ function DoctorsPageContent() {
                                         exit={{ opacity: 0, height: 0 }}
                                         className="overflow-hidden"
                                     >
-                                        <GlowingCard isDark={isDark} glowColor="amber" className="p-4">
+                                        <GlowingCard isDark={isDark} glowColor="coral" className="p-4">
                                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                                                 {/* Specialization Filter */}
                                                 <div>
@@ -507,8 +507,8 @@ function DoctorsPageContent() {
                                 ))}
                             </div>
                         ) : doctors.length === 0 ? (
-                            <GlowingCard isDark={isDark} glowColor="amber" className="p-12 text-center">
-                                <div className={cn("w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4", isDark ? "bg-slate-900" : "bg-gray-100", textMuted)}>
+                            <GlowingCard isDark={isDark} glowColor="coral" className="p-12 text-center">
+                                <div className={cn("w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4", isDark ? "bg-[#08213D]" : "bg-gray-100", textMuted)}>
                                     {Icons.users}
                                 </div>
                                 <h3 className={cn("text-lg font-medium mb-2", textPrimary)}>
@@ -518,7 +518,7 @@ function DoctorsPageContent() {
                                 {(hasActiveFilters || filters.search) && (
                                     <button
                                         onClick={clearFilters}
-                                        className="mt-4 px-4 py-2 bg-amber-500 text-white rounded-lg text-sm font-medium hover:bg-amber-600 transition-colors"
+                                        className="mt-4 px-4 py-2 bg-[#FD614B] text-white rounded-lg text-sm font-medium hover:bg-[#E84D37] transition-colors"
                                     >
                                         {isRTL ? "مسح الفلاتر" : "Clear Filters"}
                                     </button>
@@ -531,9 +531,9 @@ function DoctorsPageContent() {
                                         key={doctor.id}
                                         initial={false}
                                     >
-                                        <GlowingCard isDark={isDark} glowColor="amber" className="p-4 h-full flex flex-col">
+                                        <GlowingCard isDark={isDark} glowColor="coral" className="p-4 h-full flex flex-col">
                                             <div className="flex items-start gap-4 mb-4">
-                                                <div className="relative w-16 h-16 rounded-xl overflow-hidden border-2 border-amber-500/30 flex-shrink-0">
+                                                <div className="relative w-16 h-16 rounded-xl overflow-hidden border-2 border-[#FD614B]/40 flex-shrink-0">
                                                     {doctor.avatar_url ? (
                                                         <Image
                                                             src={doctor.avatar_url}
@@ -543,7 +543,7 @@ function DoctorsPageContent() {
                                                             sizes="64px"
                                                         />
                                                     ) : (
-                                                        <div className={cn("w-full h-full flex items-center justify-center text-2xl font-bold", isDark ? "bg-amber-500/10 text-amber-400" : "bg-amber-50 text-amber-600")}>
+                                                        <div className={cn("w-full h-full flex items-center justify-center text-2xl font-bold", isDark ? "bg-[#FD614B]/10 text-[#FD614B]" : "bg-[#FFF5F3] text-[#E84D37]")}>
                                                             {doctor.full_name.charAt(0)}
                                                         </div>
                                                     )}
@@ -598,7 +598,7 @@ function DoctorsPageContent() {
                                             <div className="mt-auto flex items-center justify-between pt-4 border-t border-white/5">
                                                 <div>
                                                     {doctor.consultation_fee && (
-                                                        <p className="text-amber-500 font-semibold">
+                                                        <p className="text-[#FD614B] font-semibold">
                                                             {formatCurrency(doctor.consultation_fee)}
                                                             <span className={cn("text-xs font-normal ml-1", textMuted)}>
                                                                 {t.patientDashboard.doctorsPage.perSession}
@@ -608,7 +608,7 @@ function DoctorsPageContent() {
                                                 </div>
                                                 <button
                                                     onClick={() => handleBookDoctor(doctor)}
-                                                    className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg font-medium text-sm transition-colors"
+                                                    className="px-4 py-2 bg-[#FD614B] hover:bg-[#E84D37] text-white rounded-lg font-medium text-sm transition-colors"
                                                 >
                                                     {t.patientDashboard.doctorsPage.bookNow}
                                                 </button>
@@ -640,9 +640,9 @@ function DoctorsPageContent() {
                         {booking.doctor && (
                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                                 {/* Doctor Info */}
-                                <GlowingCard isDark={isDark} glowColor="amber" className="p-6">
+                                <GlowingCard isDark={isDark} glowColor="coral" className="p-6">
                                     <div className="flex items-start gap-4 mb-6">
-                                        <div className="relative w-20 h-20 rounded-xl overflow-hidden border-2 border-amber-500/30 flex-shrink-0">
+                                        <div className="relative w-20 h-20 rounded-xl overflow-hidden border-2 border-[#FD614B]/40 flex-shrink-0">
                                             {booking.doctor.avatar_url ? (
                                                 <Image
                                                     src={booking.doctor.avatar_url}
@@ -652,7 +652,7 @@ function DoctorsPageContent() {
                                                     sizes="80px"
                                                 />
                                             ) : (
-                                                <div className={cn("w-full h-full flex items-center justify-center text-3xl font-bold", isDark ? "bg-amber-500/10 text-amber-400" : "bg-amber-50 text-amber-600")}>
+                                                <div className={cn("w-full h-full flex items-center justify-center text-3xl font-bold", isDark ? "bg-[#FD614B]/10 text-[#FD614B]" : "bg-[#FFF5F3] text-[#E84D37]")}>
                                                     {booking.doctor.full_name.charAt(0)}
                                                 </div>
                                             )}
@@ -675,7 +675,7 @@ function DoctorsPageContent() {
                                                 </div>
                                             )}
                                             {booking.doctor.consultation_fee && (
-                                                <p className="text-amber-500 font-semibold mt-2">
+                                                <p className="text-[#FD614B] font-semibold mt-2">
                                                     {formatCurrency(booking.doctor.consultation_fee)}
                                                     <span className={cn("text-xs font-normal ml-1", textMuted)}>
                                                         {t.patientDashboard.doctorsPage.perSession}
@@ -691,7 +691,7 @@ function DoctorsPageContent() {
                                 </GlowingCard>
 
                                 {/* Booking Form */}
-                                <GlowingCard isDark={isDark} glowColor="amber" className="p-6">
+                                <GlowingCard isDark={isDark} glowColor="coral" className="p-6">
                                     {/* Date Selection */}
                                     <div className="mb-6">
                                         <label className={cn("block text-sm font-medium mb-2", textSecondary)}>
@@ -718,7 +718,7 @@ function DoctorsPageContent() {
                                         </label>
                                         {booking.loadingSlots ? (
                                             <div className="flex items-center justify-center py-8">
-                                                <div className="animate-spin w-6 h-6 border-2 border-amber-500 border-t-transparent rounded-full" />
+                                                <div className="animate-spin w-6 h-6 border-2 border-[#FD614B] border-t-transparent rounded-full" />
                                             </div>
                                         ) : booking.availableSlots.length === 0 ? (
                                             <p className={cn("text-center py-8", textMuted)}>
@@ -733,7 +733,7 @@ function DoctorsPageContent() {
                                                         className={cn(
                                                             "px-3 py-2 rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-1",
                                                             booking.selectedSlot?.start === slot.start
-                                                                ? "bg-amber-500 text-white"
+                                                                ? "bg-[#FD614B] text-white"
                                                                 : isDark
                                                                     ? "bg-white/5 hover:bg-white/10 text-gray-300"
                                                                     : "bg-gray-100 hover:bg-gray-200 text-gray-700"
@@ -805,7 +805,7 @@ export default function DoctorsPage() {
     return (
         <Suspense fallback={
             <div className="flex items-center justify-center min-h-[400px]">
-                <div className="w-10 h-10 border-4 border-amber-500/30 border-t-amber-500 rounded-full animate-spin" />
+                <div className="w-10 h-10 border-4 border-[#FD614B]/40 border-t-amber-500 rounded-full animate-spin" />
             </div>
         }>
             <DoctorsPageContent />
