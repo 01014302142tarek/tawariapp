@@ -666,7 +666,7 @@ export async function getRecentActivity(): Promise<AdminActivityItem[]> {
         .order("actual_end", { ascending: false })
         .limit(5);
 
-    (recentPayments as PaymentRecord[] || []).forEach((payment) => {
+    ((recentPayments as unknown as PaymentRecord[]) || []).forEach((payment) => {
         activities.push({
             id: `pay-${payment.id}`,
             action: "Payment received",
@@ -698,7 +698,7 @@ export async function getRecentActivity(): Promise<AdminActivityItem[]> {
         .order("created_at", { ascending: false })
         .limit(5);
 
-    (recentAppointments as AppointmentRecord[] || []).forEach((apt) => {
+    ((recentAppointments as unknown as AppointmentRecord[]) || []).forEach((apt) => {
         const patientName = apt.patient_profiles?.profiles?.full_name || "Patient";
         activities.push({
             id: `apt-${apt.id}`,
@@ -730,7 +730,7 @@ export async function getRecentActivity(): Promise<AdminActivityItem[]> {
         .order("verified_at", { ascending: false })
         .limit(5);
 
-    (recentApprovals as ApprovalRecord[] || []).forEach((approval) => {
+    ((recentApprovals as unknown as ApprovalRecord[]) || []).forEach((approval) => {
         const doctorName = approval.profiles?.full_name || "Doctor";
         activities.push({
             id: `apv-${approval.id}`,

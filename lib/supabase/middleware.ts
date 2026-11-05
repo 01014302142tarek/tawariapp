@@ -1,6 +1,11 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import type { Database } from "@/lib/supabase/types";
+import {
+    getMockAccountByEmail,
+    isSupabaseConfigured,
+    MOCK_SESSION_COOKIE,
+} from "@/lib/supabase/mock";
 
 export type UserRole = "patient" | "doctor" | "admin";
 
@@ -23,13 +28,27 @@ export async function updateSession(request: NextRequest) {
         process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ??
         process.env.NEXT_PUBLIC_TawariAppSUPABASE_ANON_KEY;
 
-    if (!supabaseUrl || !supabaseAnonKey) {
-        throw new Error("Missing Supabase environment variables");
+    if (!isSupabaseConfigured(supabaseUrl, supabaseAnonKey)) {
+        const mockEmail = request.cookies.get(MOCK_SESSION_COOKIE)?.value ?? null;
+        const mockAccount = getMockAccountByEmail(mockEmail);
+        const sessionUser: SessionUser | null = mockAccount
+            ? {
+                  id: mockAccount.id,
+                  email: mockAccount.email,
+                  role: mockAccount.role,
+                  user_metadata: {
+                      full_name: mockAccount.full_name,
+                      phone: mockAccount.phone,
+                      role: mockAccount.role,
+                  },
+              }
+            : null;
+        return { supabaseResponse, user: sessionUser };
     }
 
     const supabase = createServerClient<Database>(
-        supabaseUrl,
-        supabaseAnonKey,
+        supabaseUrl!,
+        supabaseAnonKey!,
         {
             cookies: {
                 getAll() {

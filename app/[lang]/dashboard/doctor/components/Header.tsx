@@ -385,7 +385,7 @@ export default function Header({ onMenuClick }: { onMenuClick?: () => void }) {
 
     // Get user's name and avatar from profile with user_metadata fallback
     const userName = profile?.profile?.full_name || 
-        (user?.user_metadata as any)?.full_name || 
+        (user?.user_metadata as Record<string, string | undefined> | undefined)?.full_name || 
         (user?.email ? user.email.split('@')[0] : (isLoading ? "..." : "Doctor"));
     // Ensure avatar is a valid non-empty string, otherwise null
     const avatarUrl = profile?.profile.avatar_url;

@@ -1,0 +1,6 @@
+{
+  "name": "Tawari App",
+  "description": "منصة وتطبيق طوارئ متكامل لإدارة البلاغات والاستجابة السريعة",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

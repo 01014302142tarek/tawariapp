@@ -171,9 +171,10 @@ export default function PaymentPage() {
             } else {
                 setError(result?.error || (isRTL ? "حدث خطأ في معالجة الطلب، يرجى المحاولة مرة أخرى" : "An error occurred"));
             }
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error("Error completing payment:", err);
-            setError(err?.message || (isRTL ? "حدث خطأ في المعالجة" : "Error processing payment"));
+            const errMessage = err instanceof Error ? err.message : "";
+            setError(errMessage || (isRTL ? "حدث خطأ في المعالجة" : "Error processing payment"));
         } finally {
             setProcessing(false);
         }

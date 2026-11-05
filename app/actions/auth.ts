@@ -380,3 +380,122 @@ export async function signUpDoctor(
         };
     }
 }
+
+/**
+ * Sign in or register with a Google account
+ * Creates or updates the user profile and sets the authenticated session cookie
+ */
+export async function signInWithGoogleAccount(input: {
+    email: string;
+    fullName?: string;
+    avatarUrl?: string;
+    role?: "patient" | "doctor";
+    phone?: string;
+}): Promise<{
+    success: boolean;
+    role?: "patient" | "doctor" | "admin";
+    email?: string;
+    error?: string;
+}> {
+    try {
+        const normalizedEmail = input.email.toLowerCase().trim();
+        if (!normalizedEmail || !normalizedEmail.includes("@")) {
+            return {
+                success: false,
+                error: "Please enter a valid Google email address.",
+            };
+        }
+
+        const { upsertMockGoogleAccount, isSupabaseConfigured } = await import(
+            "@/lib/supabase/mock"
+        );
+        const supabaseUrl =
+            process.env.NEXT_PUBLIC_SUPABASE_URL ??
+            process.env.NEXT_PUBLIC_TawariAppSUPABASE_URL;
+        const supabaseAnonKey =
+            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ??
+            process.env.NEXT_PUBLIC_TawariAppSUPABASE_ANON_KEY;
+
+        if (!isSupabaseConfigured(supabaseUrl, supabaseAnonKey)) {
+            const account = upsertMockGoogleAccount({
+                email: normalizedEmail,
+                fullName: input.fullName,
+                avatarUrl: input.avatarUrl,
+                role: input.role,
+                phone: input.phone,
+            });
+            const supabase = await createClient();
+            const { error } = await supabase.auth.signInWithPassword({
+                email: account.email,
+                password: account.password,
+            });
+            if (error) {
+                return {
+                    success: false,
+                    error: error.message,
+                };
+            }
+            return {
+                success: true,
+                role: account.role,
+                email: account.email,
+            };
+        }
+
+        // When real Supabase is configured, ensure user exists via Admin API and sign in
+        const adminClient = await createAdminClient();
+        const role = input.role === "doctor" ? "doctor" : "patient";
+        const fallbackPassword = `GoogleOAuth!${normalizedEmail.slice(0, 6)}#2025`;
+
+        const { error: createError } = await adminClient.auth.admin.createUser({
+            email: normalizedEmail,
+            password: fallbackPassword,
+            email_confirm: true,
+            user_metadata: {
+                full_name:
+                    input.fullName ||
+                    normalizedEmail.split("@")[0].replace(/[._-]+/g, " "),
+                phone: input.phone || "+201000000000",
+                role,
+                avatar_url: input.avatarUrl,
+            },
+        });
+
+        if (
+            createError &&
+            !createError.message.includes("already") &&
+            !createError.message.includes("exists")
+        ) {
+            return {
+                success: false,
+                error: createError.message,
+            };
+        }
+
+        const supabase = await createClient();
+        const { error: signInError } = await supabase.auth.signInWithPassword({
+            email: normalizedEmail,
+            password: fallbackPassword,
+        });
+
+        if (signInError) {
+            return {
+                success: false,
+                error: signInError.message,
+            };
+        }
+
+        return {
+            success: true,
+            role,
+            email: normalizedEmail,
+        };
+    } catch (error) {
+        console.error("[Auth] Google sign-in error:", error);
+        return {
+            success: false,
+            error: "Failed to sign in with Google. Please try again.",
+        };
+    }
+}
+

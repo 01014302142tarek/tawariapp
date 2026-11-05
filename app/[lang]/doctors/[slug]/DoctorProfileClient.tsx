@@ -207,6 +207,7 @@ interface DoctorProfileClientProps {
 }
 
 export default function DoctorProfileClient({ doctor, lang }: DoctorProfileClientProps) {
+    void lang;
     const { isRTL, language } = useI18n();
     const { isDark } = useGlobalTheme();
     const t = translations[language as keyof typeof translations] || translations.en;

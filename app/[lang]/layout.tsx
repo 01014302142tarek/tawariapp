@@ -1,8 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Cairo } from "next/font/google";
-import { Analytics } from "@vercel/analytics/react";
-import { SpeedInsights } from "@vercel/speed-insights/next";
 import { I18nProvider, Language } from "../i18n";
 import { ThemeProviderWrapper } from "../context/ThemeProviderWrapper";
 import { AuthProvider } from "../context/AuthContext";
@@ -11,6 +9,9 @@ import { AiTriageWidget } from "@/components/triage/AiTriageWidget";
 import { OrganizationJsonLd, MedicalServiceJsonLd, WebsiteJsonLd, LocalBusinessJsonLd } from "@/components/seo/JsonLd";
 import { siteConfig } from "@/lib/seo/config";
 import "../globals.css";
+
+const Analytics = () => null;
+const SpeedInsights = () => null;
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -41,10 +42,10 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   title: {
-    default: "Tabibi - Healthcare at Your Fingertips",
-    template: "%s | Tabibi",
+    default: "Tawari App",
+    template: "%s | Tawari App",
   },
-  description: siteConfig.description.en,
+  description: "منصة وتطبيق طوارئ متكامل لإدارة البلاغات والاستجابة السريعة",
   keywords: siteConfig.keywords.en,
   authors: [{ name: siteConfig.creator }],
   creator: siteConfig.creator,
@@ -53,9 +54,9 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_US",
     url: siteConfig.url,
-    siteName: siteConfig.name,
-    title: "Tabibi - Healthcare at Your Fingertips",
-    description: siteConfig.description.en,
+    siteName: "Tawari App",
+    title: "Tawari App",
+    description: "منصة وتطبيق طوارئ متكامل لإدارة البلاغات والاستجابة السريعة",
     images: [
       {
         url: siteConfig.ogImage,
@@ -67,8 +68,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Tabibi - Healthcare at Your Fingertips",
-    description: siteConfig.description.en,
+    title: "Tawari App",
+    description: "منصة وتطبيق طوارئ متكامل لإدارة البلاغات والاستجابة السريعة",
     site: siteConfig.twitterHandle,
     images: [siteConfig.ogImage],
   },
