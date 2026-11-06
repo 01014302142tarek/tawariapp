@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 import { useTheme } from "../context/ThemeContext";
 import { useI18n } from "@/app/i18n";
 import { useAdminSidebar } from "../context/SidebarContext";
-import { Logo, LogoIcon } from "@/components/ui/Logo";
+import { Logo } from "@/components/ui/Logo";
 
 
 
@@ -176,19 +176,22 @@ export default function Sidebar({ isMobileOpen, onClose }: { isMobileOpen?: bool
                 )}
             >
                 {/* Logo Area */}
-                <div className="h-16 flex items-center flex-shrink-0">
+                <div className="h-[72px] flex items-center justify-center flex-shrink-0 px-2">
                     <Link
                         href="/"
                         className={cn(
-                            "flex items-center group w-full overflow-hidden transition-all duration-200",
-                            isExpanded ? (isRTL ? "pr-4 pl-2" : "pl-4 pr-2") : "justify-center px-0"
+                            "flex items-center group w-full transition-all duration-200",
+                            isExpanded
+                                ? (isRTL ? "justify-start pr-2 pl-1" : "justify-start pl-2 pr-1")
+                                : "justify-center"
                         )}
                     >
-                        {isExpanded ? (
-                            <Logo isDark={isDark} size="md" />
-                        ) : (
-                            <LogoIcon size="md" isDark={isDark} />
-                        )}
+                        <Logo
+                            isDark={isDark}
+                            size={isExpanded ? "md" : "sm"}
+                            showText={isExpanded}
+                            className={isExpanded ? "max-w-[208px]" : undefined}
+                        />
                     </Link>
                 </div>
 
