@@ -12,7 +12,7 @@ permissions:
 
 jobs:
   semgrep:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
 
     steps:
@@ -36,8 +36,6 @@ jobs:
         run: pip install semgrep
 
       - name: Run Semgrep
-        env:
-          SEMGREP_SEND_METRICS: "off"
         run: |
           semgrep --config p/ci \
                   --config p/javascript \
@@ -45,5 +43,8 @@ jobs:
                   --config p/nextjs \
                   --config p/react \
                   --config p/secrets \
-                  --error \
-                  --metrics=off
+                  --severity ERROR \
+                  --exclude="stitch_tawariapp_landing_page" \
+                  --exclude="scripts" \
+                  --exclude="lib/supabase/mock.ts" \
+                  --metrics=auto

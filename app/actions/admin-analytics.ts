@@ -110,10 +110,10 @@ export async function getAdminAnalytics(): Promise<{ analytics: AdminAnalytics; 
         .select("started_at, ended_at")
         .not("ended_at", "is", null);
 
+    const sessions = (sessionData || []) as Array<{ started_at: string | null; ended_at: string | null }>;
     let avgSessionMinutes = 0;
-    if (sessionData && sessionData.length > 0) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const totalMinutes = sessionData.reduce((sum: number, s: any) => {
+    if (sessions.length > 0) {
+        const totalMinutes = sessions.reduce((sum: number, s) => {
             if (s.started_at && s.ended_at) {
                 const start = new Date(s.started_at);
                 const end = new Date(s.ended_at);
@@ -121,7 +121,7 @@ export async function getAdminAnalytics(): Promise<{ analytics: AdminAnalytics; 
             }
             return sum;
         }, 0);
-        avgSessionMinutes = Math.round((totalMinutes / sessionData.length) * 10) / 10;
+        avgSessionMinutes = Math.round((totalMinutes / sessions.length) * 10) / 10;
     }
 
     // Get monthly appointment counts for the current year - single query instead of 12

@@ -1,9 +1,28 @@
 import { createServerClient } from "@supabase/ssr";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import type { Database } from "@/lib/supabase/types";
+import {
+    createMockSupabaseClient,
+    isSupabaseConfigured,
+    MOCK_SESSION_COOKIE,
+} from "@/lib/supabase/mock";
+
+async function isHttpsRequest(): Promise<boolean> {
+    try {
+        const hdrs = await headers();
+        const proto = hdrs.get("x-forwarded-proto");
+        if (proto) {
+            return proto.split(",")[0].trim() === "https";
+        }
+    } catch {
+        // Ignore if headers() is unavailable in context
+    }
+    return Boolean(process.env.APP_URL?.startsWith("https://"));
+}
 
 export async function createClient() {
     const cookieStore = await cookies();
+    const isHttps = await isHttpsRequest();
     const supabaseUrl =
         process.env.NEXT_PUBLIC_SUPABASE_URL ??
         process.env.NEXT_PUBLIC_TawariAppSUPABASE_URL;
@@ -11,13 +30,31 @@ export async function createClient() {
         process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ??
         process.env.NEXT_PUBLIC_TawariAppSUPABASE_ANON_KEY;
 
-    if (!supabaseUrl || !supabaseAnonKey) {
-        throw new Error("Missing Supabase environment variables");
+    if (!isSupabaseConfigured(supabaseUrl, supabaseAnonKey)) {
+        return createMockSupabaseClient({
+            getSessionEmail: () => cookieStore.get(MOCK_SESSION_COOKIE)?.value ?? null,
+            setSessionEmail: (email) => {
+                try {
+                    if (email) {
+                        cookieStore.set(MOCK_SESSION_COOKIE, email, {
+                            path: "/",
+                            maxAge: 60 * 60 * 24 * 7,
+                            sameSite: isHttps ? "none" : "lax",
+                            secure: isHttps,
+                        });
+                    } else {
+                        cookieStore.delete(MOCK_SESSION_COOKIE);
+                    }
+                } catch {
+                    // Ignore when called from a Server Component
+                }
+            },
+        });
     }
 
     return createServerClient<Database>(
-        supabaseUrl,
-        supabaseAnonKey,
+        supabaseUrl!,
+        supabaseAnonKey!,
         {
             cookies: {
                 getAll() {
@@ -26,7 +63,10 @@ export async function createClient() {
                 setAll(cookiesToSet) {
                     try {
                         cookiesToSet.forEach(({ name, value, options }) =>
-                            cookieStore.set(name, value, options)
+                            cookieStore.set(name, value, {
+                                ...options,
+                                ...(isHttps ? { sameSite: "none", secure: true } : {}),
+                            })
                         );
                     } catch {
                         // The `setAll` method was called from a Server Component.
@@ -42,18 +82,37 @@ export async function createClient() {
 // Admin client with service role for server-side operations that bypass RLS
 export async function createAdminClient() {
     const cookieStore = await cookies();
+    const isHttps = await isHttpsRequest();
     const supabaseUrl =
         process.env.NEXT_PUBLIC_SUPABASE_URL ??
         process.env.NEXT_PUBLIC_TawariAppSUPABASE_URL;
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-    if (!supabaseUrl || !serviceRoleKey) {
-        throw new Error("Missing Supabase environment variables");
+    if (!isSupabaseConfigured(supabaseUrl, serviceRoleKey)) {
+        return createMockSupabaseClient({
+            getSessionEmail: () => cookieStore.get(MOCK_SESSION_COOKIE)?.value ?? null,
+            setSessionEmail: (email) => {
+                try {
+                    if (email) {
+                        cookieStore.set(MOCK_SESSION_COOKIE, email, {
+                            path: "/",
+                            maxAge: 60 * 60 * 24 * 7,
+                            sameSite: isHttps ? "none" : "lax",
+                            secure: isHttps,
+                        });
+                    } else {
+                        cookieStore.delete(MOCK_SESSION_COOKIE);
+                    }
+                } catch {
+                    // Ignore when called from a Server Component
+                }
+            },
+        });
     }
 
     return createServerClient<Database>(
-        supabaseUrl,
-        serviceRoleKey,
+        supabaseUrl!,
+        serviceRoleKey!,
         {
             cookies: {
                 getAll() {
@@ -80,13 +139,13 @@ export async function createServiceRoleClient() {
         process.env.NEXT_PUBLIC_TawariAppSUPABASE_URL;
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-    if (!supabaseUrl || !serviceRoleKey) {
-        throw new Error("Missing Supabase environment variables");
+    if (!isSupabaseConfigured(supabaseUrl, serviceRoleKey)) {
+        return createMockSupabaseClient();
     }
 
     return createServerClient<Database>(
-        supabaseUrl,
-        serviceRoleKey,
+        supabaseUrl!,
+        serviceRoleKey!,
         {
             cookies: {
                 getAll() {

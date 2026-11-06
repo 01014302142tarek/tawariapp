@@ -1,4 +1,5 @@
 import { createClient, createAdminClient } from "@/lib/supabase/server";
+import { signInWithGoogleAccount } from "@/app/actions/auth";
 import { NextResponse } from "next/server";
 
 // Allowed redirect paths to prevent open redirect attacks
@@ -20,15 +21,77 @@ function isValidRedirectUrl(url: string): boolean {
     if (!url.startsWith("/")) return false;
     if (url.startsWith("//")) return false;
     if (url.includes("%") || url.includes("\\")) return false;
-    return ALLOWED_REDIRECT_PREFIXES.some(prefix => url.startsWith(prefix));
+    return ALLOWED_REDIRECT_PREFIXES.some((prefix) => url.startsWith(prefix));
+}
+
+function buildSuccessCompletionResponse(redirectPath: string, fullRedirectUrl: string) {
+    const safePath = JSON.stringify(redirectPath);
+    const safeFullUrl = JSON.stringify(fullRedirectUrl);
+    const html = `<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <title>جاري تسجيل الدخول عبر Google...</title>
+  </head>
+  <body style="font-family: system-ui, -apple-system, sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; background: #f8fafc; color: #0f172a;">
+    <div style="text-align: center; padding: 2rem; background: white; border-radius: 1rem; box-shadow: 0 10px 25px rgba(0,0,0,0.06);">
+      <p style="font-size: 1rem; font-weight: 600; margin: 0 0 0.5rem;">تم تسجيل الدخول بنجاح عبر Google</p>
+      <p style="font-size: 0.875rem; color: #64748b; margin: 0;">جاري تحويلك تلقائياً...</p>
+    </div>
+    <script>
+      (function() {
+        var nextPath = ${safePath};
+        var fallbackUrl = ${safeFullUrl};
+        if (window.opener && !window.opener.closed) {
+          try {
+            window.opener.postMessage({ type: 'OAUTH_AUTH_SUCCESS', redirectUrl: nextPath }, '*');
+            window.close();
+            return;
+          } catch (e) {}
+        }
+        window.location.replace(fallbackUrl);
+      })();
+    </script>
+  </body>
+</html>`;
+
+    return new NextResponse(html, {
+        status: 200,
+        headers: { "Content-Type": "text/html; charset=utf-8" },
+    });
 }
 
 export async function GET(request: Request) {
     const { searchParams, origin } = new URL(request.url);
     const code = searchParams.get("code");
-    const requestedNext = searchParams.get("next");
+    let requestedNext = searchParams.get("next");
+    const stateParam = searchParams.get("state");
     const errorParam = searchParams.get("error");
     const errorDescription = searchParams.get("error_description");
+
+    let directGoogle = false;
+    let preferredRole: "patient" | "doctor" = "patient";
+
+    if (stateParam) {
+        try {
+            const parsedState = JSON.parse(
+                Buffer.from(stateParam, "base64url").toString("utf-8")
+            );
+            if (parsedState && typeof parsedState === "object") {
+                if (typeof parsedState.next === "string" && !requestedNext) {
+                    requestedNext = parsedState.next;
+                }
+                if (parsedState.role === "doctor") {
+                    preferredRole = "doctor";
+                }
+                if (parsedState.directGoogle === true) {
+                    directGoogle = true;
+                }
+            }
+        } catch {
+            // Ignore malformed state parameter
+        }
+    }
 
     // If OAuth provider returned an explicit error (e.g., user denied access)
     if (errorParam) {
@@ -41,9 +104,71 @@ export async function GET(request: Request) {
     }
 
     // Validate and sanitize redirect URL
-    const next = requestedNext && isValidRedirectUrl(requestedNext)
-        ? requestedNext
-        : DEFAULT_REDIRECT;
+    const next =
+        requestedNext && isValidRedirectUrl(requestedNext)
+            ? requestedNext
+            : DEFAULT_REDIRECT;
+
+    const forwardedHost = request.headers.get("x-forwarded-host");
+    const forwardedProto = request.headers.get("x-forwarded-proto") || "https";
+    const resolvedOrigin = forwardedHost
+        ? `${forwardedProto.split(",")[0].trim()}://${forwardedHost.split(",")[0].trim()}`
+        : origin;
+
+    if (code && directGoogle) {
+        const googleClientId =
+            process.env.GOOGLE_CLIENT_ID || process.env.CLIENT_ID || "";
+        const googleClientSecret =
+            process.env.GOOGLE_CLIENT_SECRET || process.env.CLIENT_SECRET || "";
+
+        if (googleClientId && googleClientSecret) {
+            try {
+                const redirectUri = `${resolvedOrigin}/auth/callback`;
+                const tokenRes = await fetch("https://oauth2.googleapis.com/token", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                    body: new URLSearchParams({
+                        code,
+                        client_id: googleClientId.trim(),
+                        client_secret: googleClientSecret.trim(),
+                        redirect_uri: redirectUri,
+                        grant_type: "authorization_code",
+                    }),
+                });
+
+                if (tokenRes.ok) {
+                    const tokens = await tokenRes.json();
+                    const userRes = await fetch(
+                        "https://www.googleapis.com/oauth2/v2/userinfo",
+                        {
+                            headers: {
+                                Authorization: `Bearer ${tokens.access_token}`,
+                            },
+                        }
+                    );
+                    if (userRes.ok) {
+                        const googleUser = await userRes.json();
+                        if (googleUser?.email) {
+                            const result = await signInWithGoogleAccount({
+                                email: googleUser.email,
+                                fullName: googleUser.name,
+                                avatarUrl: googleUser.picture,
+                                role: preferredRole,
+                            });
+                            if (result.success) {
+                                return buildSuccessCompletionResponse(
+                                    next,
+                                    `${resolvedOrigin}${next}`
+                                );
+                            }
+                        }
+                    }
+                }
+            } catch (directErr) {
+                console.error("[AuthCallback] Direct Google OAuth exchange error:", directErr);
+            }
+        }
+    }
 
     if (code) {
         const supabase = await createClient();
@@ -63,7 +188,13 @@ export async function GET(request: Request) {
                     .maybeSingle();
 
                 const meta = user.user_metadata || {};
-                const fullName = (meta.full_name || meta.name || meta.fullName || user.email?.split("@")[0] || "User").trim();
+                const fullName = (
+                    meta.full_name ||
+                    meta.name ||
+                    meta.fullName ||
+                    user.email?.split("@")[0] ||
+                    "User"
+                ).trim();
                 const avatarUrl = meta.avatar_url || meta.picture || null;
 
                 if (!existingProfile) {
@@ -74,7 +205,7 @@ export async function GET(request: Request) {
                         .insert({
                             user_id: user.id,
                             full_name: fullName,
-                            role: "patient",
+                            role: preferredRole,
                             avatar_url: avatarUrl,
                         })
                         .select("id")
@@ -97,7 +228,10 @@ export async function GET(request: Request) {
                     await (adminClient as any)
                         .from("profiles")
                         .update({
-                            full_name: existingProfile.full_name === "New User" ? fullName : existingProfile.full_name,
+                            full_name:
+                                existingProfile.full_name === "New User"
+                                    ? fullName
+                                    : existingProfile.full_name,
                             avatar_url: existingProfile.avatar_url || avatarUrl,
                         })
                         .eq("id", existingProfile.id);
@@ -107,20 +241,13 @@ export async function GET(request: Request) {
                 // Continue with login even if profile sync encountered an issue
             }
 
-            const forwardedHost = request.headers.get("x-forwarded-host");
-            const isLocalEnv = process.env.NODE_ENV === "development";
-            if (isLocalEnv) {
-                return NextResponse.redirect(`${origin}${next}`);
-            } else if (forwardedHost) {
-                return NextResponse.redirect(`https://${forwardedHost}${next}`);
-            } else {
-                return NextResponse.redirect(`${origin}${next}`);
-            }
+            return buildSuccessCompletionResponse(next, `${resolvedOrigin}${next}`);
         } else if (error) {
             console.error("[AuthCallback] exchangeCodeForSession failed:", error.message);
         }
     }
 
     // Return the user to an error page with instructions
-    return NextResponse.redirect(`${origin}/ar/auth-code-error`);
+    return NextResponse.redirect(`${resolvedOrigin}/ar/auth-code-error`);
 }
+
