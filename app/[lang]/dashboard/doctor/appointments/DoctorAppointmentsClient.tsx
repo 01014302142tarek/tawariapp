@@ -288,7 +288,7 @@ export default function AppointmentsPage({
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         className={cn(
-                            "w-full py-3 rounded-xl border transition-colors outline-none ring-0 focus:ring-2 focus:ring-amber-500/20",
+                            "w-full py-3 rounded-xl border transition-colors outline-none ring-0 focus:ring-2 focus:ring-[#044C87]/20",
                             isRTL ? "pr-12 pl-4" : "pl-12 pr-4",
                             inputBg, inputFocus
                         )}
@@ -304,7 +304,7 @@ export default function AppointmentsPage({
                             className={cn(
                                 "px-4 py-2.5 rounded-xl text-sm font-medium transition-all whitespace-nowrap border",
                                 activeFilter === filter.id
-                                    ? "bg-[#FD614B] text-white border-[#FD614B] shadow-lg shadow-amber-500/20"
+                                    ? "bg-[#FD614B] text-white border-[#FD614B] shadow-lg shadow-[#FD614B]/20"
                                     : cn("border-transparent hover:border-[#FD614B]/40", buttonSecondary)
                             )}
                         >
@@ -410,7 +410,7 @@ export default function AppointmentsPage({
                                                         <>
                                                             <button
                                                                 onClick={() => handleStartConsultation(apt.id, apt.patient?.full_name || "Patient")}
-                                                                className="flex items-center gap-2 px-3 py-1.5 md:py-2 rounded-lg bg-[#FD614B] text-white hover:bg-[#E84D37] transition-all text-sm font-medium shadow-lg shadow-amber-500/20"
+                                                                className="flex items-center gap-2 px-3 py-1.5 md:py-2 rounded-lg bg-[#FD614B] text-white hover:bg-[#E84D37] transition-all text-sm font-medium shadow-lg shadow-[#FD614B]/20"
                                                             >
                                                                 {Icons.video}
                                                                 <span className="md:hidden lg:inline">{t.doctorDashboard.appointmentsPage.actions.join}</span>
@@ -428,7 +428,7 @@ export default function AppointmentsPage({
                                                         <>
                                                             <button
                                                                 onClick={() => handleStartConsultation(apt.id, apt.patient?.full_name || "Patient")}
-                                                                className="flex items-center gap-2 px-3 py-1.5 md:py-2 rounded-lg bg-[#FD614B] text-white hover:bg-[#E84D37] transition-all text-sm font-medium shadow-lg shadow-amber-500/20"
+                                                                className="flex items-center gap-2 px-3 py-1.5 md:py-2 rounded-lg bg-[#FD614B] text-white hover:bg-[#E84D37] transition-all text-sm font-medium shadow-lg shadow-[#FD614B]/20"
                                                             >
                                                                 {Icons.video}
                                                                 <span>{isRTL ? "ابدأ الاستشارة" : "Start"}</span>
@@ -445,7 +445,7 @@ export default function AppointmentsPage({
                                                         <>
                                                             <button
                                                                 onClick={() => router.push(`/${language}/dashboard/consultation/${apt.id}`)}
-                                                                className="flex items-center gap-2 px-3 py-1.5 md:py-2 rounded-lg bg-[#FD614B] text-white hover:bg-[#E84D37] transition-all text-sm font-medium shadow-lg shadow-amber-500/20"
+                                                                className="flex items-center gap-2 px-3 py-1.5 md:py-2 rounded-lg bg-[#FD614B] text-white hover:bg-[#E84D37] transition-all text-sm font-medium shadow-lg shadow-[#FD614B]/20"
                                                             >
                                                                 {Icons.video}
                                                                 <span>{isRTL ? "متابعة" : "Resume"}</span>

@@ -81,7 +81,7 @@ const AnimatedPosition: React.FC<{ position: number }> = ({ position }) => {
             key={position}
             initial={{ scale: 1.5, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="text-5xl sm:text-7xl font-bold bg-gradient-to-br from-amber-400 to-amber-300 bg-clip-text text-transparent my-2"
+            className="text-5xl sm:text-7xl font-bold bg-gradient-to-br from-[#FD614B] to-[#FFA07A] bg-clip-text text-transparent my-2"
         >
             #{position}
         </motion.div>
@@ -463,7 +463,7 @@ export default function WaitingRoomPage() {
                                     className="w-12 h-12 rounded-full object-cover"
                                 />
                             ) : (
-                                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-500 to-amber-600 flex items-center justify-center text-white font-semibold">
+                                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#044C87] to-[#FD614B] flex items-center justify-center text-white font-semibold">
                                     {getInitials(doctorInfo.full_name)}
                                 </div>
                             )}
@@ -513,10 +513,10 @@ export default function WaitingRoomPage() {
                     transition={{ delay: 0.2 }}
                     className={cn(
                         "rounded-xl p-4 mb-8 border",
-                        isDark ? "bg-[#FD614B]/10 border-[#FD614B]/30 text-slate-300" : "bg-[#FFF5F3]/80 border-[#FFD0CA] text-amber-950"
+                        isDark ? "bg-[#FD614B]/10 border-[#FD614B]/30 text-slate-300" : "bg-[#FFF5F3]/80 border-[#FFD0CA] text-slate-800"
                     )}
                 >
-                    <h4 className={cn("font-semibold mb-2", isDark ? "text-[#FD614B]" : "text-amber-900")}>
+                    <h4 className={cn("font-semibold mb-2", isDark ? "text-[#FD614B]" : "text-slate-900")}>
                         {isRTL ? "نصائح للاستشارة" : "Tips for your consultation"}
                     </h4>
                     <ul className={cn("text-sm space-y-2", isDark ? "text-slate-400" : "text-slate-700")}>

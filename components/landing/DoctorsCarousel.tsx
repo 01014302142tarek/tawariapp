@@ -4,8 +4,11 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useGlobalTheme } from "@/app/context/GlobalThemeContext";
+import { createClient } from "@/lib/supabase/client";
+import { cn } from "@/lib/utils";
 
 export interface Doctor {
+  id?: string;
   name: string;
   nameAr: string;
   specialty: string;
@@ -16,6 +19,7 @@ export interface Doctor {
   fee: number;
   image: string;
   available: boolean;
+  isOnline?: boolean;
 }
 
 interface DoctorsCarouselProps {
@@ -33,10 +37,65 @@ export default function DoctorsCarousel({
   const [currentIndex, setCurrentIndex] = useState(0);
   const [visibleCount, setVisibleCount] = useState(3);
   const [isPaused, setIsPaused] = useState(false);
+  const [onlineStatusMap, setOnlineStatusMap] = useState<Record<string, boolean>>({});
   const touchStartX = useRef<number | null>(null);
   const touchEndX = useRef<number | null>(null);
   const touchStartY = useRef<number | null>(null);
   const touchEndY = useRef<number | null>(null);
+
+  // Sync real-time online status of registered doctors from Supabase
+  useEffect(() => {
+    const supabase = createClient();
+
+    const fetchOnlineDoctors = async () => {
+      try {
+        const { data } = await supabase
+          .from("doctor_profiles")
+          .select("id, is_online, profiles:profiles!doctor_profiles_profile_id_fkey(full_name)");
+
+        if (data && data.length > 0) {
+          const map: Record<string, boolean> = {};
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          data.forEach((d: any) => {
+            const isOnline = Boolean(d.is_online);
+            if (d.id) map[d.id] = isOnline;
+            const fullName = d.profiles?.full_name;
+            if (fullName) {
+              const lower = fullName.trim().toLowerCase();
+              map[lower] = isOnline;
+              const clean = lower.replace(/^(dr\.?|د\.?)\s+/i, "").trim();
+              map[clean] = isOnline;
+            }
+          });
+          setOnlineStatusMap(map);
+        }
+      } catch (err) {
+        console.error("Error fetching online doctors for carousel:", err);
+      }
+    };
+
+    fetchOnlineDoctors();
+
+    // Listen for doctor online/offline status changes in real-time
+    const channel = supabase
+      .channel("public-doctors-carousel-status")
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "doctor_profiles",
+        },
+        () => {
+          fetchOnlineDoctors();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
 
   // Update visibleCount based on window width
   useEffect(() => {

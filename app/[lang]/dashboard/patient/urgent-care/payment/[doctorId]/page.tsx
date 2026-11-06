@@ -283,7 +283,7 @@ export default function PaymentPage() {
                                     className="w-14 h-14 sm:w-[72px] sm:h-[72px] rounded-full object-cover"
                                 />
                             ) : (
-                                <div className="w-14 h-14 sm:w-[72px] sm:h-[72px] rounded-full bg-gradient-to-br from-amber-500 to-amber-600 flex items-center justify-center text-white font-semibold text-lg sm:text-xl">
+                                <div className="w-14 h-14 sm:w-[72px] sm:h-[72px] rounded-full bg-gradient-to-br from-[#044C87] to-[#FD614B] flex items-center justify-center text-white font-semibold text-lg sm:text-xl">
                                     {getInitials(doctor.full_name)}
                                 </div>
                             )}
@@ -346,7 +346,7 @@ export default function PaymentPage() {
                         onChange={(e) => setChiefComplaint(e.target.value)}
                         placeholder={isRTL ? "صف مشكلتك الصحية بإيجاز..." : "Briefly describe your health concern..."}
                         className={cn(
-                            "w-full rounded-xl p-4 resize-none focus:outline-none focus:ring-2 focus:ring-amber-500/50 border transition-colors",
+                            "w-full rounded-xl p-4 resize-none focus:outline-none focus:ring-2 focus:ring-[#044C87]/50 border transition-colors",
                             isDark
                                 ? "bg-[#08213D]/50 border-white/10 text-white placeholder-slate-500"
                                 : "bg-slate-50 border-slate-200 text-slate-900 placeholder-slate-400"
@@ -397,7 +397,7 @@ export default function PaymentPage() {
                     transition={{ delay: 0.3 }}
                     className={cn(
                         "rounded-xl p-4 mb-6 border",
-                        isDark ? "bg-[#FD614B]/10 border-[#FD614B]/40 text-amber-200" : "bg-[#FFF5F3] border-[#FFD0CA] text-amber-900"
+                        isDark ? "bg-[#FD614B]/10 border-[#FD614B]/40 text-white/90" : "bg-[#FFF5F3] border-[#FFD0CA] text-slate-900"
                     )}
                 >
                     <div className="flex items-start gap-3">
@@ -405,10 +405,10 @@ export default function PaymentPage() {
                             {Icons.shield}
                         </div>
                         <div>
-                            <p className={cn("font-medium", isDark ? "text-amber-200" : "text-amber-900")}>
+                            <p className={cn("font-medium", isDark ? "text-white/90" : "text-slate-900")}>
                                 {isRTL ? "وضع الاختبار" : "Test Mode"}
                             </p>
-                            <p className={cn("text-sm", isDark ? "text-amber-200/70" : "text-[#A82B1B]")}>
+                            <p className={cn("text-sm", isDark ? "text-white/90/70" : "text-[#A82B1B]")}>
                                 {isRTL
                                     ? "هذه صفحة دفع تجريبية. لن يتم خصم أي مبالغ حقيقية."
                                     : "This is a demo payment page. No real charges will be made."}

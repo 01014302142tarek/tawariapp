@@ -365,7 +365,7 @@ const Input = ({ label, placeholder, value, onChange, type = "text", isDark, req
 }) => (
     <div className="space-y-1">
         <label className={cn("block text-xs font-medium", isDark ? "text-gray-300" : "text-gray-700")}>
-            {label} {required && <span className="text-amber-500">*</span>}
+            {label} {required && <span className="text-[#FD614B]">*</span>}
         </label>
         <input
             type={type}
@@ -376,8 +376,8 @@ const Input = ({ label, placeholder, value, onChange, type = "text", isDark, req
             className={cn(
                 "w-full px-3 py-2 text-sm rounded-lg border outline-none transition-all",
                 isDark
-                    ? "bg-slate-800/50 border-white/10 text-white placeholder-gray-500 focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/20"
-                    : "bg-white border-gray-200 text-slate-900 placeholder-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20"
+                    ? "bg-slate-800/50 border-white/10 text-white placeholder-gray-500 focus:border-[#044C87]/50 focus:ring-1 focus:ring-[#044C87]/20"
+                    : "bg-white border-gray-200 text-slate-900 placeholder-gray-400 focus:border-[#044C87] focus:ring-1 focus:ring-[#044C87]/20"
             )}
         />
     </div>
@@ -399,7 +399,7 @@ const isPasswordValid = (password: string) => {
 
 // Password requirement item (extracted to avoid creating during render)
 const RequirementItem = ({ met, text, isDark }: { met: boolean; text: string; isDark: boolean }) => (
-    <div className={cn("flex items-center gap-1.5 text-xs", met ? "text-amber-500" : (isDark ? "text-gray-500" : "text-gray-400"))}>
+    <div className={cn("flex items-center gap-1.5 text-xs", met ? "text-[#FD614B]" : (isDark ? "text-gray-500" : "text-gray-400"))}>
         {met ? Icons.checkCircle : (
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <circle cx="12" cy="12" r="9" strokeWidth={1.5} />
@@ -436,7 +436,7 @@ const PasswordInput = ({ label, placeholder, value, onChange, isDark, required =
     return (
         <div className="space-y-1">
             <label className={cn("block text-xs font-medium", isDark ? "text-gray-300" : "text-gray-700")}>
-                {label} {required && <span className="text-amber-500">*</span>}
+                {label} {required && <span className="text-[#FD614B]">*</span>}
             </label>
             <div className="relative">
                 <input
@@ -448,11 +448,11 @@ const PasswordInput = ({ label, placeholder, value, onChange, isDark, required =
                     onBlur={() => setTimeout(() => setShowRequirements(false), 200)}
                     className={cn(
                         "w-full px-3 py-2 pr-10 text-sm rounded-lg border outline-none transition-all",
-                        value && (allValid ? (isDark ? "border-blue-500/50" : "border-amber-500") : (isDark ? "border-blue-500/50" : "border-amber-500")),
+                        value && (allValid ? (isDark ? "border-[#044C87]/50" : "border-[#FD614B]") : (isDark ? "border-[#044C87]/50" : "border-[#FD614B]")),
                         !value && (isDark ? "border-white/10" : "border-gray-200"),
                         isDark
-                            ? "bg-slate-800/50 text-white placeholder-gray-500 focus:ring-1 focus:ring-blue-500/20"
-                            : "bg-white text-slate-900 placeholder-gray-400 focus:ring-1 focus:ring-blue-500/20"
+                            ? "bg-slate-800/50 text-white placeholder-gray-500 focus:ring-1 focus:ring-[#044C87]/20"
+                            : "bg-white text-slate-900 placeholder-gray-400 focus:ring-1 focus:ring-[#044C87]/20"
                     )}
                 />
                 <button
@@ -461,8 +461,8 @@ const PasswordInput = ({ label, placeholder, value, onChange, isDark, required =
                     className={cn(
                         "absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded transition-colors",
                         isDark
-                            ? "text-gray-400 hover:text-amber-400"
-                            : "text-gray-500 hover:text-amber-500"
+                            ? "text-gray-400 hover:text-[#FD614B]"
+                            : "text-gray-500 hover:text-[#FD614B]"
                     )}
                     title={showPassword ? (hidePasswordLabel || "Hide password") : (showPasswordLabel || "Show password")}
                 >
@@ -528,8 +528,8 @@ const PhoneInput = ({
     verifyButtonText?: string;
 }) => {
     const getStatusColor = () => {
-        if (isVerified) return "text-amber-500";
-        if (validationStatus === "valid") return "text-amber-500";
+        if (isVerified) return "text-[#FD614B]";
+        if (validationStatus === "valid") return "text-[#FD614B]";
         if (validationStatus === "invalid" || validationStatus === "exists") return "text-red-500";
         return isDark ? "text-gray-500" : "text-gray-400";
     };
@@ -551,8 +551,8 @@ const PhoneInput = ({
     };
 
     const getBorderColor = () => {
-        if (isVerified) return isDark ? "border-blue-500/50" : "border-amber-500";
-        if (validationStatus === "valid") return isDark ? "border-blue-500/50" : "border-amber-500";
+        if (isVerified) return isDark ? "border-[#044C87]/50" : "border-[#FD614B]";
+        if (validationStatus === "valid") return isDark ? "border-[#044C87]/50" : "border-[#FD614B]";
         if (validationStatus === "invalid" || validationStatus === "exists") return isDark ? "border-red-500/50" : "border-red-500";
         return isDark ? "border-white/10" : "border-gray-200";
     };
@@ -560,7 +560,7 @@ const PhoneInput = ({
     return (
         <div className="space-y-1">
             <label className={cn("block text-xs font-medium", isDark ? "text-gray-300" : "text-gray-700")}>
-                {label} {required && <span className="text-amber-500">*</span>}
+                {label} {required && <span className="text-[#FD614B]">*</span>}
             </label>
             <div className="relative">
                 <input
@@ -575,8 +575,8 @@ const PhoneInput = ({
                         isVerified ? "pr-10" : (validationStatus === "valid" && onVerify) ? "pr-24" : "pr-10",
                         getBorderColor(),
                         isDark
-                            ? "bg-slate-800/50 text-white placeholder-gray-500 focus:ring-1 focus:ring-blue-500/20"
-                            : "bg-white text-slate-900 placeholder-gray-400 focus:ring-1 focus:ring-blue-500/20",
+                            ? "bg-slate-800/50 text-white placeholder-gray-500 focus:ring-1 focus:ring-[#044C87]/20"
+                            : "bg-white text-slate-900 placeholder-gray-400 focus:ring-1 focus:ring-[#044C87]/20",
                         isVerified && "opacity-75 cursor-not-allowed"
                     )}
                 />
@@ -739,11 +739,11 @@ const OTPDialog = ({
             >
                 <div className={cn(
                     "rounded-2xl p-6 shadow-2xl border",
-                    isDark ? "bg-slate-900 border-white/10" : "bg-white border-gray-200"
+                    isDark ? "bg-[#08213D] border-white/10" : "bg-white border-gray-200"
                 )}>
                     {/* Header */}
                     <div className="text-center mb-6">
-                        <div className="w-12 h-12 rounded-full bg-blue-500/10 flex items-center justify-center mx-auto mb-3 text-amber-500">
+                        <div className="w-12 h-12 rounded-full bg-[#044C87]/15 flex items-center justify-center mx-auto mb-3 text-[#FD614B]">
                             {Icons.phone}
                         </div>
                         <h3 className={cn("text-lg font-semibold mb-1", isDark ? "text-white" : "text-slate-900")}>
@@ -752,7 +752,7 @@ const OTPDialog = ({
                         <p className={cn("text-sm", isDark ? "text-gray-400" : "text-gray-600")}>
                             {text.otpSubtitle}
                         </p>
-                        <p className={cn("text-sm font-medium mt-1", isDark ? "text-amber-400" : "text-amber-600")} dir="ltr">
+                        <p className={cn("text-sm font-medium mt-1", isDark ? "text-[#FD614B]" : "text-[#FD614B]")} dir="ltr">
                             {phone}
                         </p>
                     </div>
@@ -769,8 +769,8 @@ const OTPDialog = ({
                             className={cn(
                                 "w-full px-4 py-3 text-center text-xl font-mono tracking-[0.5em] rounded-lg border outline-none transition-all",
                                 isDark
-                                    ? "bg-slate-800/50 border-white/10 text-white placeholder-gray-500 focus:border-blue-500/50"
-                                    : "bg-gray-50 border-gray-200 text-slate-900 placeholder-gray-400 focus:border-blue-500"
+                                    ? "bg-slate-800/50 border-white/10 text-white placeholder-gray-500 focus:border-[#044C87]/50"
+                                    : "bg-gray-50 border-gray-200 text-slate-900 placeholder-gray-400 focus:border-[#044C87]"
                             )}
                             dir="ltr"
                         />
@@ -806,7 +806,7 @@ const OTPDialog = ({
                             className={cn(
                                 "w-full py-2 text-sm font-medium transition-colors",
                                 canResend && !isSending
-                                    ? (isDark ? "text-amber-400 hover:text-blue-300" : "text-amber-600 hover:text-amber-500")
+                                    ? (isDark ? "text-[#FD614B] hover:text-blue-300" : "text-[#FD614B] hover:text-[#FD614B]")
                                     : (isDark ? "text-gray-500" : "text-gray-400")
                             )}
                         >
@@ -845,7 +845,7 @@ const Select = ({ label, value, onChange, options, isDark, required = false, sel
 }) => (
     <div className="space-y-1">
         <label className={cn("block text-xs font-medium", isDark ? "text-gray-300" : "text-gray-700")}>
-            {label} {required && <span className="text-amber-500">*</span>}
+            {label} {required && <span className="text-[#FD614B]">*</span>}
         </label>
         <select
             value={value}
@@ -853,8 +853,8 @@ const Select = ({ label, value, onChange, options, isDark, required = false, sel
             className={cn(
                 "w-full px-3 py-2 text-sm rounded-lg border outline-none transition-all appearance-none cursor-pointer",
                 isDark
-                    ? "bg-slate-800/50 border-white/10 text-white focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/20"
-                    : "bg-white border-gray-200 text-slate-900 focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20"
+                    ? "bg-slate-800/50 border-white/10 text-white focus:border-[#044C87]/50 focus:ring-1 focus:ring-[#044C87]/20"
+                    : "bg-white border-gray-200 text-slate-900 focus:border-[#044C87] focus:ring-1 focus:ring-[#044C87]/20"
             )}
         >
             <option value="">{selectLabel}</option>
@@ -886,8 +886,8 @@ const Textarea = ({ label, placeholder, value, onChange, isDark, rows = 4 }: {
             className={cn(
                 "w-full px-3 py-2 text-sm rounded-lg border outline-none transition-all resize-none",
                 isDark
-                    ? "bg-slate-800/50 border-white/10 text-white placeholder-gray-500 focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/20"
-                    : "bg-white border-gray-200 text-slate-900 placeholder-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20"
+                    ? "bg-slate-800/50 border-white/10 text-white placeholder-gray-500 focus:border-[#044C87]/50 focus:ring-1 focus:ring-[#044C87]/20"
+                    : "bg-white border-gray-200 text-slate-900 placeholder-gray-400 focus:border-[#044C87] focus:ring-1 focus:ring-[#044C87]/20"
             )}
         />
     </div>
@@ -950,7 +950,7 @@ const FileUpload = ({ label, fileName, onFileChange, isDark, accept = "*", fileP
                 className={cn(
                     "flex flex-col items-center justify-center w-full h-20 rounded-lg border-2 border-dashed cursor-pointer transition-all",
                     fileName
-                        ? "border-blue-500/50 bg-blue-500/5"
+                        ? "border-[#044C87]/50 bg-blue-500/5"
                         : isDark
                             ? "border-white/10 bg-slate-800/30 hover:border-blue-500/40 hover:bg-slate-800/50"
                             : "border-gray-200 bg-gray-50 hover:border-blue-500/40 hover:bg-gray-100"
@@ -964,11 +964,11 @@ const FileUpload = ({ label, fileName, onFileChange, isDark, accept = "*", fileP
                             <Image src={filePreview} alt="Preview" fill className="object-cover" />
                         </div>
                     ) : (
-                        <div className={cn("mb-1", fileName ? "text-amber-500" : isDark ? "text-gray-400" : "text-gray-500")}>
+                        <div className={cn("mb-1", fileName ? "text-[#FD614B]" : isDark ? "text-gray-400" : "text-gray-500")}>
                             {fileName ? Icons.check : Icons.upload}
                         </div>
                     )}
-                    <p className={cn("text-xs text-center px-2", fileName ? "text-amber-500 font-medium" : isDark ? "text-gray-400" : "text-gray-500")}>
+                    <p className={cn("text-xs text-center px-2", fileName ? "text-[#FD614B] font-medium" : isDark ? "text-gray-400" : "text-gray-500")}>
                         {fileName || placeholder}
                     </p>
                 </div>
@@ -1093,8 +1093,8 @@ const Step1Welcome = ({
                 <label className={cn(
                     "w-16 h-16 rounded-full border-2 border-dashed flex items-center justify-center cursor-pointer transition-all overflow-hidden",
                     formData.photoUrl
-                        ? "border-amber-500"
-                        : isDark ? "border-white/20 hover:border-blue-500/50" : "border-gray-300 hover:border-blue-500/50"
+                        ? "border-[#FD614B]"
+                        : isDark ? "border-white/20 hover:border-[#044C87]/50" : "border-gray-300 hover:border-[#044C87]/50"
                 )}>
                     {formData.photoUrl ? (
                         <Image src={formData.photoUrl} alt="Profile" width={64} height={64} className="object-cover w-full h-full" />
@@ -1198,7 +1198,7 @@ const Step1Welcome = ({
 const Step2Professional = ({ formData, setFormData, isDark, text, specialties }: { formData: FormData; setFormData: (data: FormData) => void; isDark: boolean; text: OnboardingText; specialties: string[] }) => (
     <div className="space-y-4">
         <div className="text-center mb-4">
-            <div className="w-12 h-12 rounded-full bg-blue-500/10 flex items-center justify-center mx-auto mb-2 text-amber-500">
+            <div className="w-12 h-12 rounded-full bg-[#044C87]/15 flex items-center justify-center mx-auto mb-2 text-[#FD614B]">
                 {Icons.briefcase}
             </div>
             <h2 className={cn("text-xl font-bold mb-1", isDark ? "text-white" : "text-slate-900")}>{text.step2.title}</h2>
@@ -1357,7 +1357,7 @@ const WorkingHoursDropdown = ({ formData, setFormData, isDark, text }: { formDat
                                         isDark
                                             ? "hover:bg-slate-700/50 text-gray-200"
                                             : "hover:bg-gray-50 text-gray-700",
-                                        formData.workingHours === preset && (isDark ? "bg-blue-500/10" : "bg-amber-50")
+                                        formData.workingHours === preset && (isDark ? "bg-[#044C87]/15" : "bg-[#044C87]/10")
                                     )}
                                 >
                                     {preset}
@@ -1374,7 +1374,7 @@ const WorkingHoursDropdown = ({ formData, setFormData, isDark, text }: { formDat
 const Step3Practice = ({ formData, setFormData, isDark, text }: { formData: FormData; setFormData: (data: FormData) => void; isDark: boolean; text: OnboardingText }) => (
     <div className="space-y-4">
         <div className="text-center mb-4">
-            <div className="w-12 h-12 rounded-full bg-blue-500/10 flex items-center justify-center mx-auto mb-2 text-amber-500">
+            <div className="w-12 h-12 rounded-full bg-[#044C87]/15 flex items-center justify-center mx-auto mb-2 text-[#FD614B]">
                 {Icons.building}
             </div>
             <h2 className={cn("text-xl font-bold mb-1", isDark ? "text-white" : "text-slate-900")}>{text.step3.title}</h2>
@@ -1444,7 +1444,7 @@ const Step4Verification = ({ formData, setFormData, isDark, text, language, lice
     return (
         <div className="space-y-4">
             <div className="text-center mb-4">
-                <div className="w-12 h-12 rounded-full bg-blue-500/10 flex items-center justify-center mx-auto mb-2 text-amber-500">
+                <div className="w-12 h-12 rounded-full bg-[#044C87]/15 flex items-center justify-center mx-auto mb-2 text-[#FD614B]">
                     {Icons.document}
                 </div>
                 <h2 className={cn("text-xl font-bold mb-1", isDark ? "text-white" : "text-slate-900")}>{text.step4.title}</h2>
@@ -1482,7 +1482,7 @@ const Step4Verification = ({ formData, setFormData, isDark, text, language, lice
                                 isDark ? "bg-slate-800/50 border-white/10" : "bg-white border-gray-200"
                             )}>
                                 <div className="flex items-center gap-2 truncate">
-                                    <span className="text-amber-500">{Icons.document}</span>
+                                    <span className="text-[#FD614B]">{Icons.document}</span>
                                     <span className={cn("truncate", isDark ? "text-gray-300" : "text-gray-700")}>{doc}</span>
                                 </div>
                                 <button
@@ -1500,8 +1500,8 @@ const Step4Verification = ({ formData, setFormData, isDark, text, language, lice
                     className={cn(
                         "flex items-center justify-center gap-2 w-full p-3 rounded-lg border border-dashed cursor-pointer transition-all",
                         isDark
-                            ? "border-white/20 hover:border-blue-500/50 hover:bg-slate-800/50 text-gray-400 hover:text-amber-500"
-                            : "border-gray-300 hover:border-blue-500/50 hover:bg-gray-50 text-gray-500 hover:text-amber-500"
+                            ? "border-white/20 hover:border-[#044C87]/50 hover:bg-slate-800/50 text-gray-400 hover:text-[#FD614B]"
+                            : "border-gray-300 hover:border-[#044C87]/50 hover:bg-gray-50 text-gray-500 hover:text-[#FD614B]"
                     )}
                 >
                     <div className="w-5 h-5">{Icons.upload}</div>
@@ -1537,15 +1537,15 @@ const Step4Verification = ({ formData, setFormData, isDark, text, language, lice
                         type="checkbox"
                         checked={formData.termsAccepted}
                         onChange={(e) => setFormData({ ...formData, termsAccepted: e.target.checked })}
-                        className="mt-0.5 w-4 h-4 rounded border-gray-300 text-amber-500 focus:ring-blue-500"
+                        className="mt-0.5 w-4 h-4 rounded border-gray-300 text-[#FD614B] focus:ring-[#044C87]"
                     />
                     <span className={cn("text-xs", isDark ? "text-gray-300" : "text-gray-600")}>
                         {text.step4.terms}{" "}
-                        <Link href={`/${language}/terms`} target="_blank" className="text-blue-400 hover:text-amber-400 underline">
+                        <Link href={`/${language}/terms`} target="_blank" className="text-blue-400 hover:text-[#FD614B] underline">
                             {text.step4.termsLink}
                         </Link>{" "}
                         {text.step4.and}{" "}
-                        <Link href={`/${language}/privacy`} target="_blank" className="text-blue-400 hover:text-amber-400 underline">
+                        <Link href={`/${language}/privacy`} target="_blank" className="text-blue-400 hover:text-[#FD614B] underline">
                             {text.step4.privacyLink}
                         </Link>
                     </span>
@@ -1562,7 +1562,7 @@ const Step5Complete = ({ formData, isDark, text, isApproved = false }: { formDat
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ type: "spring", stiffness: 200, damping: 15 }}
-            className="w-16 h-16 rounded-full bg-blue-500/10 flex items-center justify-center mx-auto mb-4 text-amber-500"
+            className="w-16 h-16 rounded-full bg-[#044C87]/15 flex items-center justify-center mx-auto mb-4 text-[#FD614B]"
         >
             {Icons.sparkles}
         </motion.div>
@@ -1587,25 +1587,25 @@ const Step5Complete = ({ formData, isDark, text, isApproved = false }: { formDat
             transition={{ delay: 0.3 }}
             className={cn("p-3 rounded-xl border mb-4 flex items-center justify-center gap-2",
                 isApproved
-                    ? (isDark ? "bg-blue-500/10 border-blue-500/20" : "bg-amber-50 border-amber-200")
-                    : (isDark ? "bg-blue-500/10 border-blue-500/20" : "bg-amber-50 border-amber-200")
+                    ? (isDark ? "bg-[#044C87]/15 border-[#044C87]/20" : "bg-[#044C87]/10 border-[#044C87]/30")
+                    : (isDark ? "bg-[#044C87]/15 border-[#044C87]/20" : "bg-[#044C87]/10 border-[#044C87]/30")
             )}
         >
             {isApproved ? (
                 <>
-                    <div className="text-amber-500">
+                    <div className="text-[#FD614B]">
                         {Icons.spinner}
                     </div>
-                    <span className={cn("text-sm font-medium", isDark ? "text-amber-400" : "text-amber-600")}>
+                    <span className={cn("text-sm font-medium", isDark ? "text-[#FD614B]" : "text-[#FD614B]")}>
                         {text.step5.redirecting}
                     </span>
                 </>
             ) : (
                 <>
-                    <div className="text-amber-500">
+                    <div className="text-[#FD614B]">
                         {Icons.clock}
                     </div>
-                    <span className={cn("text-sm font-medium", isDark ? "text-amber-400" : "text-amber-600")}>
+                    <span className={cn("text-sm font-medium", isDark ? "text-[#FD614B]" : "text-[#FD614B]")}>
                         {text.step5.waiting}
                     </span>
                 </>
@@ -2040,7 +2040,7 @@ export default function DoctorOnboarding() {
 
                 {/* Navigation Buttons - only show for steps 1-4 */}
                 {currentStep < 5 && (
-                    <div className={cn("flex items-center justify-between mt-4 pt-4 border-t", isDark ? "border-white/5" : "border-amber-100")}>
+                    <div className={cn("flex items-center justify-between mt-4 pt-4 border-t", isDark ? "border-white/5" : "border-gray-200")}>
                         {currentStep > 1 ? (
                             <button
                                 onClick={handleBack}

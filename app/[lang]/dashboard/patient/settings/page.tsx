@@ -71,7 +71,7 @@ const Toggle = ({ enabled, onChange, isDark }: { enabled: boolean; onChange: () 
     <button
         onClick={onChange}
         className={cn(
-            "relative h-6 w-11 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2",
+            "relative h-6 w-11 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#044C87] focus:ring-offset-2",
             enabled ? "bg-[#FD614B]" : isDark ? "bg-slate-600" : "bg-gray-300",
             isDark ? "focus:ring-offset-slate-900" : "focus:ring-offset-white"
         )}
@@ -329,7 +329,7 @@ export default function SettingsPage() {
                                     value={fullName}
                                     onChange={(e) => setFullName(e.target.value)}
                                     className={cn(
-                                        "w-full px-4 py-3 rounded-xl border transition-colors focus:outline-none focus:ring-2 focus:ring-amber-500/20",
+                                        "w-full px-4 py-3 rounded-xl border transition-colors focus:outline-none focus:ring-2 focus:ring-[#044C87]/20",
                                         isDark
                                             ? "bg-white/5 border-white/10 text-white focus:border-[#FD614B]"
                                             : "bg-gray-50 border-gray-200 text-gray-900 focus:border-[#FD614B]"
@@ -541,7 +541,7 @@ export default function SettingsPage() {
                                                 onChange={(e) => setNewPassword(e.target.value)}
                                                 placeholder={isRTL ? "أدخل كلمة المرور الجديدة" : "Enter new password"}
                                                 className={cn(
-                                                    "w-full px-4 py-3 rounded-xl border transition-colors focus:outline-none focus:ring-2 focus:ring-amber-500/20 pr-12",
+                                                    "w-full px-4 py-3 rounded-xl border transition-colors focus:outline-none focus:ring-2 focus:ring-[#044C87]/20 pr-12",
                                                     isDark
                                                         ? "bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-[#FD614B]"
                                                         : "bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-400 focus:border-[#FD614B]"
@@ -572,7 +572,7 @@ export default function SettingsPage() {
                                                 onChange={(e) => setConfirmPassword(e.target.value)}
                                                 placeholder={isRTL ? "أعد إدخال كلمة المرور" : "Re-enter password"}
                                                 className={cn(
-                                                    "w-full px-4 py-3 rounded-xl border transition-colors focus:outline-none focus:ring-2 focus:ring-amber-500/20 pr-12",
+                                                    "w-full px-4 py-3 rounded-xl border transition-colors focus:outline-none focus:ring-2 focus:ring-[#044C87]/20 pr-12",
                                                     isDark
                                                         ? "bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-[#FD614B]"
                                                         : "bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-400 focus:border-[#FD614B]"

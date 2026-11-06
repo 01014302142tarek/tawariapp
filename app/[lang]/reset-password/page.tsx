@@ -155,23 +155,23 @@ export default function ResetPasswordPage() {
     // Loading state
     if (isValidSession === null) {
         return (
-            <div className={`min-h-screen flex items-center justify-center ${isDark ? 'bg-[#060B18]' : 'bg-gray-50'}`}>
+            <div className={`min-h-screen flex items-center justify-center ${isDark ? 'bg-[#031326]' : 'bg-gray-50'}`}>
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
             </div>
         );
     }
 
     return (
-        <div className={`min-h-screen overflow-x-hidden ${isRTL ? 'font-cairo' : ''} ${isDark ? 'bg-[#060B18] text-white' : 'bg-gray-50 text-slate-900'}`} dir={isRTL ? 'rtl' : 'ltr'}>
+        <div className={`min-h-screen overflow-x-hidden ${isRTL ? 'font-cairo' : ''} ${isDark ? 'bg-[#031326] text-white' : 'bg-gray-50 text-slate-900'}`} dir={isRTL ? 'rtl' : 'ltr'}>
             {/* Background Effects */}
             <div className="fixed inset-0 overflow-hidden pointer-events-none">
-                <div className={`absolute inset-0 ${isDark ? 'bg-gradient-to-br from-[#0B1528] via-[#060B18] to-[#060B18]' : 'bg-gradient-to-br from-amber-50 via-white to-white'}`} />
-                <div className={`absolute top-1/4 -right-1/4 w-[600px] h-[600px] rounded-full blur-3xl ${isDark ? 'bg-blue-500/15 border border-blue-500/25' : 'bg-amber-500/5'}`} />
-                <div className={`absolute bottom-1/4 -left-1/4 w-[400px] h-[400px] rounded-full blur-3xl ${isDark ? 'bg-blue-600/10' : 'bg-blue-500/5'}`} />
+                <div className={`absolute inset-0 ${isDark ? 'bg-gradient-to-br from-[#08213D] via-[#031326] to-[#031326]' : 'bg-gradient-to-br from-[#FEFDFE] via-[#F4F8FC] to-[#FEFDFE]'}`} />
+                <div className={`absolute top-1/4 -right-1/4 w-[600px] h-[600px] rounded-full blur-3xl ${isDark ? 'bg-[#044C87]/15 border border-[#044C87]/30' : 'bg-[#FD614B]/5'}`} />
+                <div className={`absolute bottom-1/4 -left-1/4 w-[400px] h-[400px] rounded-full blur-3xl ${isDark ? 'bg-gradient-to-r from-[#FD614B] to-[#E84D37]/10' : 'bg-blue-500/5'}`} />
             </div>
 
             {/* Navigation */}
-            <nav className={`relative z-50 backdrop-blur-xl border-b ${isDark ? 'bg-[#060B18]/80 border-white/5' : 'bg-white/80 border-gray-200'}`}>
+            <nav className={`relative z-50 backdrop-blur-xl border-b ${isDark ? 'bg-[#031326]/80 border-white/5' : 'bg-white/80 border-gray-200'}`}>
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex items-center justify-between h-16 lg:h-20">
                         <Link href={`/${language}`} className="group hover:opacity-90 transition-opacity">
@@ -211,7 +211,7 @@ export default function ResetPasswordPage() {
                     ) : isSuccess ? (
                         // Success State
                         <div className="text-center">
-                            <div className="w-20 h-20 rounded-full bg-blue-500/15 border border-blue-500/25 flex items-center justify-center mx-auto mb-6 text-amber-500">
+                            <div className="w-20 h-20 rounded-full bg-[#044C87]/15 border border-[#044C87]/30 flex items-center justify-center mx-auto mb-6 text-[#FD614B]">
                                 {Icons.check}
                             </div>
                             <h1 className={`text-2xl sm:text-3xl font-bold mb-3 ${isDark ? 'text-white' : 'text-slate-900'}`}>
@@ -258,8 +258,8 @@ export default function ResetPasswordPage() {
                                         onChange={(e) => setPassword(e.target.value)}
                                         required
                                         className={`w-full py-3.5 border rounded-xl transition-all outline-none ${isDark
-                                            ? "bg-[#0B1528] border-blue-500/30 text-white placeholder-gray-400 focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20"
-                                            : "bg-white border-gray-200 text-slate-900 placeholder-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                                            ? "bg-[#08213D] border-[#044C87]/40 text-white placeholder-gray-400 focus:border-[#044C87] focus:ring-2 focus:ring-[#044C87]/20"
+                                            : "bg-white border-gray-200 text-slate-900 placeholder-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-[#044C87]/20"
                                             } ${isRTL ? 'pr-12 pl-12' : 'pl-12 pr-12'}`}
                                     />
                                     <button
@@ -283,8 +283,8 @@ export default function ResetPasswordPage() {
                                         onChange={(e) => setConfirmPassword(e.target.value)}
                                         required
                                         className={`w-full py-3.5 border rounded-xl transition-all outline-none ${isDark
-                                            ? "bg-[#0B1528] border-blue-500/30 text-white placeholder-gray-400 focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20"
-                                            : "bg-white border-gray-200 text-slate-900 placeholder-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                                            ? "bg-[#08213D] border-[#044C87]/40 text-white placeholder-gray-400 focus:border-[#044C87] focus:ring-2 focus:ring-[#044C87]/20"
+                                            : "bg-white border-gray-200 text-slate-900 placeholder-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-[#044C87]/20"
                                             } ${isRTL ? 'pr-12 pl-12' : 'pl-12 pr-12'}`}
                                     />
                                     <button

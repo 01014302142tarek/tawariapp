@@ -9,7 +9,7 @@ import { useTheme } from "./context/ThemeContext";
 import { useI18n } from "@/app/i18n";
 import { useAuth, isDoctorProfile } from "@/app/context/AuthContext";
 import { ReviewsList } from "@/components/reviews";
-import { useDoctorAvailabilitySync } from "@/lib/useDoctorAvailabilitySync";
+import { useDoctorOnlineStatus } from "@/lib/hooks/useQueueRealtime";
 import { getDoctorDashboardData, type DoctorDashboardData } from "@/app/actions/doctor-dashboard";
 
 // Import Aceternity components
@@ -17,6 +17,7 @@ import { GlowingCard } from "@/components/ui/glowing-card";
 import { AnimatedNumber } from "@/components/ui/animated-number";
 import { SparklesCore } from "@/components/ui/sparkles";
 import { AnimatedActionButton } from "@/components/ui/animated-action-button";
+import { StaggerContainer, StaggerItem } from "@/components/ui/StaggerContainer";
 
 // ============================================
 // ICONS
@@ -136,7 +137,7 @@ const SectionHeader = ({ title, subtitle, action, isDark = true }: { title: stri
 );
 
 // Avatar
-const Avatar = ({ src, alt, size = "md", status }: { src: string; alt: string; size?: "sm" | "md" | "lg"; status?: "online" | "offline" }) => {
+const Avatar = ({ src, alt, size = "md", status, isDark = true }: { src: string; alt: string; size?: "sm" | "md" | "lg"; status?: "online" | "offline"; isDark?: boolean }) => {
     const sizes = { sm: "w-8 h-8", md: "w-12 h-12", lg: "w-14 h-14" };
     const imageSizes = { sm: "32px", md: "48px", lg: "56px" };
     return (
@@ -144,8 +145,14 @@ const Avatar = ({ src, alt, size = "md", status }: { src: string; alt: string; s
             <div className={cn("rounded-full overflow-hidden border-2 border-[#FD614B]/40", sizes[size])}>
                 <Image src={src} alt={alt} fill className="object-cover" sizes={imageSizes[size]} />
             </div>
-            {status === "online" && (
-                <span className="absolute bottom-0 right-0 w-3 h-3 bg-[#FD614B] border-2 border-slate-900 rounded-full" />
+            {status && (
+                <span
+                    className={cn(
+                        "absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full border-2",
+                        isDark ? "border-[#08213D]" : "border-white",
+                        status === "online" ? "bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.8)]" : "bg-rose-500 shadow-[0_0_6px_rgba(244,63,94,0.8)]"
+                    )}
+                />
             )}
         </div>
     );
@@ -160,7 +167,7 @@ const ProgressBar = ({ value, max, isDark = true }: { value: number; max: number
                 initial={{ width: 0 }}
                 animate={{ width: `${percentage}%` }}
                 transition={{ duration: 1, ease: "easeOut" }}
-                className="h-full rounded-full bg-gradient-to-r from-amber-500 to-amber-400"
+                className="h-full rounded-full bg-gradient-to-r from-[#044C87] to-[#FD614B]"
             />
         </div>
     );
@@ -205,11 +212,9 @@ export default function Doctor2Dashboard({
         fetchDashboardData();
     }, [hasFetched]);
 
-    // Auto-sync doctor availability status based on schedule
-    const { isOnline, nextAvailableSlot, isSyncing } = useDoctorAvailabilitySync({
-        enabled: profile?.profile.role === "doctor",
-        syncIntervalMs: 60000, // Sync every minute
-    });
+    // Synchronize doctor online status directly with realtime Supabase state (controlled strictly from Header)
+    const doctorProfileId = profile && isDoctorProfile(profile) ? profile.doctorProfile?.id : null;
+    const { isOnline } = useDoctorOnlineStatus(doctorProfileId);
 
     // Compute greeting only after mount to avoid hydration mismatch
     const greeting = mounted
@@ -343,61 +348,67 @@ export default function Doctor2Dashboard({
 
                 {/* Primary Action Buttons - Urgent Care & Video Call */}
                 <section className="mb-6 md:mb-8">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <StaggerContainer className="grid grid-cols-1 md:grid-cols-2 gap-4" staggerDelay={0.08}>
                         {/* Urgent Care Queue Button */}
-                        <AnimatedActionButton
-                            href={`/${language}/dashboard/doctor/urgent-care`}
-                            icon={
-                                <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
-                                </svg>
-                            }
-                            title={isRTL ? "الاستشارات العاجلة" : "Urgent Care Queue"}
-                            description={isRTL ? "شاهد المرضى المنتظرين" : "View waiting patients"}
-                            variant="urgent"
-                            isDark={isDark}
-                        />
+                        <StaggerItem yOffset={12}>
+                            <AnimatedActionButton
+                                href={`/${language}/dashboard/doctor/urgent-care`}
+                                icon={
+                                    <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+                                    </svg>
+                                }
+                                title={isRTL ? "الاستشارات العاجلة" : "Urgent Care Queue"}
+                                description={isRTL ? "شاهد المرضى المنتظرين" : "View waiting patients"}
+                                variant="urgent"
+                                isDark={isDark}
+                            />
+                        </StaggerItem>
 
                         {/* Start Video Call Button */}
-                        <AnimatedActionButton
-                            href={`/${language}/dashboard/doctor/appointments`}
-                            icon={Icons.video}
-                            title={t.doctorDashboard.actions.startVideoCall}
-                            description={t.doctorDashboard.actions.connectWithPatient}
-                            variant="primary"
-                            isDark={isDark}
-                        />
-                    </div>
+                        <StaggerItem yOffset={12}>
+                            <AnimatedActionButton
+                                href={`/${language}/dashboard/doctor/appointments`}
+                                icon={Icons.video}
+                                title={t.doctorDashboard.actions.startVideoCall}
+                                description={t.doctorDashboard.actions.connectWithPatient}
+                                variant="primary"
+                                isDark={isDark}
+                            />
+                        </StaggerItem>
+                    </StaggerContainer>
                 </section>
 
                 {/* Stats Row */}
                 <section className="mb-6 md:mb-8">
-                    <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+                    <StaggerContainer className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4" staggerDelay={0.06}>
                         {[
                             { label: t.doctorDashboard.stats.todayAppointments, value: dashboardData?.stats.todayAppointments || 0, icon: Icons.calendar, decimals: 0 },
                             { label: t.doctorDashboard.stats.completed, value: dashboardData?.stats.completedToday || 0, icon: Icons.check, decimals: 0 },
                             { label: t.doctorDashboard.stats.revenueToday, value: dashboardData?.stats.revenueToday || 0, suffix: isRTL ? " ج.م" : " EGP", icon: Icons.money, decimals: 0 },
                             { label: t.doctorDashboard.stats.rating, value: dashboardData?.stats.avgRating || 0, suffix: isRTL ? "/٥" : "/5", icon: Icons.star, decimals: 1 },
                         ].map((stat, idx) => (
-                            <GlowingCard key={idx} isDark={isDark} glowColor="coral" className="p-3 md:p-5">
-                                <div className="flex items-start justify-between mb-2 md:mb-3">
-                                    <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-br from-[#044C87] to-[#0C67B3] flex items-center justify-center text-white shadow-[0_0_15px_rgba(4,76,135,0.4)] border border-[#0C67B3]/40">
-                                        <span className="[&>svg]:w-4 [&>svg]:h-4 md:[&>svg]:w-5 md:[&>svg]:h-5">
-                                            {stat.icon}
-                                        </span>
+                            <StaggerItem key={idx} yOffset={16}>
+                                <GlowingCard isDark={isDark} glowColor="coral" className="p-3 md:p-5 h-full">
+                                    <div className="flex items-start justify-between mb-2 md:mb-3">
+                                        <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-br from-[#044C87] to-[#0C67B3] flex items-center justify-center text-white shadow-[0_0_15px_rgba(4,76,135,0.4)] border border-[#0C67B3]/40">
+                                            <span className="[&>svg]:w-4 [&>svg]:h-4 md:[&>svg]:w-5 md:[&>svg]:h-5">
+                                                {stat.icon}
+                                            </span>
+                                        </div>
+                                        <Badge variant="primary" className="text-[10px] md:text-xs px-1.5 md:px-2 py-0.5">{t.common.today}</Badge>
                                     </div>
-                                    <Badge variant="primary" className="text-[10px] md:text-xs px-1.5 md:px-2 py-0.5">{t.common.today}</Badge>
-                                </div>
-                                <div className="flex items-baseline gap-0.5 md:gap-1">
-                                    <span className={cn("text-xl md:text-3xl font-bold", isDark ? "text-white" : "text-slate-900")}>
-                                        <AnimatedNumber value={stat.value} decimals={stat.decimals} format={(v) => formatNumber(v)} />
-                                    </span>
-                                    {stat.suffix && <span className={cn("text-sm md:text-lg", isDark ? "text-gray-400" : "text-gray-500")}>{stat.suffix}</span>}
-                                </div>
-                                <p className={cn("text-xs md:text-sm mt-1 truncate", isDark ? "text-gray-500" : "text-gray-600")}>{stat.label}</p>
-                            </GlowingCard>
+                                    <div className="flex items-baseline gap-0.5 md:gap-1">
+                                        <span className={cn("text-xl md:text-3xl font-bold", isDark ? "text-white" : "text-slate-900")}>
+                                            <AnimatedNumber value={stat.value} decimals={stat.decimals} format={(v) => formatNumber(v)} delay={idx * 0.08} />
+                                        </span>
+                                        {stat.suffix && <span className={cn("text-sm md:text-lg", isDark ? "text-gray-400" : "text-gray-500")}>{stat.suffix}</span>}
+                                    </div>
+                                    <p className={cn("text-xs md:text-sm mt-1 truncate", isDark ? "text-gray-500" : "text-gray-600")}>{stat.label}</p>
+                                </GlowingCard>
+                            </StaggerItem>
                         ))}
-                    </div>
+                    </StaggerContainer>
                 </section>
 
                 {/* Main Content Grid - 2 Column Layout */}
@@ -532,8 +543,8 @@ export default function Doctor2Dashboard({
                                         className={cn(
                                             "p-3 rounded-xl border transition-all",
                                             isDark
-                                                ? "bg-gradient-to-r from-amber-500/5 to-transparent border-white/5"
-                                                : "bg-gradient-to-r from-amber-50 to-transparent border-gray-200"
+                                                ? "bg-gradient-to-r from-[#044C87]/10 to-transparent border-white/5"
+                                                : "bg-gradient-to-r from-[#044C87]/5 to-transparent border-gray-200"
                                         )}
                                     >
                                         <div className="flex items-start gap-3">
@@ -582,38 +593,31 @@ export default function Doctor2Dashboard({
                                 })}
                             </div>
 
-                            {/* Online Status */}
+                            {/* Online Status (Directly synchronized with Header toggle) */}
                             <div className={cn("mt-6 pt-5 border-t", isDark ? "border-white/5" : "border-gray-200")}>
                                 <div className="flex items-center gap-3">
-                                    <span className="relative flex h-3 w-3">
+                                    <span className="relative flex h-3.5 w-3.5 items-center justify-center">
                                         {isOnline ? (
                                             <>
-                                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75" />
-                                                <span className="relative inline-flex rounded-full h-3 w-3 bg-[#FD614B]" />
+                                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                                                <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]" />
                                             </>
                                         ) : (
-                                            <span className="relative inline-flex rounded-full h-3 w-3 bg-gray-400" />
+                                            <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-rose-500 shadow-[0_0_6px_rgba(244,63,94,0.7)]" />
                                         )}
                                     </span>
                                     <div className="flex-1">
                                         <div className="flex items-center gap-2">
-                                            <p className={cn("text-sm font-medium", isDark ? "text-white" : "text-slate-900")}>
+                                            <p className={cn("text-sm font-semibold", isOnline ? "text-emerald-500" : (isDark ? "text-rose-400" : "text-rose-600"))}>
                                                 {isOnline
                                                     ? t.doctorDashboard.performance.youreOnline
-                                                    : (isRTL ? "غير متصل" : "You're Offline")}
+                                                    : (isRTL ? "أنت غير متصل" : "You're Offline")}
                                             </p>
-                                            {isSyncing && (
-                                                <span className="w-3 h-3 border border-[#FD614B] border-t-transparent rounded-full animate-spin" />
-                                            )}
                                         </div>
                                         <p className={cn("text-xs", isDark ? "text-gray-500" : "text-gray-600")}>
                                             {isOnline
                                                 ? t.doctorDashboard.performance.availableForConsultations
-                                                : nextAvailableSlot
-                                                    ? (isRTL
-                                                        ? `متاح من ${new Date(nextAvailableSlot.start).toLocaleTimeString("ar-EG", { hour: "2-digit", minute: "2-digit" })}`
-                                                        : `Available from ${new Date(nextAvailableSlot.start).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}`)
-                                                    : (isRTL ? "لا توجد مواعيد متاحة" : "No upcoming slots")}
+                                                : (isRTL ? "غير متاح للاستشارات حالياً (تحكّم بالحالة من الهيدر)" : "Offline - control status from the header")}
                                         </p>
                                     </div>
                                 </div>

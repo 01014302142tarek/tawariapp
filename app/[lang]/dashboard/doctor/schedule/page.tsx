@@ -417,7 +417,7 @@ export default function SchedulePage() {
                     </div>
                     <button
                         onClick={() => setShowBlockedForm(!showBlockedForm)}
-                        className="flex items-center gap-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-white font-semibold py-2 px-4 rounded-xl transition-all shadow-lg shadow-amber-500/20 text-sm"
+                        className="flex items-center gap-2 bg-gradient-to-r from-[#FD614B] to-[#E84D37] hover:brightness-110 text-white font-semibold py-2 px-4 rounded-xl transition-all shadow-lg shadow-[#FD614B]/30 text-sm"
                     >
                         {Icons.plus}
                         {t.doctorDashboard.schedulePage.addBlockedTime}

@@ -88,7 +88,7 @@ export default function TriagePage() {
                             aria-label="Toggle theme"
                         >
                             {isDark ? (
-                                <svg className="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg className="w-5 h-5 text-[#FD614B]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
                                 </svg>
                             ) : (
@@ -251,10 +251,10 @@ export default function TriagePage() {
                         {/* Urgent Care Recommendation */}
                         {result.urgencyLevel === "urgent" && (
                             <div className={`p-6 rounded-3xl border shadow-lg space-y-4 ${isDark
-                                ? "bg-amber-500/10 border-amber-500/40 text-amber-100"
-                                : "bg-amber-50 border-amber-300 text-amber-950"
+                                ? "bg-[#FD614B]/10 border-[#FD614B]/40 text-white"
+                                : "bg-[#FFF5F3] border-[#FFD0CA] text-slate-900"
                                 }`}>
-                                <div className="flex items-center gap-3 text-amber-600 dark:text-amber-400 font-extrabold text-xl">
+                                <div className="flex items-center gap-3 text-amber-600 dark:text-[#FD614B] font-extrabold text-xl">
                                     <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                                     </svg>
@@ -268,11 +268,11 @@ export default function TriagePage() {
                                 <div className="pt-2 flex flex-col sm:flex-row items-center gap-4">
                                     <Link
                                         href={`/${language}/dashboard/patient/urgent-care`}
-                                        className="w-full sm:w-auto px-6 py-3 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 text-white font-extrabold text-sm shadow-md hover:from-amber-600 hover:to-orange-600 transition-all flex items-center justify-center gap-2"
+                                        className="w-full sm:w-auto px-6 py-3 rounded-2xl bg-gradient-to-r from-[#FD614B] to-[#E84D37] hover:brightness-110 text-white font-extrabold text-sm shadow-md shadow-[#FD614B]/30 transition-all flex items-center justify-center gap-2"
                                     >
                                         <span>{isRTL ? "⚡ الدخول لطابور الطوارئ الفوري الآن" : "⚡ Enter Urgent Queue Now"}</span>
                                     </Link>
-                                    <p className="text-xs text-amber-700 dark:text-amber-300 font-medium text-center sm:text-start">
+                                    <p className="text-xs text-[#044C87] dark:text-gray-300 font-medium text-center sm:text-start">
                                         {isRTL ? "طبيب عام / طوارئ سيتصل بك بالفيديو في خلال دقائق" : "A general/urgent doctor will connect with you via video in minutes"}
                                     </p>
                                 </div>
@@ -353,7 +353,7 @@ export default function TriagePage() {
                                                         <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
                                                             {isRTL ? doc.specialtyAr : doc.specialty}
                                                         </p>
-                                                        <div className="flex items-center gap-1.5 text-xs text-amber-500 font-semibold mt-0.5">
+                                                        <div className="flex items-center gap-1.5 text-xs text-[#FD614B] font-semibold mt-0.5">
                                                             <span>★ {doc.ratingAverage.toFixed(1)}</span>
                                                             <span className="text-slate-400">•</span>
                                                             <span className="text-slate-500 dark:text-slate-400 text-[11px] font-normal">

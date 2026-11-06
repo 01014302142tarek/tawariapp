@@ -342,7 +342,7 @@ export default function ConsultationNotesPage() {
                                     type="checkbox"
                                     checked={form.followUpRecommended}
                                     onChange={(e) => handleChange("followUpRecommended", e.target.checked)}
-                                    className="w-5 h-5 rounded border-white/20 bg-[#0D2C4F] text-[#FD614B] focus:ring-amber-500/50"
+                                    className="w-5 h-5 rounded border-white/20 bg-[#0D2C4F] text-[#FD614B] focus:ring-[#044C87]/50"
                                 />
                                 <span className="text-sm text-gray-400">
                                     {isRTL ? "يوصى بالمتابعة" : "Follow-up recommended"}
@@ -387,7 +387,7 @@ export default function ConsultationNotesPage() {
                         <button
                             onClick={handleSave}
                             disabled={saving}
-                            className="flex-1 py-3 px-4 bg-gradient-to-r from-amber-500 to-emerald-500 text-white rounded-xl hover:from-amber-600 hover:to-emerald-600 transition-colors font-medium flex items-center justify-center gap-2 disabled:opacity-50"
+                            className="flex-1 py-3 px-4 bg-gradient-to-r from-[#FD614B] to-[#E84D37] hover:brightness-110 text-white rounded-xl transition-all font-semibold flex items-center justify-center gap-2 disabled:opacity-50 shadow-md shadow-[#FD614B]/30"
                         >
                             {saving ? (
                                 <>

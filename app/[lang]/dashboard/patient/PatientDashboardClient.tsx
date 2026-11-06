@@ -19,6 +19,7 @@ import { GlowingCard } from "@/components/ui/glowing-card";
 import { AnimatedNumber } from "@/components/ui/animated-number";
 import { SparklesCore } from "@/components/ui/sparkles";
 import { AnimatedActionButton } from "@/components/ui/animated-action-button";
+import { StaggerContainer, StaggerItem } from "@/components/ui/StaggerContainer";
 
 // ============================================
 // ICONS
@@ -319,76 +320,82 @@ export default function PatientDashboard({
 
                 {/* Primary Action Buttons - Urgent Care & Video Call */}
                 <section className="mb-6 md:mb-8">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <StaggerContainer className="grid grid-cols-1 md:grid-cols-2 gap-4" staggerDelay={0.08}>
                         {/* Urgent Care Button */}
-                        <AnimatedActionButton
-                            href={`/${language}/dashboard/patient/urgent-care`}
-                            icon={
-                                <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
-                                </svg>
-                            }
-                            title={isRTL ? "استشارة عاجلة" : "Urgent Care"}
-                            description={isRTL ? "تحدث مع طبيب متاح الآن" : "Talk to an available doctor now"}
-                            variant="urgent"
-                            isDark={isDark}
-                        />
+                        <StaggerItem yOffset={12}>
+                            <AnimatedActionButton
+                                href={`/${language}/dashboard/patient/urgent-care`}
+                                icon={
+                                    <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+                                    </svg>
+                                }
+                                title={isRTL ? "استشارة عاجلة" : "Urgent Care"}
+                                description={isRTL ? "تحدث مع طبيب متاح الآن" : "Talk to an available doctor now"}
+                                variant="urgent"
+                                isDark={isDark}
+                            />
+                        </StaggerItem>
 
                         {/* Start Video Call Button */}
-                        <AnimatedActionButton
-                            href={nextAppointment ? undefined : `/${language}/dashboard/patient/doctors`}
-                            onClick={nextAppointment ? handleStartCall : undefined}
-                            icon={Icons.video}
-                            title={
-                                nextAppointment
-                                    ? (nextAppointment.status === "in_progress"
-                                        ? (isRTL ? "انضم للمكالمة" : "Join Call")
-                                        : (isRTL ? "ابدأ استشارتك" : "Start Your Consultation"))
-                                    : (isRTL ? "احجز استشارة" : "Book a Consultation")
-                            }
-                            description={
-                                nextAppointment
-                                    ? (isRTL ? `مع ${nextAppointment.doctor}` : `With ${nextAppointment.doctor}`)
-                                    : (isRTL ? "اختر طبيبًا واحجز موعدًا" : "Choose a doctor and schedule")
-                            }
-                            variant="primary"
-                            isDark={isDark}
-                            isLoading={joiningCall}
-                            loadingText={isRTL ? "جارٍ الانضمام..." : "Joining..."}
-                        />
-                    </div>
+                        <StaggerItem yOffset={12}>
+                            <AnimatedActionButton
+                                href={nextAppointment ? undefined : `/${language}/dashboard/patient/doctors`}
+                                onClick={nextAppointment ? handleStartCall : undefined}
+                                icon={Icons.video}
+                                title={
+                                    nextAppointment
+                                        ? (nextAppointment.status === "in_progress"
+                                            ? (isRTL ? "انضم للمكالمة" : "Join Call")
+                                            : (isRTL ? "ابدأ استشارتك" : "Start Your Consultation"))
+                                        : (isRTL ? "احجز استشارة" : "Book a Consultation")
+                                }
+                                description={
+                                    nextAppointment
+                                        ? (isRTL ? `مع ${nextAppointment.doctor}` : `With ${nextAppointment.doctor}`)
+                                        : (isRTL ? "اختر طبيبًا واحجز موعدًا" : "Choose a doctor and schedule")
+                                }
+                                variant="primary"
+                                isDark={isDark}
+                                isLoading={joiningCall}
+                                loadingText={isRTL ? "جارٍ الانضمام..." : "Joining..."}
+                            />
+                        </StaggerItem>
+                    </StaggerContainer>
                 </section>
 
                 {/* Stats Row */}
                 <section className="mb-6 md:mb-8">
-                    <div className="grid grid-cols-3 gap-3 md:gap-4">
+                    <StaggerContainer className="grid grid-cols-3 gap-3 md:gap-4" staggerDelay={0.06}>
                         {[
                             { label: t.patientDashboard.stats.upcomingAppointments, value: stats.upcomingAppointments, icon: Icons.calendar },
                             { label: t.patientDashboard.stats.activePrescriptions, value: stats.activePrescriptions, icon: Icons.prescription },
                             { label: t.patientDashboard.stats.unreadMessages, value: stats.unreadMessages, icon: Icons.message },
                         ].map((stat, idx) => (
-                            <GlowingCard key={idx} glowColor="coral" className="p-3 md:p-5" isDark={isDark}>
-                                <div className="flex items-start justify-between mb-2 md:mb-3">
-                                    <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-br from-[#044C87] to-[#0C67B3] flex items-center justify-center text-white shadow-[0_0_15px_rgba(4,76,135,0.4)] border border-[#0C67B3]/40">
-                                        <span className="[&>svg]:w-4 [&>svg]:h-4 md:[&>svg]:w-5 md:[&>svg]:h-5">
-                                            {stat.icon}
-                                        </span>
+                            <StaggerItem key={idx} yOffset={16}>
+                                <GlowingCard glowColor="coral" className="p-3 md:p-5 h-full" isDark={isDark}>
+                                    <div className="flex items-start justify-between mb-2 md:mb-3">
+                                        <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-br from-[#044C87] to-[#0C67B3] flex items-center justify-center text-white shadow-[0_0_15px_rgba(4,76,135,0.4)] border border-[#0C67B3]/40">
+                                            <span className="[&>svg]:w-4 [&>svg]:h-4 md:[&>svg]:w-5 md:[&>svg]:h-5">
+                                                {stat.icon}
+                                            </span>
+                                        </div>
+                                        <Badge variant="primary" className="text-[9px] md:text-xs px-1.5 md:px-2 py-0.5 hidden sm:block">{t.common.today}</Badge>
                                     </div>
-                                    <Badge variant="primary" className="text-[9px] md:text-xs px-1.5 md:px-2 py-0.5 hidden sm:block">{t.common.today}</Badge>
-                                </div>
-                                <div className="flex items-baseline gap-0.5 md:gap-1">
-                                    {isLoading ? (
-                                        <span className={cn("text-2xl md:text-3xl font-bold animate-pulse", isDark ? "text-white/50" : "text-slate-400")}>--</span>
-                                    ) : (
-                                        <span className={cn("text-2xl md:text-3xl font-bold", isDark ? "text-white" : "text-slate-900")}>
-                                            <AnimatedNumber value={stat.value} format={(v) => formatNumber(v)} />
-                                        </span>
-                                    )}
-                                </div>
-                                <p className={cn("text-[11px] md:text-sm mt-1 leading-tight", isDark ? "text-gray-500" : "text-gray-600")}>{stat.label}</p>
-                            </GlowingCard>
+                                    <div className="flex items-baseline gap-0.5 md:gap-1">
+                                        {isLoading ? (
+                                            <span className={cn("text-2xl md:text-3xl font-bold animate-pulse", isDark ? "text-white/50" : "text-slate-400")}>--</span>
+                                        ) : (
+                                            <span className={cn("text-2xl md:text-3xl font-bold", isDark ? "text-white" : "text-slate-900")}>
+                                                <AnimatedNumber value={stat.value} format={(v) => formatNumber(v)} delay={idx * 0.08} />
+                                            </span>
+                                        )}
+                                    </div>
+                                    <p className={cn("text-[11px] md:text-sm mt-1 leading-tight", isDark ? "text-gray-500" : "text-gray-600")}>{stat.label}</p>
+                                </GlowingCard>
+                            </StaggerItem>
                         ))}
-                    </div>
+                    </StaggerContainer>
                 </section>
 
                 {/* Two Column Layout */}
@@ -478,7 +485,7 @@ export default function PatientDashboard({
                                                 onClick={handleStartCall}
                                                 disabled={joiningCall}
                                                 className={cn(
-                                                    "flex-1 sm:flex-initial px-4 py-2 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-black font-semibold text-xs md:text-sm rounded-lg transition-all shadow-md shadow-amber-500/20 text-center flex items-center justify-center gap-2",
+                                                    "flex-1 sm:flex-initial px-4 py-2 bg-gradient-to-r from-[#FD614B] to-[#E84D37] hover:brightness-110 text-white font-semibold text-xs md:text-sm rounded-lg transition-all shadow-md shadow-[#FD614B]/30 text-center flex items-center justify-center gap-2",
                                                     joiningCall && "opacity-70 cursor-not-allowed"
                                                 )}
                                             >
@@ -519,7 +526,7 @@ export default function PatientDashboard({
                                         {isRTL ? "احجز موعدك الأول مع أحد أطبائنا" : "Book your first appointment with one of our doctors"}
                                     </p>
                                     <Link href={`/${language}/dashboard/patient/doctors`}>
-                                        <button className="px-5 py-2.5 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-black text-sm font-semibold rounded-lg transition-all shadow-md shadow-amber-500/20">
+                                        <button className="px-5 py-2.5 bg-gradient-to-r from-[#FD614B] to-[#E84D37] hover:brightness-110 text-white text-sm font-semibold rounded-lg transition-all shadow-md shadow-[#FD614B]/30">
                                             {t.patientDashboard.actions.bookAppointment}
                                         </button>
                                     </Link>

@@ -108,7 +108,7 @@ const Icons = {
     menu: <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>,
     close: <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>,
     back: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>,
-    verified: <svg className="w-5 h-5 text-amber-500" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.403 12.652a3 3 0 000-5.304 3 3 0 00-3.75-3.751 3 3 0 00-5.305 0 3 3 0 00-3.751 3.75 3 3 0 000 5.305 3 3 0 003.75 3.751 3 3 0 005.305 0 3 3 0 003.751-3.75zm-2.546-4.46a.75.75 0 00-1.214-.883l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clipRule="evenodd" /></svg>,
+    verified: <svg className="w-5 h-5 text-[#044C87]" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.403 12.652a3 3 0 000-5.304 3 3 0 00-3.75-3.751 3 3 0 00-5.305 0 3 3 0 00-3.751 3.75 3 3 0 000 5.305 3 3 0 003.75 3.751 3 3 0 005.305 0 3 3 0 003.751-3.75zm-2.546-4.46a.75.75 0 00-1.214-.883l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clipRule="evenodd" /></svg>,
     language: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" /></svg>,
     briefcase: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>,
     academic: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l9-5-9-5-9 5 9 5z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" /></svg>,
@@ -124,8 +124,8 @@ function ThemeToggle() {
         <button
             onClick={toggleTheme}
             className={`flex items-center justify-center w-10 h-10 rounded-full transition-all duration-300 ${isDark
-                ? 'bg-white/5 hover:bg-white/10 border border-white/10 text-white hover:text-amber-300'
-                : 'bg-amber-500 hover:bg-amber-600 border border-amber-500 text-white'
+                ? 'bg-white/5 hover:bg-white/10 border border-white/10 text-white hover:text-[#FD614B]'
+                : 'bg-[#044C87] hover:bg-[#033a68] border border-[#044C87] text-white'
                 }`}
             aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
         >
@@ -232,7 +232,7 @@ export default function DoctorProfileClient({ doctor, lang }: DoctorProfileClien
         <div className={`min-h-screen ${bgMain} ${textPrimary} overflow-x-hidden transition-colors duration-300 ${isRTL ? 'font-cairo' : ''}`} dir={isRTL ? 'rtl' : 'ltr'}>
             {/* Background Effects */}
             <div className="fixed inset-0 overflow-hidden pointer-events-none">
-                <div className={`absolute inset-0 ${isDark ? 'bg-gradient-to-br from-[#0B1528] via-[#060B18] to-[#060B18]' : 'bg-gradient-to-br from-amber-50/50 via-white to-white'}`} />
+                <div className={`absolute inset-0 ${isDark ? 'bg-gradient-to-br from-[#08213D] via-[#031326] to-[#031326]' : 'bg-gradient-to-br from-[#FEFDFE] via-[#F4F8FC] to-[#FEFDFE]'}`} />
                 <div className={`absolute top-1/4 -right-1/4 w-[800px] h-[800px] ${isDark ? 'bg-blue-600/10' : 'bg-blue-200/20'} rounded-full blur-3xl`} />
             </div>
 
@@ -305,7 +305,7 @@ export default function DoctorProfileClient({ doctor, lang }: DoctorProfileClien
                             <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
                                 {/* Avatar */}
                                 <div className="relative">
-                                    <div className="w-32 h-32 sm:w-40 sm:h-40 rounded-full overflow-hidden border-4 border-amber-400 shadow-xl shadow-amber-500/20">
+                                    <div className="w-32 h-32 sm:w-40 sm:h-40 rounded-full overflow-hidden border-4 border-[#044C87] shadow-xl shadow-[#044C87]/20">
                                         {doctor.avatar_url ? (
                                             <Image
                                                 src={doctor.avatar_url}
@@ -315,7 +315,7 @@ export default function DoctorProfileClient({ doctor, lang }: DoctorProfileClien
                                                 sizes="160px"
                                             />
                                         ) : (
-                                            <div className={`w-full h-full flex items-center justify-center text-4xl font-bold ${isDark ? 'bg-amber-500/20 text-amber-400' : 'bg-amber-100 text-amber-700'}`}>
+                                            <div className={`w-full h-full flex items-center justify-center text-4xl font-bold ${isDark ? 'bg-[#044C87]/20 text-[#FD614B]' : 'bg-[#044C87]/10 text-[#044C87]'}`}>
                                                 {doctor.full_name.charAt(0)}
                                             </div>
                                         )}

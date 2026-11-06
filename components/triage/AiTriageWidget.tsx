@@ -3,6 +3,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { useI18n } from "@/app/i18n";
 import { useGlobalTheme } from "@/app/context/GlobalThemeContext";
@@ -18,9 +19,10 @@ interface ChatMessage {
 }
 
 export function AiTriageWidget() {
+    const pathname = usePathname();
     const { isRTL, language } = useI18n();
     const { isDark } = useGlobalTheme();
-    const { user } = useAuth();
+    const { user, profile } = useAuth();
 
     const [isOpen, setIsOpen] = useState(false);
     const [inputMessage, setInputMessage] = useState("");
@@ -124,6 +126,17 @@ export function AiTriageWidget() {
             "Skin rash with intense itching",
             "Severe joint and knee pain",
         ];
+
+    // Hide widget on doctor and admin dashboards, active calls, and for doctor/admin accounts
+    const isDoctorOrAdminRoute = pathname?.includes("/dashboard/doctor") ||
+                                 pathname?.includes("/dashboard/admin") ||
+                                 pathname?.includes("/consultation/") ||
+                                 pathname?.includes("/doctor-onboarding");
+    const isDoctorOrAdminUser = profile?.profile?.role === "doctor" || profile?.profile?.role === "admin";
+
+    if (isDoctorOrAdminRoute || isDoctorOrAdminUser) {
+        return null;
+    }
 
     return (
         <>

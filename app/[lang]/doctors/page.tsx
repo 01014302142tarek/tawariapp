@@ -20,7 +20,7 @@ const Icons = {
     filter: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" /></svg>,
     language: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" /></svg>,
     chevronDown: <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>,
-    verified: <svg className="w-4 h-4 text-amber-500" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.403 12.652a3 3 0 000-5.304 3 3 0 00-3.75-3.751 3 3 0 00-5.305 0 3 3 0 00-3.751 3.75 3 3 0 000 5.305 3 3 0 003.75 3.751 3 3 0 005.305 0 3 3 0 003.751-3.75zm-2.546-4.46a.75.75 0 00-1.214-.883l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clipRule="evenodd" /></svg>,
+    verified: <svg className="w-4 h-4 text-[#044C87]" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.403 12.652a3 3 0 000-5.304 3 3 0 00-3.75-3.751 3 3 0 00-5.305 0 3 3 0 00-3.751 3.75 3 3 0 000 5.305 3 3 0 003.75 3.751 3 3 0 005.305 0 3 3 0 003.751-3.75zm-2.546-4.46a.75.75 0 00-1.214-.883l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clipRule="evenodd" /></svg>,
 };
 
 // Theme Toggle Button
@@ -30,8 +30,8 @@ function ThemeToggle() {
         <button
             onClick={toggleTheme}
             className={`flex items-center justify-center w-10 h-10 rounded-full transition-all duration-300 ${isDark
-                ? 'bg-white/5 hover:bg-white/10 border border-white/10 text-white hover:text-amber-300'
-                : 'bg-amber-500 hover:bg-amber-600 border border-amber-500 text-white'
+                ? 'bg-white/5 hover:bg-white/10 border border-white/10 text-white hover:text-[#FD614B]'
+                : 'bg-[#044C87] hover:bg-[#033a68] border border-[#044C87] text-white'
                 }`}
             aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
         >
@@ -263,7 +263,7 @@ function DoctorsPageContent() {
             <div className="fixed inset-0 overflow-hidden pointer-events-none">
                 <div className={`absolute inset-0 ${isDark ? 'bg-gradient-to-br from-[#0B1528] via-[#060B18] to-[#040813]' : 'bg-gradient-to-br from-blue-50 via-white to-white'}`} />
                 <div className={`absolute top-1/4 -right-1/4 w-[800px] h-[800px] ${isDark ? 'bg-blue-600/15' : 'bg-blue-200/30'} rounded-full blur-3xl`} />
-                <div className="absolute bottom-10 left-10 w-[500px] h-[500px] bg-amber-500/10 rounded-full blur-3xl" />
+                <div className="absolute bottom-10 left-10 w-[500px] h-[500px] bg-[#044C87]/15 rounded-full blur-3xl" />
             </div>
 
             {/* Navigation */}
@@ -436,7 +436,7 @@ function DoctorsPageContent() {
                     {loading ? (
                         <div className="flex items-center justify-center py-20">
                             <div className="flex flex-col items-center gap-4">
-                                <div className="w-12 h-12 border-4 border-amber-500/30 border-t-amber-500 rounded-full animate-spin" />
+                                <div className="w-12 h-12 border-4 border-[#044C87]/30 border-t-[#FD614B] rounded-full animate-spin" />
                                 <p className={textSecondary}>{t.loading}</p>
                             </div>
                         </div>
@@ -644,7 +644,7 @@ function DoctorsPageContent() {
                 </div>
 
                 {/* Decorative bottom gradient */}
-                <div className="h-1 bg-gradient-to-r from-transparent via-amber-500/50 to-transparent"></div>
+                <div className="h-1 bg-gradient-to-r from-transparent via-[#044C87]/50 to-transparent"></div>
             </footer>
         </div>
     );
@@ -656,7 +656,7 @@ function DoctorsPageLoading() {
     return (
         <div className={`min-h-screen flex items-center justify-center ${isDark ? 'bg-[#0A0A0A]' : 'bg-[#F8FAFC]'}`}>
             <div className="flex flex-col items-center gap-4">
-                <div className="w-12 h-12 border-4 border-amber-500/30 border-t-amber-500 rounded-full animate-spin" />
+                <div className="w-12 h-12 border-4 border-[#044C87]/30 border-t-[#FD614B] rounded-full animate-spin" />
                 <p className={isDark ? 'text-gray-400' : 'text-slate-600'}>Loading...</p>
             </div>
         </div>

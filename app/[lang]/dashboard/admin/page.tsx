@@ -101,7 +101,7 @@ const ProgressBar = ({ value, max, isDark = true }: { value: number; max: number
                 initial={{ width: 0 }}
                 animate={{ width: `${percentage}%` }}
                 transition={{ duration: 1, ease: "easeOut" }}
-                className="h-full rounded-full bg-gradient-to-r from-amber-500 to-amber-400"
+                className="h-full rounded-full bg-gradient-to-r from-[#044C87] to-[#FD614B]"
             />
         </div>
     );

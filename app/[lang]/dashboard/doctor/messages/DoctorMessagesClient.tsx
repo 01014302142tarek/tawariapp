@@ -375,7 +375,7 @@ export default function MessagesPage({
                 <button
                     onClick={() => setShowConversations(!showConversations)}
                     className={cn(
-                        "fixed bottom-4 z-50 md:hidden w-14 h-14 rounded-full bg-[#FD614B] text-white shadow-lg shadow-amber-500/30 flex items-center justify-center",
+                        "fixed bottom-4 z-50 md:hidden w-14 h-14 rounded-full bg-[#FD614B] text-white shadow-lg shadow-[#FD614B]/30 flex items-center justify-center",
                         isRTL ? "left-4" : "right-4",
                         showConversations && "rotate-180"
                     )}
@@ -628,7 +628,7 @@ export default function MessagesPage({
                                                                 className={cn(
                                                                     "flex items-center gap-2 p-2 rounded-lg transition-colors",
                                                                     isOwnMessage
-                                                                        ? "bg-[#E84D37] hover:bg-amber-700"
+                                                                        ? "bg-[#E84D37] hover:bg-[#E84D37]"
                                                                         : isDark
                                                                             ? "bg-slate-700 hover:bg-slate-600"
                                                                             : "bg-gray-300 hover:bg-gray-400",
@@ -637,7 +637,7 @@ export default function MessagesPage({
                                                             >
                                                                 <div className={cn(
                                                                     "w-8 h-8 rounded flex items-center justify-center flex-shrink-0",
-                                                                    isOwnMessage ? "bg-amber-700" : isDark ? "bg-slate-600" : "bg-gray-400"
+                                                                    isOwnMessage ? "bg-[#044C87]" : isDark ? "bg-slate-600" : "bg-gray-400"
                                                                 )}>
                                                                     {Icons.document}
                                                                 </div>
@@ -662,7 +662,7 @@ export default function MessagesPage({
                                                 )}
                                                 <p className={cn(
                                                     "text-[10px] md:text-xs mt-1",
-                                                    isOwnMessage ? "text-amber-100" : textMuted
+                                                    isOwnMessage ? "text-white/80" : textMuted
                                                 )}>{formatMessageTime(msg.created_at)}</p>
                                             </div>
                                         </motion.div>
@@ -787,9 +787,9 @@ export default function MessagesPage({
                                     type="submit"
                                     disabled={(!newMessage.trim() && !selectedFile) || sending || uploading}
                                     className={cn(
-                                        "px-4 md:px-5 py-2.5 md:py-3 bg-gradient-to-r from-amber-500 to-amber-600 text-white rounded-xl transition-all shadow-lg shadow-amber-500/20",
+                                        "px-4 md:px-5 py-2.5 md:py-3 bg-gradient-to-r from-[#FD614B] to-[#E84D37] text-white rounded-xl transition-all shadow-lg shadow-[#FD614B]/30",
                                         (newMessage.trim() || selectedFile) && !sending && !uploading
-                                            ? "hover:from-amber-400 hover:to-amber-500"
+                                            ? "hover:brightness-110"
                                             : "opacity-50 cursor-not-allowed"
                                     )}
                                 >

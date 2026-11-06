@@ -464,7 +464,7 @@ export default function RegisterPage() {
                                 </div>
                             )}
                             {emailValidation.isValid && formData.email.length > 0 && (
-                                <div className="mt-1.5 flex items-center gap-1.5 text-xs text-amber-400">
+                                <div className="mt-1.5 flex items-center gap-1.5 text-xs text-[#FD614B]">
                                     <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                                         <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clipRule="evenodd" />
                                     </svg>
@@ -514,10 +514,10 @@ export default function RegisterPage() {
                                         {text.passwordRequirements.title}
                                     </p>
                                     <div className="flex items-center gap-2">
-                                        <span className={passwordValidation.minLength ? 'text-amber-500' : (isDark ? 'text-gray-500' : 'text-gray-400')}>
+                                        <span className={passwordValidation.minLength ? 'text-emerald-500' : (isDark ? 'text-gray-500' : 'text-gray-400')}>
                                             {passwordValidation.minLength ? '✓' : '○'}
                                         </span>
-                                        <span className={passwordValidation.minLength ? (isDark ? 'text-amber-400' : 'text-amber-600') : (isDark ? 'text-gray-400' : 'text-gray-500')}>
+                                        <span className={passwordValidation.minLength ? (isDark ? 'text-[#FD614B]' : 'text-emerald-600') : (isDark ? 'text-gray-400' : 'text-gray-500')}>
                                             {text.passwordRequirements.minLength}
                                         </span>
                                     </div>
@@ -526,34 +526,34 @@ export default function RegisterPage() {
                                     </p>
                                     <div className="grid grid-cols-2 gap-1">
                                         <div className="flex items-center gap-2">
-                                            <span className={passwordValidation.hasUppercase ? 'text-amber-500' : (isDark ? 'text-gray-500' : 'text-gray-400')}>
+                                            <span className={passwordValidation.hasUppercase ? 'text-emerald-500' : (isDark ? 'text-gray-500' : 'text-gray-400')}>
                                                 {passwordValidation.hasUppercase ? '✓' : '○'}
                                             </span>
-                                            <span className={passwordValidation.hasUppercase ? (isDark ? 'text-amber-400' : 'text-amber-600') : (isDark ? 'text-gray-400' : 'text-gray-500')}>
+                                            <span className={passwordValidation.hasUppercase ? (isDark ? 'text-[#FD614B]' : 'text-emerald-600') : (isDark ? 'text-gray-400' : 'text-gray-500')}>
                                                 {text.passwordRequirements.uppercase}
                                             </span>
                                         </div>
                                         <div className="flex items-center gap-2">
-                                            <span className={passwordValidation.hasLowercase ? 'text-amber-500' : (isDark ? 'text-gray-500' : 'text-gray-400')}>
+                                            <span className={passwordValidation.hasLowercase ? 'text-emerald-500' : (isDark ? 'text-gray-500' : 'text-gray-400')}>
                                                 {passwordValidation.hasLowercase ? '✓' : '○'}
                                             </span>
-                                            <span className={passwordValidation.hasLowercase ? (isDark ? 'text-amber-400' : 'text-amber-600') : (isDark ? 'text-gray-400' : 'text-gray-500')}>
+                                            <span className={passwordValidation.hasLowercase ? (isDark ? 'text-[#FD614B]' : 'text-emerald-600') : (isDark ? 'text-gray-400' : 'text-gray-500')}>
                                                 {text.passwordRequirements.lowercase}
                                             </span>
                                         </div>
                                         <div className="flex items-center gap-2">
-                                            <span className={passwordValidation.hasNumber ? 'text-amber-500' : (isDark ? 'text-gray-500' : 'text-gray-400')}>
+                                            <span className={passwordValidation.hasNumber ? 'text-emerald-500' : (isDark ? 'text-gray-500' : 'text-gray-400')}>
                                                 {passwordValidation.hasNumber ? '✓' : '○'}
                                             </span>
-                                            <span className={passwordValidation.hasNumber ? (isDark ? 'text-amber-400' : 'text-amber-600') : (isDark ? 'text-gray-400' : 'text-gray-500')}>
+                                            <span className={passwordValidation.hasNumber ? (isDark ? 'text-[#FD614B]' : 'text-emerald-600') : (isDark ? 'text-gray-400' : 'text-gray-500')}>
                                                 {text.passwordRequirements.number}
                                             </span>
                                         </div>
                                         <div className="flex items-center gap-2">
-                                            <span className={passwordValidation.hasSpecial ? 'text-amber-500' : (isDark ? 'text-gray-500' : 'text-gray-400')}>
+                                            <span className={passwordValidation.hasSpecial ? 'text-emerald-500' : (isDark ? 'text-gray-500' : 'text-gray-400')}>
                                                 {passwordValidation.hasSpecial ? '✓' : '○'}
                                             </span>
-                                            <span className={passwordValidation.hasSpecial ? (isDark ? 'text-amber-400' : 'text-amber-600') : (isDark ? 'text-gray-400' : 'text-gray-500')}>
+                                            <span className={passwordValidation.hasSpecial ? (isDark ? 'text-[#FD614B]' : 'text-emerald-600') : (isDark ? 'text-gray-400' : 'text-gray-500')}>
                                                 {text.passwordRequirements.special}
                                             </span>
                                         </div>

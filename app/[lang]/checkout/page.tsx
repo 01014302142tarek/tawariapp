@@ -213,10 +213,10 @@ function CheckoutPageContent() {
     // Loading state
     if (loading) {
         return (
-            <div className={cn("min-h-screen flex items-center justify-center", isDark ? "bg-slate-950" : "bg-gray-50")}>
+            <div className={cn("min-h-screen flex items-center justify-center", isDark ? "bg-[#031326]" : "bg-[#F4F8FC]")}>
                 <div className="text-center">
-                    <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-                    <p className={cn("text-lg", isDark ? "text-white" : "text-gray-900")}>
+                    <div className="w-16 h-16 border-4 border-[#044C87] border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+                    <p className={cn("text-lg", isDark ? "text-[#FEFDFE]" : "text-slate-900")}>
                         {isRTL ? "جاري التحميل..." : "Loading..."}
                     </p>
                 </div>
@@ -227,18 +227,18 @@ function CheckoutPageContent() {
     // Error state (no appointment)
     if (!appointment) {
         return (
-            <div className={cn("min-h-screen flex items-center justify-center p-4", isDark ? "bg-slate-950" : "bg-gray-50")}>
+            <div className={cn("min-h-screen flex items-center justify-center p-4", isDark ? "bg-[#031326]" : "bg-[#F4F8FC]")}>
                 <div className="text-center max-w-md">
-                    <div className={cn("w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4", isDark ? "bg-red-500/20" : "bg-red-100")}>
-                        <span className={cn(isDark ? "text-red-500" : "text-red-600")}>{Icons.warning}</span>
+                    <div className={cn("w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4", isDark ? "bg-[#FD614B]/20" : "bg-red-100")}>
+                        <span className={cn(isDark ? "text-[#FD614B]" : "text-red-600")}>{Icons.warning}</span>
                     </div>
-                    <h2 className={cn("text-xl font-semibold mb-2", isDark ? "text-white" : "text-gray-900")}>
+                    <h2 className={cn("text-xl font-semibold mb-2", isDark ? "text-[#FEFDFE]" : "text-slate-900")}>
                         {isRTL ? "خطأ" : "Error"}
                     </h2>
                     <p className={cn("mb-6", isDark ? "text-gray-400" : "text-gray-600")}>{error}</p>
                     <button
                         onClick={() => router.back()}
-                        className="px-6 py-2 bg-gradient-to-r from-[#FD614B] to-[#E84D37] hover:brightness-110 text-white rounded-xl shadow-lg shadow-[#FD614B]/30 transition-all"
+                        className="px-6 py-2 bg-gradient-to-r from-[#FD614B] to-[#E84D37] hover:brightness-110 text-white rounded-xl shadow-lg shadow-[#FD614B]/30 transition-all font-semibold"
                     >
                         {isRTL ? "العودة" : "Go Back"}
                     </button>
@@ -248,7 +248,7 @@ function CheckoutPageContent() {
     }
 
     return (
-        <div className={cn("min-h-screen py-8 px-4", isDark ? "bg-slate-950" : "bg-gray-50", isRTL && "rtl")}>
+        <div className={cn("min-h-screen py-8 px-4", isDark ? "bg-[#031326]" : "bg-[#F4F8FC]", isRTL && "rtl")}>
             <div className="max-w-lg mx-auto">
                 {/* Header */}
                 <div className="mb-6">
@@ -259,7 +259,7 @@ function CheckoutPageContent() {
                         <span className={isRTL ? "rotate-180" : ""}>{Icons.back}</span>
                         <span>{isRTL ? "العودة" : "Back"}</span>
                     </button>
-                    <h1 className={cn("text-2xl font-bold", isDark ? "text-white" : "text-gray-900")}>
+                    <h1 className={cn("text-2xl font-bold", isDark ? "text-[#FEFDFE]" : "text-slate-900")}>
                         {isRTL ? "إتمام الدفع" : "Complete Payment"}
                     </h1>
                     <p className={cn("mt-1", isDark ? "text-gray-400" : "text-gray-600")}>
@@ -269,27 +269,27 @@ function CheckoutPageContent() {
 
                 {/* Appointment Summary */}
                 <GlowingCard glowColor="blue" className="p-5 mb-6" isDark={isDark}>
-                    <h3 className={cn("text-lg font-semibold mb-4", isDark ? "text-white" : "text-gray-900")}>
+                    <h3 className={cn("text-lg font-semibold mb-4", isDark ? "text-[#FEFDFE]" : "text-slate-900")}>
                         {isRTL ? "تفاصيل الموعد" : "Appointment Details"}
                     </h3>
 
                     <div className="flex items-start gap-4 mb-4">
-                        <div className={cn("w-12 h-12 rounded-full flex items-center justify-center", isDark ? "bg-blue-500/20 text-blue-400" : "bg-amber-100 text-amber-600")}>
+                        <div className={cn("w-12 h-12 rounded-full flex items-center justify-center", isDark ? "bg-[#044C87]/20 text-[#044C87]" : "bg-[#044C87]/10 text-[#044C87]")}>
                             {Icons.doctor}
                         </div>
                         <div>
-                            <h4 className={cn("font-medium", isDark ? "text-white" : "text-gray-900")}>{appointment.doctorName}</h4>
+                            <h4 className={cn("font-medium", isDark ? "text-[#FEFDFE]" : "text-slate-900")}>{appointment.doctorName}</h4>
                             <p className={cn("text-sm", isDark ? "text-gray-400" : "text-gray-600")}>{appointment.specialty}</p>
                         </div>
                     </div>
 
                     <div className={cn("space-y-3 pt-4 border-t", isDark ? "border-white/10" : "border-gray-200")}>
                         <div className={cn("flex items-center gap-3", isDark ? "text-gray-300" : "text-gray-700")}>
-                            <span className="text-amber-400">{Icons.calendar}</span>
+                            <span className="text-[#FD614B]">{Icons.calendar}</span>
                             <span>{formatDate(appointment.scheduledStart)}</span>
                         </div>
                         <div className={cn("flex items-center gap-3", isDark ? "text-gray-300" : "text-gray-700")}>
-                            <span className="text-amber-400">{Icons.clock}</span>
+                            <span className="text-[#FD614B]">{Icons.clock}</span>
                             <span>{formatTime(appointment.scheduledStart)}</span>
                         </div>
                     </div>
@@ -297,7 +297,7 @@ function CheckoutPageContent() {
 
                 {/* Payment Method Selection */}
                 <GlowingCard glowColor="blue" className="p-5 mb-6" isDark={isDark}>
-                    <h3 className={cn("text-lg font-semibold mb-4", isDark ? "text-white" : "text-gray-900")}>
+                    <h3 className={cn("text-lg font-semibold mb-4", isDark ? "text-[#FEFDFE]" : "text-slate-900")}>
                         {isRTL ? "طريقة الدفع" : "Payment Method"}
                     </h3>
 
@@ -308,22 +308,22 @@ function CheckoutPageContent() {
                             className={cn(
                                 "w-full flex items-center gap-4 p-4 rounded-xl border transition-all",
                                 paymentMethod === "card"
-                                    ? "border-blue-500 bg-blue-500/10 shadow-[0_0_15px_rgba(37,99,235,0.2)]"
+                                    ? "border-[#FD614B] bg-[#FD614B]/10 shadow-[0_0_15px_rgba(253,97,75,0.2)]"
                                     : isDark 
-                                        ? "border-white/10 bg-white/5 hover:border-blue-500/40"
-                                        : "border-slate-200 bg-slate-50 hover:border-blue-300"
+                                        ? "border-white/10 bg-white/5 hover:border-[#044C87]/40"
+                                        : "border-slate-200 bg-slate-50 hover:border-[#044C87]/30"
                             )}
                         >
                             <div className={cn(
                                 "w-10 h-10 rounded-full flex items-center justify-center",
                                 paymentMethod === "card" 
-                                    ? "bg-blue-500/20 text-blue-400" 
-                                    : isDark ? "bg-amber-500/10 text-amber-400" : "bg-amber-100 text-amber-600"
+                                    ? "bg-[#FD614B]/20 text-[#FD614B]" 
+                                    : isDark ? "bg-[#044C87]/15 text-[#044C87]" : "bg-[#044C87]/10 text-[#044C87]"
                             )}>
                                 {Icons.card}
                             </div>
                             <div className="flex-1 text-start">
-                                <p className={cn("font-medium", isDark ? "text-white" : "text-gray-900")}>
+                                <p className={cn("font-medium", isDark ? "text-[#FEFDFE]" : "text-slate-900")}>
                                     {isRTL ? "بطاقة ائتمان/خصم" : "Credit/Debit Card"}
                                 </p>
                                 <p className={cn("text-sm", isDark ? "text-gray-400" : "text-gray-600")}>
@@ -331,7 +331,7 @@ function CheckoutPageContent() {
                                 </p>
                             </div>
                             {paymentMethod === "card" && (
-                                <span className="text-amber-400">{Icons.check}</span>
+                                <span className="text-[#FD614B]">{Icons.check}</span>
                             )}
                         </button>
 
@@ -341,22 +341,22 @@ function CheckoutPageContent() {
                             className={cn(
                                 "w-full flex items-center gap-4 p-4 rounded-xl border transition-all",
                                 paymentMethod === "wallet"
-                                    ? "border-blue-500 bg-blue-500/10 shadow-[0_0_15px_rgba(37,99,235,0.2)]"
+                                    ? "border-[#FD614B] bg-[#FD614B]/10 shadow-[0_0_15px_rgba(253,97,75,0.2)]"
                                     : isDark
-                                        ? "border-white/10 bg-white/5 hover:border-blue-500/40"
-                                        : "border-slate-200 bg-slate-50 hover:border-blue-300"
+                                        ? "border-white/10 bg-white/5 hover:border-[#044C87]/40"
+                                        : "border-slate-200 bg-slate-50 hover:border-[#044C87]/30"
                             )}
                         >
                             <div className={cn(
                                 "w-10 h-10 rounded-full flex items-center justify-center",
                                 paymentMethod === "wallet" 
-                                    ? "bg-blue-500/20 text-blue-400" 
-                                    : isDark ? "bg-amber-500/10 text-amber-400" : "bg-amber-100 text-amber-600"
+                                    ? "bg-[#FD614B]/20 text-[#FD614B]" 
+                                    : isDark ? "bg-[#044C87]/15 text-[#044C87]" : "bg-[#044C87]/10 text-[#044C87]"
                             )}>
                                 {Icons.wallet}
                             </div>
                             <div className="flex-1 text-start">
-                                <p className={cn("font-medium", isDark ? "text-white" : "text-gray-900")}>
+                                <p className={cn("font-medium", isDark ? "text-[#FEFDFE]" : "text-slate-900")}>
                                     {isRTL ? "محفظة إلكترونية" : "Mobile Wallet"}
                                 </p>
                                 <p className={cn("text-sm", isDark ? "text-gray-400" : "text-gray-600")}>
@@ -364,7 +364,7 @@ function CheckoutPageContent() {
                                 </p>
                             </div>
                             {paymentMethod === "wallet" && (
-                                <span className="text-amber-400">{Icons.check}</span>
+                                <span className="text-[#FD614B]">{Icons.check}</span>
                             )}
                         </button>
                     </div>
@@ -372,7 +372,7 @@ function CheckoutPageContent() {
 
                 {/* Order Summary */}
                 <GlowingCard glowColor="blue" className="p-5 mb-6" isDark={isDark}>
-                    <h3 className={cn("text-lg font-semibold mb-4", isDark ? "text-white" : "text-gray-900")}>
+                    <h3 className={cn("text-lg font-semibold mb-4", isDark ? "text-[#FEFDFE]" : "text-slate-900")}>
                         {isRTL ? "ملخص الطلب" : "Order Summary"}
                     </h3>
 
@@ -390,10 +390,10 @@ function CheckoutPageContent() {
                             </span>
                         </div>
                         <div className={cn("border-t pt-3 flex justify-between", isDark ? "border-white/10" : "border-gray-200")}>
-                            <span className={cn("font-semibold", isDark ? "text-white" : "text-gray-900")}>
+                            <span className={cn("font-semibold", isDark ? "text-[#FEFDFE]" : "text-slate-900")}>
                                 {isRTL ? "الإجمالي" : "Total"}
                             </span>
-                            <span className="text-amber-400 font-bold text-lg">
+                            <span className="text-[#FD614B] font-bold text-lg">
                                 {appointment.consultationFee.toFixed(2)} {isRTL ? "ج.م" : "EGP"}
                             </span>
                         </div>
@@ -459,10 +459,10 @@ function CheckoutPageContent() {
 function CheckoutLoading() {
     const { isDark } = useTheme();
     return (
-        <div className={cn("min-h-screen flex items-center justify-center", isDark ? "bg-slate-950" : "bg-gray-50")}>
+        <div className={cn("min-h-screen flex items-center justify-center", isDark ? "bg-[#031326]" : "bg-[#F4F8FC]")}>
             <div className="text-center">
-                <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-                <p className={cn("text-lg", isDark ? "text-white" : "text-gray-900")}>Loading...</p>
+                <div className="w-16 h-16 border-4 border-[#044C87] border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+                <p className={cn("text-lg", isDark ? "text-[#FEFDFE]" : "text-slate-900")}>Loading...</p>
             </div>
         </div>
     );

@@ -253,7 +253,7 @@ export default function FAQPage() {
         <div className={`min-h-screen overflow-x-hidden ${isRTL ? 'font-cairo' : ''} ${isDark ? 'bg-[#031326] text-white' : 'bg-gray-50 text-slate-900'}`} dir={isRTL ? 'rtl' : 'ltr'}>
             {/* Background Effects */}
             <div className="fixed inset-0 overflow-hidden pointer-events-none">
-                <div className={`absolute inset-0 ${isDark ? 'bg-gradient-to-br from-[#042642] via-[#031326] to-[#060B18]' : 'bg-gradient-to-br from-amber-50/50 via-white to-white'}`} />
+                <div className={`absolute inset-0 ${isDark ? 'bg-gradient-to-br from-[#08213D] via-[#031326] to-[#031326]' : 'bg-gradient-to-br from-[#FEFDFE] via-[#F4F8FC] to-[#FEFDFE]'}`} />
                 <div className={`absolute top-1/4 -right-1/4 w-[600px] h-[600px] rounded-full blur-3xl ${isDark ? 'bg-[#FD614B]/10' : 'bg-[#FD614B]/10'}`} />
                 <div className={`absolute bottom-1/4 -left-1/4 w-[400px] h-[400px] rounded-full blur-3xl ${isDark ? 'bg-[#FD614B]/10' : 'bg-[#FD614B]/10'}`} />
             </div>

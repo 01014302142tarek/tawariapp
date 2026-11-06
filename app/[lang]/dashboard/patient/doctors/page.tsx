@@ -378,7 +378,7 @@ function DoctorsPageContent() {
                                     {Icons.filter}
                                     <span className="font-medium">{isRTL ? "فلترة" : "Filters"}</span>
                                     {hasActiveFilters && (
-                                        <span className="w-2 h-2 bg-amber-400 rounded-full" />
+                                        <span className="w-2 h-2 bg-[#FD614B] rounded-full" />
                                     )}
                                 </button>
                             </div>
@@ -773,7 +773,7 @@ function DoctorsPageContent() {
                                         className={cn(
                                             "w-full py-3 rounded-xl font-semibold transition-all flex items-center justify-center gap-2",
                                             booking.selectedSlot && bookingStatus === "idle"
-                                                ? "bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-white shadow-lg shadow-amber-500/20"
+                                                ? "bg-gradient-to-r from-[#FD614B] to-[#E84D37] hover:brightness-110 text-white shadow-lg shadow-[#FD614B]/30"
                                                 : bookingStatus === "success"
                                                     ? "bg-green-500 text-white"
                                                     : bookingStatus === "error"
@@ -805,7 +805,7 @@ export default function DoctorsPage() {
     return (
         <Suspense fallback={
             <div className="flex items-center justify-center min-h-[400px]">
-                <div className="w-10 h-10 border-4 border-[#FD614B]/40 border-t-amber-500 rounded-full animate-spin" />
+                <div className="w-10 h-10 border-4 border-[#FD614B]/40 border-t-[#FD614B] rounded-full animate-spin" />
             </div>
         }>
             <DoctorsPageContent />

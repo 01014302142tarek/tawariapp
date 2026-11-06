@@ -176,11 +176,13 @@ export default function Sidebar({ isMobileOpen, onClose }: { isMobileOpen?: bool
                 )}
             >
                 {/* Logo Area */}
-                <div className={cn("h-16 flex items-center flex-shrink-0")}>
+                <div className="h-16 flex items-center flex-shrink-0">
                     <Link
                         href="/"
-                        className="flex items-center group w-full overflow-hidden"
-                        style={{ paddingLeft: isRTL ? 0 : (isExpanded ? 16 : (collapsedWidth - 36) / 2), paddingRight: isRTL ? (isExpanded ? 16 : (collapsedWidth - 36) / 2) : 0 }}
+                        className={cn(
+                            "flex items-center group w-full overflow-hidden transition-all duration-200",
+                            isExpanded ? (isRTL ? "pr-4 pl-2" : "pl-4 pr-2") : "justify-center px-0"
+                        )}
                     >
                         {isExpanded ? (
                             <Logo isDark={isDark} size="md" />
@@ -215,8 +217,8 @@ export default function Sidebar({ isMobileOpen, onClose }: { isMobileOpen?: bool
                                                 "flex items-center py-2.5 rounded-xl transition-all duration-200 relative mx-3",
                                                 isActive
                                                     ? isDark
-                                                        ? "bg-gradient-to-r from-[#044C87]/40 to-[#044C87]/10 text-[#FEFDFE] font-semibold border-s-2 border-[#FD614B] shadow-[inset_0_0_12px_rgba(4,76,135,0.25)]"
-                                                        : "bg-gradient-to-r from-[#044C87]/15 to-[#044C87]/5 text-[#044C87] font-semibold border-s-2 border-[#FD614B]"
+                                                        ? "bg-[#044C87]/30 text-[#FEFDFE] font-semibold shadow-sm"
+                                                        : "bg-[#044C87]/15 text-[#044C87] font-semibold shadow-sm"
                                                     : isDark
                                                         ? "text-gray-400 hover:text-white hover:bg-white/5"
                                                         : "text-gray-600 hover:text-slate-900 hover:bg-gray-100/80"
@@ -226,9 +228,9 @@ export default function Sidebar({ isMobileOpen, onClose }: { isMobileOpen?: bool
                                                 <motion.div
                                                     layoutId="adminActiveIndicator"
                                                     className={cn(
-                                                        "absolute top-1/2 -translate-y-1/2 w-1 h-6",
-                                                        isRTL ? "right-0 rounded-l-full" : "left-0 rounded-r-full",
-                                                        isDark ? "bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.8)]" : "bg-blue-600"
+                                                        "absolute top-1/2 -translate-y-1/2 w-1 h-6 rounded-full",
+                                                        isRTL ? "-right-1" : "-left-1",
+                                                        "bg-[#FD614B] shadow-[0_0_8px_rgba(253,97,75,0.7)]"
                                                     )}
                                                     transition={{ duration: 0.3, ease: "easeInOut" }}
                                                 />
@@ -236,8 +238,8 @@ export default function Sidebar({ isMobileOpen, onClose }: { isMobileOpen?: bool
 
                                             <div
                                                 className={cn(
-                                                    "flex items-center justify-center flex-shrink-0",
-                                                    isActive && "drop-shadow-[0_0_8px_rgba(245,158,11,0.5)]"
+                                                    "flex items-center justify-center flex-shrink-0 transition-colors",
+                                                    isActive ? "text-[#FD614B]" : ""
                                                 )}
                                                 style={{ width: collapsedWidth - 24, minWidth: collapsedWidth - 24 }}
                                             >
@@ -267,7 +269,7 @@ export default function Sidebar({ isMobileOpen, onClose }: { isMobileOpen?: bool
                                                     }}
                                                     transition={{ duration: 0.2 }}
                                                     className={cn(
-                                                        "flex items-center justify-center text-xs font-bold text-black bg-gradient-to-r from-amber-500 to-amber-400 rounded-full shadow-lg shadow-amber-500/30",
+                                                        "flex items-center justify-center text-xs font-bold text-black bg-[#FD614B] rounded-full shadow-md shadow-[#FD614B]/30 text-white",
                                                         isExpanded ? "w-5 h-5 ml-3" : "w-4 h-4 text-[10px]"
                                                     )}
                                                 >

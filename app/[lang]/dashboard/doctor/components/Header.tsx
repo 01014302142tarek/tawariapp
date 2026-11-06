@@ -7,7 +7,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useTheme } from "../context/ThemeContext";
 import { useI18n } from "@/app/i18n";
-import { useAuth } from "@/app/context/AuthContext";
+import { useAuth, isDoctorProfile } from "@/app/context/AuthContext";
+import { useDoctorOnlineStatus } from "@/lib/hooks/useQueueRealtime";
+import { toggleDoctorOnline } from "@/app/actions/queue";
 import { useRouter } from "next/navigation";
 import { MovingBorder } from "@/components/ui/moving-border";
 import { NotificationDropdown } from "@/components/notifications";
@@ -133,7 +135,8 @@ const UserDropdown = ({
     themeMode,
     onSetThemeMode,
     onLogout,
-    settingsHref
+    settingsHref,
+    isOnline,
 }: {
     name: string;
     avatarUrl: string | null;
@@ -142,6 +145,7 @@ const UserDropdown = ({
     onSetThemeMode: (mode: "system" | "light" | "dark") => void;
     onLogout: () => void;
     settingsHref: string;
+    isOnline?: boolean;
 }) => {
     const [isOpen, setIsOpen] = useState(false);
     const [showThemeMenu, setShowThemeMenu] = useState(false);
@@ -188,18 +192,33 @@ const UserDropdown = ({
                     isDark ? "hover:bg-white/5" : "hover:bg-gray-100"
                 )}
             >
-                <div className="relative w-9 h-9 md:w-10 md:h-10 rounded-full overflow-hidden border-2 border-[#FD614B]/40 flex items-center justify-center bg-[#FD614B]/10">
-                    {avatarUrl ? (
-                        <Image
-                            src={avatarUrl}
-                            alt={name}
-                            fill
-                            className="object-cover"
-                            sizes="(max-width: 768px) 36px, 40px"
-                        />
-                    ) : (
-                        <span className="text-sm font-semibold text-[#FD614B]">{getInitials(name)}</span>
-                    )}
+                <div className="relative w-9 h-9 md:w-10 md:h-10 rounded-full border-2 border-[#044C87]/40 flex items-center justify-center bg-[#044C87]/10">
+                    <div className="w-full h-full rounded-full overflow-hidden relative">
+                        {avatarUrl ? (
+                            <Image
+                                src={avatarUrl}
+                                alt={name}
+                                fill
+                                className="object-cover"
+                                sizes="(max-width: 768px) 36px, 40px"
+                            />
+                        ) : (
+                            <span className="w-full h-full flex items-center justify-center text-sm font-semibold text-[#FD614B]">{getInitials(name)}</span>
+                        )}
+                    </div>
+                    {/* Online / Offline Status Dot Badge Over Avatar */}
+                    <span
+                        className={cn(
+                            "absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 transition-all duration-300 z-10",
+                            isDark ? "border-[#031326]" : "border-white",
+                            isOnline ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]" : "bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.8)]"
+                        )}
+                        title={isOnline ? (isRTL ? "متصل الآن" : "Online") : (isRTL ? "غير متصل" : "Offline")}
+                    >
+                        {isOnline && (
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                        )}
+                    </span>
                 </div>
                 <div className="text-left hidden sm:block">
                     <p className={cn("text-sm font-medium", isDark ? "text-white" : "text-slate-900")}>{name}</p>
@@ -391,6 +410,35 @@ export default function Header({ onMenuClick }: { onMenuClick?: () => void }) {
     const avatarUrl = profile?.profile.avatar_url;
     const userAvatar = avatarUrl && avatarUrl.trim() !== "" ? avatarUrl : null;
 
+    // Doctor online status synchronization
+    const doctorProfileId = profile && isDoctorProfile(profile) ? profile.doctorProfile?.id : null;
+    const { isOnline: serverOnline } = useDoctorOnlineStatus(doctorProfileId);
+    const [optimisticOnline, setOptimisticOnline] = useState<boolean | null>(null);
+    const isOnline = optimisticOnline !== null ? optimisticOnline : serverOnline;
+    const [isTogglingOnline, setIsTogglingOnline] = useState(false);
+
+    // Sync optimistic state when server catches up
+    useEffect(() => {
+        if (optimisticOnline !== null && serverOnline === optimisticOnline) {
+            setOptimisticOnline(null);
+        }
+    }, [serverOnline, optimisticOnline]);
+
+    const handleToggleOnline = async () => {
+        const nextStatus = !isOnline;
+        setOptimisticOnline(nextStatus);
+        setIsTogglingOnline(true);
+        try {
+            await toggleDoctorOnline(nextStatus);
+        } catch (err) {
+            console.error("Failed to toggle doctor online status", err);
+            // Revert optimistic update on error
+            setOptimisticOnline(null);
+        } finally {
+            setIsTogglingOnline(false);
+        }
+    };
+
     const handleLogout = async () => {
         await signOut();
         // Use window.location for a full page reload to ensure clean auth state
@@ -444,7 +492,10 @@ export default function Header({ onMenuClick }: { onMenuClick?: () => void }) {
                 {/* Right: Actions */}
                 <div className="flex items-center gap-2 sm:gap-3">
                     {/* Video Call Button - visible on sm+ screens */}
-                    <button
+                    <motion.button
+                        whileHover={{ scale: 1.03 }}
+                        whileTap={{ scale: 0.97 }}
+                        transition={{ type: "spring", stiffness: 400, damping: 25 }}
                         onClick={() => router.push(`/${language}/dashboard/doctor/appointments`)}
                         className="hidden sm:block focus:outline-none"
                         title={t.doctorDashboard?.actions?.startVideoCall || "Start Call"}
@@ -459,10 +510,13 @@ export default function Header({ onMenuClick }: { onMenuClick?: () => void }) {
                                 <span>{t.doctorDashboard?.actions?.startVideoCall || "Start Call"}</span>
                             </div>
                         </MovingBorder>
-                    </button>
+                    </motion.button>
 
                     {/* Urgent Care Status Button */}
-                    <button
+                    <motion.button
+                        whileHover={{ scale: 1.03 }}
+                        whileTap={{ scale: 0.97 }}
+                        transition={{ type: "spring", stiffness: 400, damping: 25 }}
                         onClick={() => router.push(`/${language}/dashboard/doctor/urgent-care`)}
                         className="focus:outline-none"
                         title={t.doctorDashboard?.actions?.urgentCare || "Urgent Care"}
@@ -477,7 +531,44 @@ export default function Header({ onMenuClick }: { onMenuClick?: () => void }) {
                                 <span className="hidden sm:inline">{t.doctorDashboard?.actions?.urgentCare || "Urgent Care"}</span>
                             </div>
                         </MovingBorder>
-                    </button>
+                    </motion.button>
+
+                    {/* Quick Online Status Toggle Pill with Tactile Spring & Glow */}
+                    <motion.button
+                        whileHover={{ scale: 1.04 }}
+                        whileTap={{ scale: 0.95 }}
+                        transition={{ type: "spring", stiffness: 450, damping: 22 }}
+                        onClick={handleToggleOnline}
+                        disabled={isTogglingOnline && optimisticOnline === null}
+                        className={cn(
+                            "flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs sm:text-sm font-bold transition-colors cursor-pointer select-none",
+                            isOnline
+                                ? "bg-emerald-500/15 border-emerald-500/50 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/25 shadow-[0_0_12px_rgba(16,185,129,0.3)]"
+                                : "bg-rose-500/10 border-rose-500/40 text-rose-600 dark:text-rose-400 hover:bg-rose-500/20 shadow-[0_0_10px_rgba(244,63,94,0.2)]"
+                        )}
+                        title={isOnline ? (isRTL ? "أنت متصل الآن - انقر للتحويل إلى غير متصل" : "Online - Click to go offline") : (isRTL ? "أنت غير متصل - انقر لتصبح متصل الآن" : "Offline - Click to go online")}
+                    >
+                        <span className="relative flex h-2.5 w-2.5 items-center justify-center">
+                            {isOnline && (
+                                <motion.span
+                                    className="absolute inline-flex h-full w-full rounded-full bg-emerald-400"
+                                    animate={{
+                                        scale: [1, 2.2, 1],
+                                        opacity: [0.8, 0, 0.8],
+                                    }}
+                                    transition={{
+                                        duration: 2.2,
+                                        repeat: Infinity,
+                                        ease: "easeInOut",
+                                    }}
+                                />
+                            )}
+                            <span className={cn("relative inline-flex rounded-full h-2.5 w-2.5 transition-colors", isOnline ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.9)]" : "bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.9)]")} />
+                        </span>
+                        <span className="whitespace-nowrap font-semibold">
+                            {isOnline ? (isRTL ? "متصل الآن" : "Online") : (isRTL ? "غير متصل" : "Offline")}
+                        </span>
+                    </motion.button>
 
                     {/* Notifications - visible on all screens */}
                     <NotificationDropdown isDark={isDark} dashboardType="doctor" />
@@ -491,6 +582,7 @@ export default function Header({ onMenuClick }: { onMenuClick?: () => void }) {
                         onSetThemeMode={setThemeMode}
                         onLogout={handleLogout}
                         settingsHref={`/${language}/dashboard/doctor/settings`}
+                        isOnline={isOnline}
                     />
                 </div>
             </div>

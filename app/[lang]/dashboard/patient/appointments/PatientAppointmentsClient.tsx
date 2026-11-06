@@ -279,7 +279,7 @@ export default function AppointmentsPage({
                                     onChange={(e) => setCancellationReason(e.target.value)}
                                     placeholder={isRTL ? "اكتب سبب الإلغاء هنا..." : "Enter your reason for cancelling..."}
                                     className={cn(
-                                        "w-full p-3 rounded-lg border resize-none h-24 mb-4 focus:outline-none focus:ring-2 focus:ring-amber-500",
+                                        "w-full p-3 rounded-lg border resize-none h-24 mb-4 focus:outline-none focus:ring-2 focus:ring-[#044C87]",
                                         isDark
                                             ? "bg-[#0D2C4F] border-white/10 text-white placeholder-gray-500"
                                             : "bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400"
@@ -332,7 +332,7 @@ export default function AppointmentsPage({
                 </div>
                 <button
                     onClick={() => router.push(`/${language}/dashboard/patient/doctors`)}
-                    className="flex items-center justify-center gap-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-white font-semibold py-2 md:py-2.5 px-4 md:px-5 rounded-lg md:rounded-xl transition-all shadow-lg shadow-amber-500/20 text-sm md:text-base"
+                    className="flex items-center justify-center gap-2 bg-gradient-to-r from-[#FD614B] to-[#E84D37] hover:brightness-110 text-white font-semibold py-2 md:py-2.5 px-4 md:px-5 rounded-lg md:rounded-xl transition-all shadow-lg shadow-[#FD614B]/30 text-sm md:text-base"
                 >
                     {Icons.plus}
                     <span>{t.patientDashboard.appointmentsPage.bookNew}</span>

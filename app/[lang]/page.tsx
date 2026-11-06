@@ -4,22 +4,24 @@ import React from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { cn } from "@/lib/utils";
 import { useI18n } from "../i18n";
 import { useGlobalTheme } from "@/app/context/GlobalThemeContext";
 import DoctorsCarousel from "@/components/landing/DoctorsCarousel";
 import { Logo } from "@/components/ui/Logo";
 
-// Tabibi Sapphire & Gold Logo Component (Delegated to central Logo)
+// Tabibi Sapphire & Gold Logo Component with Rotating Coral Rope Border
 const LogoFull = ({ className = "", isDark = true }: { className?: string; isDark?: boolean }) => (
-  <Logo className={className} isDark={isDark} />
+  <Logo className={className} isDark={isDark} withMovingBorder={true} />
 );
 
 // Professional SVG Icons
 const Icons = {
   menu: <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>,
   close: <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>,
-  check: <svg className="w-5 h-5 text-amber-400" fill="currentColor" viewBox="0 0 24 24"><path fillRule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm13.36-1.814a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z" clipRule="evenodd" /></svg>,
-  star: <svg className="w-4 h-4 text-amber-400" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" /></svg>,
+  check: <svg className="w-5 h-5 text-[#FD614B]" fill="currentColor" viewBox="0 0 24 24"><path fillRule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm13.36-1.814a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z" clipRule="evenodd" /></svg>,
+  star: <svg className="w-4 h-4 text-[#FD614B]" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" /></svg>,
   starEmpty: <svg className="w-4 h-4 text-gray-600" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" /></svg>,
   play: <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>,
   arrow: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>,
@@ -92,7 +94,7 @@ const doctors = [
     reviews: 248,
     fee: 350,
     image: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=400&h=400&fit=crop&crop=face",
-    available: true
+    available: false
   },
   {
     name: "Dr. Omar Al-Fayed",
@@ -104,7 +106,7 @@ const doctors = [
     reviews: 312,
     fee: 300,
     image: "https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=400&h=400&fit=crop&crop=face",
-    available: true
+    available: false
   },
   {
     name: "Dr. Layla Ahmed",
@@ -116,7 +118,7 @@ const doctors = [
     reviews: 195,
     fee: 280,
     image: "https://images.unsplash.com/photo-1594824476967-48c8b964273f?w=400&h=400&fit=crop&crop=face",
-    available: true
+    available: false
   },
   {
     name: "Dr. Mohamed Ibrahim",
@@ -128,7 +130,7 @@ const doctors = [
     reviews: 280,
     fee: 320,
     image: "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=400&h=400&fit=crop&crop=face",
-    available: true
+    available: false
   },
   {
     name: "Dr. Sarah Mansour",
@@ -140,7 +142,7 @@ const doctors = [
     reviews: 215,
     fee: 380,
     image: "https://images.unsplash.com/photo-1551836022-deb4988cc6c0?w=400&h=400&fit=crop&crop=face",
-    available: true
+    available: false
   },
   {
     name: "Dr. Tarek El-Kady",
@@ -152,7 +154,7 @@ const doctors = [
     reviews: 340,
     fee: 340,
     image: "https://images.unsplash.com/photo-1537368910025-700350fe46c7?w=400&h=400&fit=crop&crop=face",
-    available: true
+    available: false
   },
   {
     name: "Dr. Reem Hassan",
@@ -164,7 +166,7 @@ const doctors = [
     reviews: 178,
     fee: 260,
     image: "https://images.unsplash.com/photo-1527613426441-4da17471b66d?w=400&h=400&fit=crop&crop=face",
-    available: true
+    available: false
   },
   {
     name: "Dr. Khaled Mostafa",
@@ -176,7 +178,7 @@ const doctors = [
     reviews: 410,
     fee: 360,
     image: "https://images.unsplash.com/photo-1582750433449-648ed127bb54?w=400&h=400&fit=crop&crop=face",
-    available: true
+    available: false
   }
 ];
 
@@ -216,8 +218,8 @@ function ThemeToggle() {
     <button
       onClick={toggleTheme}
       className={`flex items-center justify-center w-10 h-10 rounded-full transition-all duration-300 ${isDark
-        ? 'bg-white/5 hover:bg-white/10 border border-white/10 text-white hover:text-amber-300'
-        : 'bg-amber-500 hover:bg-amber-400 border border-amber-500 text-black hover:text-black'
+        ? 'bg-white/5 hover:bg-white/10 border border-white/10 text-white hover:text-[#FD614B]'
+        : 'bg-[#044C87] hover:bg-[#033a68] border border-[#044C87] text-white shadow-sm'
         }`}
       aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
     >
@@ -258,8 +260,35 @@ export default function LandingPage() {
 
 function LandingPageContent() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [hoveredNavIdx, setHoveredNavIdx] = useState<number | null>(null);
+  const [clickedNavIdx, setClickedNavIdx] = useState<number | null>(null);
   const { t, isRTL, language } = useI18n();
   const { isDark } = useGlobalTheme();
+
+  const navItems = [
+    { href: "#how-it-works", label: t.nav.howItWorks },
+    { href: "#specialties", label: t.nav.specialties },
+    { href: "#doctors", label: t.nav.doctors },
+    { href: "#for-doctors", label: t.nav.forDoctors },
+  ];
+
+  const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string, idx: number) => {
+    setClickedNavIdx(idx);
+    setTimeout(() => setClickedNavIdx(null), 300);
+    if (href.startsWith("#")) {
+      e.preventDefault();
+      const element = document.querySelector(href);
+      if (element) {
+        const navOffset = 85;
+        const elementPosition = element.getBoundingClientRect().top + window.pageYOffset;
+        window.scrollTo({
+          top: elementPosition - navOffset,
+          behavior: "smooth",
+        });
+      }
+    }
+  };
+
   const mainSpecialties = [
     { key: 'general', nameEn: 'General Medicine', nameAr: 'طب عام', icon: SpecialtyIcons.general },
     { key: 'cardiology', nameEn: 'Cardiology', nameAr: 'أمراض القلب', icon: SpecialtyIcons.cardiology },
@@ -294,18 +323,76 @@ function LandingPageContent() {
               <LogoFull isDark={isDark} />
             </Link>
 
-            <div className="hidden lg:flex items-center gap-8">
-              <Link href="#how-it-works" className={`${textSecondary} hover:${textPrimary} transition-colors text-sm font-medium`}>{t.nav.howItWorks}</Link>
-              <Link href="#specialties" className={`${textSecondary} hover:${textPrimary} transition-colors text-sm font-medium`}>{t.nav.specialties}</Link>
-              <Link href="#doctors" className={`${textSecondary} hover:${textPrimary} transition-colors text-sm font-medium`}>{t.nav.doctors}</Link>
-              <Link href="#for-doctors" className={`${textSecondary} hover:${textPrimary} transition-colors text-sm font-medium`}>{t.nav.forDoctors}</Link>
+            {/* Desktop Navigation Links with Spring Pill & Click Ripple */}
+            <div
+              className="hidden lg:flex items-center gap-1 p-1 rounded-full bg-white/[0.03] dark:bg-white/[0.04] border border-white/[0.08] backdrop-blur-md relative"
+              onMouseLeave={() => setHoveredNavIdx(null)}
+            >
+              {navItems.map((item, idx) => {
+                const isHovered = hoveredNavIdx === idx;
+
+                return (
+                  <motion.a
+                    key={item.href}
+                    href={item.href}
+                    onClick={(e) => handleNavClick(e, item.href, idx)}
+                    onMouseEnter={() => setHoveredNavIdx(idx)}
+                    whileHover={{ y: -1 }}
+                    whileTap={{ scale: 0.92 }}
+                    transition={{ type: "spring", stiffness: 450, damping: 25 }}
+                    className={cn(
+                      "relative px-4 py-2 text-sm font-semibold rounded-full transition-colors duration-200 select-none cursor-pointer flex items-center justify-center",
+                      isHovered
+                        ? (isDark ? "text-white" : "text-[#08213D]")
+                        : (isDark ? "text-[#CBD5E1] hover:text-white" : "text-[#334E68] hover:text-[#042642]")
+                    )}
+                  >
+                    {/* Liquid Sliding Pill Background */}
+                    {isHovered && (
+                      <motion.span
+                        layoutId="nav-sliding-pill"
+                        className={cn(
+                          "absolute inset-0 rounded-full -z-10",
+                          isDark
+                            ? "bg-gradient-to-r from-white/[0.08] via-white/[0.13] to-white/[0.08] border border-white/15 shadow-[0_0_15px_rgba(253,97,75,0.22)]"
+                            : "bg-white border border-[#044C87]/15 shadow-sm"
+                        )}
+                        transition={{
+                          type: "spring",
+                          stiffness: 400,
+                          damping: 28,
+                        }}
+                      />
+                    )}
+
+                    {/* Micro Coral Glow Accent on Hover */}
+                    {isHovered && (
+                      <motion.span
+                        layoutId="nav-bottom-glow"
+                        className="absolute bottom-1 w-4 h-0.5 rounded-full bg-[#FD614B] shadow-[0_0_8px_#FD614B]"
+                        transition={{
+                          type: "spring",
+                          stiffness: 450,
+                          damping: 28,
+                        }}
+                      />
+                    )}
+
+                    <span className="relative z-10">{item.label}</span>
+                  </motion.a>
+                );
+              })}
             </div>
 
             <div className="hidden lg:flex items-center gap-3">
               <ThemeToggle />
               <LanguageToggle />
-              <Link href={`/${language}/login`} className={`${textSecondary} hover:${textPrimary} font-medium text-sm px-4 py-2 transition-colors`}>{t.nav.login}</Link>
-              <Link href={`/${language}/get-started`} className="bg-gradient-to-r from-[#FD614B] to-[#E84D37] hover:brightness-110 text-white font-semibold px-5 py-2.5 rounded-full transition-all shadow-lg shadow-[#FD614B]/30">{t.nav.getStarted}</Link>
+              <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.95 }} transition={{ type: "spring", stiffness: 400, damping: 22 }}>
+                <Link href={`/${language}/login`} className={`${textSecondary} hover:${textPrimary} font-medium text-sm px-4 py-2 transition-colors inline-block`}>{t.nav.login}</Link>
+              </motion.div>
+              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} transition={{ type: "spring", stiffness: 400, damping: 22 }}>
+                <Link href={`/${language}/get-started`} className="inline-block bg-gradient-to-r from-[#FD614B] to-[#E84D37] hover:brightness-110 text-white font-semibold px-5 py-2.5 rounded-full transition-all shadow-lg shadow-[#FD614B]/30">{t.nav.getStarted}</Link>
+              </motion.div>
             </div>
 
             <div className="flex lg:hidden items-center gap-2">
@@ -318,11 +405,25 @@ function LandingPageContent() {
 
           {mobileMenuOpen && (
             <div className={`lg:hidden py-4 border-t ${borderColor}`}>
-              <div className="flex flex-col gap-4">
-                <Link href="#how-it-works" onClick={() => setMobileMenuOpen(false)} className={`${textSecondary} hover:text-[#FD614B] py-2`}>{t.nav.howItWorks}</Link>
-                <Link href="#specialties" onClick={() => setMobileMenuOpen(false)} className={`${textSecondary} hover:text-[#FD614B] py-2`}>{t.nav.specialties}</Link>
-                <Link href="#doctors" onClick={() => setMobileMenuOpen(false)} className={`${textSecondary} hover:text-[#FD614B] py-2`}>{t.nav.doctors}</Link>
-                <Link href="#for-doctors" onClick={() => setMobileMenuOpen(false)} className={`${textSecondary} hover:text-[#FD614B] py-2`}>{t.nav.forDoctors}</Link>
+              <div className="flex flex-col gap-2">
+                {navItems.map((item, idx) => (
+                  <motion.a
+                    key={item.href}
+                    href={item.href}
+                    onClick={(e) => {
+                      setMobileMenuOpen(false);
+                      handleNavClick(e, item.href, idx);
+                    }}
+                    whileTap={{ scale: 0.96, x: isRTL ? -4 : 4 }}
+                    className={cn(
+                      "px-3 py-2.5 rounded-xl text-base font-medium transition-colors select-none",
+                      textSecondary,
+                      "hover:text-[#FD614B] hover:bg-white/5 active:bg-white/10"
+                    )}
+                  >
+                    {item.label}
+                  </motion.a>
+                ))}
                 <div className={`flex flex-col gap-3 pt-4 border-t ${borderColor}`}>
                   <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
                     <LanguageToggle />
@@ -409,7 +510,7 @@ function LandingPageContent() {
             <div className="relative hidden lg:block">
               <div className="relative w-full aspect-square max-w-lg mx-auto">
                 <div className={`absolute -top-4 -right-4 w-24 h-24 ${isDark ? 'bg-blue-500/20' : 'bg-blue-300/30'} rounded-2xl blur-xl`} />
-                <div className={`absolute -bottom-4 -left-4 w-32 h-32 ${isDark ? 'bg-amber-500/15' : 'bg-blue-200/40'} rounded-2xl blur-xl`} />
+                <div className={`absolute -bottom-4 -left-4 w-32 h-32 ${isDark ? 'bg-[#044C87]/20' : 'bg-blue-200/40'} rounded-2xl blur-xl`} />
                 <div className={`relative w-full h-full rounded-3xl overflow-hidden border-2 ${isDark ? 'border-blue-500/40 shadow-[0_0_35px_rgba(37,99,235,0.3)]' : 'border-blue-500/20 shadow-2xl shadow-blue-500/10'}`}>
                   <Image src="/hero-doctor-telehealth.png" alt="Doctor consultation" fill className="object-cover" priority />
                 </div>
@@ -617,7 +718,7 @@ function LandingPageContent() {
                 { number: isRTL ? "٥٠ ألف+" : "EGP 50K+", label: t.forDoctors.stat4, sublabel: t.forDoctors.stat4Sub },
               ].map((stat, idx) => (
                 <div key={idx} className={`rounded-2xl p-4 sm:p-6 text-center transition-all ${isDark ? 'bg-[#0B152B]/85 border border-blue-500/30' : 'bg-white border-2 border-blue-200 shadow-lg shadow-blue-100/50 hover:shadow-xl hover:shadow-blue-200/60 hover:border-blue-400'}`}>
-                  <div className="text-2xl sm:text-3xl font-black text-amber-400 mb-1">{stat.number}</div>
+                  <div className="text-2xl sm:text-3xl font-black text-[#FD614B] mb-1">{stat.number}</div>
                   <div className={`${textPrimary} font-medium text-sm`}>{stat.label}</div>
                   <div className={`${textMuted} text-xs`}>{stat.sublabel}</div>
                 </div>

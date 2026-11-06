@@ -74,7 +74,7 @@ const ProgressBar = ({ value, max, isDark = true }: { value: number; max: number
                 initial={{ width: 0 }}
                 animate={{ width: `${percentage}%` }}
                 transition={{ duration: 1, ease: "easeOut" }}
-                className="h-full rounded-full bg-gradient-to-r from-amber-500 to-amber-400"
+                className="h-full rounded-full bg-gradient-to-r from-[#044C87] to-[#FD614B]"
             />
         </div>
     );
@@ -233,7 +233,7 @@ export default function AnalyticsPage() {
                                                     initial={{ height: 0 }}
                                                     animate={{ height: `${Math.max(heightPercent, 2)}%` }}
                                                     transition={{ delay: idx * 0.05, duration: 0.5 }}
-                                                    className="w-full rounded-t-sm md:rounded-t-md bg-gradient-to-t from-amber-600 to-amber-400 hover:from-amber-500 hover:to-amber-300 transition-colors cursor-pointer"
+                                                    className="w-full rounded-t-sm md:rounded-t-md bg-gradient-to-t from-[#044C87] to-[#FD614B] hover:brightness-110 transition-colors cursor-pointer"
                                                     style={{ minHeight: '4px' }}
                                                 />
                                                 {/* Tooltip */}
@@ -295,7 +295,7 @@ export default function AnalyticsPage() {
                         </div>
                     </div>
                     {topDoctors.length > 0 ? (
-                        <div className="overflow-x-auto -mx-4 md:mx-0 scrollbar-thin scrollbar-thumb-amber-500/20 scrollbar-track-transparent">
+                        <div className="overflow-x-auto -mx-4 md:mx-0 scrollbar-thin scrollbar-thumb-[#044C87]/20 scrollbar-track-transparent">
                             <table className="w-full min-w-[500px]">
                                 <thead>
                                     <tr className={cn("border-b", isDark ? "border-white/5" : "border-gray-200")}>

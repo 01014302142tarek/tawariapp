@@ -283,7 +283,7 @@ export default function PrescriptionsPage({
                 </div>
                 <button
                     onClick={() => setShowCreateModal(true)}
-                    className="flex items-center justify-center gap-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-white font-semibold py-2 md:py-2.5 px-4 md:px-5 rounded-lg md:rounded-xl transition-all shadow-lg shadow-amber-500/20 text-sm md:text-base"
+                    className="flex items-center justify-center gap-2 bg-gradient-to-r from-[#FD614B] to-[#E84D37] hover:brightness-110 text-white font-semibold py-2 md:py-2.5 px-4 md:px-5 rounded-lg md:rounded-xl transition-all shadow-lg shadow-[#FD614B]/30 text-sm md:text-base"
                 >
                     {Icons.plus}
                     <span>{isRTL ? "وصفة جديدة" : "New Prescription"}</span>
@@ -297,7 +297,7 @@ export default function PrescriptionsPage({
                     className={cn(
                         "px-4 py-2.5 rounded-xl text-sm font-medium transition-all border",
                         activeTab === "prescriptions"
-                            ? "bg-[#FD614B] text-white border-[#FD614B] shadow-lg shadow-amber-500/20"
+                            ? "bg-[#FD614B] text-white border-[#FD614B] shadow-lg shadow-[#FD614B]/20"
                             : cn("border-transparent", isDark ? "bg-white/5 text-gray-400 hover:bg-white/10" : "bg-gray-100 text-gray-600 hover:bg-gray-200")
                     )}
                 >
@@ -308,7 +308,7 @@ export default function PrescriptionsPage({
                     className={cn(
                         "px-4 py-2.5 rounded-xl text-sm font-medium transition-all border relative",
                         activeTab === "renewals"
-                            ? "bg-[#FD614B] text-white border-[#FD614B] shadow-lg shadow-amber-500/20"
+                            ? "bg-[#FD614B] text-white border-[#FD614B] shadow-lg shadow-[#FD614B]/20"
                             : cn("border-transparent", isDark ? "bg-white/5 text-gray-400 hover:bg-white/10" : "bg-gray-100 text-gray-600 hover:bg-gray-200")
                     )}
                 >

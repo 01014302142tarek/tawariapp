@@ -325,7 +325,7 @@ export default function PreCallPage() {
                                     </div>
                                     <div className={cn("h-2 rounded-full overflow-hidden", isDark ? "bg-[#0D2C4F]" : "bg-gray-200")}>
                                         <motion.div
-                                            className="h-full bg-gradient-to-r from-amber-500 to-emerald-500"
+                                            className="h-full bg-gradient-to-r from-[#044C87] to-[#FD614B]"
                                             animate={{ width: `${audioLevel}%` }}
                                             transition={{ duration: 0.1 }}
                                         />
@@ -426,7 +426,7 @@ export default function PreCallPage() {
                                 className={cn(
                                     "w-full py-4 rounded-xl font-semibold text-lg transition-all",
                                     allDevicesReady
-                                        ? "bg-gradient-to-r from-amber-500 to-emerald-500 text-white hover:from-amber-600 hover:to-emerald-600 shadow-lg shadow-amber-500/25"
+                                        ? "bg-gradient-to-r from-[#044C87] to-[#FD614B] text-white hover:brightness-110 shadow-lg shadow-[#FD614B]/25"
                                         : isDark ? "bg-[#0D2C4F] text-gray-500 cursor-not-allowed" : "bg-gray-200 text-gray-400 cursor-not-allowed"
                                 )}
                             >

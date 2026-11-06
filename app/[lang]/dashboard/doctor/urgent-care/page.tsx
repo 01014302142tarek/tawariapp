@@ -9,7 +9,6 @@ import { useTheme } from "../context/ThemeContext";
 import { useI18n } from "@/app/i18n";
 import { useAuth } from "@/app/context/AuthContext";
 import {
-    toggleDoctorOnline,
     getDoctorQueueStatus,
     callNextPatient,
     startQueueConsultation,
@@ -17,6 +16,7 @@ import {
 } from "@/app/actions/queue";
 import { useDoctorQueue, useDoctorOnlineStatus } from "@/lib/hooks/useQueueRealtime";
 import { QueueChat } from "@/components/queue-chat";
+import { AnimatedNumber } from "@/components/ui/animated-number";
 
 // ============================================
 // Icons
@@ -161,7 +161,7 @@ const QueuePatientCard: React.FC<QueuePatientCardProps> = ({
                                 className="w-10 h-10 rounded-full object-cover"
                             />
                         ) : (
-                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-500 to-amber-600 flex items-center justify-center text-white font-medium">
+                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#044C87] to-[#FD614B] flex items-center justify-center text-white font-medium">
                                 {getInitials(entry.patient_name)}
                             </div>
                         )}
@@ -217,10 +217,13 @@ const QueuePatientCard: React.FC<QueuePatientCardProps> = ({
 
                 {/* Call Button (only for first in queue) */}
                 {isNext && (
-                    <button
+                    <motion.button
+                        whileHover={{ scale: 1.03, boxShadow: "0 0 15px rgba(253,97,75,0.4)" }}
+                        whileTap={{ scale: 0.95 }}
+                        transition={{ type: "spring", stiffness: 400, damping: 25 }}
                         onClick={onCall}
                         disabled={calling}
-                        className="px-4 py-2 bg-[#FD614B] text-white rounded-lg font-medium hover:bg-[#E84D37] transition-colors flex items-center gap-2 disabled:opacity-50"
+                        className="px-4 py-2 bg-[#FD614B] text-white rounded-lg font-medium hover:bg-[#E84D37] transition-all flex items-center gap-2 disabled:opacity-50 cursor-pointer"
                     >
                         {calling ? (
                             <>
@@ -233,7 +236,7 @@ const QueuePatientCard: React.FC<QueuePatientCardProps> = ({
                                 <span>{isRTL ? "استدعاء" : "Call"}</span>
                             </>
                         )}
-                    </button>
+                    </motion.button>
                 )}
             </div>
         </motion.div>
@@ -270,7 +273,7 @@ const CurrentConsultationCard: React.FC<CurrentConsultationProps> = ({
             <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
                     <span className="relative flex h-3 w-3">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75" />
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
                         <span className="relative inline-flex rounded-full h-3 w-3 bg-[#FD614B]" />
                     </span>
                     <span className="text-[#FD614B] font-semibold">
@@ -287,7 +290,7 @@ const CurrentConsultationCard: React.FC<CurrentConsultationProps> = ({
             </div>
 
             <div className="flex items-center gap-4 mb-6">
-                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-amber-500 to-amber-600 flex items-center justify-center text-white font-bold text-2xl">
+                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#044C87] to-[#FD614B] flex items-center justify-center text-white font-bold text-2xl">
                     {Icons.user}
                 </div>
                 <div>
@@ -314,10 +317,13 @@ const CurrentConsultationCard: React.FC<CurrentConsultationProps> = ({
                 </div>
             )}
 
-            <button
+            <motion.button
+                whileHover={{ scale: 1.02, boxShadow: "0 0 25px rgba(253,97,75,0.45)" }}
+                whileTap={{ scale: 0.97 }}
+                transition={{ type: "spring", stiffness: 400, damping: 25 }}
                 onClick={onStartCall}
                 disabled={starting}
-                className="w-full py-4 bg-[#FD614B] text-white rounded-xl font-semibold text-lg hover:bg-[#E84D37] transition-colors flex items-center justify-center gap-3 disabled:opacity-50"
+                className="w-full py-4 bg-[#FD614B] text-white rounded-xl font-semibold text-lg hover:bg-[#E84D37] transition-all flex items-center justify-center gap-3 disabled:opacity-50 cursor-pointer shadow-lg shadow-[#FD614B]/20"
             >
                 {starting ? (
                     <>
@@ -330,7 +336,7 @@ const CurrentConsultationCard: React.FC<CurrentConsultationProps> = ({
                         <span>{isRTL ? "بدء مكالمة الفيديو" : "Start Video Call"}</span>
                     </>
                 )}
-            </button>
+            </motion.button>
         </motion.div>
     );
 };
@@ -355,7 +361,6 @@ export default function DoctorUrgentCarePage() {
     const [doctorProfileId, setDoctorProfileId] = useState<string | null>(null);
     const [doctorMessagingProfileId, setDoctorMessagingProfileId] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
-    const [toggling, setToggling] = useState(false);
     const [calling, setCalling] = useState(false);
     const [startingCall, setStartingCall] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -485,30 +490,6 @@ export default function DoctorUrgentCarePage() {
         };
     }, [loadQueueStatus]);
 
-    // Handle toggle online status
-    const handleToggleOnline = async () => {
-        setToggling(true);
-        setError(null);
-        const newOnlineStatus = !isOnline;
-
-        try {
-            const result = await toggleDoctorOnline(newOnlineStatus);
-            if (!result.success) {
-                setError(result.error || (isRTL ? "حدث خطأ" : "An error occurred"));
-            } else {
-                // Update local state immediately for responsive UI
-                setIsOnline(newOnlineStatus);
-                // Refresh queue status (without showing loading spinner)
-                await loadQueueStatus(false);
-            }
-        } catch (err) {
-            console.error("Error toggling online status:", err);
-            setError(isRTL ? "حدث خطأ" : "An error occurred");
-        } finally {
-            setToggling(false);
-        }
-    };
-
     // Handle call next patient
     const handleCallNext = async () => {
         if (waitingPatients.length === 0) return;
@@ -615,86 +596,27 @@ export default function DoctorUrgentCarePage() {
                         </div>
                     </div>
 
-                    {/* Online Status */}
-                    <div className="flex items-center gap-2 text-sm">
-                        <div className={cn(
-                            "w-2 h-2 rounded-full",
-                            isOnline ? "bg-green-500" : "bg-red-500"
-                        )} />
-                        <span className={cn(isDark ? "text-slate-400" : "text-slate-600")}>
-                            {isOnline ? (isRTL ? "متصل" : "Online") : (isRTL ? "غير متصل" : "Offline")}
+                    {/* Online Status (Synced with Header) */}
+                    <div className={cn(
+                        "flex items-center gap-2 px-3.5 py-1.5 rounded-full border text-xs sm:text-sm font-semibold select-none",
+                        isOnline
+                            ? "bg-emerald-500/15 border-emerald-500/30 text-emerald-500 dark:text-emerald-400 shadow-sm"
+                            : "bg-rose-500/10 border-rose-500/30 text-rose-500 dark:text-rose-400 shadow-sm"
+                    )}>
+                        <span className="relative flex h-2.5 w-2.5">
+                            {isOnline && (
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                            )}
+                            <span className={cn(
+                                "relative inline-flex rounded-full h-2.5 w-2.5",
+                                isOnline ? "bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.8)]" : "bg-rose-500 shadow-[0_0_6px_rgba(244,63,94,0.8)]"
+                            )} />
+                        </span>
+                        <span className="whitespace-nowrap">
+                            {isOnline ? (isRTL ? "متصل الآن" : "Online") : (isRTL ? "غير متصل" : "Offline")}
                         </span>
                     </div>
                 </div>
-
-                {/* Online Toggle */}
-                <motion.button
-                    onClick={handleToggleOnline}
-                    disabled={toggling}
-                    className={cn(
-                        "w-full p-4 sm:p-6 rounded-2xl border-2 transition-all flex items-center justify-between gap-3",
-                        isOnline
-                            ? "bg-[#FD614B]/10 border-[#FD614B] hover:bg-[#FD614B]/20"
-                            : isDark
-                                ? "bg-[#0D2C4F]/50 border-[#044C87]/30 hover:border-[#FD614B]/50"
-                                : "bg-white border-gray-200 hover:border-[#FD614B]/50"
-                    )}
-                    whileTap={{ scale: 0.98 }}
-                >
-                    <div className="flex items-center gap-4">
-                        <div className={cn(
-                            "w-14 h-14 rounded-xl flex items-center justify-center transition-colors",
-                            isOnline
-                                ? "bg-[#FD614B] text-white"
-                                : isDark
-                                    ? "bg-slate-700 text-slate-400"
-                                    : "bg-gray-100 text-gray-400"
-                        )}>
-                            {toggling ? Icons.loading : Icons.power}
-                        </div>
-                        <div className="text-start">
-                            <p className={cn("text-xl font-bold", isDark ? "text-white" : "text-slate-900")}>
-                                {isOnline
-                                    ? (isRTL ? "أنت متصل الآن" : "You're Online")
-                                    : (isRTL ? "أنت غير متصل" : "You're Offline")}
-                            </p>
-                            <p className={cn(isDark ? "text-slate-400" : "text-slate-600")}>
-                                {isOnline
-                                    ? (isRTL ? "المرضى يمكنهم الانضمام إلى قائمتك" : "Patients can join your queue")
-                                    : (isRTL ? "اضغط للبدء في استقبال المرضى" : "Tap to start accepting patients")}
-                            </p>
-                        </div>
-                    </div>
-
-                    <motion.div
-                        className={cn(
-                            "w-16 h-8 rounded-full relative",
-                            isOnline ? "bg-[#FD614B]" : isDark ? "bg-slate-600" : "bg-gray-300"
-                        )}
-                        animate={{
-                            backgroundColor: isOnline
-                                ? "rgb(245, 158, 11)"
-                                : isDark
-                                    ? "rgb(71, 85, 105)"
-                                    : "rgb(209, 213, 219)"
-                        }}
-                        transition={{ duration: 0.3, ease: "easeInOut" }}
-                    >
-                        <motion.div
-                            className="absolute top-1 w-6 h-6 rounded-full bg-white shadow-lg"
-                            animate={{
-                                x: isOnline ? 32 : 4,
-                                scale: toggling ? 0.9 : 1
-                            }}
-                            transition={{
-                                type: "spring",
-                                stiffness: 300,
-                                damping: 25,
-                                mass: 0.8
-                            }}
-                        />
-                    </motion.div>
-                </motion.button>
             </div>
 
             {/* Error Message */}
@@ -727,7 +649,7 @@ export default function DoctorUrgentCarePage() {
                             </div>
                             <div>
                                 <p className={cn("text-2xl font-bold", isDark ? "text-white" : "text-slate-900")}>
-                                    {waitingPatients.length}
+                                    <AnimatedNumber value={waitingPatients.length} />
                                 </p>
                                 <p className={cn("text-sm", isDark ? "text-slate-400" : "text-slate-600")}>
                                     {isRTL ? "في الانتظار" : "In Queue"}
@@ -749,7 +671,7 @@ export default function DoctorUrgentCarePage() {
                             </div>
                             <div>
                                 <p className={cn("text-2xl font-bold", isDark ? "text-white" : "text-slate-900")}>
-                                    {todayStats.completed}
+                                    <AnimatedNumber value={todayStats.completed} delay={0.06} />
                                 </p>
                                 <p className={cn("text-sm", isDark ? "text-slate-400" : "text-slate-600")}>
                                     {isRTL ? "مكتمل اليوم" : "Completed Today"}
@@ -771,7 +693,7 @@ export default function DoctorUrgentCarePage() {
                             </div>
                             <div>
                                 <p className={cn("text-2xl font-bold", isDark ? "text-white" : "text-slate-900")}>
-                                    {todayStats.earnings}
+                                    <AnimatedNumber value={todayStats.earnings} delay={0.12} />
                                 </p>
                                 <p className={cn("text-sm", isDark ? "text-slate-400" : "text-slate-600")}>
                                     {isRTL ? "جنيه اليوم" : "EGP Today"}
@@ -806,14 +728,17 @@ export default function DoctorUrgentCarePage() {
                             {isRTL ? "قائمة الانتظار" : "Waiting Queue"}
                         </h2>
                         {waitingPatients.length > 0 && !currentPatient && (
-                            <button
+                            <motion.button
+                                whileHover={{ scale: 1.03, boxShadow: "0 0 15px rgba(253,97,75,0.4)" }}
+                                whileTap={{ scale: 0.95 }}
+                                transition={{ type: "spring", stiffness: 400, damping: 25 }}
                                 onClick={handleCallNext}
                                 disabled={calling}
-                                className="px-4 py-2 bg-[#FD614B] text-white rounded-lg font-medium hover:bg-[#E84D37] transition-colors flex items-center gap-2 disabled:opacity-50"
+                                className="px-4 py-2 bg-[#FD614B] text-white rounded-lg font-medium hover:bg-[#E84D37] transition-all flex items-center gap-2 disabled:opacity-50 cursor-pointer shadow-md shadow-[#FD614B]/20"
                             >
                                 {calling ? Icons.loading : Icons.phone}
                                 <span>{isRTL ? "استدعاء التالي" : "Call Next"}</span>
-                            </button>
+                            </motion.button>
                         )}
                     </div>
 
@@ -877,8 +802,8 @@ export default function DoctorUrgentCarePage() {
                     </h3>
                     <p className={cn("mb-6 max-w-md mx-auto", isDark ? "text-slate-400" : "text-slate-600")}>
                         {isRTL
-                            ? "قم بتشغيل حالة الاتصال في الأعلى لبدء استقبال المرضى في قائمة الانتظار الخاصة بك"
-                            : "Toggle the switch above to start accepting patients in your queue"}
+                            ? "يمكنك تفعيل الاتصال في أي وقت من زر 'متصل الآن' في الهيدر أعلى الصفحة لبدء استقبال المرضى"
+                            : "You can go online anytime using the 'Online' switch in the header above to start accepting patients"}
                     </p>
                 </div>
             )}

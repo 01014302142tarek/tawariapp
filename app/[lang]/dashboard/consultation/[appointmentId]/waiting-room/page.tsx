@@ -181,7 +181,7 @@ export default function WaitingRoomPage() {
                 isDark ? "bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-white" : "bg-gray-50 text-slate-900"
             )}>
                 <div className="text-center">
-                    <div className="animate-spin w-10 h-10 border-2 border-gray-400 border-t-amber-500 rounded-full mx-auto mb-4" />
+                    <div className="animate-spin w-10 h-10 border-2 border-gray-400 border-t-[#FD614B] rounded-full mx-auto mb-4" />
                     <p className={isDark ? "text-gray-400" : "text-gray-600"}>{isRTL ? "جاري التحميل..." : "Loading..."}</p>
                 </div>
             </div>
@@ -225,7 +225,7 @@ export default function WaitingRoomPage() {
                     <PulseRing delay={0.5} />
                     <PulseRing delay={1} />
                     <motion.div
-                        className="absolute inset-0 rounded-full bg-gradient-to-br from-amber-500/20 to-amber-600/20 flex items-center justify-center"
+                        className="absolute inset-0 rounded-full bg-gradient-to-br from-[#044C87]/20 to-[#FD614B]/20 flex items-center justify-center"
                         animate={{ scale: [1, 1.05, 1] }}
                         transition={{ duration: 2, repeat: Infinity }}
                     >
@@ -276,9 +276,9 @@ export default function WaitingRoomPage() {
                 {/* Tips */}
                 <div className={cn(
                     "p-4 rounded-xl border text-start mb-8",
-                    isDark ? "bg-[#FD614B]/10 border-[#FD614B]/30 text-gray-400" : "bg-[#FFF5F3] border-[#FFD0CA] text-amber-950"
+                    isDark ? "bg-[#FD614B]/10 border-[#FD614B]/30 text-gray-400" : "bg-[#FFF5F3] border-[#FFD0CA] text-slate-800"
                 )}>
-                    <h3 className={cn("font-medium mb-3 flex items-center gap-2", isDark ? "text-[#FD614B]" : "text-amber-900")}>
+                    <h3 className={cn("font-medium mb-3 flex items-center gap-2", isDark ? "text-[#FD614B]" : "text-slate-900")}>
                         <svg className="w-5 h-5 text-[#FD614B]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 18v-5.25m0 0a6.01 6.01 0 001.5-.189m-1.5.189a6.01 6.01 0 01-1.5-.189m3.75 7.478a12.06 12.06 0 01-4.5 0m3.75 2.383a14.406 14.406 0 01-3 0M14.25 18v-.192c0-.983.658-1.823 1.508-2.316a7.5 7.5 0 10-7.517 0c.85.493 1.509 1.333 1.509 2.316V18" />
                         </svg>
