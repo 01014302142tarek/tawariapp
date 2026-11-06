@@ -447,29 +447,70 @@ export async function signInWithGoogleAccount(input: {
         const role = input.role === "doctor" ? "doctor" : "patient";
         const fallbackPassword = `GoogleOAuth!${normalizedEmail.slice(0, 6)}#2025`;
 
+        const userMetadata = {
+            full_name:
+                input.fullName ||
+                normalizedEmail.split("@")[0].replace(/[._-]+/g, " "),
+            phone: input.phone || "+201000000000",
+            role,
+            avatar_url: input.avatarUrl,
+        };
+
         const { error: createError } = await adminClient.auth.admin.createUser({
             email: normalizedEmail,
             password: fallbackPassword,
             email_confirm: true,
-            user_metadata: {
-                full_name:
-                    input.fullName ||
-                    normalizedEmail.split("@")[0].replace(/[._-]+/g, " "),
-                phone: input.phone || "+201000000000",
-                role,
-                avatar_url: input.avatarUrl,
-            },
+            user_metadata: userMetadata,
         });
 
-        if (
-            createError &&
-            !createError.message.includes("already") &&
-            !createError.message.includes("exists")
-        ) {
-            return {
-                success: false,
-                error: createError.message,
-            };
+        if (createError) {
+            const alreadyExists = /already|exists|registered/i.test(
+                createError.message
+            );
+            if (!alreadyExists) {
+                console.error("[Auth] Google createUser failed:", createError.message);
+                return {
+                    success: false,
+                    error: createError.message,
+                };
+            }
+
+            let existingId: string | undefined;
+            for (let page = 1; page <= 5 && !existingId; page++) {
+                const { data: listed, error: listError } =
+                    await adminClient.auth.admin.listUsers({ page, perPage: 200 });
+                if (listError) {
+                    console.error("[Auth] Google listUsers failed:", listError.message);
+                    break;
+                }
+                existingId = listed.users.find(
+                    (user) => user.email?.toLowerCase() === normalizedEmail
+                )?.id;
+                if (!listed.nextPage) break;
+            }
+
+            if (!existingId) {
+                return {
+                    success: false,
+                    error: "Google account exists but could not be loaded for sign-in.",
+                };
+            }
+
+            const { error: updateError } = await adminClient.auth.admin.updateUserById(
+                existingId,
+                {
+                    password: fallbackPassword,
+                    email_confirm: true,
+                    user_metadata: userMetadata,
+                }
+            );
+            if (updateError) {
+                console.error("[Auth] Google updateUser failed:", updateError.message);
+                return {
+                    success: false,
+                    error: updateError.message,
+                };
+            }
         }
 
         const supabase = await createClient();
@@ -479,6 +520,7 @@ export async function signInWithGoogleAccount(input: {
         });
 
         if (signInError) {
+            console.error("[Auth] Google password sign-in failed:", signInError.message);
             return {
                 success: false,
                 error: signInError.message,

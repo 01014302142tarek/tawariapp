@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getGoogleOAuthRedirectUri, getPublicOrigin } from "@/lib/env";
 import { isSupabaseConfigured } from "@/lib/supabase/mock";
 
 export async function GET(request: NextRequest) {
@@ -11,18 +12,14 @@ export async function GET(request: NextRequest) {
     const googleClientSecret =
         process.env.GOOGLE_CLIENT_SECRET || process.env.CLIENT_SECRET || "";
 
-    const forwardedHost = request.headers.get("x-forwarded-host");
-    const forwardedProto = request.headers.get("x-forwarded-proto") || "https";
-    const origin = forwardedHost
-        ? `${forwardedProto.split(",")[0].trim()}://${forwardedHost.split(",")[0].trim()}`
-        : process.env.APP_URL?.replace(/\/$/, "") || new URL(request.url).origin;
+    const origin = getPublicOrigin(request);
 
     if (
         googleClientId.trim() &&
         googleClientSecret.trim() &&
         !googleClientId.includes("YOUR_")
     ) {
-        const redirectUri = `${origin}/auth/callback`;
+        const redirectUri = getGoogleOAuthRedirectUri();
         const statePayload = JSON.stringify({
             next,
             role,

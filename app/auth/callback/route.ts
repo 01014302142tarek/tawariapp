@@ -1,5 +1,6 @@
 import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { signInWithGoogleAccount } from "@/app/actions/auth";
+import { getGoogleOAuthRedirectUri, getPublicOrigin } from "@/lib/env";
 import { NextResponse } from "next/server";
 
 // Allowed redirect paths to prevent open redirect attacks
@@ -109,64 +110,89 @@ export async function GET(request: Request) {
             ? requestedNext
             : DEFAULT_REDIRECT;
 
-    const forwardedHost = request.headers.get("x-forwarded-host");
-    const forwardedProto = request.headers.get("x-forwarded-proto") || "https";
-    const resolvedOrigin = forwardedHost
-        ? `${forwardedProto.split(",")[0].trim()}://${forwardedHost.split(",")[0].trim()}`
-        : origin;
+    const resolvedOrigin = getPublicOrigin(request);
 
     if (code && directGoogle) {
         const googleClientId =
             process.env.GOOGLE_CLIENT_ID || process.env.CLIENT_ID || "";
         const googleClientSecret =
             process.env.GOOGLE_CLIENT_SECRET || process.env.CLIENT_SECRET || "";
+        const errorLang = next.startsWith("/en/") ? "en" : "ar";
+        const fail = (message: string) => {
+            const errUrl = new URL(`${resolvedOrigin}/${errorLang}/auth-code-error`);
+            errUrl.searchParams.set(
+                "error_description",
+                message.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim()
+            );
+            return NextResponse.redirect(errUrl);
+        };
 
-        if (googleClientId && googleClientSecret) {
-            try {
-                const redirectUri = `${resolvedOrigin}/auth/callback`;
-                const tokenRes = await fetch("https://oauth2.googleapis.com/token", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-                    body: new URLSearchParams({
-                        code,
-                        client_id: googleClientId.trim(),
-                        client_secret: googleClientSecret.trim(),
-                        redirect_uri: redirectUri,
-                        grant_type: "authorization_code",
-                    }),
-                });
+        if (!googleClientId || !googleClientSecret) {
+            return fail("Google OAuth is not configured on the server.");
+        }
 
-                if (tokenRes.ok) {
-                    const tokens = await tokenRes.json();
-                    const userRes = await fetch(
-                        "https://www.googleapis.com/oauth2/v2/userinfo",
-                        {
-                            headers: {
-                                Authorization: `Bearer ${tokens.access_token}`,
-                            },
-                        }
-                    );
-                    if (userRes.ok) {
-                        const googleUser = await userRes.json();
-                        if (googleUser?.email) {
-                            const result = await signInWithGoogleAccount({
-                                email: googleUser.email,
-                                fullName: googleUser.name,
-                                avatarUrl: googleUser.picture,
-                                role: preferredRole,
-                            });
-                            if (result.success) {
-                                return buildSuccessCompletionResponse(
-                                    next,
-                                    `${resolvedOrigin}${next}`
-                                );
-                            }
-                        }
-                    }
-                }
-            } catch (directErr) {
-                console.error("[AuthCallback] Direct Google OAuth exchange error:", directErr);
+        try {
+            const redirectUri = getGoogleOAuthRedirectUri();
+            const tokenRes = await fetch("https://oauth2.googleapis.com/token", {
+                method: "POST",
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                body: new URLSearchParams({
+                    code,
+                    client_id: googleClientId.trim(),
+                    client_secret: googleClientSecret.trim(),
+                    redirect_uri: redirectUri,
+                    grant_type: "authorization_code",
+                }),
+            });
+            const tokenPayload = await tokenRes.json().catch(() => ({}));
+            if (!tokenRes.ok || !tokenPayload.access_token) {
+                const lastTokenError =
+                    tokenPayload.error_description ||
+                    tokenPayload.error ||
+                    `Google token HTTP ${tokenRes.status}`;
+                console.error(
+                    "[AuthCallback] Google token exchange failed:",
+                    redirectUri,
+                    lastTokenError
+                );
+                return fail(String(lastTokenError));
             }
+            const tokens = tokenPayload as { access_token: string };
+
+            const userRes = await fetch(
+                "https://www.googleapis.com/oauth2/v2/userinfo",
+                {
+                    headers: {
+                        Authorization: `Bearer ${tokens.access_token}`,
+                    },
+                }
+            );
+            if (!userRes.ok) {
+                return fail("Could not load the Google account profile.");
+            }
+
+            const googleUser = await userRes.json();
+            if (!googleUser?.email) {
+                return fail("Google did not return an email address.");
+            }
+
+            const result = await signInWithGoogleAccount({
+                email: googleUser.email,
+                fullName: googleUser.name,
+                avatarUrl: googleUser.picture,
+                role: preferredRole,
+            });
+            if (result.success) {
+                return buildSuccessCompletionResponse(
+                    next,
+                    `${resolvedOrigin}${next}`
+                );
+            }
+
+            return fail(result.error || "Could not create a local session for this Google account.");
+        } catch (directErr) {
+            console.error("[AuthCallback] Direct Google OAuth exchange error:", directErr);
+            return fail("Google sign-in failed unexpectedly. Please try again.");
         }
     }
 

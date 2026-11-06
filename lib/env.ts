@@ -140,3 +140,71 @@ export function getEnvConfig() {
         isProduction: process.env.NODE_ENV === "production",
     };
 }
+
+function isPlaceholderUrl(value: string): boolean {
+    return /YOUR_|MY_APP_URL|example\.com/i.test(value);
+}
+
+function isUnusablePublicHost(originOrHost: string): boolean {
+    try {
+        const url = new URL(
+            originOrHost.includes("://") ? originOrHost : `http://${originOrHost}`
+        );
+        return url.hostname === "0.0.0.0" || url.hostname === "::" || url.hostname === "[::]";
+    } catch {
+        return true;
+    }
+}
+
+/** Canonical public origin for OAuth (no trailing slash). */
+export function getAppOrigin(): string {
+    const configured = (
+        process.env.NEXT_PUBLIC_APP_URL ||
+        process.env.NEXT_PUBLIC_SITE_URL ||
+        process.env.APP_URL ||
+        ""
+    )
+        .trim()
+        .replace(/\/$/, "");
+
+    if (configured && !isPlaceholderUrl(configured) && !isUnusablePublicHost(configured)) {
+        return configured;
+    }
+
+    return "http://localhost:3000";
+}
+
+/** Browser-safe origin. Never returns 0.0.0.0, which Chrome cannot open. */
+export function getPublicOrigin(request: Request): string {
+    const configured = getAppOrigin();
+    const requestOrigin = new URL(request.url).origin;
+    const forwardedHost = request.headers.get("x-forwarded-host")?.split(",")[0]?.trim();
+    const forwardedProto = request.headers.get("x-forwarded-proto")?.split(",")[0]?.trim();
+
+    let origin = requestOrigin;
+    if (forwardedHost) {
+        const isLocal =
+            forwardedHost.includes("localhost") || forwardedHost.startsWith("127.");
+        const proto = forwardedProto || (isLocal ? "http" : "https");
+        origin = `${proto}://${forwardedHost}`;
+    }
+
+    if (!origin || isUnusablePublicHost(origin)) {
+        return configured;
+    }
+
+    return origin.replace(/\/$/, "");
+}
+
+/**
+ * Exact Google OAuth redirect URI. Must match Google Cloud Console
+ * Authorized redirect URIs character-for-character.
+ */
+export function getGoogleOAuthRedirectUri(): string {
+    const explicit = process.env.GOOGLE_REDIRECT_URI?.trim();
+    if (explicit && !isPlaceholderUrl(explicit)) {
+        return explicit.replace(/\/$/, "");
+    }
+
+    return `${getAppOrigin()}/auth/callback`;
+}
