@@ -199,10 +199,29 @@ export function getPublicOrigin(request: Request): string {
 /**
  * Exact Google OAuth redirect URI. Must match Google Cloud Console
  * Authorized redirect URIs character-for-character.
+ * Production uses the live request origin so Vercel never sends localhost.
  */
-export function getGoogleOAuthRedirectUri(): string {
+export function getGoogleOAuthRedirectUri(request?: Request): string {
+    if (request) {
+        const origin = getPublicOrigin(request);
+        if (!/localhost|127\.0\.0\.1/.test(origin)) {
+            return `${origin}/auth/callback`;
+        }
+    }
+
+    if (process.env.VERCEL) {
+        const vercelHost = (
+            process.env.VERCEL_PROJECT_PRODUCTION_URL ||
+            process.env.VERCEL_URL ||
+            ""
+        ).replace(/^https?:\/\//, "");
+        if (vercelHost) {
+            return `https://${vercelHost}/auth/callback`;
+        }
+    }
+
     const explicit = process.env.GOOGLE_REDIRECT_URI?.trim();
-    if (explicit && !isPlaceholderUrl(explicit)) {
+    if (explicit && !isPlaceholderUrl(explicit) && !/localhost|127\.0\.0\.1/.test(explicit)) {
         return explicit.replace(/\/$/, "");
     }
 

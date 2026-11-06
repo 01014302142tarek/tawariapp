@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
         googleClientSecret.trim() &&
         !googleClientId.includes("YOUR_")
     ) {
-        const redirectUri = getGoogleOAuthRedirectUri();
+        const redirectUri = getGoogleOAuthRedirectUri(request);
         const statePayload = JSON.stringify({
             next,
             role,

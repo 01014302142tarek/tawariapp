@@ -132,7 +132,7 @@ export async function GET(request: Request) {
         }
 
         try {
-            const redirectUri = getGoogleOAuthRedirectUri();
+            const redirectUri = getGoogleOAuthRedirectUri(request);
             const tokenRes = await fetch("https://oauth2.googleapis.com/token", {
                 method: "POST",
                 headers: { "Content-Type": "application/x-www-form-urlencoded" },
