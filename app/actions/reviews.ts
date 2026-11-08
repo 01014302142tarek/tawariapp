@@ -75,7 +75,7 @@ export async function getReviewsForDoctor(
             *,
             patient:patient_profiles!reviews_patient_profile_id_fkey (
                 id,
-                profile:profiles (
+                profile:profiles!patient_profiles_profile_id_fkey (
                     full_name,
                     avatar_url
                 )
@@ -161,7 +161,7 @@ export async function getMyReviews(): Promise<{ reviews: ReviewWithDetails[]; er
             *,
             doctor:doctor_profiles!reviews_doctor_profile_id_fkey (
                 id,
-                profile:profiles (
+                profile:profiles!doctor_profiles_profile_id_fkey (
                     full_name,
                     avatar_url
                 )
@@ -195,14 +195,14 @@ export async function getReviewById(
             *,
             patient:patient_profiles!reviews_patient_profile_id_fkey (
                 id,
-                profile:profiles (
+                profile:profiles!patient_profiles_profile_id_fkey (
                     full_name,
                     avatar_url
                 )
             ),
             doctor:doctor_profiles!reviews_doctor_profile_id_fkey (
                 id,
-                profile:profiles (
+                profile:profiles!doctor_profiles_profile_id_fkey (
                     full_name,
                     avatar_url
                 )
@@ -698,7 +698,7 @@ export async function getDoctorReviews(options?: {
             *,
             patient:patient_profiles!reviews_patient_profile_id_fkey (
                 id,
-                profile:profiles (
+                profile:profiles!patient_profiles_profile_id_fkey (
                     full_name,
                     avatar_url
                 )
@@ -995,14 +995,14 @@ export async function getReviewsForModeration(options?: {
             *,
             patient:patient_profiles!reviews_patient_profile_id_fkey (
                 id,
-                profile:profiles (
+                profile:profiles!patient_profiles_profile_id_fkey (
                     full_name,
                     avatar_url
                 )
             ),
             doctor:doctor_profiles!reviews_doctor_profile_id_fkey (
                 id,
-                profile:profiles (
+                profile:profiles!doctor_profiles_profile_id_fkey (
                     full_name
                 )
             )

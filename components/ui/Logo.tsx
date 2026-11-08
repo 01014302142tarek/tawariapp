@@ -24,7 +24,7 @@ const sizeClasses = {
 };
 
 const iconSizeClasses = {
-    sm: "h-7 w-7",
+    sm: "h-full w-full",
     md: "h-9 w-9",
     lg: "h-11 w-11",
     xl: "h-14 w-14",
@@ -46,49 +46,56 @@ function MovingBorderFrame({
     return (
         <div
             className={cn(
-                "relative inline-flex items-center justify-center overflow-hidden group select-none",
-                compact ? "p-[1.5px] rounded-xl" : "p-[1.5px] rounded-2xl",
+                "relative inline-flex items-center justify-center group select-none",
+                compact ? "h-12 w-12 shrink-0 p-[1.5px]" : "p-[1.5px]",
                 className
             )}
         >
-            <motion.div
-                initial={{ rotate: 0 }}
-                animate={{ rotate: 360 }}
-                transition={{
-                    duration: 3.5,
-                    repeat: Infinity,
-                    ease: "linear",
-                }}
-                className={cn(
-                    "absolute pointer-events-none blur-[6px] opacity-70",
-                    compact ? "inset-[-80%]" : "inset-[-150%]"
-                )}
-                style={{
-                    background:
-                        "conic-gradient(from 0deg, transparent 0deg, transparent 270deg, rgba(253,97,75,0.4) 310deg, #FD614B 345deg, #FFA799 355deg, #FD614B 360deg)",
-                }}
-            />
-            <motion.div
-                initial={{ rotate: 0 }}
-                animate={{ rotate: 360 }}
-                transition={{
-                    duration: 3.5,
-                    repeat: Infinity,
-                    ease: "linear",
-                }}
-                className={cn(
-                    "absolute pointer-events-none",
-                    compact ? "inset-[-80%]" : "inset-[-150%]"
-                )}
-                style={{
-                    background:
-                        "conic-gradient(from 0deg, transparent 0deg, transparent 280deg, rgba(253,97,75,0.6) 320deg, #FD614B 350deg, #FFB5A8 358deg, #FD614B 360deg)",
-                }}
-            />
             <div
                 className={cn(
-                    "relative flex items-center justify-center backdrop-blur-xl transition-colors duration-300",
-                    compact ? "px-1 py-1 rounded-[10px]" : "px-3.5 py-1.5 rounded-[14px]",
+                    "absolute inset-0 overflow-hidden pointer-events-none",
+                    compact ? "rounded-[14px]" : "rounded-2xl"
+                )}
+            >
+                <motion.div
+                    initial={{ rotate: 0 }}
+                    animate={{ rotate: 360 }}
+                    transition={{
+                        duration: 3.5,
+                        repeat: Infinity,
+                        ease: "linear",
+                    }}
+                    className={cn(
+                        "absolute blur-[6px] opacity-70",
+                        compact ? "inset-[-80%]" : "inset-[-150%]"
+                    )}
+                    style={{
+                        background:
+                            "conic-gradient(from 0deg, transparent 0deg, transparent 270deg, rgba(253,97,75,0.4) 310deg, #FD614B 345deg, #FFA799 355deg, #FD614B 360deg)",
+                    }}
+                />
+                <motion.div
+                    initial={{ rotate: 0 }}
+                    animate={{ rotate: 360 }}
+                    transition={{
+                        duration: 3.5,
+                        repeat: Infinity,
+                        ease: "linear",
+                    }}
+                    className={cn(
+                        "absolute",
+                        compact ? "inset-[-80%]" : "inset-[-150%]"
+                    )}
+                    style={{
+                        background:
+                            "conic-gradient(from 0deg, transparent 0deg, transparent 280deg, rgba(253,97,75,0.6) 320deg, #FD614B 350deg, #FFB5A8 358deg, #FD614B 360deg)",
+                    }}
+                />
+            </div>
+            <div
+                className={cn(
+                    "relative z-10 flex items-center justify-center backdrop-blur-xl transition-colors duration-300 w-full h-full min-w-0",
+                    compact ? "rounded-[12px] p-[3px]" : "px-3.5 py-1.5 rounded-[14px]",
                     isDark
                         ? "bg-[#031326]/90 border border-white/10 group-hover:bg-[#061D38]"
                         : "bg-white/95 border border-slate-200/80 shadow-sm group-hover:bg-white"
@@ -121,18 +128,23 @@ export function LogoIcon({
         ? "/images/logo/tabibi_icon_dark.png"
         : "/images/logo/tabibi_icon_light.png";
 
+    const compact = size === "sm";
     const mark = (
         <motion.div
-            className={cn("relative inline-flex items-center justify-center flex-shrink-0 select-none", className)}
+            className={cn(
+                "relative inline-flex items-center justify-center flex-shrink-0 select-none",
+                compact && "h-full w-full",
+                className
+            )}
             animate={
-                animated
+                animated && !compact
                     ? {
                           scale: [1, 1, 1.045, 0.985, 1.055, 1, 1],
                       }
                     : undefined
             }
             transition={
-                animated
+                animated && !compact
                     ? {
                           duration: 3.4,
                           repeat: Infinity,
@@ -142,9 +154,9 @@ export function LogoIcon({
                       }
                     : undefined
             }
-            whileHover={{ scale: 1.08 }}
+            whileHover={compact ? undefined : { scale: 1.08 }}
         >
-            {animated && (
+            {animated && !compact && (
                 <motion.div
                     className="absolute inset-0 rounded-full bg-[#0C67B3]/25 blur-md pointer-events-none"
                     animate={{
@@ -164,7 +176,10 @@ export function LogoIcon({
             <img
                 src={iconSrc}
                 alt="Tabibi Icon"
-                className={cn("object-contain select-none relative z-10", iconSizeClasses[size])}
+                className={cn(
+                    "object-contain select-none relative z-10",
+                    compact ? "h-full w-full p-[1px]" : iconSizeClasses[size]
+                )}
                 loading="eager"
             />
         </motion.div>

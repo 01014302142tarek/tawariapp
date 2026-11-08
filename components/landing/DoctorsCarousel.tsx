@@ -78,7 +78,7 @@ export default function DoctorsCarousel({
 
     // Listen for doctor online/offline status changes in real-time
     const channel = supabase
-      .channel("public-doctors-carousel-status")
+      .channel(`public-doctors-carousel-status-${Math.random().toString(36).slice(2, 9)}`)
       .on(
         "postgres_changes",
         {

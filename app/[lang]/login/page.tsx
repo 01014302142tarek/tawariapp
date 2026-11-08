@@ -77,6 +77,10 @@ function InputField({
     placeholder,
     value,
     onChange,
+    name,
+    id,
+    required = false,
+    autoComplete,
     showPasswordToggle,
     showPassword,
     onTogglePassword,
@@ -88,6 +92,10 @@ function InputField({
     placeholder: string;
     value: string;
     onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+    name?: string;
+    id?: string;
+    required?: boolean;
+    autoComplete?: string;
     showPasswordToggle?: boolean;
     showPassword?: boolean;
     onTogglePassword?: () => void;
@@ -105,6 +113,10 @@ function InputField({
                 {icon}
             </span>
             <input
+                id={id}
+                name={name}
+                required={required}
+                autoComplete={autoComplete}
                 type={inputType}
                 placeholder={placeholder}
                 value={value}
@@ -259,6 +271,10 @@ function LoginPageContent() {
                         )}
 
                         <InputField
+                            id="login-email"
+                            name="email"
+                            required
+                            autoComplete="email"
                             icon={Icons.email}
                             type="email"
                             placeholder={text.email}
@@ -269,6 +285,10 @@ function LoginPageContent() {
                         />
 
                         <InputField
+                            id="login-password"
+                            name="password"
+                            required
+                            autoComplete="current-password"
                             icon={Icons.lock}
                             type="password"
                             placeholder={text.password}

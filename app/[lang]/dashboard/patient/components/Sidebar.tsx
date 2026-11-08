@@ -167,7 +167,7 @@ export default function Sidebar({ isMobileOpen, onClose }: { isMobileOpen?: bool
                 )}
             >
                 {/* Logo Area */}
-                <div className="h-[72px] flex items-center justify-center flex-shrink-0 px-2">
+                <div className="h-[72px] w-full flex items-center justify-center flex-shrink-0">
                     <Link
                         href="/"
                         className={cn(

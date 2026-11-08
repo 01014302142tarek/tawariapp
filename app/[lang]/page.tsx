@@ -397,14 +397,19 @@ function LandingPageContent() {
 
             <div className="flex lg:hidden items-center gap-2">
               <ThemeToggle />
-              <button className={`p-2 ${textSecondary} hover:${textPrimary}`} onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
+              <button
+                aria-label="Toggle mobile menu"
+                data-testid="mobile-menu-button"
+                className={`p-2 ${textSecondary} hover:${textPrimary}`}
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              >
                 {mobileMenuOpen ? Icons.close : Icons.menu}
               </button>
             </div>
           </div>
 
           {mobileMenuOpen && (
-            <div className={`lg:hidden py-4 border-t ${borderColor}`}>
+            <div data-testid="mobile-menu-drawer" className={`lg:hidden py-4 border-t ${borderColor}`}>
               <div className="flex flex-col gap-2">
                 {navItems.map((item, idx) => (
                   <motion.a

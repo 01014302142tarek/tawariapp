@@ -45,7 +45,7 @@ export function useOnlineDoctors(initialDoctors: OnlineDoctor[] = []) {
     useEffect(() => {
         const supabase = createClient();
         const channel: RealtimeChannel = supabase
-            .channel("online-doctors")
+            .channel(`online-doctors-${Math.random().toString(36).slice(2, 9)}`)
             .on(
                 "postgres_changes",
                 {
@@ -136,7 +136,7 @@ export function useDoctorQueue(doctorProfileId: string | null) {
 
         // Subscribe to changes
         const channel = supabase
-            .channel(`queue-${doctorProfileId}`)
+            .channel(`queue-${doctorProfileId}-${Math.random().toString(36).slice(2, 9)}`)
             .on(
                 "postgres_changes",
                 {
@@ -218,7 +218,7 @@ export function useMyQueuePosition(queueEntryId: string | null) {
 
         // Subscribe to changes
         const channel = supabase
-            .channel(`my-queue-${queueEntryId}`)
+            .channel(`my-queue-${queueEntryId}-${Math.random().toString(36).slice(2, 9)}`)
             .on(
                 "postgres_changes",
                 {
@@ -278,7 +278,7 @@ export function useDoctorOnlineStatus(doctorProfileId: string | null) {
 
         // Subscribe to changes
         const channel = supabase
-            .channel(`doctor-status-${doctorProfileId}`)
+            .channel(`doctor-status-${doctorProfileId}-${Math.random().toString(36).slice(2, 9)}`)
             .on(
                 "postgres_changes",
                 {
