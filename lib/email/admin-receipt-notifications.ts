@@ -1,11 +1,30 @@
 import { createServiceRoleClient } from "@/lib/supabase/server";
 import { sendEmail } from "./service";
 import { createNotification } from "@/app/actions/notifications";
+import { generateReceiptActionToken } from "@/lib/security/receipt-token";
 
 const ADMIN_EMAIL = "tbakr373@gmail.com";
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || process.env.APP_URL || "http://localhost:3000";
+
+function getBaseUrl(): string {
+    if (process.env.NEXT_PUBLIC_SITE_URL && !process.env.NEXT_PUBLIC_SITE_URL.includes("localhost")) {
+        return process.env.NEXT_PUBLIC_SITE_URL.replace(/\/$/, "");
+    }
+    if (process.env.NEXT_PUBLIC_APP_URL && !process.env.NEXT_PUBLIC_APP_URL.includes("localhost")) {
+        return process.env.NEXT_PUBLIC_APP_URL.replace(/\/$/, "");
+    }
+    if (process.env.VERCEL_PROJECT_PRODUCTION_URL) {
+        return `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL.replace(/\/$/, "")}`;
+    }
+    if (process.env.VERCEL_URL) {
+        return `https://${process.env.VERCEL_URL.replace(/\/$/, "")}`;
+    }
+    return (process.env.NEXT_PUBLIC_SITE_URL || process.env.APP_URL || "http://localhost:3000").replace(/\/$/, "");
+}
+
+const SITE_URL = getBaseUrl();
 
 export interface NewReceiptNotificationPayload {
+    transactionId?: string | null;
     appointmentId?: string | null;
     queueEntryId?: string | null;
     patientProfileId?: string | null;
@@ -31,7 +50,6 @@ export async function notifyAdminNewPaymentReceipt(payload: NewReceiptNotificati
         const methodLabelEn = payload.method === "instapay" ? "InstaPay" : payload.method === "wepay" ? "WE Pay" : payload.method;
         const patientName = payload.patientName || "مريض / Patient";
         const doctorName = payload.doctorName || "طبيب معتمد / Verified Doctor";
-        const reviewUrl = `${SITE_URL}/ar/dashboard/admin/appointments`;
 
         const serviceRole = await createServiceRoleClient();
 
@@ -152,7 +170,40 @@ export async function notifyAdminNewPaymentReceipt(payload: NewReceiptNotificati
             }
         }
 
-        // 4. Send Bilingual HTML Email to tbakr373@gmail.com
+        // 4. Generate One-Click Action Tokens for Direct Email Approval & Rejection
+        let txId = payload.transactionId;
+        if (!txId && (payload.appointmentId || payload.queueEntryId)) {
+            try {
+                let q = (serviceRole as any).from("transactions").select("id");
+                if (payload.appointmentId) q = q.eq("appointment_id", payload.appointmentId);
+                else if (payload.queueEntryId) q = q.eq("payment_details->>queue_entry_id", payload.queueEntryId);
+                const { data: foundTx } = await q.order("created_at", { ascending: false }).limit(1).single();
+                txId = foundTx?.id;
+            } catch (txLookupErr) {
+                console.warn("Could not find transaction id for quick token:", txLookupErr);
+            }
+        }
+
+        const approveToken = generateReceiptActionToken({
+            transactionId: txId || undefined,
+            appointmentId: payload.appointmentId || undefined,
+            queueEntryId: payload.queueEntryId || undefined,
+            action: "approve",
+        });
+
+        const rejectToken = generateReceiptActionToken({
+            transactionId: txId || undefined,
+            appointmentId: payload.appointmentId || undefined,
+            queueEntryId: payload.queueEntryId || undefined,
+            action: "reject",
+        });
+
+        const baseUrl = getBaseUrl();
+        const quickApproveUrl = `${baseUrl}/api/admin/receipts/quick-action?token=${approveToken}&action=approve`;
+        const quickRejectUrl = `${baseUrl}/api/admin/receipts/quick-action?token=${rejectToken}&action=reject`;
+        const reviewUrl = `${baseUrl}/ar/dashboard/admin/appointments`;
+
+        // 5. Send Bilingual HTML Email to tbakr373@gmail.com
         const emailHtml = `
 <!DOCTYPE html>
 <html dir="rtl" lang="ar">
@@ -171,7 +222,6 @@ export async function notifyAdminNewPaymentReceipt(payload: NewReceiptNotificati
         .info-row:last-child { border-bottom: none; }
         .label { color: #94a3b8; font-size: 14px; }
         .value { color: #ffffff; font-weight: bold; font-size: 14px; }
-        .btn { display: block; text-align: center; background: linear-gradient(135deg, #FD614B, #E84D37); color: #ffffff !important; padding: 14px 28px; border-radius: 12px; font-weight: bold; font-size: 16px; text-decoration: none; margin: 24px 0 12px 0; box-shadow: 0 4px 15px rgba(253,97,75,0.4); }
         .footer { text-align: center; color: #64748b; font-size: 12px; padding: 16px; border-top: 1px solid rgba(255,255,255,0.05); }
         .receipt-preview { text-align: center; margin: 16px 0; }
         .receipt-preview img { max-width: 100%; max-height: 350px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.15); }
@@ -233,10 +283,27 @@ export async function notifyAdminNewPaymentReceipt(payload: NewReceiptNotificati
                 `}
             </div>` : ""}
 
-            <a href="${reviewUrl}" class="btn">
-                فتح لوحة التحكم لمراجعة واعتماد الإيصال<br/>
-                <span style="font-size: 13px; font-weight: normal;">Open Dashboard to Review & Approve</span>
-            </a>
+            <!-- زر الموافقة الفوري المباشر من داخل الإيميل -->
+            <div style="text-align: center; margin: 28px 0 16px 0;">
+                <a href="${quickApproveUrl}" target="_blank" style="display: block; background: linear-gradient(135deg, #10b981, #059669); color: #ffffff !important; padding: 18px 24px; border-radius: 14px; font-weight: bold; font-size: 18px; text-decoration: none; box-shadow: 0 6px 20px rgba(16,185,129,0.35); border: 1px solid #34d399;">
+                    ✓ موافقة واعتماد الدفع فوراً بضغطة واحدة<br/>
+                    <span style="font-size: 13px; font-weight: normal; opacity: 0.95;">One-Click Instant Approval (No Login Required)</span>
+                </a>
+            </div>
+
+            <p style="text-align: center; color: #10b981; font-size: 13px; margin: 0 0 20px 0; background: rgba(16,185,129,0.08); padding: 10px 14px; border-radius: 8px; border: 1px solid rgba(16,185,129,0.2);">
+                ⚡ بمجرد الضغط على الزر الأخضر أعلاه، سيتم تأكيد الدفع فوراً وإشعار المريض والطبيب وفتح المكالمة مباشرة دون الحاجة لتسجيل الدخول للوحة الإدارة.
+            </p>
+
+            <!-- خيارات إضافية: رفض الإيصال أو فتح لوحة التحكم -->
+            <div style="text-align: center; margin-bottom: 24px;">
+                <a href="${quickRejectUrl}" target="_blank" style="display: inline-block; background: rgba(239,68,68,0.15); color: #f87171 !important; border: 1px solid rgba(239,68,68,0.4); padding: 10px 20px; border-radius: 10px; font-weight: bold; font-size: 13px; text-decoration: none; margin: 4px;">
+                    ✕ رفض الإيصال (Reject)
+                </a>
+                <a href="${reviewUrl}" target="_blank" style="display: inline-block; background: rgba(255,255,255,0.05); color: #94a3b8 !important; border: 1px solid rgba(255,255,255,0.15); padding: 10px 20px; border-radius: 10px; font-weight: bold; font-size: 13px; text-decoration: none; margin: 4px;">
+                    فتح لوحة التحكم (Dashboard)
+                </a>
+            </div>
         </div>
         <div class="footer">
             هذه الرسالة مرسلة تلقائياً إلى إدارة منصة طبيبي (${ADMIN_EMAIL})<br/>
@@ -276,7 +343,7 @@ export async function notifyAdminNewPaymentReceipt(payload: NewReceiptNotificati
             to: ADMIN_EMAIL,
             subject: `[طبيبي / Tabibi] إيصال دفع جديد بانتظار المراجعة - ${patientName} (${payload.amount} ج.م)`,
             html: emailHtml,
-            text: `إيصال دفع جديد بانتظار المراجعة من ${patientName} بمبلغ ${payload.amount} ج.م عبر ${methodLabelAr}. رابط المراجعة: ${reviewUrl}`,
+            text: `إيصال دفع جديد بانتظار المراجعة من ${patientName} بمبلغ ${payload.amount} ج.م عبر ${methodLabelAr}. رابط الاعتماد الفوري بضغطة واحدة: ${quickApproveUrl}`,
             attachments: attachments.length > 0 ? attachments : undefined,
         });
     } catch (err) {

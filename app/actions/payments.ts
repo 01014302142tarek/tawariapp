@@ -467,6 +467,7 @@ export async function submitManualTransferPayment(
         }
 
         notifyAdminNewPaymentReceipt({
+            transactionId,
             appointmentId: appointment.id,
             patientProfileId: profile.id,
             doctorProfileId: doctorUserProfId,
@@ -709,6 +710,7 @@ export async function submitUrgentCareManualPayment(
     // Notify Admin, Doctor, and Patient (In-App + Email to tbakr373@gmail.com)
     try {
         notifyAdminNewPaymentReceipt({
+            transactionId: newTx?.id,
             queueEntryId,
             appointmentId: urgentAppointmentId,
             patientProfileId: profile.id,
