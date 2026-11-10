@@ -3,6 +3,8 @@
 import { createClient, createServiceRoleClient } from "@/lib/supabase/server";
 import { notifyPaymentSuccess } from "./notifications";
 import { uploadPaymentReceipt } from "@/lib/supabase/storage";
+import { isValidEgyptianPhone, normalizeEgyptianPhone, isValidFullName } from "@/lib/validations/payment";
+import { joinDoctorQueue } from "./queue";
 import {
     getAuthToken,
     createOrder,
@@ -339,7 +341,26 @@ export async function submitManualTransferPayment(
         return { success: false, error: "Patient profile not found" };
     }
 
-    // 4. Fetch appointment
+    // 4. Validate inputs strictly
+    if (!input.receiptBase64) {
+        return { success: false, error: "صورة إيصال التحويل مطلوبة لتأكيد الدفع" };
+    }
+
+    if (!isValidFullName(input.senderName)) {
+        return {
+            success: false,
+            error: "يرجى كتابة اسم ثنائي أو ثلاثي صحيح لصاحب الحساب المحوّل منه (حروف فقط بدون أرقام أو رموز)",
+        };
+    }
+
+    if (!isValidEgyptianPhone(input.senderPhone)) {
+        return {
+            success: false,
+            error: "يرجى إدخال رقم هاتف محمول مصري صحيح مكون من 11 رقماً يبدأ بـ 010 أو 011 أو 012 أو 015",
+        };
+    }
+
+    // 5. Fetch appointment
     const { data: appointmentData } = await supabase
         .from("appointments")
         .select("id, consultation_fee, status, patient_profile_id, doctor_profile_id, scheduled_start")
@@ -363,21 +384,22 @@ export async function submitManualTransferPayment(
         return { success: false, error: "Unauthorized - Not your appointment" };
     }
 
-    // 5. Upload receipt screenshot
+    // 6. Upload receipt screenshot
     const uploadRes = await uploadPaymentReceipt(appointment.id, input.receiptBase64, input.receiptFileName);
     if (!uploadRes.url) {
         return { success: false, error: uploadRes.error || "Failed to upload payment receipt" };
     }
     const receiptUrl = uploadRes.url;
 
-    // 6. Record or update transaction using serviceRole to ensure complete persistence
+    // 7. Record or update transaction using serviceRole to ensure complete persistence
     const targetLabel = input.method === "instapay" ? "إنستا باي (InstaPay)" : "محفظة وي باي (WE Pay)";
+    const normalizedSenderPhone = normalizeEgyptianPhone(input.senderPhone!);
     const paymentDetails = {
         method: input.method,
         method_label_ar: targetLabel,
         target_phone: input.targetPhone, // "01014302142" or "01555952142"
-        sender_name: input.senderName?.trim() || profile.full_name,
-        sender_phone: input.senderPhone?.trim() || null,
+        sender_name: input.senderName!.trim(),
+        sender_phone: normalizedSenderPhone,
         receipt_url: receiptUrl,
         receipt_file_name: input.receiptFileName,
         submitted_at: new Date().toISOString(),
@@ -457,6 +479,233 @@ export async function submitManualTransferPayment(
         success: true,
         transactionId,
         appointmentId: appointment.id,
+        receiptUrl,
+    };
+}
+
+export interface SubmitUrgentCarePaymentInput {
+    doctorProfileId: string;
+    chiefComplaint?: string;
+    method: "instapay" | "wepay";
+    targetPhone: string;
+    senderName: string;
+    senderPhone: string;
+    receiptBase64: string;
+    receiptFileName: string;
+}
+
+export interface SubmitUrgentCarePaymentResult {
+    success: boolean;
+    queueEntryId?: string;
+    receiptUrl?: string;
+    error?: string;
+}
+
+/**
+ * Submit manual transfer payment (InstaPay or WE Pay) for Urgent Care consultation
+ */
+export async function submitUrgentCareManualPayment(
+    input: SubmitUrgentCarePaymentInput
+): Promise<SubmitUrgentCarePaymentResult> {
+    const supabase = await createClient();
+    const serviceRole = await createServiceRoleClient();
+
+    // 1. Authenticate user
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+        return { success: false, error: "Not authenticated" };
+    }
+
+    // 2. Fetch patient profile
+    const { data: profileData } = await supabase
+        .from("profiles")
+        .select("id, full_name, role")
+        .eq("user_id", user.id)
+        .single();
+
+    const profile = profileData as { id: string; full_name: string; role: string } | null;
+    if (!profile) {
+        return { success: false, error: "Profile not found" };
+    }
+
+    let patientProfileId: string | null = null;
+    const { data: patientProfileData } = await supabase
+        .from("patient_profiles")
+        .select("id")
+        .eq("profile_id", profile.id)
+        .single();
+
+    const existingPatient = patientProfileData as { id: string } | null;
+    if (existingPatient?.id) {
+        patientProfileId = existingPatient.id;
+    } else {
+        const { data: newPatient } = await (serviceRole as any)
+            .from("patient_profiles")
+            .insert({ profile_id: profile.id })
+            .select("id")
+            .single();
+        patientProfileId = (newPatient as { id: string } | null)?.id || null;
+    }
+
+    if (!patientProfileId) {
+        return { success: false, error: "Patient profile not found" };
+    }
+
+    // 3. Strict validation of inputs
+    if (!input.receiptBase64) {
+        return {
+            success: false,
+            error: "صورة إيصال التحويل مطلوبة لتأكيد الدفع",
+        };
+    }
+
+    if (!isValidFullName(input.senderName)) {
+        return {
+            success: false,
+            error: "يرجى كتابة اسم ثنائي أو ثلاثي صحيح لصاحب الحساب المحوّل منه (حروف فقط بدون أرقام أو رموز)",
+        };
+    }
+
+    if (!isValidEgyptianPhone(input.senderPhone)) {
+        return {
+            success: false,
+            error: "يرجى إدخال رقم هاتف محمول مصري صحيح مكون من 11 رقماً يبدأ بـ 010 أو 011 أو 012 أو 015",
+        };
+    }
+
+    // 4. Fetch doctor
+    const { data: doctorData } = await (serviceRole as any)
+        .from("doctor_profiles")
+        .select("id, is_online, consultation_fee")
+        .eq("id", input.doctorProfileId)
+        .single();
+
+    const doctor = doctorData as { id: string; is_online: boolean; consultation_fee: number } | null;
+    if (!doctor) {
+        return { success: false, error: "Doctor profile not found" };
+    }
+
+    if (!doctor.is_online) {
+        return { success: false, error: "Doctor is currently offline" };
+    }
+
+    const serviceFee = 10;
+    const totalAmount = (doctor.consultation_fee || 0) + serviceFee;
+
+    // 5. Join queue
+    const queueRes = await joinDoctorQueue({
+        doctorProfileId: doctor.id,
+        chiefComplaint: input.chiefComplaint?.trim() || undefined,
+        paymentAmount: totalAmount,
+    });
+
+    if (!queueRes.success || !queueRes.queueEntryId) {
+        return { success: false, error: queueRes.error || "Failed to join doctor queue" };
+    }
+
+    const queueEntryId = queueRes.queueEntryId;
+
+    // 6. Upload receipt screenshot
+    const uploadRes = await uploadPaymentReceipt(queueEntryId, input.receiptBase64, input.receiptFileName);
+    if (!uploadRes.url) {
+        return { success: false, error: uploadRes.error || "Failed to upload payment receipt" };
+    }
+    const receiptUrl = uploadRes.url;
+
+    // 7. Record transaction with serviceRole
+    const targetLabel = input.method === "instapay" ? "إنستا باي (InstaPay)" : "محفظة وي باي (WE Pay)";
+    const normalizedSenderPhone = normalizeEgyptianPhone(input.senderPhone);
+
+    const paymentDetails = {
+        method: input.method,
+        method_label_ar: targetLabel,
+        target_phone: input.targetPhone,
+        sender_name: input.senderName.trim(),
+        sender_phone: normalizedSenderPhone,
+        receipt_url: receiptUrl,
+        receipt_file_name: input.receiptFileName,
+        type: "urgent_care",
+        queue_entry_id: queueEntryId,
+        submitted_at: new Date().toISOString(),
+    };
+
+    // Also create initial urgent appointment record so it shows up in Admin Appointments immediately
+    let urgentAppointmentId: string | null = null;
+    try {
+        const { data: aptData } = await (serviceRole as any)
+            .from("appointments")
+            .insert({
+                patient_profile_id: patientProfileId,
+                doctor_profile_id: doctor.id,
+                scheduled_start: new Date().toISOString(),
+                scheduled_end: new Date(Date.now() + 30 * 60000).toISOString(),
+                status: "in_waiting_room",
+                appointment_type: "on_demand",
+                is_urgent: true,
+                consultation_fee: totalAmount,
+                chief_complaint: input.chiefComplaint?.trim() || null,
+            })
+            .select("id")
+            .single();
+
+        if (aptData?.id) {
+            urgentAppointmentId = aptData.id;
+            await (serviceRole as any)
+                .from("consultation_queue")
+                .update({ 
+                    appointment_id: urgentAppointmentId,
+                    payment_status: "completed"
+                })
+                .eq("id", queueEntryId);
+        }
+    } catch (e) {
+        console.warn("Could not create initial urgent appointment record:", e);
+    }
+
+    // Insert transaction
+    const { data: newTx, error: txError } = await (serviceRole as any)
+        .from("transactions")
+        .insert({
+            patient_profile_id: patientProfileId,
+            doctor_profile_id: doctor.id,
+            appointment_id: urgentAppointmentId,
+            amount: totalAmount,
+            currency: "EGP",
+            transaction_type: "consultation",
+            status: "completed",
+            payment_method: input.method,
+            payment_details: paymentDetails,
+        })
+        .select("id")
+        .single();
+
+    if (txError) {
+        console.error("Error creating urgent transaction:", txError);
+    }
+
+    // Record doctor earnings
+    if (urgentAppointmentId && newTx?.id) {
+        try {
+            const { grossAmount, platformFee, netAmount } = calculatePlatformFee(doctor.consultation_fee);
+            await (serviceRole as any)
+                .from("doctor_earnings")
+                .upsert({
+                    doctor_profile_id: doctor.id,
+                    appointment_id: urgentAppointmentId,
+                    transaction_id: newTx.id,
+                    gross_amount: grossAmount,
+                    platform_fee: platformFee,
+                    net_amount: netAmount,
+                    status: "available",
+                }, { onConflict: "appointment_id" });
+        } catch (err) {
+            console.warn("Error creating urgent doctor earnings:", err);
+        }
+    }
+
+    return {
+        success: true,
+        queueEntryId,
         receiptUrl,
     };
 }

@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { useI18n } from "@/app/i18n";
 import { GlowingCard } from "@/components/ui/glowing-card";
 import { initiateAppointmentPayment, submitManualTransferPayment } from "@/app/actions/payments";
+import { isValidFullName, isValidEgyptianPhone } from "@/lib/validations/payment";
 import { createClient } from "@/lib/supabase/client";
 import { useTheme } from "../dashboard/patient/context/ThemeContext";
 
@@ -116,6 +117,8 @@ function CheckoutPageContent() {
     // Transfer fields
     const [senderName, setSenderName] = useState("");
     const [senderPhone, setSenderPhone] = useState("");
+    const [nameTouched, setNameTouched] = useState(false);
+    const [phoneTouched, setPhoneTouched] = useState(false);
     const [receiptBase64, setReceiptBase64] = useState<string | null>(null);
     const [receiptFileName, setReceiptFileName] = useState<string>("");
     const [copiedNumber, setCopiedNumber] = useState<string | null>(null);
@@ -254,15 +257,41 @@ function CheckoutPageContent() {
         }
     };
 
+    // Validation state
+    const isNameValid = isValidFullName(senderName);
+    const isPhoneValid = isValidEgyptianPhone(senderPhone);
+    const canSubmit = Boolean(receiptBase64 && isNameValid && isPhoneValid);
+
     // Submit manual transfer payment (InstaPay or WE Pay)
     const handleManualSubmit = async () => {
         if (!appointment) return;
+
+        setNameTouched(true);
+        setPhoneTouched(true);
 
         if (!receiptBase64) {
             setError(
                 isRTL
                     ? "يرجى إرفاق صورة إيصال الدفع أو لقطة شاشة التحويل لتأكيد الحجز"
                     : "Please upload the payment receipt screenshot to confirm your booking"
+            );
+            return;
+        }
+
+        if (!isNameValid) {
+            setError(
+                isRTL
+                    ? "يرجى كتابة اسم ثنائي أو ثلاثي صحيح لصاحب الحساب المحوّل منه (حروف فقط بدون أرقام أو رموز)"
+                    : "Please enter a valid full name (letters only, at least 2 words)"
+            );
+            return;
+        }
+
+        if (!isPhoneValid) {
+            setError(
+                isRTL
+                    ? "يرجى إدخال رقم هاتف محمول مصري صحيح مكون من 11 رقماً يبدأ بـ 010 أو 011 أو 012 أو 015"
+                    : "Please enter a valid 11-digit Egyptian mobile number starting with 010, 011, 012, or 015"
             );
             return;
         }
@@ -277,8 +306,8 @@ function CheckoutPageContent() {
                 appointmentId: appointment.id,
                 method: paymentMethod as "instapay" | "wepay",
                 targetPhone,
-                senderName: senderName.trim() || undefined,
-                senderPhone: senderPhone.trim() || undefined,
+                senderName: senderName.trim(),
+                senderPhone: senderPhone.trim(),
                 receiptBase64,
                 receiptFileName: receiptFileName || `receipt-${Date.now()}.png`,
             });
@@ -706,41 +735,63 @@ function CheckoutPageContent() {
                         )}
                     </div>
 
-                    {/* Sender Details (Optional) */}
+                    {/* Sender Details (Required for Verification) */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-2">
                         <div>
-                            <label className={cn("block text-xs font-medium mb-1.5", isDark ? "text-gray-400" : "text-gray-600")}>
-                                {isRTL ? "اسم صاحب الحساب المحوّل منه (اختياري)" : "Sender Name (Optional)"}
+                            <label className={cn("block text-xs font-semibold mb-1.5", isDark ? "text-gray-300" : "text-slate-800")}>
+                                {isRTL ? "اسم صاحب الحساب المحوّل منه (مطلوب) *" : "Sender Full Name (Required) *"}
                             </label>
                             <input
                                 type="text"
                                 value={senderName}
-                                onChange={(e) => setSenderName(e.target.value)}
-                                placeholder={isRTL ? "الاسم كما في المحفظة" : "Account holder name"}
+                                onBlur={() => setNameTouched(true)}
+                                onChange={(e) => {
+                                    setSenderName(e.target.value);
+                                    if (!nameTouched) setNameTouched(true);
+                                }}
+                                placeholder={isRTL ? "مثال: محمد أحمد علي" : "e.g. Mohamed Ahmed"}
                                 className={cn(
                                     "w-full px-3.5 py-2.5 rounded-xl border text-sm outline-none transition-colors",
-                                    isDark
-                                        ? "bg-white/5 border-white/10 text-white placeholder-gray-500 focus:border-[#FD614B]/60"
-                                        : "bg-white border-slate-200 text-slate-900 placeholder-gray-400 focus:border-[#FD614B]"
+                                    nameTouched && !isNameValid
+                                        ? "border-red-500 bg-red-500/5 focus:border-red-500 text-red-500 placeholder-red-300"
+                                        : isDark
+                                            ? "bg-white/5 border-white/10 text-white placeholder-gray-500 focus:border-[#FD614B]/60"
+                                            : "bg-white border-slate-200 text-slate-900 placeholder-gray-400 focus:border-[#FD614B]"
                                 )}
                             />
+                            {nameTouched && !isNameValid && (
+                                <p className="text-[11px] text-red-500 mt-1">
+                                    {isRTL ? "يرجى كتابة اسم ثنائي أو ثلاثي صحيح (حروف فقط بدون أرقام أو رموز)" : "Please enter a valid full name (letters only, min 2 words)"}
+                                </p>
+                            )}
                         </div>
                         <div>
-                            <label className={cn("block text-xs font-medium mb-1.5", isDark ? "text-gray-400" : "text-gray-600")}>
-                                {isRTL ? "رقم الهاتف المحوّل منه (اختياري)" : "Sender Phone (Optional)"}
+                            <label className={cn("block text-xs font-semibold mb-1.5", isDark ? "text-gray-300" : "text-slate-800")}>
+                                {isRTL ? "رقم الهاتف المحوّل منه (مطلوب) *" : "Sender Phone Number (Required) *"}
                             </label>
                             <input
                                 type="tel"
                                 value={senderPhone}
-                                onChange={(e) => setSenderPhone(e.target.value)}
+                                onBlur={() => setPhoneTouched(true)}
+                                onChange={(e) => {
+                                    setSenderPhone(e.target.value);
+                                    if (!phoneTouched) setPhoneTouched(true);
+                                }}
                                 placeholder="01xxxxxxxxx"
                                 className={cn(
                                     "w-full px-3.5 py-2.5 rounded-xl border text-sm outline-none transition-colors font-mono",
-                                    isDark
-                                        ? "bg-white/5 border-white/10 text-white placeholder-gray-500 focus:border-[#FD614B]/60"
-                                        : "bg-white border-slate-200 text-slate-900 placeholder-gray-400 focus:border-[#FD614B]"
+                                    phoneTouched && !isPhoneValid
+                                        ? "border-red-500 bg-red-500/5 focus:border-red-500 text-red-500 placeholder-red-300"
+                                        : isDark
+                                            ? "bg-white/5 border-white/10 text-white placeholder-gray-500 focus:border-[#FD614B]/60"
+                                            : "bg-white border-slate-200 text-slate-900 placeholder-gray-400 focus:border-[#FD614B]"
                                 )}
                             />
+                            {phoneTouched && !isPhoneValid && (
+                                <p className="text-[11px] text-red-500 mt-1">
+                                    {isRTL ? "يرجى إدخال رقم هاتف مصري صحيح (11 رقماً يبدأ بـ 010 أو 011 أو 012 أو 015)" : "Valid 11-digit Egyptian phone starting with 010, 011, 012, or 015 required"}
+                                </p>
+                            )}
                         </div>
                     </div>
                 </GlowingCard>
@@ -762,11 +813,11 @@ function CheckoutPageContent() {
                 {/* Submit Action Button */}
                 <motion.button
                     onClick={handleManualSubmit}
-                    disabled={submitting || !receiptBase64}
+                    disabled={submitting || !canSubmit}
                     whileTap={{ scale: 0.98 }}
                     className={cn(
                         "w-full py-4 rounded-xl font-bold text-white transition-all flex items-center justify-center gap-3 text-base shadow-lg",
-                        submitting || !receiptBase64
+                        submitting || !canSubmit
                             ? "bg-gray-500/50 cursor-not-allowed opacity-70"
                             : "bg-gradient-to-r from-[#FD614B] via-[#E84D37] to-[#FD614B] hover:brightness-110 shadow-[#FD614B]/30"
                     )}
@@ -788,11 +839,11 @@ function CheckoutPageContent() {
                     )}
                 </motion.button>
 
-                {!receiptBase64 && (
+                {!canSubmit && (
                     <p className={cn("text-center text-xs mt-2.5", isDark ? "text-gray-400" : "text-gray-500")}>
                         {isRTL
-                            ? "💡 يرجى رفع صورة إيصال التحويل أعلاه لتفعيل زر تأكيد الحجز"
-                            : "💡 Please upload the transfer receipt screenshot above to enable booking confirmation"}
+                            ? "💡 يرجى رفع صورة إيصال التحويل، وكتابة اسم المحوّل ورقم هاتفه بشكل صحيح لتأكيد الحجز"
+                            : "💡 Please upload the transfer receipt and enter valid sender name and phone to confirm booking"}
                     </p>
                 )}
 

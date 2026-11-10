@@ -676,41 +676,50 @@ export async function endQueueConsultation(
     const endedAt = new Date();
     const durationMinutes = Math.round((endedAt.getTime() - startedAt.getTime()) / 60000);
 
-    // Create an appointment record FIRST for this urgent care consultation
+    // Create or update appointment record for this urgent care consultation
     // This enables reviews, prescription linking, and consultation history
-    // We do this BEFORE updating status so patient polling gets appointment_id with "completed" status
-    let appointmentId: string | null = null;
+    let appointmentId: string | null = queueEntry.appointment_id || null;
     try {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { data: appointmentData, error: appointmentError } = await (adminSupabase as any)
-            .from("appointments")
-            .insert({
-                patient_profile_id: queueEntry.patient_profile_id,
-                doctor_profile_id: queueEntry.doctor_profile_id,
-                // For urgent care, scheduled times are when patient was called/consultation started
-                scheduled_start: queueEntry.called_at || queueEntry.joined_at,
-                scheduled_end: endedAt.toISOString(), // Required NOT NULL field
-                actual_start: queueEntry.consultation_started_at,
-                actual_end: endedAt.toISOString(),
-                status: "completed",
-                // appointment_type only accepts 'scheduled' or 'on_demand', use on_demand for urgent care
-                appointment_type: "on_demand",
-                is_urgent: true, // Mark as urgent care
-                consultation_fee: queueEntry.payment_amount || 0, // Required NOT NULL field
-                chief_complaint: queueEntry.chief_complaint || null,
-            })
-            .select("id")
-            .single();
+        if (!appointmentId) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const { data: appointmentData, error: appointmentError } = await (adminSupabase as any)
+                .from("appointments")
+                .insert({
+                    patient_profile_id: queueEntry.patient_profile_id,
+                    doctor_profile_id: queueEntry.doctor_profile_id,
+                    scheduled_start: queueEntry.called_at || queueEntry.joined_at,
+                    scheduled_end: endedAt.toISOString(),
+                    actual_start: queueEntry.consultation_started_at,
+                    actual_end: endedAt.toISOString(),
+                    status: "completed",
+                    appointment_type: "on_demand",
+                    is_urgent: true,
+                    consultation_fee: queueEntry.payment_amount || 0,
+                    chief_complaint: queueEntry.chief_complaint || null,
+                })
+                .select("id")
+                .single();
 
-        if (appointmentError) {
-            console.error("Error creating appointment for urgent care:", appointmentError);
-            // Don't fail the whole operation, just log the error
+            if (appointmentError) {
+                console.error("Error creating appointment for urgent care:", appointmentError);
+            } else {
+                appointmentId = (appointmentData as { id: string })?.id;
+                console.log("Created appointment for urgent care:", appointmentId);
+            }
         } else {
-            appointmentId = (appointmentData as { id: string })?.id;
-            console.log("Created appointment for urgent care:", appointmentId);
+            // Update existing appointment created during manual payment
+            await (adminSupabase as any)
+                .from("appointments")
+                .update({
+                    status: "completed",
+                    actual_start: queueEntry.consultation_started_at,
+                    actual_end: endedAt.toISOString(),
+                })
+                .eq("id", appointmentId);
+            console.log("Updated existing urgent care appointment:", appointmentId);
         }
     } catch (err) {
-        console.error("Exception creating appointment for urgent care:", err);
+        console.error("Exception creating/updating appointment for urgent care:", err);
     }
 
     // Update queue entry with status AND appointment_id together to avoid race condition

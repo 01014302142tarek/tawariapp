@@ -1557,6 +1557,7 @@ export async function getAppointmentById(
         return { appointment: null, error: "Not authenticated" };
     }
 
+    let aptData: any = null;
     const { data, error } = await supabase
         .from("appointments")
         .select(`
@@ -1564,7 +1565,7 @@ export async function getAppointmentById(
             doctor_profiles (
                 id,
                 consultation_fee,
-                profiles (
+                profiles!doctor_profiles_profile_id_fkey (
                     id,
                     full_name,
                     avatar_url
@@ -1572,7 +1573,7 @@ export async function getAppointmentById(
             ),
             patient_profiles (
                 id,
-                profiles (
+                profiles!patient_profiles_profile_id_fkey (
                     id,
                     full_name,
                     avatar_url
@@ -1583,16 +1584,83 @@ export async function getAppointmentById(
         .single();
 
     if (error) {
-        console.error("getAppointmentById error:", error);
-        return { appointment: null, error: error.message };
+        // Fallback: If PostgREST embedding relationship error occurs, query entities directly
+        const { data: rawSimpleApt, error: simpleError } = await supabase
+            .from("appointments")
+            .select("*")
+            .eq("id", appointmentId)
+            .single();
+
+        const simpleApt = rawSimpleApt as any;
+        if (simpleError || !simpleApt) {
+            console.error("getAppointmentById error:", error);
+            return { appointment: null, error: error.message };
+        }
+
+        // Fetch doctor info
+        let doctorInfo: any = null;
+        if (simpleApt.doctor_profile_id) {
+            const { data: rawDocProfile } = await supabase
+                .from("doctor_profiles")
+                .select("id, profile_id, consultation_fee")
+                .eq("id", simpleApt.doctor_profile_id)
+                .single();
+
+            const docProfile = rawDocProfile as any;
+            if (docProfile) {
+                const { data: docUser } = await supabase
+                    .from("profiles")
+                    .select("id, full_name, avatar_url")
+                    .eq("id", docProfile.profile_id)
+                    .single();
+
+                doctorInfo = {
+                    id: docProfile.id,
+                    consultation_fee: docProfile.consultation_fee,
+                    profiles: docUser,
+                };
+            }
+        }
+
+        // Fetch patient info
+        let patientInfo: any = null;
+        if (simpleApt.patient_profile_id) {
+            const { data: rawPatProfile } = await supabase
+                .from("patient_profiles")
+                .select("id, profile_id")
+                .eq("id", simpleApt.patient_profile_id)
+                .single();
+
+            const patProfile = rawPatProfile as any;
+            if (patProfile) {
+                const { data: patUser } = await supabase
+                    .from("profiles")
+                    .select("id, full_name, avatar_url")
+                    .eq("id", patProfile.profile_id)
+                    .single();
+
+                patientInfo = {
+                    id: patProfile.id,
+                    profiles: patUser,
+                };
+            }
+        }
+
+        aptData = {
+            ...simpleApt,
+            doctor_profiles: doctorInfo,
+            patient_profiles: patientInfo,
+        };
+    } else {
+        aptData = data;
     }
 
-    if (!data) {
+    if (!aptData) {
         return { appointment: null, error: "Appointment not found" };
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const apt = data as any;
+    const apt = aptData as any;
     const appointment: AppointmentWithDetails = {
         ...apt,
         doctor: apt.doctor_profiles ? {
