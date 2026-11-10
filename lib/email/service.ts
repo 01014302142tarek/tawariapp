@@ -24,19 +24,23 @@ export interface EmailResult {
     error?: string;
 }
 
-// Initialize Resend client
-const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
-
-// Email sender address (uses onboarding@resend.dev for test/unverified domains, or custom domain if set)
-const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || "Tabibi <onboarding@resend.dev>";
+// Get Resend client instance
+function getResendClient(): Resend | null {
+    const key = process.env.RESEND_API_KEY;
+    if (!key || !key.trim()) return null;
+    return new Resend(key.trim());
+}
 
 /**
  * Send an email using Resend
  * Falls back to console logging if RESEND_API_KEY is not configured
  */
 export async function sendEmail(options: EmailOptions): Promise<EmailResult> {
+    const client = getResendClient();
+    const fromEmail = process.env.RESEND_FROM_EMAIL || "Tabibi <onboarding@resend.dev>";
+
     // If Resend is not configured, log to console (development mode)
-    if (!resend) {
+    if (!client) {
         console.log("[EMAIL SERVICE] Resend not configured, logging email:");
         console.log(`  To: ${options.to}`);
         console.log(`  Subject: ${options.subject}`);
@@ -48,8 +52,8 @@ export async function sendEmail(options: EmailOptions): Promise<EmailResult> {
     }
 
     try {
-        const { data, error } = await resend.emails.send({
-            from: FROM_EMAIL,
+        const { data, error } = await client.emails.send({
+            from: fromEmail,
             to: options.to,
             subject: options.subject,
             html: options.html,
