@@ -27,8 +27,8 @@ export interface EmailResult {
 // Initialize Resend client
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 
-// Email sender address (must be from verified domain)
-const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || "Tabibi <noreply@tabibi.com>";
+// Email sender address (uses onboarding@resend.dev for test/unverified domains, or custom domain if set)
+const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || "Tabibi <onboarding@resend.dev>";
 
 /**
  * Send an email using Resend
