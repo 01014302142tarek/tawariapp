@@ -691,7 +691,6 @@ export async function submitUrgentCareManualPayment(
         .from("transactions")
         .insert({
             patient_profile_id: patientProfileId,
-            doctor_profile_id: doctor.id,
             appointment_id: urgentAppointmentId,
             amount: totalAmount,
             currency: "EGP",
