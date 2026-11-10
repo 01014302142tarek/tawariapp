@@ -29,6 +29,18 @@ export interface AdminAppointment {
         avatar_url?: string;
         specialty?: string;
     };
+    payment?: {
+        id: string;
+        status: string;
+        paymentMethod: string | null;
+        amount: number;
+        receiptUrl?: string | null;
+        senderName?: string | null;
+        senderPhone?: string | null;
+        targetPhone?: string | null;
+        methodLabelAr?: string | null;
+        uploadedAt?: string | null;
+    } | null;
 }
 
 export interface AppointmentStats {
@@ -236,11 +248,30 @@ export async function getAdminAppointments(options?: {
         }
     }
 
+    // Fetch transactions with receipts for these appointments
+    const appointmentIds = (data || []).map((apt: any) => apt.id).filter(Boolean);
+    const transactionsMap = new Map<string, any>();
+    if (appointmentIds.length > 0) {
+        const { data: txData } = await supabase
+            .from("transactions")
+            .select("id, appointment_id, status, payment_method, amount, payment_details, created_at")
+            .in("appointment_id", appointmentIds);
+
+        if (txData) {
+            txData.forEach((tx: any) => {
+                if (tx.appointment_id) {
+                    transactionsMap.set(tx.appointment_id, tx);
+                }
+            });
+        }
+    }
+
     // Build appointments with all the data
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let appointments: AdminAppointment[] = (data || []).map((apt: any) => {
         const patientProfile = patientProfiles.get(apt.patient_profile_id);
         const doctorProfile = doctorProfiles.get(apt.doctor_profile_id);
+        const tx = transactionsMap.get(apt.id);
 
         return {
             id: apt.id,
@@ -263,6 +294,18 @@ export async function getAdminAppointments(options?: {
                 avatar_url: doctorProfile?.avatar_url,
                 specialty: doctorSpecialties.get(apt.doctor_profile_id) || undefined,
             },
+            payment: tx ? {
+                id: tx.id,
+                status: tx.status,
+                paymentMethod: tx.payment_method,
+                amount: Number(tx.amount) || 0,
+                receiptUrl: tx.payment_details?.receipt_url || null,
+                senderName: tx.payment_details?.sender_name || null,
+                senderPhone: tx.payment_details?.sender_phone || null,
+                targetPhone: tx.payment_details?.target_phone || null,
+                methodLabelAr: tx.payment_details?.method_label_ar || tx.payment_method,
+                uploadedAt: tx.payment_details?.submitted_at || tx.created_at,
+            } : null,
         };
     });
 

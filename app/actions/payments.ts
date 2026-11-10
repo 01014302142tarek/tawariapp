@@ -1,7 +1,8 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createServiceRoleClient } from "@/lib/supabase/server";
 import { notifyPaymentSuccess } from "./notifications";
+import { uploadPaymentReceipt } from "@/lib/supabase/storage";
 import {
     getAuthToken,
     createOrder,
@@ -278,6 +279,185 @@ export async function initiateAppointmentPayment(
         success: true,
         transactionId: transaction.id,
         paymentUrl,
+    };
+}
+
+export interface SubmitManualPaymentInput {
+    appointmentId: string;
+    method: "instapay" | "wepay";
+    targetPhone: string;
+    senderName?: string;
+    senderPhone?: string;
+    receiptBase64: string;
+    receiptFileName: string;
+}
+
+export interface SubmitManualPaymentResult {
+    success: boolean;
+    transactionId?: string;
+    appointmentId?: string;
+    receiptUrl?: string;
+    error?: string;
+}
+
+/**
+ * Submit manual transfer payment (InstaPay or WE Pay) with uploaded receipt image
+ */
+export async function submitManualTransferPayment(
+    input: SubmitManualPaymentInput
+): Promise<SubmitManualPaymentResult> {
+    const supabase = await createClient();
+    const serviceRole = await createServiceRoleClient();
+
+    // 1. Authenticate user
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+        return { success: false, error: "Not authenticated" };
+    }
+
+    // 2. Fetch patient profile
+    const { data: profileData } = await supabase
+        .from("profiles")
+        .select("id, full_name, role")
+        .eq("user_id", user.id)
+        .single();
+
+    const profile = profileData as { id: string; full_name: string; role: string } | null;
+    if (!profile) {
+        return { success: false, error: "Profile not found" };
+    }
+
+    // 3. Fetch patient profile record
+    const { data: patientProfileData } = await supabase
+        .from("patient_profiles")
+        .select("id")
+        .eq("profile_id", profile.id)
+        .single();
+
+    const patientProfile = patientProfileData as { id: string } | null;
+    if (!patientProfile) {
+        return { success: false, error: "Patient profile not found" };
+    }
+
+    // 4. Fetch appointment
+    const { data: appointmentData } = await supabase
+        .from("appointments")
+        .select("id, consultation_fee, status, patient_profile_id, doctor_profile_id, scheduled_start")
+        .eq("id", input.appointmentId)
+        .single();
+
+    const appointment = appointmentData as {
+        id: string;
+        consultation_fee: number;
+        status: string;
+        patient_profile_id: string;
+        doctor_profile_id: string;
+        scheduled_start: string;
+    } | null;
+
+    if (!appointment) {
+        return { success: false, error: "Appointment not found" };
+    }
+
+    if (appointment.patient_profile_id !== patientProfile.id) {
+        return { success: false, error: "Unauthorized - Not your appointment" };
+    }
+
+    // 5. Upload receipt screenshot
+    const uploadRes = await uploadPaymentReceipt(appointment.id, input.receiptBase64, input.receiptFileName);
+    if (!uploadRes.url) {
+        return { success: false, error: uploadRes.error || "Failed to upload payment receipt" };
+    }
+    const receiptUrl = uploadRes.url;
+
+    // 6. Record or update transaction using serviceRole to ensure complete persistence
+    const targetLabel = input.method === "instapay" ? "إنستا باي (InstaPay)" : "محفظة وي باي (WE Pay)";
+    const paymentDetails = {
+        method: input.method,
+        method_label_ar: targetLabel,
+        target_phone: input.targetPhone, // "01014302142" or "01555952142"
+        sender_name: input.senderName?.trim() || profile.full_name,
+        sender_phone: input.senderPhone?.trim() || null,
+        receipt_url: receiptUrl,
+        receipt_file_name: input.receiptFileName,
+        submitted_at: new Date().toISOString(),
+    };
+
+    // Check if an existing transaction exists for this appointment
+    const { data: existingTx } = await (serviceRole as any)
+        .from("transactions")
+        .select("id")
+        .eq("appointment_id", appointment.id)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .single();
+
+    let transactionId = existingTx?.id;
+
+    if (existingTx) {
+        await (serviceRole as any)
+            .from("transactions")
+            .update({
+                status: "completed",
+                payment_method: input.method,
+                payment_details: paymentDetails,
+                amount: appointment.consultation_fee,
+                updated_at: new Date().toISOString(),
+            })
+            .eq("id", existingTx.id);
+    } else {
+        const { data: newTx, error: txError } = await (serviceRole as any)
+            .from("transactions")
+            .insert({
+                patient_profile_id: patientProfile.id,
+                appointment_id: appointment.id,
+                amount: appointment.consultation_fee,
+                currency: "EGP",
+                transaction_type: "consultation",
+                status: "completed",
+                payment_method: input.method,
+                payment_details: paymentDetails,
+            })
+            .select("id")
+            .single();
+
+        if (txError) {
+            console.error("Error creating manual transaction:", txError);
+            return { success: false, error: "Failed to record transaction" };
+        }
+        transactionId = newTx?.id;
+    }
+
+    // 7. Record doctor earnings
+    const { grossAmount, platformFee, netAmount } = calculatePlatformFee(appointment.consultation_fee);
+    await (serviceRole as any)
+        .from("doctor_earnings")
+        .upsert({
+            doctor_profile_id: appointment.doctor_profile_id,
+            appointment_id: appointment.id,
+            transaction_id: transactionId,
+            gross_amount: grossAmount,
+            platform_fee: platformFee,
+            net_amount: netAmount,
+            status: "available",
+        }, { onConflict: "appointment_id" });
+
+    // 8. Notifications
+    try {
+        notifyPaymentSuccess(
+            profile.id,
+            appointment.consultation_fee,
+            transactionId
+        ).catch(() => {});
+    } catch {
+        // non-blocking
+    }
+
+    return {
+        success: true,
+        transactionId,
+        appointmentId: appointment.id,
+        receiptUrl,
     };
 }
 

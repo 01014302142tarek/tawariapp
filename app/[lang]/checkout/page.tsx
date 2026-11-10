@@ -1,25 +1,35 @@
 "use client";
 
-import React, { useState, useEffect, Suspense } from "react";
+import React, { useState, useEffect, useRef, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { motion } from "framer-motion";
+import Image from "next/image";
+import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useI18n } from "@/app/i18n";
 import { GlowingCard } from "@/components/ui/glowing-card";
-import { initiateAppointmentPayment } from "@/app/actions/payments";
+import { initiateAppointmentPayment, submitManualTransferPayment } from "@/app/actions/payments";
 import { createClient } from "@/lib/supabase/client";
 import { useTheme } from "../dashboard/patient/context/ThemeContext";
+
+// Target accounts specified by the user
+const INSTAPAY_NUMBER = "01014302142";
+const WEPAY_NUMBER = "01555952142";
 
 // Icons
 const Icons = {
     card: (
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
         </svg>
     ),
     wallet: (
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+        </svg>
+    ),
+    instapay: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
         </svg>
     ),
     lock: (
@@ -57,7 +67,29 @@ const Icons = {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
         </svg>
     ),
+    copy: (
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+        </svg>
+    ),
+    upload: (
+        <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+        </svg>
+    ),
+    trash: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+        </svg>
+    ),
+    sparkles: (
+        <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.286L13 21l-2.286-6.857L5 12l5.714-2.286L13 3z" />
+        </svg>
+    ),
 };
+
+type PaymentMethodType = "instapay" | "wepay" | "card";
 
 interface AppointmentDetails {
     id: string;
@@ -70,22 +102,32 @@ interface AppointmentDetails {
 function CheckoutPageContent() {
     const searchParams = useSearchParams();
     const router = useRouter();
-    const { isRTL } = useI18n();
+    const { isRTL, language } = useI18n();
     const { isDark } = useTheme();
 
     const appointmentId = searchParams.get("appointment");
 
     const [loading, setLoading] = useState(true);
-    const [processing, setProcessing] = useState(false);
+    const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [appointment, setAppointment] = useState<AppointmentDetails | null>(null);
-    const [paymentMethod, setPaymentMethod] = useState<"card" | "wallet">("card");
+    const [paymentMethod, setPaymentMethod] = useState<PaymentMethodType>("instapay");
+
+    // Transfer fields
+    const [senderName, setSenderName] = useState("");
+    const [senderPhone, setSenderPhone] = useState("");
+    const [receiptBase64, setReceiptBase64] = useState<string | null>(null);
+    const [receiptFileName, setReceiptFileName] = useState<string>("");
+    const [copiedNumber, setCopiedNumber] = useState<string | null>(null);
+    const [successBooking, setSuccessBooking] = useState(false);
+
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     // Load appointment details
     useEffect(() => {
         async function loadAppointment() {
             if (!appointmentId) {
-                setError(isRTL ? "لم يتم تحديد موعد" : "No appointment specified");
+                setError(isRTL ? "لم يتم تحديد موعد للدفع" : "No appointment specified");
                 setLoading(false);
                 return;
             }
@@ -124,7 +166,7 @@ function CheckoutPageContent() {
                 .eq("id", appointment.doctor_profile_id)
                 .single();
 
-            let doctorName = isRTL ? "طبيب" : "Doctor";
+            let doctorName = isRTL ? "طبيب متخصص" : "Doctor";
             if (doctorProfile) {
                 const { data: doctor } = await supabase
                     .from("profiles")
@@ -145,7 +187,7 @@ function CheckoutPageContent() {
                 .eq("is_primary", true)
                 .single();
 
-            let specialty = isRTL ? "طب عام" : "General Medicine";
+            let specialty = isRTL ? "استشارة طبية" : "Medical Consultation";
             if (specialization) {
                 const specData = specialization as { specialization: { name_en: string; name_ar: string } | null };
                 if (specData.specialization) {
@@ -166,27 +208,114 @@ function CheckoutPageContent() {
         loadAppointment();
     }, [appointmentId, isRTL]);
 
-    // Handle payment
-    const handlePayment = async () => {
+    // Handle copying phone number to clipboard
+    const handleCopy = (number: string) => {
+        navigator.clipboard.writeText(number);
+        setCopiedNumber(number);
+        setTimeout(() => {
+            setCopiedNumber(null);
+        }, 2500);
+    };
+
+    // Handle file selection
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        // Validate type
+        const validTypes = ["image/jpeg", "image/png", "image/webp", "image/jpg"];
+        if (!validTypes.includes(file.type)) {
+            setError(isRTL ? "يرجى رفع صورة بصيغة JPG أو PNG أو WebP فقط" : "Please upload a valid JPG, PNG, or WebP image");
+            return;
+        }
+
+        // Validate size (max 8MB)
+        if (file.size > 8 * 1024 * 1024) {
+            setError(isRTL ? "حجم الصورة كبير جداً، الحد الأقصى 8 ميجابايت" : "Image size is too large (max 8MB)");
+            return;
+        }
+
+        setError(null);
+        setReceiptFileName(file.name);
+
+        const reader = new FileReader();
+        reader.onload = () => {
+            setReceiptBase64(reader.result as string);
+        };
+        reader.readAsDataURL(file);
+    };
+
+    // Handle removing uploaded image
+    const handleRemoveImage = () => {
+        setReceiptBase64(null);
+        setReceiptFileName("");
+        if (fileInputRef.current) {
+            fileInputRef.current.value = "";
+        }
+    };
+
+    // Submit manual transfer payment (InstaPay or WE Pay)
+    const handleManualSubmit = async () => {
         if (!appointment) return;
 
-        setProcessing(true);
+        if (!receiptBase64) {
+            setError(
+                isRTL
+                    ? "يرجى إرفاق صورة إيصال الدفع أو لقطة شاشة التحويل لتأكيد الحجز"
+                    : "Please upload the payment receipt screenshot to confirm your booking"
+            );
+            return;
+        }
+
+        const targetPhone = paymentMethod === "instapay" ? INSTAPAY_NUMBER : WEPAY_NUMBER;
+
+        setSubmitting(true);
+        setError(null);
+
+        try {
+            const res = await submitManualTransferPayment({
+                appointmentId: appointment.id,
+                method: paymentMethod as "instapay" | "wepay",
+                targetPhone,
+                senderName: senderName.trim() || undefined,
+                senderPhone: senderPhone.trim() || undefined,
+                receiptBase64,
+                receiptFileName: receiptFileName || `receipt-${Date.now()}.png`,
+            });
+
+            if (res.success) {
+                setSuccessBooking(true);
+            } else {
+                setError(res.error || (isRTL ? "فشل تأكيد عملية الدفع" : "Failed to confirm payment"));
+            }
+        } catch (err: unknown) {
+            const message = err instanceof Error ? err.message : String(err);
+            console.error("Manual payment error:", message);
+            setError(isRTL ? "حدث خطأ غير متوقع أثناء إرسال الإيصال" : "An unexpected error occurred while submitting receipt");
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
+    // Handle legacy card payment fallback
+    const handleCardPayment = async () => {
+        if (!appointment) return;
+
+        setSubmitting(true);
         setError(null);
 
         try {
             const result = await initiateAppointmentPayment(appointment.id);
-
             if (result.success && result.paymentUrl) {
-                // Redirect to Paymob payment page
                 window.location.href = result.paymentUrl;
             } else {
-                setError(result.error || (isRTL ? "فشل في بدء الدفع" : "Failed to initiate payment"));
+                setError(result.error || (isRTL ? "فشل في بدء الدفع بالبطاقة" : "Failed to initiate card payment"));
             }
         } catch (err) {
             console.error("Payment error:", err);
-            setError(isRTL ? "حدث خطأ أثناء الدفع" : "An error occurred during payment");
+            setError(isRTL ? "حدث خطأ أثناء الاتصال ببوابة الدفع" : "An error occurred with payment gateway");
         } finally {
-            setProcessing(false);
+            setSubmitting(false);
         }
     };
 
@@ -215,11 +344,73 @@ function CheckoutPageContent() {
         return (
             <div className={cn("min-h-screen flex items-center justify-center", isDark ? "bg-[#031326]" : "bg-[#F4F8FC]")}>
                 <div className="text-center">
-                    <div className="w-16 h-16 border-4 border-[#044C87] border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+                    <div className="w-16 h-16 border-4 border-[#FD614B] border-t-transparent rounded-full animate-spin mx-auto mb-4" />
                     <p className={cn("text-lg", isDark ? "text-[#FEFDFE]" : "text-slate-900")}>
-                        {isRTL ? "جاري التحميل..." : "Loading..."}
+                        {isRTL ? "جاري تحميل تفاصيل الدفع..." : "Loading payment details..."}
                     </p>
                 </div>
+            </div>
+        );
+    }
+
+    // Success Screen after uploading receipt
+    if (successBooking) {
+        return (
+            <div className={cn("min-h-screen flex items-center justify-center p-4", isDark ? "bg-[#031326]" : "bg-[#F4F8FC]")}>
+                <motion.div
+                    initial={{ scale: 0.9, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    className="max-w-md w-full"
+                >
+                    <GlowingCard glowColor="coral" className="p-8 text-center" isDark={isDark}>
+                        <div className="w-20 h-20 rounded-full bg-emerald-500/20 text-emerald-500 flex items-center justify-center mx-auto mb-5 border-2 border-emerald-500/40">
+                            {Icons.check}
+                        </div>
+                        <h2 className={cn("text-2xl font-bold mb-2", isDark ? "text-white" : "text-slate-900")}>
+                            {isRTL ? "تم تأكيد الحجز بنجاح!" : "Booking Confirmed Successfully!"}
+                        </h2>
+                        <p className={cn("text-sm mb-6 leading-relaxed", isDark ? "text-gray-300" : "text-gray-600")}>
+                            {isRTL
+                                ? "تم استلام إيصال الدفع بنجاح وتسجيل حجزك مع الطبيب. يمكنك الآن متابعة تفاصيل موعدك ودخول غرفة الاستشارة في الوقت المحدد."
+                                : "Your payment receipt has been received and your appointment is confirmed. You can now view your appointment details and join the consultation at the scheduled time."}
+                        </p>
+
+                        <div className={cn("p-4 rounded-xl mb-6 text-start space-y-2 border", isDark ? "bg-white/5 border-white/10" : "bg-slate-50 border-slate-200")}>
+                            <div className="flex justify-between text-sm">
+                                <span className={isDark ? "text-gray-400" : "text-gray-600"}>{isRTL ? "الطبيب:" : "Doctor:"}</span>
+                                <span className={cn("font-medium", isDark ? "text-white" : "text-slate-900")}>{appointment?.doctorName}</span>
+                            </div>
+                            <div className="flex justify-between text-sm">
+                                <span className={isDark ? "text-gray-400" : "text-gray-600"}>{isRTL ? "التخصص:" : "Specialty:"}</span>
+                                <span className={cn("font-medium", isDark ? "text-white" : "text-slate-900")}>{appointment?.specialty}</span>
+                            </div>
+                            <div className="flex justify-between text-sm">
+                                <span className={isDark ? "text-gray-400" : "text-gray-600"}>{isRTL ? "طريقة الدفع:" : "Method:"}</span>
+                                <span className="font-semibold text-[#FD614B]">
+                                    {paymentMethod === "instapay" ? "إنستا باي (InstaPay)" : "محفظة وي باي (WE Pay)"}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div className="flex flex-col gap-3">
+                            <button
+                                onClick={() => router.push(`/${language}/dashboard/patient/appointments`)}
+                                className="w-full py-3.5 bg-gradient-to-r from-[#FD614B] to-[#E84D37] hover:brightness-110 text-white rounded-xl shadow-lg shadow-[#FD614B]/30 transition-all font-semibold"
+                            >
+                                {isRTL ? "الانتقال إلى قائمة مواعيدي" : "View My Appointments"}
+                            </button>
+                            <button
+                                onClick={() => router.push(`/${language}/dashboard/patient`)}
+                                className={cn(
+                                    "w-full py-3 rounded-xl border transition-all text-sm font-medium",
+                                    isDark ? "border-white/10 text-gray-300 hover:bg-white/5" : "border-gray-200 text-gray-700 hover:bg-gray-100"
+                                )}
+                            >
+                                {isRTL ? "العودة للوحة التحكم" : "Back to Dashboard"}
+                            </button>
+                        </div>
+                    </GlowingCard>
+                </motion.div>
             </div>
         );
     }
@@ -249,205 +440,390 @@ function CheckoutPageContent() {
 
     return (
         <div className={cn("min-h-screen py-8 px-4", isDark ? "bg-[#031326]" : "bg-[#F4F8FC]", isRTL && "rtl")}>
-            <div className="max-w-lg mx-auto">
+            <div className="max-w-xl mx-auto">
                 {/* Header */}
                 <div className="mb-6">
                     <button
                         onClick={() => router.back()}
-                        className={cn("flex items-center gap-2 transition-colors mb-4", isDark ? "text-gray-400 hover:text-white" : "text-gray-600 hover:text-gray-900")}
+                        className={cn("flex items-center gap-2 transition-colors mb-3 text-sm font-medium", isDark ? "text-gray-400 hover:text-white" : "text-gray-600 hover:text-gray-900")}
                     >
                         <span className={isRTL ? "rotate-180" : ""}>{Icons.back}</span>
                         <span>{isRTL ? "العودة" : "Back"}</span>
                     </button>
-                    <h1 className={cn("text-2xl font-bold", isDark ? "text-[#FEFDFE]" : "text-slate-900")}>
-                        {isRTL ? "إتمام الدفع" : "Complete Payment"}
+                    <h1 className={cn("text-2xl font-bold tracking-tight", isDark ? "text-[#FEFDFE]" : "text-slate-900")}>
+                        {isRTL ? "إتمام الدفع وتأكيد الحجز" : "Complete Payment & Confirm Booking"}
                     </h1>
-                    <p className={cn("mt-1", isDark ? "text-gray-400" : "text-gray-600")}>
-                        {isRTL ? "ادفع لتأكيد موعدك" : "Pay to confirm your appointment"}
+                    <p className={cn("mt-1 text-sm", isDark ? "text-gray-400" : "text-gray-600")}>
+                        {isRTL
+                            ? "ادفع رسوم الاستشارة عبر إنستا باي أو وي باي وارفع إيصال التحويل لتأكيد موعدك فوراً"
+                            : "Transfer the consultation fee via InstaPay or WE Pay and upload your receipt to confirm"}
                     </p>
                 </div>
 
                 {/* Appointment Summary */}
                 <GlowingCard glowColor="blue" className="p-5 mb-6" isDark={isDark}>
-                    <h3 className={cn("text-lg font-semibold mb-4", isDark ? "text-[#FEFDFE]" : "text-slate-900")}>
-                        {isRTL ? "تفاصيل الموعد" : "Appointment Details"}
+                    <h3 className={cn("text-base font-semibold mb-3 flex items-center gap-2", isDark ? "text-white" : "text-slate-900")}>
+                        <span className="text-[#FD614B]">{Icons.doctor}</span>
+                        {isRTL ? "تفاصيل الكشف والموعد" : "Appointment Details"}
                     </h3>
 
                     <div className="flex items-start gap-4 mb-4">
-                        <div className={cn("w-12 h-12 rounded-full flex items-center justify-center", isDark ? "bg-[#044C87]/20 text-[#044C87]" : "bg-[#044C87]/10 text-[#044C87]")}>
-                            {Icons.doctor}
+                        <div className={cn("w-12 h-12 rounded-xl flex items-center justify-center font-bold text-lg text-white shadow-md bg-gradient-to-br from-[#044C87] to-[#0C67B3]")}>
+                            {appointment.doctorName.charAt(0)}
                         </div>
-                        <div>
-                            <h4 className={cn("font-medium", isDark ? "text-[#FEFDFE]" : "text-slate-900")}>{appointment.doctorName}</h4>
+                        <div className="flex-1 min-w-0">
+                            <h4 className={cn("font-bold text-base truncate", isDark ? "text-[#FEFDFE]" : "text-slate-900")}>{appointment.doctorName}</h4>
                             <p className={cn("text-sm", isDark ? "text-gray-400" : "text-gray-600")}>{appointment.specialty}</p>
+                        </div>
+                        <div className="text-end">
+                            <div className="text-xl font-black text-[#FD614B]">
+                                {appointment.consultationFee.toFixed(0)} {isRTL ? "ج.م" : "EGP"}
+                            </div>
+                            <span className={cn("text-xs", isDark ? "text-gray-400" : "text-gray-500")}>
+                                {isRTL ? "رسوم الاستشارة" : "Consultation Fee"}
+                            </span>
                         </div>
                     </div>
 
-                    <div className={cn("space-y-3 pt-4 border-t", isDark ? "border-white/10" : "border-gray-200")}>
-                        <div className={cn("flex items-center gap-3", isDark ? "text-gray-300" : "text-gray-700")}>
+                    <div className={cn("grid grid-cols-2 gap-3 pt-3 border-t", isDark ? "border-white/10" : "border-gray-200")}>
+                        <div className={cn("flex items-center gap-2 text-sm", isDark ? "text-gray-300" : "text-gray-700")}>
                             <span className="text-[#FD614B]">{Icons.calendar}</span>
-                            <span>{formatDate(appointment.scheduledStart)}</span>
+                            <span className="truncate">{formatDate(appointment.scheduledStart)}</span>
                         </div>
-                        <div className={cn("flex items-center gap-3", isDark ? "text-gray-300" : "text-gray-700")}>
+                        <div className={cn("flex items-center gap-2 text-sm", isDark ? "text-gray-300" : "text-gray-700")}>
                             <span className="text-[#FD614B]">{Icons.clock}</span>
                             <span>{formatTime(appointment.scheduledStart)}</span>
                         </div>
                     </div>
                 </GlowingCard>
 
-                {/* Payment Method Selection */}
-                <GlowingCard glowColor="blue" className="p-5 mb-6" isDark={isDark}>
-                    <h3 className={cn("text-lg font-semibold mb-4", isDark ? "text-[#FEFDFE]" : "text-slate-900")}>
-                        {isRTL ? "طريقة الدفع" : "Payment Method"}
-                    </h3>
+                {/* Payment Method Selector */}
+                <GlowingCard glowColor="coral" className="p-5 mb-6" isDark={isDark}>
+                    <div className="flex items-center justify-between mb-4">
+                        <h3 className={cn("text-base font-bold", isDark ? "text-[#FEFDFE]" : "text-slate-900")}>
+                            {isRTL ? "طرق الدفع المتاحة" : "Available Payment Methods"}
+                        </h3>
+                        <span className="text-xs bg-[#FD614B]/15 text-[#FD614B] font-semibold px-2.5 py-1 rounded-full border border-[#FD614B]/30">
+                            {isRTL ? "تحويل مباشر" : "Direct Transfer"}
+                        </span>
+                    </div>
 
-                    <div className="space-y-3">
-                        {/* Credit/Debit Card */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-5">
+                        {/* InstaPay Option */}
                         <button
-                            onClick={() => setPaymentMethod("card")}
+                            type="button"
+                            onClick={() => setPaymentMethod("instapay")}
                             className={cn(
-                                "w-full flex items-center gap-4 p-4 rounded-xl border transition-all",
-                                paymentMethod === "card"
-                                    ? "border-[#FD614B] bg-[#FD614B]/10 shadow-[0_0_15px_rgba(253,97,75,0.2)]"
-                                    : isDark 
-                                        ? "border-white/10 bg-white/5 hover:border-[#044C87]/40"
-                                        : "border-slate-200 bg-slate-50 hover:border-[#044C87]/30"
-                            )}
-                        >
-                            <div className={cn(
-                                "w-10 h-10 rounded-full flex items-center justify-center",
-                                paymentMethod === "card" 
-                                    ? "bg-[#FD614B]/20 text-[#FD614B]" 
-                                    : isDark ? "bg-[#044C87]/15 text-[#044C87]" : "bg-[#044C87]/10 text-[#044C87]"
-                            )}>
-                                {Icons.card}
-                            </div>
-                            <div className="flex-1 text-start">
-                                <p className={cn("font-medium", isDark ? "text-[#FEFDFE]" : "text-slate-900")}>
-                                    {isRTL ? "بطاقة ائتمان/خصم" : "Credit/Debit Card"}
-                                </p>
-                                <p className={cn("text-sm", isDark ? "text-gray-400" : "text-gray-600")}>
-                                    Visa, Mastercard, Meeza
-                                </p>
-                            </div>
-                            {paymentMethod === "card" && (
-                                <span className="text-[#FD614B]">{Icons.check}</span>
-                            )}
-                        </button>
-
-                        {/* Mobile Wallet */}
-                        <button
-                            onClick={() => setPaymentMethod("wallet")}
-                            className={cn(
-                                "w-full flex items-center gap-4 p-4 rounded-xl border transition-all",
-                                paymentMethod === "wallet"
-                                    ? "border-[#FD614B] bg-[#FD614B]/10 shadow-[0_0_15px_rgba(253,97,75,0.2)]"
+                                "flex flex-col p-4 rounded-xl border text-start transition-all relative overflow-hidden",
+                                paymentMethod === "instapay"
+                                    ? "border-[#FD614B] bg-[#FD614B]/10 shadow-[0_0_15px_rgba(253,97,75,0.25)] ring-1 ring-[#FD614B]"
                                     : isDark
-                                        ? "border-white/10 bg-white/5 hover:border-[#044C87]/40"
-                                        : "border-slate-200 bg-slate-50 hover:border-[#044C87]/30"
+                                        ? "border-white/10 bg-white/5 hover:border-white/20"
+                                        : "border-slate-200 bg-white hover:border-slate-300"
                             )}
                         >
-                            <div className={cn(
-                                "w-10 h-10 rounded-full flex items-center justify-center",
-                                paymentMethod === "wallet" 
-                                    ? "bg-[#FD614B]/20 text-[#FD614B]" 
-                                    : isDark ? "bg-[#044C87]/15 text-[#044C87]" : "bg-[#044C87]/10 text-[#044C87]"
-                            )}>
-                                {Icons.wallet}
+                            <div className="flex items-center justify-between mb-2">
+                                <span className="font-bold text-sm text-[#FD614B] flex items-center gap-1.5">
+                                    {Icons.instapay}
+                                    {isRTL ? "إنستا باي (InstaPay)" : "InstaPay"}
+                                </span>
+                                {paymentMethod === "instapay" && (
+                                    <span className="text-[#FD614B]">{Icons.check}</span>
+                                )}
                             </div>
-                            <div className="flex-1 text-start">
-                                <p className={cn("font-medium", isDark ? "text-[#FEFDFE]" : "text-slate-900")}>
-                                    {isRTL ? "محفظة إلكترونية" : "Mobile Wallet"}
-                                </p>
-                                <p className={cn("text-sm", isDark ? "text-gray-400" : "text-gray-600")}>
-                                    Vodafone Cash, Orange Money, Etisalat Cash
-                                </p>
-                            </div>
-                            {paymentMethod === "wallet" && (
-                                <span className="text-[#FD614B]">{Icons.check}</span>
+                            <span className={cn("text-xs mb-1", isDark ? "text-gray-400" : "text-gray-600")}>
+                                {isRTL ? "متاح على رقم:" : "Available on:"}
+                            </span>
+                            <span className={cn("font-mono font-bold text-base tracking-wider", isDark ? "text-white" : "text-slate-900")}>
+                                {INSTAPAY_NUMBER}
+                            </span>
+                        </button>
+
+                        {/* WE Pay Option */}
+                        <button
+                            type="button"
+                            onClick={() => setPaymentMethod("wepay")}
+                            className={cn(
+                                "flex flex-col p-4 rounded-xl border text-start transition-all relative overflow-hidden",
+                                paymentMethod === "wepay"
+                                    ? "border-[#0C67B3] bg-[#0C67B3]/10 shadow-[0_0_15px_rgba(12,103,179,0.25)] ring-1 ring-[#0C67B3]"
+                                    : isDark
+                                        ? "border-white/10 bg-white/5 hover:border-white/20"
+                                        : "border-slate-200 bg-white hover:border-slate-300"
                             )}
+                        >
+                            <div className="flex items-center justify-between mb-2">
+                                <span className="font-bold text-sm text-[#0C67B3] flex items-center gap-1.5">
+                                    {Icons.wallet}
+                                    {isRTL ? "محفظة وي باي (WE Pay)" : "WE Pay Wallet"}
+                                </span>
+                                {paymentMethod === "wepay" && (
+                                    <span className="text-[#0C67B3]">{Icons.check}</span>
+                                )}
+                            </div>
+                            <span className={cn("text-xs mb-1", isDark ? "text-gray-400" : "text-gray-600")}>
+                                {isRTL ? "متاح على رقم:" : "Available on:"}
+                            </span>
+                            <span className={cn("font-mono font-bold text-base tracking-wider", isDark ? "text-white" : "text-slate-900")}>
+                                {WEPAY_NUMBER}
+                            </span>
                         </button>
                     </div>
-                </GlowingCard>
 
-                {/* Order Summary */}
-                <GlowingCard glowColor="blue" className="p-5 mb-6" isDark={isDark}>
-                    <h3 className={cn("text-lg font-semibold mb-4", isDark ? "text-[#FEFDFE]" : "text-slate-900")}>
-                        {isRTL ? "ملخص الطلب" : "Order Summary"}
-                    </h3>
+                    {/* Step-by-Step Payment Instructions */}
+                    <div className={cn(
+                        "p-4 rounded-xl border mb-5",
+                        paymentMethod === "instapay"
+                            ? isDark ? "bg-[#FD614B]/5 border-[#FD614B]/20" : "bg-orange-50/50 border-orange-200"
+                            : isDark ? "bg-[#0C67B3]/5 border-[#0C67B3]/20" : "bg-blue-50/50 border-blue-200"
+                    )}>
+                        <div className="flex items-center justify-between mb-3">
+                            <span className={cn("text-xs font-semibold uppercase tracking-wider", paymentMethod === "instapay" ? "text-[#FD614B]" : "text-[#0C67B3]")}>
+                                {paymentMethod === "instapay"
+                                    ? (isRTL ? "خطوات التحويل عبر إنستا باي" : "InstaPay Transfer Steps")
+                                    : (isRTL ? "خطوات التحويل عبر محفظة وي باي" : "WE Pay Transfer Steps")}
+                            </span>
+                            <button
+                                type="button"
+                                onClick={() => handleCopy(paymentMethod === "instapay" ? INSTAPAY_NUMBER : WEPAY_NUMBER)}
+                                className={cn(
+                                    "flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-medium transition-all",
+                                    copiedNumber === (paymentMethod === "instapay" ? INSTAPAY_NUMBER : WEPAY_NUMBER)
+                                        ? "bg-emerald-500 text-white"
+                                        : "bg-white/10 hover:bg-white/20 text-current border border-white/20"
+                                )}
+                            >
+                                {copiedNumber === (paymentMethod === "instapay" ? INSTAPAY_NUMBER : WEPAY_NUMBER) ? (
+                                    <>
+                                        {Icons.check}
+                                        <span>{isRTL ? "تم نسخ الرقم!" : "Copied!"}</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        {Icons.copy}
+                                        <span>{isRTL ? "نسخ الرقم" : "Copy Number"}</span>
+                                    </>
+                                )}
+                            </button>
+                        </div>
 
-                    <div className="space-y-3">
-                        <div className={cn("flex justify-between", isDark ? "text-gray-300" : "text-gray-700")}>
-                            <span>{isRTL ? "رسوم الاستشارة" : "Consultation Fee"}</span>
-                            <span>
-                                {appointment.consultationFee.toFixed(2)} {isRTL ? "ج.م" : "EGP"}
-                            </span>
+                        <div className="space-y-2 text-xs leading-relaxed">
+                            <p className={isDark ? "text-gray-300" : "text-gray-700"}>
+                                <strong>1. </strong>
+                                {paymentMethod === "instapay"
+                                    ? (isRTL ? "افتح تطبيق إنستا باي (InstaPay) على هاتفك." : "Open the InstaPay app on your phone.")
+                                    : (isRTL ? "افتح تطبيق محفظة وي باي (WE Pay) أو استخدم كود المحفظة." : "Open your WE Pay wallet app or USSD code.")}
+                            </p>
+                            <p className={isDark ? "text-gray-300" : "text-gray-700"}>
+                                <strong>2. </strong>
+                                {isRTL
+                                    ? `حوّل المبلغ المطلوب (${appointment.consultationFee.toFixed(0)} ج.م) إلى الرقم: `
+                                    : `Transfer the exact amount (${appointment.consultationFee.toFixed(0)} EGP) to: `}
+                                <span className="font-mono font-bold text-sm underline px-1 text-[#FD614B]">
+                                    {paymentMethod === "instapay" ? INSTAPAY_NUMBER : WEPAY_NUMBER}
+                                </span>
+                            </p>
+                            <p className={isDark ? "text-gray-300" : "text-gray-700"}>
+                                <strong>3. </strong>
+                                {isRTL
+                                    ? "التقط لقطة شاشة (Screenshot) لعملية التحويل الناجحة أو إيصال السداد."
+                                    : "Take a screenshot of the successful transfer or transaction receipt."}
+                            </p>
+                            <p className={isDark ? "text-gray-300" : "text-gray-700"}>
+                                <strong>4. </strong>
+                                {isRTL
+                                    ? "ارفع صورة الإيصال في الخانة أدناه واضغط 'تأكيد الدفع وإتمام الحجز'."
+                                    : "Upload the screenshot below and click 'Confirm Payment & Complete Booking'."}
+                            </p>
                         </div>
-                        <div className={cn("flex justify-between text-sm", isDark ? "text-gray-400" : "text-gray-600")}>
-                            <span>{isRTL ? "ضريبة القيمة المضافة (14%)" : "VAT (14%)"}</span>
-                            <span>
-                                {isRTL ? "مشمول" : "Included"}
-                            </span>
+                    </div>
+
+                    {/* Receipt Image Upload Area */}
+                    <div className="mb-4">
+                        <label className={cn("block text-xs font-semibold mb-2", isDark ? "text-gray-300" : "text-slate-800")}>
+                            {isRTL ? "صورة إيصال التحويل (مطلوبة) *" : "Payment Receipt Screenshot (Required) *"}
+                        </label>
+
+                        <input
+                            ref={fileInputRef}
+                            type="file"
+                            accept="image/png,image/jpeg,image/jpg,image/webp"
+                            onChange={handleFileChange}
+                            className="hidden"
+                        />
+
+                        {receiptBase64 ? (
+                            <div className={cn("relative p-3 rounded-xl border flex items-center gap-3", isDark ? "border-emerald-500/40 bg-emerald-500/10" : "border-emerald-300 bg-emerald-50")}>
+                                <div className="relative w-16 h-16 rounded-lg overflow-hidden border border-emerald-500/30 flex-shrink-0 bg-black/20">
+                                    <Image
+                                        src={receiptBase64}
+                                        alt="Receipt preview"
+                                        fill
+                                        className="object-cover"
+                                        unoptimized
+                                    />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <p className={cn("text-sm font-semibold truncate", isDark ? "text-white" : "text-slate-900")}>
+                                        {receiptFileName || "receipt.png"}
+                                    </p>
+                                    <p className="text-xs text-emerald-500 font-medium flex items-center gap-1 mt-0.5">
+                                        {Icons.check}
+                                        {isRTL ? "تم إرفاق الصورة بنجاح ومستعدة للإرسال" : "Receipt image ready to submit"}
+                                    </p>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={handleRemoveImage}
+                                    title={isRTL ? "حذف الصورة" : "Remove receipt"}
+                                    className="p-2 rounded-lg text-red-500 hover:bg-red-500/10 transition-colors"
+                                >
+                                    {Icons.trash}
+                                </button>
+                            </div>
+                        ) : (
+                            <div
+                                onClick={() => fileInputRef.current?.click()}
+                                className={cn(
+                                    "border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all flex flex-col items-center justify-center gap-2",
+                                    isDark
+                                        ? "border-white/15 bg-white/5 hover:border-[#FD614B]/60 hover:bg-[#FD614B]/5"
+                                        : "border-slate-300 bg-slate-50 hover:border-[#FD614B] hover:bg-orange-50/30"
+                                )}
+                            >
+                                <div className={cn("w-12 h-12 rounded-full flex items-center justify-center", isDark ? "bg-[#FD614B]/15 text-[#FD614B]" : "bg-orange-100 text-[#FD614B]")}>
+                                    {Icons.upload}
+                                </div>
+                                <div className="text-center">
+                                    <p className={cn("text-sm font-semibold", isDark ? "text-white" : "text-slate-900")}>
+                                        {isRTL ? "اضغط هنا لرفع صورة إيصال التحويل" : "Click to upload transfer receipt"}
+                                    </p>
+                                    <p className={cn("text-xs mt-1", isDark ? "text-gray-400" : "text-gray-500")}>
+                                        {isRTL ? "يدعم JPG, PNG, WebP (بحد أقصى 8 ميجابايت)" : "Supports JPG, PNG, WebP (max 8MB)"}
+                                    </p>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Sender Details (Optional) */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-2">
+                        <div>
+                            <label className={cn("block text-xs font-medium mb-1.5", isDark ? "text-gray-400" : "text-gray-600")}>
+                                {isRTL ? "اسم صاحب الحساب المحوّل منه (اختياري)" : "Sender Name (Optional)"}
+                            </label>
+                            <input
+                                type="text"
+                                value={senderName}
+                                onChange={(e) => setSenderName(e.target.value)}
+                                placeholder={isRTL ? "الاسم كما في المحفظة" : "Account holder name"}
+                                className={cn(
+                                    "w-full px-3.5 py-2.5 rounded-xl border text-sm outline-none transition-colors",
+                                    isDark
+                                        ? "bg-white/5 border-white/10 text-white placeholder-gray-500 focus:border-[#FD614B]/60"
+                                        : "bg-white border-slate-200 text-slate-900 placeholder-gray-400 focus:border-[#FD614B]"
+                                )}
+                            />
                         </div>
-                        <div className={cn("border-t pt-3 flex justify-between", isDark ? "border-white/10" : "border-gray-200")}>
-                            <span className={cn("font-semibold", isDark ? "text-[#FEFDFE]" : "text-slate-900")}>
-                                {isRTL ? "الإجمالي" : "Total"}
-                            </span>
-                            <span className="text-[#FD614B] font-bold text-lg">
-                                {appointment.consultationFee.toFixed(2)} {isRTL ? "ج.م" : "EGP"}
-                            </span>
+                        <div>
+                            <label className={cn("block text-xs font-medium mb-1.5", isDark ? "text-gray-400" : "text-gray-600")}>
+                                {isRTL ? "رقم الهاتف المحوّل منه (اختياري)" : "Sender Phone (Optional)"}
+                            </label>
+                            <input
+                                type="tel"
+                                value={senderPhone}
+                                onChange={(e) => setSenderPhone(e.target.value)}
+                                placeholder="01xxxxxxxxx"
+                                className={cn(
+                                    "w-full px-3.5 py-2.5 rounded-xl border text-sm outline-none transition-colors font-mono",
+                                    isDark
+                                        ? "bg-white/5 border-white/10 text-white placeholder-gray-500 focus:border-[#FD614B]/60"
+                                        : "bg-white border-slate-200 text-slate-900 placeholder-gray-400 focus:border-[#FD614B]"
+                                )}
+                            />
                         </div>
                     </div>
                 </GlowingCard>
 
-                {/* Error Message */}
+                {/* Error Banner */}
                 {error && (
                     <motion.div
                         initial={{ opacity: 0, y: -10 }}
                         animate={{ opacity: 1, y: 0 }}
                         className={cn("mb-6 p-4 rounded-xl", isDark ? "bg-red-500/10 border border-red-500/20" : "bg-red-50 border border-red-200")}
                     >
-                        <div className="flex gap-3 items-start">
+                        <div className="flex gap-3 items-center">
                             <span className={cn(isDark ? "text-red-500" : "text-red-600")}>{Icons.warning}</span>
-                            <p className={cn(isDark ? "text-red-400" : "text-red-700")}>{error}</p>
+                            <p className={cn("text-sm font-medium", isDark ? "text-red-400" : "text-red-700")}>{error}</p>
                         </div>
                     </motion.div>
                 )}
 
-                {/* Pay Button */}
+                {/* Submit Action Button */}
                 <motion.button
-                    onClick={handlePayment}
-                    disabled={processing}
+                    onClick={handleManualSubmit}
+                    disabled={submitting || !receiptBase64}
                     whileTap={{ scale: 0.98 }}
                     className={cn(
-                        "w-full py-4 rounded-xl font-semibold text-white transition-all flex items-center justify-center gap-3",
-                        processing
-                            ? "bg-gray-600 cursor-not-allowed"
-                            : "bg-gradient-to-r from-[#FD614B] to-[#E84D37] hover:brightness-110 text-white shadow-lg shadow-[#FD614B]/30"
+                        "w-full py-4 rounded-xl font-bold text-white transition-all flex items-center justify-center gap-3 text-base shadow-lg",
+                        submitting || !receiptBase64
+                            ? "bg-gray-500/50 cursor-not-allowed opacity-70"
+                            : "bg-gradient-to-r from-[#FD614B] via-[#E84D37] to-[#FD614B] hover:brightness-110 shadow-[#FD614B]/30"
                     )}
                 >
-                    {processing ? (
+                    {submitting ? (
                         <>
                             <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                            <span>{isRTL ? "جاري المعالجة..." : "Processing..."}</span>
+                            <span>{isRTL ? "جاري رفع الإيصال وتأكيد الحجز..." : "Submitting receipt & confirming..."}</span>
                         </>
                     ) : (
                         <>
-                            <span>{Icons.lock}</span>
+                            <span>{Icons.check}</span>
                             <span>
-                                {isRTL ? "ادفع الآن" : "Pay Now"} - {appointment.consultationFee.toFixed(2)} {isRTL ? "ج.م" : "EGP"}
+                                {isRTL
+                                    ? `تأكيد الدفع وإتمام الحجز (${appointment.consultationFee.toFixed(0)} ج.م)`
+                                    : `Confirm Payment & Complete Booking (${appointment.consultationFee.toFixed(0)} EGP)`}
                             </span>
                         </>
                     )}
                 </motion.button>
 
+                {!receiptBase64 && (
+                    <p className={cn("text-center text-xs mt-2.5", isDark ? "text-gray-400" : "text-gray-500")}>
+                        {isRTL
+                            ? "💡 يرجى رفع صورة إيصال التحويل أعلاه لتفعيل زر تأكيد الحجز"
+                            : "💡 Please upload the transfer receipt screenshot above to enable booking confirmation"}
+                    </p>
+                )}
+
+                {/* Alternative: Pay with Credit Card */}
+                <div className="mt-8 pt-6 border-t border-white/10 text-center">
+                    <p className={cn("text-xs mb-3", isDark ? "text-gray-400" : "text-gray-500")}>
+                        {isRTL ? "أو يمكنك الدفع مباشرة بالبطاقة البنكية:" : "Or pay directly with debit/credit card:"}
+                    </p>
+                    <button
+                        type="button"
+                        onClick={handleCardPayment}
+                        disabled={submitting}
+                        className={cn(
+                            "inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border text-xs font-semibold transition-all",
+                            isDark
+                                ? "border-white/15 bg-white/5 text-gray-300 hover:bg-white/10"
+                                : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+                        )}
+                    >
+                        {Icons.card}
+                        <span>{isRTL ? "الدفع بالفيزا / ماستركارد أونلاين" : "Pay with Visa / Mastercard"}</span>
+                    </button>
+                </div>
+
                 {/* Security Note */}
-                <p className={cn("text-center text-sm mt-4 flex items-center justify-center gap-2", isDark ? "text-gray-500" : "text-gray-600")}>
+                <p className={cn("text-center text-xs mt-6 flex items-center justify-center gap-1.5", isDark ? "text-gray-500" : "text-gray-500")}>
                     {Icons.lock}
                     <span>
                         {isRTL
-                            ? "مدفوعات آمنة مشفرة بواسطة Paymob"
-                            : "Secure encrypted payments powered by Paymob"}
+                            ? "جميع التحويلات والبيانات مشفرة ومحمية بالكامل"
+                            : "All transactions and data are fully encrypted and secure"}
                     </span>
                 </p>
             </div>
@@ -461,7 +837,7 @@ function CheckoutLoading() {
     return (
         <div className={cn("min-h-screen flex items-center justify-center", isDark ? "bg-[#031326]" : "bg-[#F4F8FC]")}>
             <div className="text-center">
-                <div className="w-16 h-16 border-4 border-[#044C87] border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+                <div className="w-16 h-16 border-4 border-[#FD614B] border-t-transparent rounded-full animate-spin mx-auto mb-4" />
                 <p className={cn("text-lg", isDark ? "text-[#FEFDFE]" : "text-slate-900")}>Loading...</p>
             </div>
         </div>

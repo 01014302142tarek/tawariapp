@@ -1,6 +1,6 @@
 "use server";
 
-import { createClient } from "./server";
+import { createClient, createServiceRoleClient } from "./server";
 
 // Maximum file sizes
 const MAX_AVATAR_SIZE = 5 * 1024 * 1024; // 5MB
@@ -727,4 +727,61 @@ export async function getChatAttachmentSignedUrl(
     }
 
     return { url: data.signedUrl };
+}
+
+/**
+ * Upload a payment receipt screenshot (for InstaPay / WE Pay manual transfers)
+ */
+export async function uploadPaymentReceipt(
+    appointmentId: string,
+    fileBase64: string,
+    fileName: string
+): Promise<{ url: string | null; error?: string }> {
+    const supabase = await createServiceRoleClient();
+
+    // Validate file extension
+    const ext = fileName.split(".").pop()?.toLowerCase();
+    if (!ext || !["jpg", "jpeg", "png", "webp"].includes(ext)) {
+        return { url: null, error: "Invalid file type. Only JPG, PNG, and WebP are allowed." };
+    }
+
+    // Convert base64 to buffer
+    const base64Data = fileBase64.replace(/^data:image\/\w+;base64,/, "");
+    const buffer = Buffer.from(base64Data, "base64");
+
+    // Validate file size (max 8MB)
+    if (!validateFileSize(buffer, 8 * 1024 * 1024)) {
+        return { url: null, error: "File too large. Maximum size is 8MB." };
+    }
+
+    // Validate file signature magic bytes
+    if (!validateFileContent(buffer, ext)) {
+        return { url: null, error: "Invalid image content. Please upload a valid image file." };
+    }
+
+    const fileId = crypto.randomUUID();
+    const filePath = `receipts/${appointmentId}/${fileId}.${ext}`;
+
+    try {
+        const { error: uploadError } = await (supabase as any).storage
+            .from("avatars")
+            .upload(filePath, buffer, {
+                contentType: `image/${ext === "jpg" ? "jpeg" : ext}`,
+                upsert: true,
+            });
+
+        if (!uploadError) {
+            const { data: { publicUrl } } = (supabase as any).storage
+                .from("avatars")
+                .getPublicUrl(filePath);
+
+            return { url: publicUrl };
+        }
+    } catch (err) {
+        console.warn("Storage upload exception, falling back to data URL:", err);
+    }
+
+    // Safe fallback: data URL so the receipt is never lost
+    const mime = ext === "jpg" ? "jpeg" : ext;
+    return { url: `data:image/${mime};base64,${base64Data}` };
 }

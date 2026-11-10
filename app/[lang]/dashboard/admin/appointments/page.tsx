@@ -71,6 +71,16 @@ const Icons = {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z" />
         </svg>
     ),
+    receipt: (
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z" />
+        </svg>
+    ),
+    externalLink: (
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+        </svg>
+    ),
 };
 
 const Badge = ({ variant, children }: { variant: string; children: React.ReactNode }) => {
@@ -102,6 +112,7 @@ export default function AdminAppointmentsPage() {
     const [totalAppointments, setTotalAppointments] = useState(0);
     const [currentPage, setCurrentPage] = useState(1);
     const [stats, setStats] = useState({ total: 0, scheduled: 0, completed: 0, cancelled: 0, no_show: 0 });
+    const [selectedReceiptAppointment, setSelectedReceiptAppointment] = useState<AdminAppointment | null>(null);
 
     // Debounce search input
     useEffect(() => {
@@ -452,6 +463,53 @@ export default function AdminAppointmentsPage() {
                                                 </div>
                                             </div>
                                         )}
+                                        {/* Payment / Receipt Information */}
+                                        {apt.payment && (
+                                            <div className={cn(
+                                                "p-3 rounded-xl border flex flex-wrap items-center justify-between gap-3 text-xs",
+                                                isDark ? "bg-[#044C87]/15 border-[#0C67B3]/30" : "bg-sky-50 border-sky-200"
+                                            )}>
+                                                <div className="flex items-center gap-2 flex-wrap">
+                                                    <span className="font-semibold text-emerald-500 flex items-center gap-1">
+                                                        {Icons.check}
+                                                        {language === "ar" ? "تفاصيل الدفع:" : "Payment:"}
+                                                    </span>
+                                                    <span className={cn("px-2.5 py-1 rounded-md font-bold text-xs", isDark ? "bg-white/10 text-white" : "bg-white text-slate-900 border border-slate-200")}>
+                                                        {apt.payment.methodLabelAr || (apt.payment.paymentMethod === "instapay" ? "إنستا باي (InstaPay)" : apt.payment.paymentMethod === "wepay" ? "وي باي (WE Pay)" : apt.payment.paymentMethod)}
+                                                    </span>
+                                                    {apt.payment.targetPhone && (
+                                                        <span className={cn("font-mono font-medium px-2 py-0.5 rounded", isDark ? "bg-black/30 text-gray-300" : "bg-white text-gray-700")}>
+                                                            {language === "ar" ? "الرقم المحوّل إليه:" : "Target:"} {apt.payment.targetPhone}
+                                                        </span>
+                                                    )}
+                                                    {apt.payment.senderName && (
+                                                        <span className={cn(isDark ? "text-gray-300" : "text-gray-700")}>
+                                                            • {language === "ar" ? "المحوّل:" : "Sender:"} <strong className="font-semibold">{apt.payment.senderName}</strong>
+                                                        </span>
+                                                    )}
+                                                    {apt.payment.senderPhone && (
+                                                        <span className={cn("font-mono", isDark ? "text-gray-400" : "text-gray-600")}>
+                                                            ({apt.payment.senderPhone})
+                                                        </span>
+                                                    )}
+                                                </div>
+
+                                                {apt.payment.receiptUrl ? (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setSelectedReceiptAppointment(apt)}
+                                                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r from-[#FD614B] to-[#E84D37] hover:brightness-110 text-white font-semibold transition-all shadow-sm"
+                                                    >
+                                                        {Icons.receipt}
+                                                        <span>{language === "ar" ? "عرض إيصال الدفع" : "View Receipt"}</span>
+                                                    </button>
+                                                ) : (
+                                                    <span className={cn("text-[11px] italic", isDark ? "text-gray-500" : "text-gray-400")}>
+                                                        {language === "ar" ? "لا يوجد إيصال مرفق" : "No receipt attached"}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        )}
                                     </div>
                                 </GlowingCard>
                             </motion.div>
@@ -546,6 +604,118 @@ export default function AdminAppointmentsPage() {
                         <p className={isDark ? "text-gray-400" : "text-gray-600"}>
                             {language === "ar" ? "حاول تعديل البحث أو الفلاتر" : "Try adjusting your search or filters"}
                         </p>
+                    </div>
+                )}
+                {/* Receipt Preview Modal */}
+                {selectedReceiptAppointment && selectedReceiptAppointment.payment && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.95 }}
+                            className={cn(
+                                "relative w-full max-w-xl max-h-[92vh] overflow-hidden rounded-2xl border shadow-2xl flex flex-col",
+                                isDark ? "bg-[#031326] border-white/15" : "bg-white border-slate-200"
+                            )}
+                        >
+                            {/* Modal Header */}
+                            <div className={cn("p-4 border-b flex items-center justify-between", isDark ? "border-white/10" : "border-slate-200")}>
+                                <div className="flex items-center gap-2">
+                                    <span className="text-[#FD614B]">{Icons.receipt}</span>
+                                    <h3 className={cn("font-bold text-base md:text-lg", isDark ? "text-white" : "text-slate-900")}>
+                                        {language === "ar" ? "إيصال التحويل - تأكيد الدفع" : "Payment Transfer Receipt"}
+                                    </h3>
+                                </div>
+                                <button
+                                    onClick={() => setSelectedReceiptAppointment(null)}
+                                    className={cn("p-1.5 rounded-lg transition-colors", isDark ? "hover:bg-white/10 text-gray-400" : "hover:bg-gray-100 text-gray-600")}
+                                >
+                                    {Icons.x}
+                                </button>
+                            </div>
+
+                            {/* Modal Body */}
+                            <div className="p-4 overflow-y-auto flex-1 space-y-4">
+                                {/* Image Preview */}
+                                <div className="relative w-full h-80 rounded-xl overflow-hidden border border-white/10 bg-black/40 flex items-center justify-center">
+                                    {selectedReceiptAppointment.payment.receiptUrl ? (
+                                        <Image
+                                            src={selectedReceiptAppointment.payment.receiptUrl}
+                                            alt="Receipt Screenshot"
+                                            fill
+                                            className="object-contain"
+                                            unoptimized
+                                        />
+                                    ) : (
+                                        <p className="text-gray-400 text-sm">{language === "ar" ? "لا توجد صورة متوفرة" : "No image available"}</p>
+                                    )}
+                                </div>
+
+                                {/* Transfer Details Card */}
+                                <div className={cn("p-4 rounded-xl space-y-2 text-sm border", isDark ? "bg-white/5 border-white/10" : "bg-slate-50 border-slate-200")}>
+                                    <div className="flex justify-between items-center">
+                                        <span className={isDark ? "text-gray-400" : "text-gray-600"}>{language === "ar" ? "طريقة الدفع:" : "Method:"}</span>
+                                        <span className="font-bold text-[#FD614B]">
+                                            {selectedReceiptAppointment.payment.methodLabelAr || selectedReceiptAppointment.payment.paymentMethod}
+                                        </span>
+                                    </div>
+                                    {selectedReceiptAppointment.payment.targetPhone && (
+                                        <div className="flex justify-between items-center">
+                                            <span className={isDark ? "text-gray-400" : "text-gray-600"}>{language === "ar" ? "الرقم المحوّل إليه:" : "Target Number:"}</span>
+                                            <span className="font-mono font-bold">{selectedReceiptAppointment.payment.targetPhone}</span>
+                                        </div>
+                                    )}
+                                    <div className="flex justify-between items-center">
+                                        <span className={isDark ? "text-gray-400" : "text-gray-600"}>{language === "ar" ? "قيمة الاستشارة:" : "Consultation Fee:"}</span>
+                                        <span className="font-bold text-emerald-500">
+                                            {formatCurrency(selectedReceiptAppointment.consultation_fee)}
+                                        </span>
+                                    </div>
+                                    {selectedReceiptAppointment.payment.senderName && (
+                                        <div className="flex justify-between items-center">
+                                            <span className={isDark ? "text-gray-400" : "text-gray-600"}>{language === "ar" ? "اسم المحوّل:" : "Sender Name:"}</span>
+                                            <span className="font-medium">{selectedReceiptAppointment.payment.senderName}</span>
+                                        </div>
+                                    )}
+                                    {selectedReceiptAppointment.payment.senderPhone && (
+                                        <div className="flex justify-between items-center">
+                                            <span className={isDark ? "text-gray-400" : "text-gray-600"}>{language === "ar" ? "رقم هاتف المحوّل:" : "Sender Phone:"}</span>
+                                            <span className="font-mono">{selectedReceiptAppointment.payment.senderPhone}</span>
+                                        </div>
+                                    )}
+                                    {selectedReceiptAppointment.payment.uploadedAt && (
+                                        <div className="flex justify-between items-center text-xs">
+                                            <span className={isDark ? "text-gray-400" : "text-gray-600"}>{language === "ar" ? "تاريخ الإرسال:" : "Submitted At:"}</span>
+                                            <span className="font-mono">{new Date(selectedReceiptAppointment.payment.uploadedAt).toLocaleString(language === "ar" ? "ar-EG" : "en-US")}</span>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Modal Footer */}
+                            <div className={cn("p-4 border-t flex items-center justify-between gap-3", isDark ? "border-white/10" : "border-slate-200")}>
+                                {selectedReceiptAppointment.payment.receiptUrl && (
+                                    <a
+                                        href={selectedReceiptAppointment.payment.receiptUrl}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className={cn(
+                                            "flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold border transition-all",
+                                            isDark ? "border-white/15 bg-white/5 hover:bg-white/10 text-white" : "border-slate-300 bg-white hover:bg-slate-50 text-slate-800"
+                                        )}
+                                    >
+                                        {Icons.externalLink}
+                                        <span>{language === "ar" ? "فتح الصورة بحجمها الكامل" : "Open Full Image"}</span>
+                                    </a>
+                                )}
+                                <button
+                                    onClick={() => setSelectedReceiptAppointment(null)}
+                                    className="px-5 py-2 bg-gradient-to-r from-[#FD614B] to-[#E84D37] text-white rounded-xl text-xs font-bold hover:brightness-110 transition-all ml-auto"
+                                >
+                                    {language === "ar" ? "إغلاق" : "Close"}
+                                </button>
+                            </div>
+                        </motion.div>
                     </div>
                 )}
             </main>
