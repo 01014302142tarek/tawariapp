@@ -1,6 +1,6 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createServiceRoleClient } from "@/lib/supabase/server";
 
 export type TriageUrgencyLevel = "emergency" | "urgent" | "routine";
 
@@ -136,14 +136,14 @@ const SPECIALTY_RULES: SpecialtyRule[] = [
         nameAr: "أمراض المخ والأعصاب",
         dbMatcher: "Neurology",
         keywords: [
-            "راس", "راسي", "رأسي", "راسي وجعاني", "راسي واجعاني", "راسي بتوجعني", "وجع في راسي", "الم في راسي",
-            "دماغي", "دماغي وجعاني", "دماغي بتوجعني", "نافوخي", "حاسس دماغي هتنفجر", "مخ", "دماغ",
+            "راسي وجعاني", "راسي واجعاني", "راسي بتوجعني", "وجع في راسي", "الم في راسي", "صداع في راسي", "راسي تقيلة", "ضغط في راسي",
+            "دماغي وجعاني", "دماغي بتوجعني", "دماغي واجعاني", "وجع في دماغي", "الم في دماغي", "صداع في دماغي", "نافوخي بيوجعني", "حاسس دماغي هتنفجر", "ثقل في دماغي", "دماغي تقيلة", "ضغط في دماغي",
             "اعصاب", "أعصاب", "عصب", "صداع", "صداع نصفي", "صداع كلي", "صداع مزمن", "صداع شديد", "شقيقة",
             "دوار", "دوخة", "دوخه", "دايخ", "دايخة", "توهان", "عدم اتزان", "زغللة مع دوخة", "تنميل",
             "تنميل ايد", "تنميل في الاطراف", "شكشكة", "شكشكة في الاطراف", "حرقان اعصاب", "عصب سابع",
             "عصب خامس", "رعشة", "رعشة ايدين", "باركنسون", "صرع", "كهربا زيادة", "شحنات زيادة",
             "فقدان تركيز", "نسيان مفاجئ", "التهاب اعصاب", "عرق النسا", "التهاب العصب الوركي",
-            "فقرات عنقية ضاغطة على العصب", "دكتور مخ واعصاب", "neurology", "neurologist", "migraine", "headache", "dizziness", "vertigo", "numbness", "nerve"
+            "فقرات عنقية ضاغطة على العصب", "دكتور مخ واعصاب", "طبيب مخ واعصاب", "neurology", "neurologist", "migraine", "headache", "dizziness", "vertigo", "numbness", "nerve"
         ],
         explanationAr: "الصداع المستمر، نوبات الشقيقة، الدوار أو التنميل وضعف الأعصاب تتطلب فحصاً لدى طبيب مخ وأعصاب للتأكد من سلامة الجهاز العصبي والتروية الدموية الدماغية.",
         explanationEn: "Persistent headache, migraine, dizziness, or peripheral numbness requires a neurologist consultation to evaluate the nervous system."
@@ -235,12 +235,18 @@ const SPECIALTY_RULES: SpecialtyRule[] = [
         nameAr: "الجلدية والتناسلية والشعر",
         dbMatcher: "Dermatology",
         keywords: [
-            "جلد", "جلدي", "جلدي بيحرقني", "جلدي بيهرشني", "بشرة", "بشرتي", "فروة راس", "شعر", "شعري",
-            "شعري بيقع", "تساقط شعر", "صلع", "ثعلبة", "قشرة", "قشرة في شعري", "اظافر", "ضوافر", "حبوب",
-            "حب شباب", "حبوب في الوش", "حبوب في ضهري", "بثور", "هرش", "حكة", "حكه", "بهارش", "طفح",
-            "طفح جلدي", "احمرار في جلدي", "حساسية جلدية", "ارتيكاريا", "اكزيما", "إكزيما", "صدفية", "بهاق",
-            "فطريات", "تينيا", "تينيا بين الصوابع", "بقع بيضاء", "بقع بنية", "تصبغات", "كلف", "نمش",
-            "زوائد جلدية", "عين سمكة", "سنط", "حزام ناري", "حروق شمس", "دكتور جلدية", "dermatology", "skin", "rash", "acne", "hair loss", "alopecia", "eczema", "psoriasis", "itching"
+            "جلد", "جلدي", "جلدي بيحرقني", "جلدي بيهرشني", "بشرة", "بشرتي", "فروة راس", "فروة راسي", "فروة الراس", "شعر", "شعري",
+            "شعري بيقع", "تساقط شعر", "صلع", "ثعلبة", "ثعلبة في راسي", "ثعلبة في دماغي", "قشرة", "قشرة في شعري", "قشرة في راسي", "قشرة في دماغي", "اظافر", "ضوافر", "حبوب",
+            "حب شباب", "حبوب في الوش", "حبوب في وجهي", "حبوب في الجبهة", "حبوب في الدقن", "حبوب بعد الحلاقة",
+            "حبوب في ضهري", "حبوب في ظهري", "حبوب في صدري", "حبوب في بطني", "حبوب في رجلي", "حبوب في ايدي", "حبوب في فخذي", "حبوب في جسمي",
+            "حبوب في دماغي", "حبوب ف دماغي", "حبوب في راسي", "حبوب ف راسي", "حبوب في الراس", "حبوب في الرأس", "حبوب في شعري", "حبوب في فروة راسي", "حبوب في فروة الراس", "حبوب في الرقبة", "حبوب في قفايا",
+            "حبوب بتطلع في دماغي", "حبوب بتطلع في راسي", "حبوب بتطلع في شعري", "حبوب بتطلع في وشي", "حبوب بتطلع في ضهري", "حبوب بتوجعني في راسي", "حبوب بتوجعني في دماغي",
+            "حبة في دماغي", "حبة في راسي", "حبة في وشي", "حبة في ضهري", "حبة كبيرة", "بثور", "دمامل", "دمل", "دمامل في راسي", "دمامل في دماغي", "دمامل في شعري", "دمل في راسي", "دمل في دماغي",
+            "هرش", "حكة", "حكه", "بهارش", "هرش في دماغي", "هرش في راسي", "هرش في فروة الراس", "هرش في شعري", "حكة في دماغي", "حكة في راسي", "حكة في فروة الراس",
+            "طفح", "طفح جلدي", "احمرار في جلدي", "التهاب جلدي", "حساسية جلدية", "ارتيكاريا", "اكزيما", "إكزيما", "صدفية", "بهاق",
+            "فطريات", "تينيا", "تينيا بين الصوابع", "بقع بيضاء", "بقع بنية", "تصبغات", "كلف", "نمش", "تسلخات", "تسلخات بين الفخذين",
+            "زوائد جلدية", "عين سمكة", "سنط", "حزام ناري", "حروق شمس", "دكتور جلدية", "دكتورة جلدية", "طبيب جلدية", "طبيبة جلدية", "امراض جلدية", "أمراض جلدية",
+            "dermatology", "dermatologist", "skin", "rash", "acne", "hair loss", "alopecia", "eczema", "psoriasis", "itching", "scalp pimples", "scalp acne"
         ],
         explanationAr: "الأعراض الجلدية (مثل الحبوب، الطفح، الحكة، الأكزيما، أو تساقط الشعر) تتطلب استشارة طبيب جلدية لتشخيص الحالة ووصف العلاج المناسب.",
         explanationEn: "Skin issues, rashes, acne, or hair loss problems are best handled by a licensed dermatologist for proper diagnosis and therapy."
@@ -438,7 +444,7 @@ function mapDocSpecsToSuggestions(docSpecs: any[]): TriageDoctorSuggestion[] {
  */
 async function fetchDoctorsForSpecialty(specialtyMatcher: string): Promise<TriageDoctorSuggestion[]> {
     try {
-        const supabase = await createClient();
+        const supabase = await createServiceRoleClient();
 
         // 1. Find matching specialization IDs
         const { data: specs } = await supabase
@@ -684,7 +690,25 @@ export async function assessSymptoms(input: {
 
     const words = rawNormalized.split(/\s+/);
 
+    // Clinical Context Flags for accurate specialty prioritization:
+    const SKIN_MANIFESTATION_ROOTS = [
+        "حبوب", "حبة", "حب شباب", "بثور", "دمامل", "دمل", "طفح", "هرش", "حكة", "حكه",
+        "اكزيما", "صدفية", "بهاق", "تينيا", "قشرة", "ثعلبة", "تسلخات", "عين سمكة", "سنط", "حزام ناري"
+    ].map(normalizeMedicalText);
+    const hasSkinManifestation = SKIN_MANIFESTATION_ROOTS.some(term => rawNormalized.includes(term));
+
+    const NEURO_SYMPTOM_ROOTS = [
+        "صداع", "شقيقة", "دوخة", "دوار", "تنميل", "شكشكة", "شلل", "عصب سابع", "عصب خامس",
+        "صرع", "كهربا", "شحنات", "رعشة", "باركنسون", "فقدان اتزان", "عدم اتزان"
+    ].map(normalizeMedicalText);
+    const hasNeurologicalSymptoms = NEURO_SYMPTOM_ROOTS.some(term => rawNormalized.includes(term));
+
     for (const rule of SPECIALTY_RULES) {
+        // Prevent pure dermatological symptoms located on head/scalp from triggering Neurology
+        if (rule.nameEn === "Neurology" && hasSkinManifestation && !hasNeurologicalSymptoms) {
+            continue;
+        }
+
         let score = 0;
         for (const kw of rule.keywords) {
             const normKw = normalizeMedicalText(kw);
@@ -697,6 +721,12 @@ export async function assessSymptoms(input: {
                 }
             }
         }
+
+        // Give clear clinical priority to Dermatology when explicit skin signs are present
+        if (rule.nameEn === "Dermatology" && hasSkinManifestation) {
+            score += 25;
+        }
+
         if (score > highestScore) {
             highestScore = score;
             bestSpecialty = rule;
