@@ -222,8 +222,15 @@ export async function notifyAdminNewPaymentReceipt(payload: NewReceiptNotificati
 
             ${payload.receiptUrl ? `
             <div class="receipt-preview">
-                <p style="color: #94a3b8; font-size: 13px; margin-bottom: 8px;">صورة الإيصال المرفقة / Receipt Image:</p>
-                <img src="${payload.receiptUrl}" alt="إيصال التحويل" />
+                <p style="color: #94a3b8; font-size: 13px; margin-bottom: 8px;">صورة الإيصال المرفقة / Receipt Image Preview:</p>
+                ${payload.receiptUrl.startsWith("http") ? `
+                <a href="${payload.receiptUrl}" target="_blank" style="display: block; margin-bottom: 8px;">
+                    <img src="${payload.receiptUrl}" alt="إيصال التحويل" style="max-width: 100%; max-height: 400px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2);" />
+                </a>
+                <p><a href="${payload.receiptUrl}" target="_blank" style="color: #FD614B; text-decoration: underline; font-weight: bold; font-size: 13px;">🔍 فتح صورة الإيصال بحجمها الكامل / View Full Image</a></p>
+                ` : `
+                <p style="color: #10b981; font-size: 13px;">(تم إرفاق صورة الإيصال كملف في أسفل هذا الإيميل / Attached below as an image file)</p>
+                `}
             </div>` : ""}
 
             <a href="${reviewUrl}" class="btn">
@@ -240,11 +247,37 @@ export async function notifyAdminNewPaymentReceipt(payload: NewReceiptNotificati
 </html>
         `;
 
+        const attachments: any[] = [];
+        if (payload.receiptUrl) {
+            try {
+                if (payload.receiptUrl.startsWith("data:")) {
+                    const match = payload.receiptUrl.match(/^data:image\/([a-zA-Z0-9+]+);base64,(.+)$/);
+                    if (match) {
+                        const rawExt = match[1].toLowerCase();
+                        const ext = rawExt.includes("jpeg") || rawExt.includes("jpg") ? "jpg" : "png";
+                        attachments.push({
+                            filename: `payment-receipt-${Date.now()}.${ext}`,
+                            content: Buffer.from(match[2], "base64"),
+                            contentType: `image/${ext === "jpg" ? "jpeg" : "png"}`,
+                        });
+                    }
+                } else if (payload.receiptUrl.startsWith("http")) {
+                    attachments.push({
+                        filename: `payment-receipt-${Date.now()}.png`,
+                        path: payload.receiptUrl,
+                    });
+                }
+            } catch (attErr) {
+                console.warn("Failed to prepare receipt email attachment:", attErr);
+            }
+        }
+
         await sendEmail({
             to: ADMIN_EMAIL,
             subject: `[طبيبي / Tabibi] إيصال دفع جديد بانتظار المراجعة - ${patientName} (${payload.amount} ج.م)`,
             html: emailHtml,
             text: `إيصال دفع جديد بانتظار المراجعة من ${patientName} بمبلغ ${payload.amount} ج.م عبر ${methodLabelAr}. رابط المراجعة: ${reviewUrl}`,
+            attachments: attachments.length > 0 ? attachments : undefined,
         });
     } catch (err) {
         console.error("Error in notifyAdminNewPaymentReceipt:", err);

@@ -16,6 +16,12 @@ export interface EmailOptions {
     subject: string;
     html: string;
     text?: string;
+    attachments?: Array<{
+        filename?: string | false;
+        content?: string | Buffer;
+        path?: string;
+        contentType?: string;
+    }>;
 }
 
 export interface EmailResult {
@@ -52,13 +58,19 @@ export async function sendEmail(options: EmailOptions): Promise<EmailResult> {
     }
 
     try {
-        const { data, error } = await client.emails.send({
+        const emailPayload: any = {
             from: fromEmail,
             to: options.to,
             subject: options.subject,
             html: options.html,
             text: options.text,
-        });
+        };
+
+        if (options.attachments && options.attachments.length > 0) {
+            emailPayload.attachments = options.attachments;
+        }
+
+        const { data, error } = await client.emails.send(emailPayload);
 
         if (error) {
             console.error("[EMAIL SERVICE] Resend error:", error);
