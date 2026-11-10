@@ -356,6 +356,8 @@ export async function notifyAdminNewPaymentReceipt(payload: NewReceiptNotificati
  */
 export async function notifyPaymentApproved(payload: {
     appointmentId?: string;
+    queueEntryId?: string;
+    isUrgent?: boolean;
     patientProfileId?: string;
     doctorProfileId?: string;
     patientName: string;
@@ -367,14 +369,23 @@ export async function notifyPaymentApproved(payload: {
         const methodLabelAr = payload.method === "instapay" ? "إنستا باي (InstaPay)" : payload.method === "wepay" ? "وي باي (WE Pay)" : payload.method;
         const patientName = payload.patientName || "مريض / Patient";
         const doctorName = payload.doctorName || "طبيب معتمد / Verified Doctor";
+        const serviceRole = await createServiceRoleClient();
 
         // 1. Notify Patient (In-App)
         if (payload.patientProfileId) {
             try {
-                const title_ar = "تم اعتماد إيصال الدفع بنجاح ✅";
-                const title_en = "Payment Approved Successfully ✅";
-                const body_ar = `تمت مراجعة إيصال التحويل الخاص بك واعتماده من قِبل الإدارة. استشارتك مع ${doctorName} مؤكدة وجاهزة، يمكنك الانضمام الآن.`;
-                const body_en = `Your transfer receipt was verified and approved by administration. Your consultation with ${doctorName} is confirmed and ready to join now.`;
+                const title_ar = "تم اعتماد إيصال الدفع وتأكيد الاستشارة ✅";
+                const title_en = "Payment Approved by Admin ✅";
+                const body_ar = payload.isUrgent || payload.queueEntryId
+                    ? `قام مسؤول المنصة (الأدمن) باعتماد إيصال التحويل الخاص بك بنجاح. استشارتك العاجلة مع ${doctorName} مفعلة الآن، يمكنك الانضمام للغرفة وبدء المكالمة فوراً.`
+                    : `قام مسؤول المنصة (الأدمن) باعتماد إيصال التحويل الخاص بك بنجاح. موعد استشارتك مع ${doctorName} مؤكد وجاهز، يمكنك الانضمام للمكالمة الآن.`;
+                const body_en = payload.isUrgent || payload.queueEntryId
+                    ? `Admin approved your payment transfer receipt. Your urgent consultation with ${doctorName} is active. You can join the room and start the call now.`
+                    : `Admin approved your payment transfer receipt. Your consultation with ${doctorName} is confirmed and ready.`;
+
+                const patientLink = payload.isUrgent || payload.queueEntryId
+                    ? `/dashboard/patient/urgent-care/waiting/${payload.queueEntryId || ""}`
+                    : (payload.appointmentId ? `/dashboard/consultation/${payload.appointmentId}/waiting-room` : "/dashboard/patient/appointments");
 
                 await createNotification({
                     profileId: payload.patientProfileId,
@@ -386,9 +397,44 @@ export async function notifyPaymentApproved(payload: {
                         title_en,
                         body_ar,
                         body_en,
-                        link: payload.appointmentId ? `/dashboard/consultation/${payload.appointmentId}/waiting-room` : "/dashboard/patient/appointments",
+                        link: patientLink,
                     },
                 });
+
+                // Also try sending direct email to patient if email exists
+                try {
+                    const { data: pProfile } = await (serviceRole as any)
+                        .from("profiles")
+                        .select("user_id")
+                        .eq("id", payload.patientProfileId)
+                        .single();
+
+                    if (pProfile?.user_id) {
+                        const { data: authUser } = await serviceRole.auth.admin.getUserById(pProfile.user_id);
+                        if (authUser?.user?.email) {
+                            await sendEmail({
+                                to: authUser.user.email,
+                                subject: `[طبيبي / Tabibi] تم اعتماد الدفع وتأكيد استشارتك مع ${doctorName} ✅`,
+                                html: `
+                                <div style="font-family: Arial, sans-serif; direction: rtl; text-align: right; background-color: #031326; color: #ffffff; padding: 25px; border-radius: 12px; max-width: 600px; margin: 0 auto;">
+                                    <h2 style="color: #10b981; margin-top: 0;">✓ تم اعتماد إيصال الدفع بنجاح!</h2>
+                                    <p style="font-size: 15px; color: #cbd5e1; line-height: 1.6;">
+                                        مرحباً <strong>${patientName}</strong>،<br/>
+                                        قام فريق إدارة منصة طبيبي بمراجعة إيصال التحويل الخاص بك واعتماده بنجاح. استشارتك مع <strong>${doctorName}</strong> أصبحت مفعلة ومؤكدة الآن، ويمكنك الدخول لإجراء المكالمة مباشرة.
+                                    </p>
+                                    <div style="background: rgba(255,255,255,0.05); padding: 14px; border-radius: 8px; margin: 20px 0;">
+                                        <p style="margin: 4px 0; color: #94a3b8;">الطبيب: <strong style="color: #fff;">${doctorName}</strong></p>
+                                        <p style="margin: 4px 0; color: #94a3b8;">المبلغ: <strong style="color: #10b981;">${payload.amount} ج.م</strong> (${methodLabelAr})</p>
+                                    </div>
+                                    <a href="${SITE_URL}${patientLink}" style="display: inline-block; background: #10b981; color: #ffffff !important; padding: 12px 24px; border-radius: 8px; font-weight: bold; text-decoration: none;">الدخول لغرفة الاستشارة الآن</a>
+                                </div>`,
+                                text: `مرحباً ${patientName}، قامت إدارة منصة طبيبي باعتماد إيصال التحويل بنجاح. استشارتك مع ${doctorName} مؤكدة الآن.`,
+                            });
+                        }
+                    }
+                } catch (pEmailErr) {
+                    console.warn("Could not email patient on approval:", pEmailErr);
+                }
             } catch (e) {
                 console.warn("Could not notify patient in-app on approval:", e);
             }
@@ -397,10 +443,18 @@ export async function notifyPaymentApproved(payload: {
         // 2. Notify Doctor (In-App)
         if (payload.doctorProfileId) {
             try {
-                const title_ar = "تم تأكيد دفع المريض بنجاح ✅";
-                const title_en = "Patient Payment Confirmed ✅";
-                const body_ar = `تم اعتماد إيصال تحويل المريض (${patientName}) بمبلغ ${payload.amount} ج.م لموعد الاستشارة. المريض جاهز الآن في غرفة الانتظار.`;
-                const body_en = `Admin approved the transfer receipt for patient (${patientName}) (${payload.amount} EGP). Patient is ready in the waiting room.`;
+                const title_ar = "تم اعتماد دفع المريض من الإدارة ✅";
+                const title_en = "Patient Payment Confirmed by Admin ✅";
+                const body_ar = payload.isUrgent || payload.queueEntryId
+                    ? `قام مسؤول المنصة (الأدمن) باعتماد إيصال تحويل المريض (${patientName}) بمبلغ ${payload.amount} ج.م. المريض جاهز ومؤكد الآن في قائمة الانتظار للمكالمة.`
+                    : `قام مسؤول المنصة (الأدمن) باعتماد إيصال تحويل المريض (${patientName}) بمبلغ ${payload.amount} ج.م لموعد الاستشارة. المريض جاهز الآن لبدء الكشف.`;
+                const body_en = payload.isUrgent || payload.queueEntryId
+                    ? `Admin approved the transfer receipt for patient (${patientName}) (${payload.amount} EGP). Patient is ready in your urgent queue.`
+                    : `Admin approved the transfer receipt for patient (${patientName}) (${payload.amount} EGP). Consultation is confirmed and ready.`;
+
+                const doctorLink = payload.isUrgent || payload.queueEntryId
+                    ? "/dashboard/doctor/queue"
+                    : (payload.appointmentId ? `/dashboard/consultation/${payload.appointmentId}/room` : "/dashboard/doctor/appointments");
 
                 await createNotification({
                     profileId: payload.doctorProfileId,
@@ -413,8 +467,41 @@ export async function notifyPaymentApproved(payload: {
                         body_ar,
                         body_en,
                         appointmentId: payload.appointmentId,
+                        queueEntryId: payload.queueEntryId,
+                        link: doctorLink,
                     },
                 });
+
+                // Also try sending direct email to doctor if email exists
+                try {
+                    const { data: dProfile } = await (serviceRole as any)
+                        .from("profiles")
+                        .select("user_id")
+                        .eq("id", payload.doctorProfileId)
+                        .single();
+
+                    if (dProfile?.user_id) {
+                        const { data: authUser } = await serviceRole.auth.admin.getUserById(dProfile.user_id);
+                        if (authUser?.user?.email) {
+                            await sendEmail({
+                                to: authUser.user.email,
+                                subject: `[طبيبي / Tabibi] تم تأكيد دفع المريض (${patientName}) للاستشارة ✅`,
+                                html: `
+                                <div style="font-family: Arial, sans-serif; direction: rtl; text-align: right; background-color: #031326; color: #ffffff; padding: 25px; border-radius: 12px; max-width: 600px; margin: 0 auto;">
+                                    <h2 style="color: #10b981; margin-top: 0;">✓ تم اعتماد دفع المريض بنجاح</h2>
+                                    <p style="font-size: 15px; color: #cbd5e1; line-height: 1.6;">
+                                        مرحباً دكتور <strong>${doctorName}</strong>،<br/>
+                                        قام فريق الإدارة باعتماد إيصال تحويل المريض (<strong>${patientName}</strong>) بمبلغ <strong>${payload.amount} ج.م</strong>. المريض في انتظارك ويمكنك بدء المكالمة الطبية الآن.
+                                    </p>
+                                    <a href="${SITE_URL}${doctorLink}" style="display: inline-block; background: #044C87; color: #ffffff !important; padding: 12px 24px; border-radius: 8px; font-weight: bold; text-decoration: none;">فتح غرفة الكشف</a>
+                                </div>`,
+                                text: `مرحباً دكتور ${doctorName}، اعتمدت الإدارة إيصال تحويل المريض (${patientName}) بمبلغ ${payload.amount} ج.م. المريض جاهز في الانتظار.`,
+                            });
+                        }
+                    }
+                } catch (dEmailErr) {
+                    console.warn("Could not email doctor on approval:", dEmailErr);
+                }
             } catch (e) {
                 console.warn("Could not notify doctor in-app on approval:", e);
             }
@@ -465,6 +552,8 @@ export async function notifyPaymentApproved(payload: {
  */
 export async function notifyPaymentRejected(payload: {
     appointmentId?: string;
+    queueEntryId?: string;
+    isUrgent?: boolean;
     patientProfileId?: string;
     doctorProfileId?: string;
     patientName: string;

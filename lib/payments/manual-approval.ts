@@ -11,6 +11,130 @@ export interface ApprovalExecutionResult {
     amount?: number;
     method?: string;
     appointmentId?: string;
+    queueEntryId?: string;
+}
+
+/**
+ * Helper to resolve doctor and patient information for an appointment, queue entry, or transaction
+ */
+async function resolveDoctorAndPatient(
+    serviceRole: any,
+    tx: any,
+    params: { appointmentId?: string; queueEntryId?: string }
+) {
+    const queueEntryId = tx.payment_details?.queue_entry_id || params.queueEntryId;
+    let queueDocProfileId: string | null = null;
+    let queuePatProfileId: string | null = null;
+    let queueAptId: string | null = null;
+
+    if (queueEntryId) {
+        const { data: qRec } = await (serviceRole as any)
+            .from("consultation_queue")
+            .select("doctor_profile_id, patient_profile_id, appointment_id")
+            .eq("id", queueEntryId)
+            .single();
+        if (qRec) {
+            queueDocProfileId = qRec.doctor_profile_id;
+            queuePatProfileId = qRec.patient_profile_id;
+            queueAptId = qRec.appointment_id;
+        }
+    }
+
+    const effectiveAppointmentId = tx.appointment_id || queueAptId || params.appointmentId;
+    let apptDocProfileId: string | null = null;
+    let apptPatProfileId: string | null = null;
+    let apptStatus: string | null = null;
+
+    if (effectiveAppointmentId) {
+        const { data: aptData } = await (serviceRole as any)
+            .from("appointments")
+            .select("doctor_profile_id, patient_profile_id, status")
+            .eq("id", effectiveAppointmentId)
+            .single();
+        if (aptData) {
+            apptDocProfileId = aptData.doctor_profile_id;
+            apptPatProfileId = aptData.patient_profile_id;
+            apptStatus = aptData.status;
+        }
+    }
+
+    // 1. Resolve Doctor
+    const targetDoctorId = apptDocProfileId || queueDocProfileId || tx.doctor_profile_id;
+    let doctorUserProfId: string | undefined;
+    let doctorName = "طبيب معتمد";
+
+    if (targetDoctorId) {
+        const { data: dRec } = await (serviceRole as any)
+            .from("doctor_profiles")
+            .select("profile_id, profiles!doctor_profiles_profile_id_fkey(full_name)")
+            .eq("id", targetDoctorId)
+            .single();
+
+        if (dRec) {
+            doctorUserProfId = dRec.profile_id;
+            if (dRec.profiles?.full_name) {
+                doctorName = dRec.profiles.full_name;
+            }
+        } else {
+            const { data: directDoc } = await (serviceRole as any)
+                .from("profiles")
+                .select("id, full_name")
+                .eq("id", targetDoctorId)
+                .single();
+            if (directDoc?.full_name) {
+                doctorName = directDoc.full_name;
+                doctorUserProfId = directDoc.id;
+            }
+        }
+    }
+
+    // 2. Resolve Patient
+    const targetPatientId = apptPatProfileId || queuePatProfileId || tx.patient_profile_id;
+    let patientUserProfId: string | undefined;
+    let patientName = tx.payment_details?.sender_name?.trim() || "";
+
+    if (targetPatientId) {
+        const { data: pRec } = await (serviceRole as any)
+            .from("patient_profiles")
+            .select("profile_id, profiles!patient_profiles_profile_id_fkey(full_name)")
+            .eq("id", targetPatientId)
+            .single();
+
+        if (pRec) {
+            patientUserProfId = pRec.profile_id;
+            if (!patientName && pRec.profiles?.full_name) {
+                patientName = pRec.profiles.full_name;
+            }
+        } else {
+            const { data: directPat } = await (serviceRole as any)
+                .from("profiles")
+                .select("id, full_name")
+                .eq("id", targetPatientId)
+                .single();
+            if (directPat) {
+                patientUserProfId = directPat.id;
+                if (!patientName && directPat.full_name) {
+                    patientName = directPat.full_name;
+                }
+            }
+        }
+    }
+
+    if (!patientName) {
+        patientName = "مريض";
+    }
+
+    return {
+        queueEntryId,
+        effectiveAppointmentId,
+        apptStatus,
+        targetDoctorId,
+        doctorUserProfId,
+        doctorName,
+        targetPatientId,
+        patientUserProfId,
+        patientName,
+    };
 }
 
 /**
@@ -45,15 +169,20 @@ export async function executePaymentApproval(params: {
         return { success: false, error: "لم يتم العثور على المعاملة المالية المطلوبة" };
     }
 
+    // Resolve doctor and patient details first
+    const resolved = await resolveDoctorAndPatient(serviceRole, tx, params);
+
     // Check if already approved
     if (tx.status === "completed" && tx.payment_details?.admin_approval === "approved") {
         return {
             success: true,
             alreadyProcessed: true,
-            patientName: tx.payment_details?.sender_name || "مريض",
+            patientName: resolved.patientName,
+            doctorName: resolved.doctorName,
             amount: tx.amount || 0,
             method: tx.payment_method || "instapay",
-            appointmentId: tx.appointment_id,
+            appointmentId: resolved.effectiveAppointmentId || undefined,
+            queueEntryId: resolved.queueEntryId || undefined,
         };
     }
 
@@ -73,18 +202,15 @@ export async function executePaymentApproval(params: {
         })
         .eq("id", tx.id);
 
-    let doctorName = "طبيب معتمد";
-    let patientName = tx.payment_details?.sender_name || "مريض";
-
     // 3. Update appointment if present
-    if (tx.appointment_id) {
+    if (resolved.effectiveAppointmentId) {
         await (serviceRole as any)
             .from("appointments")
             .update({
-                status: tx.appointments?.status === "in_waiting_room" ? "in_waiting_room" : "scheduled",
+                status: (resolved.apptStatus === "in_waiting_room" || resolved.queueEntryId) ? "in_waiting_room" : "scheduled",
                 updated_at: new Date().toISOString(),
             })
-            .eq("id", tx.appointment_id);
+            .eq("id", resolved.effectiveAppointmentId);
 
         // Credit doctor earnings
         try {
@@ -92,8 +218,8 @@ export async function executePaymentApproval(params: {
             await (serviceRole as any)
                 .from("doctor_earnings")
                 .upsert({
-                    doctor_profile_id: tx.appointments?.doctor_profile_id || tx.doctor_profile_id,
-                    appointment_id: tx.appointment_id,
+                    doctor_profile_id: resolved.targetDoctorId,
+                    appointment_id: resolved.effectiveAppointmentId,
                     transaction_id: tx.id,
                     gross_amount: grossAmount,
                     platform_fee: platformFee,
@@ -103,64 +229,45 @@ export async function executePaymentApproval(params: {
         } catch (e) {
             console.warn("Could not upsert doctor earnings on approval:", e);
         }
-
-        // Notify patient, doctor, and admin
-        try {
-            let patientUserProfId: string | undefined;
-            if (tx.appointments?.patient_profile_id) {
-                const { data: pRec } = await (serviceRole as any)
-                    .from("patient_profiles")
-                    .select("profile_id")
-                    .eq("id", tx.appointments.patient_profile_id)
-                    .single();
-                patientUserProfId = pRec?.profile_id;
-            }
-
-            let doctorUserProfId: string | undefined;
-            const doctorProfileId = tx.appointments?.doctor_profile_id || tx.doctor_profile_id;
-            if (doctorProfileId) {
-                const { data: dRec } = await (serviceRole as any)
-                    .from("doctor_profiles")
-                    .select("profile_id, profiles!doctor_profiles_profile_id_fkey(full_name)")
-                    .eq("id", doctorProfileId)
-                    .single();
-                doctorUserProfId = dRec?.profile_id;
-                if (dRec?.profiles?.full_name) {
-                    doctorName = dRec.profiles.full_name;
-                }
-            }
-
-            await notifyPaymentApproved({
-                appointmentId: tx.appointment_id,
-                patientProfileId: patientUserProfId,
-                doctorProfileId: doctorUserProfId,
-                patientName,
-                doctorName,
-                amount: tx.amount || 0,
-                method: tx.payment_method || "instapay",
-            });
-        } catch (notifErr) {
-            console.warn("Error notifying on approval:", notifErr);
-        }
     }
 
     // 4. Update urgent care queue if present
-    const queueEntryId = tx.payment_details?.queue_entry_id || params.queueEntryId;
-    if (queueEntryId) {
+    if (resolved.queueEntryId) {
         await (serviceRole as any)
             .from("consultation_queue")
-            .update({ payment_status: "completed" })
-            .eq("id", queueEntryId);
+            .update({
+                payment_status: "completed",
+                ...(resolved.effectiveAppointmentId ? { appointment_id: resolved.effectiveAppointmentId } : {}),
+            })
+            .eq("id", resolved.queueEntryId);
+    }
+
+    // 5. Notify BOTH Doctor and Patient (In-App notifications + Direct Emails)
+    try {
+        await notifyPaymentApproved({
+            appointmentId: resolved.effectiveAppointmentId || undefined,
+            queueEntryId: resolved.queueEntryId || undefined,
+            patientProfileId: resolved.patientUserProfId,
+            doctorProfileId: resolved.doctorUserProfId,
+            patientName: resolved.patientName,
+            doctorName: resolved.doctorName,
+            amount: tx.amount || 0,
+            method: tx.payment_method || "instapay",
+            isUrgent: !!resolved.queueEntryId,
+        });
+    } catch (notifErr) {
+        console.warn("Error notifying on approval:", notifErr);
     }
 
     return {
         success: true,
         alreadyProcessed: false,
-        patientName,
-        doctorName,
+        patientName: resolved.patientName,
+        doctorName: resolved.doctorName,
         amount: tx.amount || 0,
         method: tx.payment_method || "instapay",
-        appointmentId: tx.appointment_id,
+        appointmentId: resolved.effectiveAppointmentId || undefined,
+        queueEntryId: resolved.queueEntryId || undefined,
     };
 }
 
@@ -195,15 +302,19 @@ export async function executePaymentRejection(params: {
         return { success: false, error: "لم يتم العثور على المعاملة المالية المطلوبة" };
     }
 
+    const resolved = await resolveDoctorAndPatient(serviceRole, tx, params);
+
     // Check if already rejected
     if (tx.status === "failed" && tx.payment_details?.admin_approval === "rejected") {
         return {
             success: true,
             alreadyProcessed: true,
-            patientName: tx.payment_details?.sender_name || "مريض",
+            patientName: resolved.patientName,
+            doctorName: resolved.doctorName,
             amount: tx.amount || 0,
             method: tx.payment_method || "instapay",
-            appointmentId: tx.appointment_id,
+            appointmentId: resolved.effectiveAppointmentId || undefined,
+            queueEntryId: resolved.queueEntryId || undefined,
         };
     }
 
@@ -225,11 +336,8 @@ export async function executePaymentRejection(params: {
         })
         .eq("id", tx.id);
 
-    let doctorName = "طبيب معتمد";
-    let patientName = tx.payment_details?.sender_name || "مريض";
-
     // 2. Mark appointment as cancelled
-    if (tx.appointment_id) {
+    if (resolved.effectiveAppointmentId) {
         await (serviceRole as any)
             .from("appointments")
             .update({
@@ -237,68 +345,45 @@ export async function executePaymentRejection(params: {
                 cancellation_reason: `تم رفض إيصال التحويل من قِبل الإدارة: ${rejectionReason}`,
                 updated_at: new Date().toISOString(),
             })
-            .eq("id", tx.appointment_id);
-
-        // Notify patient, doctor, and admin
-        try {
-            let patientUserProfId: string | undefined;
-            if (tx.appointments?.patient_profile_id) {
-                const { data: pRec } = await (serviceRole as any)
-                    .from("patient_profiles")
-                    .select("profile_id")
-                    .eq("id", tx.appointments.patient_profile_id)
-                    .single();
-                patientUserProfId = pRec?.profile_id;
-            }
-
-            let doctorUserProfId: string | undefined;
-            const doctorProfileId = tx.appointments?.doctor_profile_id || tx.doctor_profile_id;
-            if (doctorProfileId) {
-                const { data: dRec } = await (serviceRole as any)
-                    .from("doctor_profiles")
-                    .select("profile_id, profiles!doctor_profiles_profile_id_fkey(full_name)")
-                    .eq("id", doctorProfileId)
-                    .single();
-                doctorUserProfId = dRec?.profile_id;
-                if (dRec?.profiles?.full_name) {
-                    doctorName = dRec.profiles.full_name;
-                }
-            }
-
-            await notifyPaymentRejected({
-                appointmentId: tx.appointment_id,
-                patientProfileId: patientUserProfId,
-                doctorProfileId: doctorUserProfId,
-                patientName,
-                doctorName,
-                amount: tx.amount || 0,
-                method: tx.payment_method || "instapay",
-                reason: rejectionReason,
-            });
-        } catch (notifErr) {
-            console.warn("Error notifying on rejection:", notifErr);
-        }
+            .eq("id", resolved.effectiveAppointmentId);
     }
 
-    // 3. Update urgent care queue if present
-    const queueEntryId = tx.payment_details?.queue_entry_id || params.queueEntryId;
-    if (queueEntryId) {
+    // 3. If urgent care queue entry is linked, cancel it
+    if (resolved.queueEntryId) {
         await (serviceRole as any)
             .from("consultation_queue")
             .update({
                 status: "cancelled",
                 payment_status: "failed",
             })
-            .eq("id", queueEntryId);
+            .eq("id", resolved.queueEntryId);
+    }
+
+    // 4. Notify both Doctor and Patient of rejection
+    try {
+        await notifyPaymentRejected({
+            appointmentId: resolved.effectiveAppointmentId || undefined,
+            queueEntryId: resolved.queueEntryId || undefined,
+            patientProfileId: resolved.patientUserProfId,
+            doctorProfileId: resolved.doctorUserProfId,
+            patientName: resolved.patientName,
+            doctorName: resolved.doctorName,
+            amount: tx.amount || 0,
+            method: tx.payment_method || "instapay",
+            reason: rejectionReason,
+        });
+    } catch (notifErr) {
+        console.warn("Error notifying on rejection:", notifErr);
     }
 
     return {
         success: true,
         alreadyProcessed: false,
-        patientName,
-        doctorName,
+        patientName: resolved.patientName,
+        doctorName: resolved.doctorName,
         amount: tx.amount || 0,
         method: tx.payment_method || "instapay",
-        appointmentId: tx.appointment_id,
+        appointmentId: resolved.effectiveAppointmentId || undefined,
+        queueEntryId: resolved.queueEntryId || undefined,
     };
 }
