@@ -1,6 +1,9 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createServiceRoleClient } from "@/lib/supabase/server";
+import { calculatePlatformFee } from "@/lib/payments/paymob";
+import { createNotification } from "./notifications";
+import { notifyPaymentApproved, notifyPaymentRejected } from "@/lib/email/admin-receipt-notifications";
 
 // ============================================
 // Types
@@ -31,6 +34,7 @@ export interface AdminAppointment {
     };
     payment?: {
         id: string;
+        transactionId?: string;
         status: string;
         paymentMethod: string | null;
         amount: number;
@@ -40,6 +44,9 @@ export interface AdminAppointment {
         targetPhone?: string | null;
         methodLabelAr?: string | null;
         uploadedAt?: string | null;
+        adminApproval?: "pending" | "approved" | "rejected";
+        approvedAt?: string | null;
+        rejectionReason?: string | null;
     } | null;
 }
 
@@ -162,7 +169,7 @@ export async function getAdminAppointments(options?: {
             .from("patient_profiles")
             .select(`
                 id,
-                profiles (
+                profiles!patient_profiles_profile_id_fkey (
                     id,
                     full_name,
                     avatar_url
@@ -175,7 +182,7 @@ export async function getAdminAppointments(options?: {
             patientData.forEach((p: any) => {
                 patientProfiles.set(p.id, {
                     id: p.id,
-                    full_name: p.profiles?.full_name || "Unknown Patient",
+                    full_name: p.profiles?.full_name || "مريض",
                     avatar_url: p.profiles?.avatar_url,
                 });
             });
@@ -189,7 +196,7 @@ export async function getAdminAppointments(options?: {
             .from("doctor_profiles")
             .select(`
                 id,
-                profiles (
+                profiles!doctor_profiles_profile_id_fkey (
                     id,
                     full_name,
                     avatar_url
@@ -202,7 +209,7 @@ export async function getAdminAppointments(options?: {
             doctorData.forEach((d: any) => {
                 doctorProfiles.set(d.id, {
                     id: d.id,
-                    full_name: d.profiles?.full_name || "Unknown Doctor",
+                    full_name: d.profiles?.full_name || "طبيب معتمد",
                     avatar_url: d.profiles?.avatar_url,
                 });
             });
@@ -285,17 +292,18 @@ export async function getAdminAppointments(options?: {
             created_at: apt.created_at,
             patient: {
                 id: patientProfile?.id || apt.patient_profile_id,
-                full_name: patientProfile?.full_name || "Unknown Patient",
+                full_name: patientProfile?.full_name || "مريض",
                 avatar_url: patientProfile?.avatar_url,
             },
             doctor: {
                 id: doctorProfile?.id || apt.doctor_profile_id,
-                full_name: doctorProfile?.full_name || "Unknown Doctor",
+                full_name: doctorProfile?.full_name || "طبيب معتمد",
                 avatar_url: doctorProfile?.avatar_url,
                 specialty: doctorSpecialties.get(apt.doctor_profile_id) || undefined,
             },
             payment: tx ? {
                 id: tx.id,
+                transactionId: tx.id,
                 status: tx.status,
                 paymentMethod: tx.payment_method,
                 amount: Number(tx.amount) || 0,
@@ -305,6 +313,9 @@ export async function getAdminAppointments(options?: {
                 targetPhone: tx.payment_details?.target_phone || null,
                 methodLabelAr: tx.payment_details?.method_label_ar || tx.payment_method,
                 uploadedAt: tx.payment_details?.submitted_at || tx.created_at,
+                adminApproval: tx.payment_details?.admin_approval || (tx.status === "completed" ? "approved" : "pending"),
+                approvedAt: tx.payment_details?.approved_at || null,
+                rejectionReason: tx.payment_details?.rejection_reason || null,
             } : null,
         };
     });
@@ -370,4 +381,238 @@ export async function getAppointmentStats(): Promise<{ stats: AppointmentStats; 
             no_show: noShowCount || 0,
         }
     };
+}
+
+/**
+ * Approve a manual transfer payment (InstaPay / WE Pay)
+ * Marks transaction as completed, enables consultation, credits doctor earnings, and notifies patient
+ */
+export async function approveManualPayment(
+    transactionId: string
+): Promise<{ success: boolean; error?: string }> {
+    const supabase = await createClient();
+    const adminCheck = await verifyAdmin(supabase);
+    if (!adminCheck.isAdmin) {
+        return { success: false, error: adminCheck.error || "Unauthorized" };
+    }
+
+    const serviceRole = await createServiceRoleClient();
+
+    // 1. Fetch transaction
+    const { data: txData, error: txError } = await (serviceRole as any)
+        .from("transactions")
+        .select("*, appointments(*)")
+        .eq("id", transactionId)
+        .single();
+
+    if (txError || !txData) {
+        return { success: false, error: "Transaction not found" };
+    }
+
+    const tx = txData as any;
+    const paymentDetails = {
+        ...(tx.payment_details || {}),
+        admin_approval: "approved",
+        approved_at: new Date().toISOString(),
+    };
+
+    // 2. Mark transaction as completed
+    await (serviceRole as any)
+        .from("transactions")
+        .update({
+            status: "completed",
+            payment_details: paymentDetails,
+            updated_at: new Date().toISOString(),
+        })
+        .eq("id", transactionId);
+
+    // 3. If there is an appointment, ensure it is in valid scheduled or in_waiting_room state
+    if (tx.appointment_id) {
+        await (serviceRole as any)
+            .from("appointments")
+            .update({
+                status: tx.appointments?.status === "in_waiting_room" ? "in_waiting_room" : "scheduled",
+                updated_at: new Date().toISOString(),
+            })
+            .eq("id", tx.appointment_id);
+
+        // Credit doctor earnings now that payment is approved
+        try {
+            const { grossAmount, platformFee, netAmount } = calculatePlatformFee(tx.amount || 0);
+            await (serviceRole as any)
+                .from("doctor_earnings")
+                .upsert({
+                    doctor_profile_id: tx.appointments?.doctor_profile_id || tx.doctor_profile_id,
+                    appointment_id: tx.appointment_id,
+                    transaction_id: tx.id,
+                    gross_amount: grossAmount,
+                    platform_fee: platformFee,
+                    net_amount: netAmount,
+                    status: "available",
+                }, { onConflict: "appointment_id" });
+        } catch (e) {
+            console.warn("Could not upsert doctor earnings on approval:", e);
+        }
+
+        // Notify patient, doctor, and admin (In-app + Email to tbakr373@gmail.com)
+        try {
+            let patientProfileId = tx.appointments?.patient_profile_id;
+            let patientUserProfId: string | undefined;
+            if (patientProfileId) {
+                const { data: pRec } = await (serviceRole as any)
+                    .from("patient_profiles")
+                    .select("profile_id")
+                    .eq("id", patientProfileId)
+                    .single();
+                patientUserProfId = pRec?.profile_id;
+            }
+
+            let doctorUserProfId: string | undefined;
+            let doctorName: string | undefined;
+            const doctorProfileId = tx.appointments?.doctor_profile_id || tx.doctor_profile_id;
+            if (doctorProfileId) {
+                const { data: dRec } = await (serviceRole as any)
+                    .from("doctor_profiles")
+                    .select("profile_id, profiles!doctor_profiles_profile_id_fkey(full_name)")
+                    .eq("id", doctorProfileId)
+                    .single();
+                doctorUserProfId = dRec?.profile_id;
+                doctorName = dRec?.profiles?.full_name;
+            }
+
+            await notifyPaymentApproved({
+                appointmentId: tx.appointment_id,
+                patientProfileId: patientUserProfId,
+                doctorProfileId: doctorUserProfId,
+                patientName: tx.payment_details?.sender_name || "مريض",
+                doctorName,
+                amount: tx.amount || 0,
+                method: tx.payment_method || "instapay",
+            });
+        } catch (notifErr) {
+            console.warn("Error notifying on approval:", notifErr);
+        }
+    }
+
+    // 4. If urgent care queue entry is linked, update queue entry
+    const queueEntryId = tx.payment_details?.queue_entry_id;
+    if (queueEntryId) {
+        await (serviceRole as any)
+            .from("consultation_queue")
+            .update({ payment_status: "completed" })
+            .eq("id", queueEntryId);
+    }
+
+    return { success: true };
+}
+
+/**
+ * Reject a manual transfer payment
+ * Marks transaction as failed, cancels appointment, and notifies patient with reason
+ */
+export async function rejectManualPayment(
+    transactionId: string,
+    reason?: string
+): Promise<{ success: boolean; error?: string }> {
+    const supabase = await createClient();
+    const adminCheck = await verifyAdmin(supabase);
+    if (!adminCheck.isAdmin) {
+        return { success: false, error: adminCheck.error || "Unauthorized" };
+    }
+
+    const serviceRole = await createServiceRoleClient();
+
+    const { data: txData, error: txError } = await (serviceRole as any)
+        .from("transactions")
+        .select("*, appointments(*)")
+        .eq("id", transactionId)
+        .single();
+
+    if (txError || !txData) {
+        return { success: false, error: "Transaction not found" };
+    }
+
+    const tx = txData as any;
+    const rejectionReason = (reason && reason.trim()) || "لم يتم استلام المبلغ في الحساب أو الإيصال غير مطابق";
+    const paymentDetails = {
+        ...(tx.payment_details || {}),
+        admin_approval: "rejected",
+        rejection_reason: rejectionReason,
+        rejected_at: new Date().toISOString(),
+    };
+
+    // 1. Mark transaction as failed
+    await (serviceRole as any)
+        .from("transactions")
+        .update({
+            status: "failed",
+            payment_details: paymentDetails,
+            updated_at: new Date().toISOString(),
+        })
+        .eq("id", transactionId);
+
+    // 2. Mark appointment as cancelled
+    if (tx.appointment_id) {
+        await (serviceRole as any)
+            .from("appointments")
+            .update({
+                status: "cancelled",
+                cancellation_reason: `تم رفض إيصال التحويل من قِبل الإدارة: ${rejectionReason}`,
+                updated_at: new Date().toISOString(),
+            })
+            .eq("id", tx.appointment_id);
+
+        // Notify patient, doctor, and admin of rejection (In-app + Email to tbakr373@gmail.com)
+        try {
+            let patientUserProfId: string | undefined;
+            if (tx.appointments?.patient_profile_id) {
+                const { data: pRec } = await (serviceRole as any)
+                    .from("patient_profiles")
+                    .select("profile_id")
+                    .eq("id", tx.appointments.patient_profile_id)
+                    .single();
+                patientUserProfId = pRec?.profile_id;
+            }
+
+            let doctorUserProfId: string | undefined;
+            let doctorName: string | undefined;
+            const doctorProfileId = tx.appointments?.doctor_profile_id || tx.doctor_profile_id;
+            if (doctorProfileId) {
+                const { data: dRec } = await (serviceRole as any)
+                    .from("doctor_profiles")
+                    .select("profile_id, profiles!doctor_profiles_profile_id_fkey(full_name)")
+                    .eq("id", doctorProfileId)
+                    .single();
+                doctorUserProfId = dRec?.profile_id;
+                doctorName = dRec?.profiles?.full_name;
+            }
+
+            await notifyPaymentRejected({
+                appointmentId: tx.appointment_id,
+                patientProfileId: patientUserProfId,
+                doctorProfileId: doctorUserProfId,
+                patientName: tx.payment_details?.sender_name || "مريض",
+                doctorName,
+                amount: tx.amount || 0,
+                method: tx.payment_method || "instapay",
+                reason: rejectionReason,
+            });
+        } catch (notifErr) {
+            console.warn("Error notifying on rejection:", notifErr);
+        }
+    }
+
+    // 3. If urgent care queue entry is linked, cancel it
+    const queueEntryId = tx.payment_details?.queue_entry_id;
+    if (queueEntryId) {
+        await (serviceRole as any)
+            .from("consultation_queue")
+            .update({
+                status: "cancelled",
+                payment_status: "failed",
+            })
+            .eq("id", queueEntryId);
+    }
+
+    return { success: true };
 }

@@ -316,12 +316,23 @@ export async function notifyAppointmentConfirmed(
     appointmentDate: string,
     appointmentId: string
 ): Promise<{ success: boolean; error?: string }> {
+    const title_en = "Appointment Confirmed ✅";
+    const title_ar = "تم تأكيد موعد الاستشارة ✅";
+    const body_en = `Your appointment with Dr. ${doctorName} on ${appointmentDate} has been confirmed.`;
+    const body_ar = `تم تأكيد موعدك مع د. ${doctorName} بتاريخ ${appointmentDate}.`;
+
     return createNotification({
         profileId: patientProfileId,
-        title: "Appointment Confirmed",
-        body: `Your appointment with ${doctorName} on ${appointmentDate} has been confirmed.`,
+        title: title_en,
+        body: body_en,
         notificationType: "appointment_confirmation",
-        data: { appointmentId },
+        data: {
+            title_ar,
+            title_en,
+            body_ar,
+            body_en,
+            appointmentId,
+        },
     });
 }
 
@@ -333,19 +344,34 @@ export async function notifyAppointmentCancelled(
     otherPartyName: string,
     appointmentDate: string,
     appointmentId: string,
-    isPatient: boolean
+    isPatient: boolean,
+    reason?: string
 ): Promise<{ success: boolean; error?: string }> {
-    const title = "Appointment Cancelled";
-    const body = isPatient
-        ? `Your appointment with ${otherPartyName} on ${appointmentDate} has been cancelled.`
-        : `Your appointment with patient ${otherPartyName} on ${appointmentDate} has been cancelled.`;
+    const title_en = "Appointment Cancelled ❌";
+    const title_ar = "تم إلغاء الموعد ❌";
+    const reasonTextAr = reason ? ` (سبب الإلغاء: ${reason})` : "";
+    const reasonTextEn = reason ? ` (Reason: ${reason})` : "";
+
+    const body_en = isPatient
+        ? `Your appointment with Dr. ${otherPartyName} on ${appointmentDate} has been cancelled.${reasonTextEn}`
+        : `Your appointment with patient ${otherPartyName} on ${appointmentDate} has been cancelled.${reasonTextEn}`;
+    const body_ar = isPatient
+        ? `تم إلغاء موعدك مع د. ${otherPartyName} بتاريخ ${appointmentDate}.${reasonTextAr}`
+        : `تم إلغاء موعدك مع المريض ${otherPartyName} بتاريخ ${appointmentDate}.${reasonTextAr}`;
 
     return createNotification({
         profileId,
-        title,
-        body,
+        title: title_en,
+        body: body_en,
         notificationType: "appointment_cancelled",
-        data: { appointmentId },
+        data: {
+            title_ar,
+            title_en,
+            body_ar,
+            body_en,
+            appointmentId,
+            reason,
+        },
     });
 }
 
@@ -358,12 +384,23 @@ export async function notifyNewAppointment(
     appointmentDate: string,
     appointmentId: string
 ): Promise<{ success: boolean; error?: string }> {
+    const title_en = "New Appointment Booked 📅";
+    const title_ar = "حجز موعد استشارة جديد 📅";
+    const body_en = `New appointment with ${patientName} scheduled for ${appointmentDate}.`;
+    const body_ar = `تم حجز موعد استشارة جديد مع المريض ${patientName} بتاريخ ${appointmentDate}.`;
+
     return createNotification({
         profileId: doctorProfileId,
-        title: "New Appointment",
-        body: `New appointment with ${patientName} scheduled for ${appointmentDate}.`,
+        title: title_en,
+        body: body_en,
         notificationType: "new_appointment",
-        data: { appointmentId },
+        data: {
+            title_ar,
+            title_en,
+            body_ar,
+            body_en,
+            appointmentId,
+        },
     });
 }
 
@@ -377,17 +414,27 @@ export async function notifyAppointmentReminder(
     appointmentId: string,
     isPatient: boolean
 ): Promise<{ success: boolean; error?: string }> {
-    const title = "Appointment Reminder";
-    const body = isPatient
-        ? `Reminder: Your appointment with ${otherPartyName} is on ${appointmentDate}.`
+    const title_en = "Appointment Reminder ⏰";
+    const title_ar = "تذكير بموعد الاستشارة ⏰";
+    const body_en = isPatient
+        ? `Reminder: Your appointment with Dr. ${otherPartyName} is on ${appointmentDate}.`
         : `Reminder: Your appointment with patient ${otherPartyName} is on ${appointmentDate}.`;
+    const body_ar = isPatient
+        ? `تذكير: موعد استشارتك مع د. ${otherPartyName} في ${appointmentDate}.`
+        : `تذكير: موعدك مع المريض ${otherPartyName} في ${appointmentDate}.`;
 
     return createNotification({
         profileId,
-        title,
-        body,
+        title: title_en,
+        body: body_en,
         notificationType: "appointment_reminder",
-        data: { appointmentId },
+        data: {
+            title_ar,
+            title_en,
+            body_ar,
+            body_en,
+            appointmentId,
+        },
     });
 }
 
@@ -399,12 +446,23 @@ export async function notifyNewMessage(
     senderName: string,
     conversationId: string
 ): Promise<{ success: boolean; error?: string }> {
+    const title_en = "New Message 💬";
+    const title_ar = "رسالة جديدة 💬";
+    const body_en = `You have a new message from ${senderName}.`;
+    const body_ar = `لديك رسالة جديدة من ${senderName}.`;
+
     return createNotification({
         profileId: recipientProfileId,
-        title: "New Message",
-        body: `You have a new message from ${senderName}.`,
+        title: title_en,
+        body: body_en,
         notificationType: "message",
-        data: { conversationId },
+        data: {
+            title_ar,
+            title_en,
+            body_ar,
+            body_en,
+            conversationId,
+        },
     });
 }
 
@@ -417,12 +475,23 @@ export async function notifyPrescriptionIssued(
     medicationName: string,
     prescriptionId: string
 ): Promise<{ success: boolean; error?: string }> {
+    const title_en = "New Prescription Issued 💊";
+    const title_ar = "إصدار روشتة طبية جديدة 💊";
+    const body_en = `Dr. ${doctorName} has prescribed ${medicationName} for you.`;
+    const body_ar = `قام د. ${doctorName} بإصدار روشتة طبية تحتوي على: ${medicationName}.`;
+
     return createNotification({
         profileId: patientProfileId,
-        title: "New Prescription",
-        body: `${doctorName} has prescribed ${medicationName} for you.`,
+        title: title_en,
+        body: body_en,
         notificationType: "prescription",
-        data: { prescriptionId },
+        data: {
+            title_ar,
+            title_en,
+            body_ar,
+            body_en,
+            prescriptionId,
+        },
     });
 }
 
@@ -435,12 +504,23 @@ export async function notifyRenewalRequest(
     medicationName: string,
     requestId: string
 ): Promise<{ success: boolean; error?: string }> {
+    const title_en = "Prescription Renewal Request 📋";
+    const title_ar = "طلب تجديد روشتة طبية 📋";
+    const body_en = `${patientName} has requested a renewal for ${medicationName}.`;
+    const body_ar = `طلب المريض ${patientName} تجديد روشتة ${medicationName}.`;
+
     return createNotification({
         profileId: doctorProfileId,
-        title: "Prescription Renewal Request",
-        body: `${patientName} has requested a renewal for ${medicationName}.`,
+        title: title_en,
+        body: body_en,
         notificationType: "prescription_renewal",
-        data: { requestId },
+        data: {
+            title_ar,
+            title_en,
+            body_ar,
+            body_en,
+            requestId,
+        },
     });
 }
 
@@ -453,17 +533,28 @@ export async function notifyRenewalResponse(
     approved: boolean,
     prescriptionId?: string
 ): Promise<{ success: boolean; error?: string }> {
-    const title = approved ? "Renewal Approved" : "Renewal Denied";
-    const body = approved
+    const title_en = approved ? "Renewal Approved ✅" : "Renewal Denied ❌";
+    const title_ar = approved ? "تمت الموافقة على تجديد الروشتة ✅" : "تم رفض تجديد الروشتة ❌";
+    const body_en = approved
         ? `Your renewal request for ${medicationName} has been approved.`
         : `Your renewal request for ${medicationName} has been denied. Please schedule a follow-up consultation.`;
+    const body_ar = approved
+        ? `تمت الموافقة على طلب تجديد روشتة ${medicationName}.`
+        : `تم رفض طلب تجديد روشتة ${medicationName}. يرجى حجز استشارة متابعة جديدة.`;
 
     return createNotification({
         profileId: patientProfileId,
-        title,
-        body,
+        title: title_en,
+        body: body_en,
         notificationType: "prescription_renewal",
-        data: { prescriptionId, approved },
+        data: {
+            title_ar,
+            title_en,
+            body_ar,
+            body_en,
+            prescriptionId,
+            approved,
+        },
     });
 }
 
@@ -475,12 +566,24 @@ export async function notifyPaymentSuccess(
     amount: number,
     transactionId: string
 ): Promise<{ success: boolean; error?: string }> {
+    const title_en = "Payment Successful ✅";
+    const title_ar = "تم سداد المبلغ بنجاح ✅";
+    const body_en = `Your payment of ${amount} EGP has been processed successfully.`;
+    const body_ar = `تم تأكيد سداد مبلغ ${amount} ج.م بنجاح.`;
+
     return createNotification({
         profileId: patientProfileId,
-        title: "Payment Successful",
-        body: `Your payment of ${amount} EGP has been processed successfully.`,
+        title: title_en,
+        body: body_en,
         notificationType: "payment_success",
-        data: { transactionId, amount },
+        data: {
+            title_ar,
+            title_en,
+            body_ar,
+            body_en,
+            transactionId,
+            amount,
+        },
     });
 }
 
@@ -492,16 +595,27 @@ export async function notifyVerificationStatus(
     approved: boolean,
     reason?: string
 ): Promise<{ success: boolean; error?: string }> {
-    const title = approved ? "Verification Approved" : "Verification Update";
-    const body = approved
-        ? "Congratulations! Your account has been verified. You can now accept appointments."
+    const title_en = approved ? "Verification Approved 🩺" : "Verification Update ℹ️";
+    const title_ar = approved ? "تم توثيق الحساب الطبي بنجاح 🩺" : "تحديث حالة التوثيق ℹ️";
+    const body_en = approved
+        ? "Congratulations! Your doctor account has been verified. You can now accept appointments."
         : `Your verification status has been updated. ${reason || "Please check your dashboard for details."}`;
+    const body_ar = approved
+        ? "تهانينا! تم توثيق حسابك الطبي بنجاح. يمكنك الآن استقبال المرضى ومواعيد الاستشارات."
+        : `تم تحديث حالة توثيق حسابك الطبي. ${reason ? `السبب: ${reason}` : "يرجى مراجعة لوحة التحكم للتفاصيل."}`;
 
     return createNotification({
         profileId: doctorProfileId,
-        title,
-        body,
+        title: title_en,
+        body: body_en,
         notificationType: "doctor_verification",
-        data: { approved, reason },
+        data: {
+            title_ar,
+            title_en,
+            body_ar,
+            body_en,
+            approved,
+            reason,
+        },
     });
 }

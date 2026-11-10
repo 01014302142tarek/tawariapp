@@ -590,7 +590,7 @@ export async function getPatientContacts(): Promise<{
             doctor_profiles!inner (
                 id,
                 profile_id,
-                profiles (
+                profiles!doctor_profiles_profile_id_fkey (
                     id,
                     full_name,
                     avatar_url,

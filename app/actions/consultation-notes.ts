@@ -318,7 +318,7 @@ export async function getPatientConsultationNotes(filters?: {
                 scheduled_start,
                 patient_profile_id,
                 doctor_profiles (
-                    profiles (
+                    profiles!doctor_profiles_profile_id_fkey (
                         full_name
                     )
                 )

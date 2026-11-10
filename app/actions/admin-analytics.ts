@@ -155,7 +155,7 @@ export async function getAdminAnalytics(): Promise<{ analytics: AdminAnalytics; 
             gross_amount,
             doctor_profiles (
                 id,
-                profiles (
+                profiles!doctor_profiles_profile_id_fkey (
                     full_name
                 ),
                 doctor_specializations (

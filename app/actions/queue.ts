@@ -429,10 +429,14 @@ export async function callNextPatient(): Promise<{
 
             createNotification({
                 profileId: patientProfileData.profile_id,
-                title: "حان دورك في الكشف العاجل!",
-                body: `${doctorName} بانتظارك الآن في غرفة الكشف. اضغط للدخول إلى مكالمة الفيديو.`,
+                title: "It's your turn for urgent consultation! 📹",
+                body: `Dr. ${doctorName} is waiting for you now. Click to join the video call.`,
                 notificationType: "system",
                 data: {
+                    title_ar: "حان دورك في الكشف العاجل! 📹",
+                    title_en: "It's your turn for urgent consultation! 📹",
+                    body_ar: `${doctorName} بانتظارك الآن في غرفة الكشف. اضغط للدخول إلى مكالمة الفيديو.`,
+                    body_en: `Dr. ${doctorName} is waiting for you now. Click to join the video call.`,
                     queueEntryId: queueEntry.id,
                     roomUrl,
                     action: "urgent_call",
@@ -504,6 +508,14 @@ export async function startQueueConsultation(
     const queueEntry = queueData as QueueEntry | null;
     if (!queueEntry) {
         return { success: false, error: "Queue entry not found" };
+    }
+
+    // Require completed/approved payment before starting consultation
+    if (queueEntry.payment_status !== "completed") {
+        return {
+            success: false,
+            error: "في انتظار تأكيد وموافقة الإدارة على إيصال التحويل قبل بدء المكالمة."
+        };
     }
 
     // Create Daily.co room configuration
@@ -1031,10 +1043,14 @@ export async function joinDoctorQueue(data: {
 
                 createNotification({
                     profileId: docRecord.profile_id,
-                    title: "مريض جديد في قائمة الانتظار",
-                    body: `انضم ${patientName} إلى قائمة انتظارك (الترتيب: #${position}).`,
+                    title: "New Patient in Queue 👥",
+                    body: `${patientName} joined your waiting queue (Position: #${position}).`,
                     notificationType: "new_appointment",
                     data: {
+                        title_ar: "مريض جديد في قائمة الانتظار 👥",
+                        title_en: "New Patient in Queue 👥",
+                        body_ar: `انضم ${patientName} إلى قائمة انتظارك (الترتيب: #${position}).`,
+                        body_en: `${patientName} joined your waiting queue (Position: #${position}).`,
                         queueEntryId: insertData.id,
                         position,
                     },

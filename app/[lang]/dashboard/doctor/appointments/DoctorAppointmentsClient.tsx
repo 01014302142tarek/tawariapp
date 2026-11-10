@@ -434,6 +434,13 @@ export default function AppointmentsPage({
                                                                 <span>{isRTL ? "ابدأ الاستشارة" : "Start"}</span>
                                                             </button>
                                                             <button
+                                                                onClick={() => handleCancel(apt.id)}
+                                                                className={cn("p-2 rounded-lg transition-colors", isDark ? "text-red-400 hover:bg-red-500/10" : "text-red-500 hover:bg-red-50")}
+                                                                title={isRTL ? "اعتذار / إلغاء الموعد" : "Cancel / Reject"}
+                                                            >
+                                                                {Icons.x}
+                                                            </button>
+                                                            <button
                                                                 onClick={() => handleNoShow(apt.id)}
                                                                 className={cn("px-3 py-1.5 rounded-lg text-sm font-medium transition-colors", isDark ? "text-gray-400 hover:bg-white/5" : "text-gray-600 hover:bg-gray-100")}
                                                             >

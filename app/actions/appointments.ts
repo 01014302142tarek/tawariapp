@@ -6,7 +6,8 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/supabase/types";
 import { appointmentLimiter } from "@/lib/rate-limit";
 import { appointmentSchema, validateInput } from "@/lib/validations";
-import { notifyNewAppointment, notifyAppointmentCancelled, notifyAppointmentConfirmed, createNotification } from "./notifications";
+import { notifyNewAppointment, notifyAppointmentConfirmed, createNotification } from "./notifications";
+import { notifyAppointmentCancelledAllParties } from "@/lib/email/admin-receipt-notifications";
 import { revalidateTag } from "next/cache";
 
 // ============================================
@@ -51,6 +52,9 @@ export interface AppointmentWithDetails extends Appointment {
         specialty?: string;
         consultation_fee?: number;
     };
+    paymentApproval?: "pending" | "approved" | "rejected";
+    paymentMethod?: string | null;
+    paymentRejectionReason?: string | null;
 }
 
 export interface ConsultationSession {
@@ -484,18 +488,17 @@ export async function cancelAppointmentAsPatient(
         return { success: false, error: error.message };
     }
 
-    // Send notification to doctor about cancellation
-    // isPatient=false because the doctor is receiving the notification (they're not the patient)
-    if (appointment?.doctor_profiles?.profile_id) {
-        const appointmentDate = new Date(appointment.scheduled_start).toLocaleString();
-        notifyAppointmentCancelled(
-            appointment.doctor_profiles.profile_id,
-            profile.full_name || "A patient",
-            appointmentDate,
-            appointmentId,
-            false
-        ).catch(err => console.error("Failed to send cancellation notification:", err));
-    }
+    // Send notification to all parties (Doctor, Admin, Patient) about cancellation
+    const appointmentDate = new Date(appointment.scheduled_start).toLocaleString();
+    notifyAppointmentCancelledAllParties({
+        appointmentId,
+        cancelledByRole: "patient",
+        cancellerName: profile.full_name || "المريض / Patient",
+        doctorUserProfId: appointment?.doctor_profiles?.profile_id,
+        patientUserProfId: profile.id,
+        appointmentDate,
+        reason,
+    }).catch(err => console.error("Failed to notify parties of cancellation:", err));
 
     const userIds = await getUserIdsForAppointment(supabase, appointmentId);
     revalidateAppointmentCaches([user.id, userIds.doctorUserId, userIds.patientUserId]);
@@ -696,13 +699,15 @@ export async function cancelAppointmentAsDoctor(
                 const docName = (docUserData as { full_name?: string } | null)?.full_name || "Doctor";
                 const dateStr = new Date(apptInfo.scheduled_start).toLocaleString();
 
-                notifyAppointmentCancelled(
-                    patientProfileRec.profile_id,
-                    docName,
-                    dateStr,
+                notifyAppointmentCancelledAllParties({
                     appointmentId,
-                    true
-                ).catch(err => console.error("Failed to send patient cancellation notification:", err));
+                    cancelledByRole: "doctor",
+                    cancellerName: docName,
+                    doctorUserProfId: profile.id,
+                    patientUserProfId: patientProfileRec.profile_id,
+                    appointmentDate: dateStr,
+                    reason,
+                }).catch(err => console.error("Failed to notify parties of doctor cancellation:", err));
             }
         }
     } catch (e) {
@@ -808,6 +813,32 @@ export async function startConsultation(
     if (!doctorProfile) {
         return { success: false, error: "Doctor profile not found" };
     }
+
+    // Verify payment approval before allowing doctor to start call
+    try {
+        const { data: latestTx } = await (supabase as any)
+            .from("transactions")
+            .select("payment_method, status, payment_details")
+            .eq("appointment_id", appointmentId)
+            .order("created_at", { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+        if (latestTx) {
+            if (latestTx.payment_method === "instapay" || latestTx.payment_method === "wepay") {
+                const approval = latestTx.payment_details?.admin_approval;
+                if (approval !== "approved" && latestTx.status !== "completed") {
+                    return {
+                        success: false,
+                        error: "في انتظار مراجعة وتأكيد إيصال التحويل من قِبل الإدارة قبل بدء المكالمة."
+                    };
+                }
+            }
+        }
+    } catch (err) {
+        console.warn("Error checking payment approval in startConsultation:", err);
+    }
+
     // Check if appointment already has an active session (allow doctor to reconnect)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: existingSession } = await (supabase as any)
@@ -1508,10 +1539,14 @@ export async function rescheduleAppointment(data: {
             if (patRec?.profile_id) {
                 createNotification({
                     profileId: patRec.profile_id,
-                    title: "تم تغيير موعد الكشف",
-                    body: `قام الطبيب بتعديل موعد استشارتك إلى: ${newDateStr}.`,
+                    title: "Appointment Rescheduled 📅",
+                    body: `The doctor has rescheduled your consultation to: ${newDateStr}.`,
                     notificationType: "appointment_rescheduled",
                     data: {
+                        title_ar: "تم تعديل موعد الاستشارة 📅",
+                        title_en: "Appointment Rescheduled 📅",
+                        body_ar: `قام الطبيب بتعديل موعد استشارتك إلى: ${newDateStr}.`,
+                        body_en: `The doctor has rescheduled your consultation to: ${newDateStr}.`,
                         appointmentId: data.appointmentId,
                         newStart: data.newScheduledStart,
                     },
@@ -1527,10 +1562,14 @@ export async function rescheduleAppointment(data: {
             if (docRec?.profile_id) {
                 createNotification({
                     profileId: docRec.profile_id,
-                    title: "تم تغيير موعد الكشف من قبل المريض",
-                    body: `قام المريض بتعديل موعد الاستشارة إلى: ${newDateStr}.`,
+                    title: "Appointment Rescheduled by Patient 📅",
+                    body: `The patient has rescheduled the consultation to: ${newDateStr}.`,
                     notificationType: "appointment_rescheduled",
                     data: {
+                        title_ar: "قام المريض بتعديل موعد الاستشارة 📅",
+                        title_en: "Appointment Rescheduled by Patient 📅",
+                        body_ar: `قام المريض بتعديل موعد الاستشارة إلى: ${newDateStr}.`,
+                        body_en: `The patient has rescheduled the consultation to: ${newDateStr}.`,
                         appointmentId: data.appointmentId,
                         newStart: data.newScheduledStart,
                     },
@@ -1659,6 +1698,34 @@ export async function getAppointmentById(
         return { appointment: null, error: "Appointment not found" };
     }
 
+    // Check payment status & admin approval status for this appointment
+    let paymentApproval: "pending" | "approved" | "rejected" = "approved";
+    let paymentMethod: string | null = null;
+    let paymentRejectionReason: string | null = null;
+
+    try {
+        const { data: txData } = await supabase
+            .from("transactions")
+            .select("payment_method, status, payment_details")
+            .eq("appointment_id", appointmentId)
+            .order("created_at", { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+        if (txData) {
+            const tx = txData as any;
+            paymentMethod = tx.payment_method;
+            if (tx.payment_method === "instapay" || tx.payment_method === "wepay") {
+                paymentApproval = tx.payment_details?.admin_approval || (tx.status === "completed" ? "approved" : "pending");
+                paymentRejectionReason = tx.payment_details?.rejection_reason || null;
+            } else {
+                paymentApproval = tx.status === "completed" ? "approved" : "pending";
+            }
+        }
+    } catch (e) {
+        console.warn("Could not fetch transaction for appointment:", e);
+    }
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const apt = aptData as any;
     const appointment: AppointmentWithDetails = {
@@ -1674,6 +1741,9 @@ export async function getAppointmentById(
             full_name: apt.patient_profiles.profiles?.full_name || "Unknown Patient",
             avatar_url: apt.patient_profiles.profiles?.avatar_url,
         } : undefined,
+        paymentApproval,
+        paymentMethod,
+        paymentRejectionReason,
         doctor_profiles: undefined,
         patient_profiles: undefined,
     };

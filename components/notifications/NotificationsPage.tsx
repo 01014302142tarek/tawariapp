@@ -14,6 +14,7 @@ import {
     Notification,
     NotificationType,
 } from "@/app/actions/notifications";
+import { getLocalizedNotificationText } from "@/lib/utils/notification-i18n";
 
 // Icons for notification types
 const NotificationIcons: Record<NotificationType, React.ReactNode> = {
@@ -405,7 +406,9 @@ export default function NotificationsPage({ isDark, dashboardType }: Notificatio
                 ) : (
                     <>
                         <AnimatePresence mode="popLayout">
-                            {notifications.map((notification) => (
+                            {notifications.map((notification) => {
+                                const localized = getLocalizedNotificationText(notification, isRTL);
+                                return (
                                     <motion.div
                                     key={notification.id}
                                     layout
@@ -438,13 +441,13 @@ export default function NotificationsPage({ isDark, dashboardType }: Notificatio
                                                     isDark ? "text-white" : "text-gray-900",
                                                     !notification.is_read && "font-semibold"
                                                 )}>
-                                                    {notification.title}
+                                                    {localized.title}
                                                 </p>
                                                 <p className={cn(
                                                     "text-sm mt-1",
                                                     isDark ? "text-gray-400" : "text-gray-600"
                                                 )}>
-                                                    {notification.body}
+                                                    {localized.body}
                                                 </p>
                                             </div>
                                             {!notification.is_read && (
@@ -479,7 +482,8 @@ export default function NotificationsPage({ isDark, dashboardType }: Notificatio
                                         </div>
                                     </div>
                                 </motion.div>
-                            ))}
+                            );
+                            })}
                         </AnimatePresence>
 
                         {/* Load More */}

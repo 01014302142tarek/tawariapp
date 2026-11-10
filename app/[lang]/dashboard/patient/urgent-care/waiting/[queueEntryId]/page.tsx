@@ -424,7 +424,109 @@ export default function WaitingRoomPage() {
                     </div>
                 </div>
 
-                {/* Main Waiting Card */}
+                {/* When manual payment is pending admin approval */}
+                {entry.payment_status === "pending" ? (
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.96 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className={cn(
+                            "rounded-3xl p-6 sm:p-10 text-center mb-6 border shadow-2xl relative overflow-hidden",
+                            isDark
+                                ? "bg-gradient-to-b from-[#0D2C4F] via-[#091D34] to-[#041122] border-amber-500/30"
+                                : "bg-gradient-to-b from-amber-50/90 via-white to-amber-50/40 border-amber-200"
+                        )}
+                    >
+                        {/* Glow effect */}
+                        <div className="absolute top-0 right-1/2 translate-x-1/2 w-48 h-48 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
+
+                        {/* Animated Radar Icon */}
+                        <div className="relative w-28 h-28 mx-auto mb-6">
+                            <span className="animate-ping absolute inset-0 rounded-full bg-amber-400/20" />
+                            <span className="animate-pulse absolute inset-2 rounded-full bg-amber-400/30" />
+                            <div className="relative w-full h-full rounded-full bg-gradient-to-br from-amber-500 to-[#FD614B] flex items-center justify-center text-white shadow-xl">
+                                <svg className="w-12 h-12 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                            </div>
+                        </div>
+
+                        {/* Live Status Badge */}
+                        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold bg-amber-500/15 text-amber-400 border border-amber-500/30 mb-4 shadow-sm">
+                            <span className="w-2.5 h-2.5 rounded-full bg-amber-400 animate-ping" />
+                            <span>{isRTL ? "جاري مراجعة إيصال الدفع بواسطة الإدارة" : "Payment Verification in Progress"}</span>
+                        </div>
+
+                        <h2 className={cn("text-2xl sm:text-3xl font-black mb-3 tracking-tight", isDark ? "text-white" : "text-slate-900")}>
+                            {isRTL ? "يرجى الانتظار، سيتم تحويلك فور اعتماد الدفع" : "Please wait, you will be redirected once approved"}
+                        </h2>
+
+                        <p className={cn("text-sm sm:text-base leading-relaxed max-w-lg mx-auto mb-6", isDark ? "text-gray-300" : "text-slate-600")}>
+                            {isRTL
+                                ? "تم استلام صورة الإيصال بنجاح. يقوم فريق إدارة المنصة الآن بمراجعة العملية والتأكد من استلام المبلغ على الحساب. لا تغلق هذه الصفحة، سيتم نقلك تلقائياً لمكالمة الطبيب فور الموافقة."
+                                : "Your receipt has been submitted. Our admin team is verifying the transfer. Please keep this page open; you will be connected to the doctor automatically once approved."}
+                        </p>
+
+                        {/* Status details */}
+                        <div className={cn(
+                            "p-4 rounded-2xl max-w-md mx-auto text-start space-y-2.5 border mb-6 text-xs sm:text-sm",
+                            isDark ? "bg-white/5 border-white/10" : "bg-white border-slate-200 shadow-sm"
+                        )}>
+                            <div className="flex justify-between items-center">
+                                <span className={isDark ? "text-gray-400" : "text-gray-500"}>{isRTL ? "طبيب الطوارئ:" : "Emergency Doctor:"}</span>
+                                <span className="font-bold text-[#FD614B]">{doctorInfo?.full_name || (isRTL ? "طبيب معتمد" : "Verified Doctor")}</span>
+                            </div>
+                            <div className="flex justify-between items-center">
+                                <span className={isDark ? "text-gray-400" : "text-gray-500"}>{isRTL ? "المبلغ المطلوب:" : "Total Amount:"}</span>
+                                <span className="font-mono font-bold text-emerald-500">{entry.payment_amount} EGP</span>
+                            </div>
+                            <div className="flex justify-between items-center">
+                                <span className={isDark ? "text-gray-400" : "text-gray-500"}>{isRTL ? "حالة الإشعار:" : "Review Status:"}</span>
+                                <span className="text-amber-400 font-bold flex items-center gap-1.5">
+                                    <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+                                    {isRTL ? "قيد التدقيق من الإدارة" : "Under Admin Review"}
+                                </span>
+                            </div>
+                        </div>
+
+                        <button
+                            onClick={() => setShowLeaveConfirm(true)}
+                            className={cn(
+                                "text-xs font-semibold px-4 py-2 rounded-xl transition-all border",
+                                isDark ? "border-red-500/20 text-red-400 hover:bg-red-500/10" : "border-red-200 text-red-600 hover:bg-red-50"
+                            )}
+                        >
+                            {isRTL ? "إلغاء الطلب ومغادرة القائمة" : "Cancel Request & Leave"}
+                        </button>
+                    </motion.div>
+                ) : entry.payment_status === "failed" ? (
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.96 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className={cn(
+                            "rounded-3xl p-6 sm:p-10 text-center mb-6 border shadow-2xl",
+                            isDark ? "bg-[#0D2C4F] border-red-500/30" : "bg-red-50/50 border-red-200"
+                        )}
+                    >
+                        <div className="w-16 h-16 rounded-full bg-red-500/20 text-red-500 flex items-center justify-center mx-auto mb-4 font-bold text-2xl">
+                            ✕
+                        </div>
+                        <h2 className="text-2xl font-bold mb-2 text-red-400">
+                            {isRTL ? "تعذر تأكيد عملية التحويل" : "Payment Verification Failed"}
+                        </h2>
+                        <p className={cn("text-sm max-w-md mx-auto mb-6", isDark ? "text-gray-300" : "text-slate-600")}>
+                            {isRTL
+                                ? "تمت مراجعة الإيصال من قِبل الإدارة ولم يتم تأكيده. يرجى إعادة المحاولة بإيصال تحويل صحيح."
+                                : "Your receipt was reviewed and could not be verified. Please retry with a valid receipt."}
+                        </p>
+                        <button
+                            onClick={handleBack}
+                            className="px-6 py-2.5 bg-[#FD614B] text-white rounded-xl font-bold hover:bg-[#E84D37] transition-all shadow-md"
+                        >
+                            {isRTL ? "العودة لحجز استشارة جديدة" : "Back to Available Doctors"}
+                        </button>
+                    </motion.div>
+                ) : (
+                /* Main Waiting Card (Active Queue) */
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -476,6 +578,7 @@ export default function WaitingRoomPage() {
                         </div>
                     )}
                 </motion.div>
+                )}
 
                 {/* Status Messages */}
                 <motion.div

@@ -97,12 +97,12 @@ const getInitials = (name: string): string => {
     return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
 };
 
-const formatWaitTime = (minutes: number): string => {
-    if (minutes === 0) return "متاح الآن";
-    if (minutes < 60) return `~${minutes} دقيقة انتظار`;
+const formatWaitTime = (minutes: number, isRTL: boolean = true): string => {
+    if (minutes === 0) return isRTL ? "متاح الآن" : "Available now";
+    if (minutes < 60) return isRTL ? `~${minutes} دقيقة انتظار` : `~${minutes} min wait`;
     const hours = Math.floor(minutes / 60);
     const mins = minutes % 60;
-    return `~${hours} س و ${mins} د`;
+    return isRTL ? `~${hours} س و ${mins} د` : `~${hours}h ${mins}m`;
 };
 
 // ============================================
@@ -407,7 +407,7 @@ export default function PaymentPage() {
                                 </div>
                                 <div className={cn("flex items-center gap-1", isDark ? "text-slate-400" : "text-slate-500")}>
                                     {Icons.clock}
-                                    <span>{formatWaitTime(doctor.estimated_wait_minutes)}</span>
+                                    <span>{formatWaitTime(doctor.estimated_wait_minutes, isRTL)}</span>
                                 </div>
                                 {doctor.queue_length > 0 && (
                                     <div className={cn("flex items-center gap-1", isDark ? "text-slate-400" : "text-slate-600")}>
@@ -572,7 +572,9 @@ export default function PaymentPage() {
                     )}>
                         <div className="flex items-center justify-between mb-2">
                             <span className={cn("font-bold", paymentMethod === "instapay" ? "text-[#FD614B]" : "text-[#0C67B3]")}>
-                                {paymentMethod === "instapay" ? "تعليمات التحويل عبر إنستا باي" : "تعليمات التحويل عبر محفظة وي باي"}
+                                {paymentMethod === "instapay"
+                                    ? (isRTL ? "تعليمات التحويل عبر إنستا باي" : "InstaPay Transfer Instructions")
+                                    : (isRTL ? "تعليمات التحويل عبر محفظة وي باي" : "WE Pay Transfer Instructions")}
                             </span>
                             <button
                                 type="button"
@@ -598,13 +600,21 @@ export default function PaymentPage() {
                             </button>
                         </div>
                         <p className={isDark ? "text-gray-300" : "text-gray-700"}>
-                            1. حوّل المبلغ المحدد (<strong className="text-[#FD614B]">{totalAmount} ج.م</strong>) إلى الرقم: <span className="font-mono font-bold underline">{paymentMethod === "instapay" ? INSTAPAY_NUMBER : WEPAY_NUMBER}</span>
+                            {isRTL ? (
+                                <>1. حوّل المبلغ المحدد (<strong className="text-[#FD614B]">{totalAmount} ج.م</strong>) إلى الرقم: <span className="font-mono font-bold underline">{paymentMethod === "instapay" ? INSTAPAY_NUMBER : WEPAY_NUMBER}</span></>
+                            ) : (
+                                <>1. Transfer the exact amount (<strong className="text-[#FD614B]">{totalAmount} EGP</strong>) to: <span className="font-mono font-bold underline">{paymentMethod === "instapay" ? INSTAPAY_NUMBER : WEPAY_NUMBER}</span></>
+                            )}
                         </p>
                         <p className={isDark ? "text-gray-300" : "text-gray-700"}>
-                            2. التقط لقطة شاشة (Screenshot) لرسالة التحويل الناجحة.
+                            {isRTL
+                                ? "2. التقط لقطة شاشة لإشعار تأكيد التحويل الناجح."
+                                : "2. Take a screenshot of the successful transfer confirmation."}
                         </p>
                         <p className={isDark ? "text-gray-300" : "text-gray-700"}>
-                            3. ارفع الصورة واكتب اسمك ورقم هاتفك واضغط زر الدخول لقائمة الانتظار.
+                            {isRTL
+                                ? "3. ارفع الصورة واكتب اسمك ورقم هاتفك واضغط زر الدخول لقائمة الانتظار."
+                                : "3. Upload the receipt screenshot, enter your name & phone number, and click join queue."}
                         </p>
                     </div>
 

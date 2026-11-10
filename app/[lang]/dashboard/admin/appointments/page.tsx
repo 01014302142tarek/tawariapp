@@ -9,7 +9,7 @@ import { GlowingCard } from "@/components/ui/glowing-card";
 import { SparklesCore } from "@/components/ui/sparkles";
 import { AnimatedNumber } from "@/components/ui/animated-number";
 import { useI18n } from "@/app/i18n";
-import { getAdminAppointments, getAppointmentStats, type AdminAppointment, type AppointmentStatus } from "@/app/actions/admin-appointments";
+import { getAdminAppointments, getAppointmentStats, approveManualPayment, rejectManualPayment, type AdminAppointment, type AppointmentStatus } from "@/app/actions/admin-appointments";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -113,6 +113,87 @@ export default function AdminAppointmentsPage() {
     const [currentPage, setCurrentPage] = useState(1);
     const [stats, setStats] = useState({ total: 0, scheduled: 0, completed: 0, cancelled: 0, no_show: 0 });
     const [selectedReceiptAppointment, setSelectedReceiptAppointment] = useState<AdminAppointment | null>(null);
+    const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
+    const [rejectModalAppointment, setRejectModalAppointment] = useState<AdminAppointment | null>(null);
+    const [rejectionReasonInput, setRejectionReasonInput] = useState("");
+
+    const handleApprove = async (txId: string, appointmentId: string) => {
+        setActionLoadingId(txId);
+        try {
+            const res = await approveManualPayment(txId);
+            if (res.success) {
+                setAppointments(prev => prev.map(a => {
+                    if (a.id === appointmentId && a.payment) {
+                        return {
+                            ...a,
+                            payment: {
+                                ...a.payment,
+                                adminApproval: "approved",
+                                approvedAt: new Date().toISOString(),
+                            }
+                        };
+                    }
+                    return a;
+                }));
+                if (selectedReceiptAppointment?.id === appointmentId && selectedReceiptAppointment.payment) {
+                    setSelectedReceiptAppointment({
+                        ...selectedReceiptAppointment,
+                        payment: {
+                            ...selectedReceiptAppointment.payment,
+                            adminApproval: "approved",
+                            approvedAt: new Date().toISOString(),
+                        }
+                    });
+                }
+            } else {
+                alert(res.error || (language === "ar" ? "فشل اعتماد الدفع" : "Failed to approve payment"));
+            }
+        } catch (e) {
+            console.error("Approve error:", e);
+        } finally {
+            setActionLoadingId(null);
+        }
+    };
+
+    const handleReject = async () => {
+        if (!rejectModalAppointment?.payment?.transactionId) return;
+        const txId = rejectModalAppointment.payment.transactionId;
+        const aptId = rejectModalAppointment.id;
+        const reason = rejectionReasonInput.trim() || (language === "ar" ? "لم يصل المبلغ على الحساب أو الإيصال غير مطابق" : "Payment not received or invalid receipt");
+
+        setActionLoadingId(txId);
+        try {
+            const res = await rejectManualPayment(txId, reason);
+            if (res.success) {
+                setAppointments(prev => prev.map(a => {
+                    if (a.id === aptId) {
+                        return {
+                            ...a,
+                            status: "cancelled",
+                            cancellation_reason: `تم رفض إيصال التحويل: ${reason}`,
+                            payment: a.payment ? {
+                                ...a.payment,
+                                adminApproval: "rejected",
+                                rejectionReason: reason,
+                            } : null
+                        };
+                    }
+                    return a;
+                }));
+                setRejectModalAppointment(null);
+                setRejectionReasonInput("");
+                if (selectedReceiptAppointment?.id === aptId) {
+                    setSelectedReceiptAppointment(null);
+                }
+            } else {
+                alert(res.error || (language === "ar" ? "فشل رفض الدفع" : "Failed to reject payment"));
+            }
+        } catch (e) {
+            console.error("Reject error:", e);
+        } finally {
+            setActionLoadingId(null);
+        }
+    };
 
     // Debounce search input
     useEffect(() => {
@@ -466,20 +547,47 @@ export default function AdminAppointmentsPage() {
                                         {/* Payment / Receipt Information */}
                                         {apt.payment && (
                                             <div className={cn(
-                                                "p-3 rounded-xl border flex flex-wrap items-center justify-between gap-3 text-xs",
-                                                isDark ? "bg-[#044C87]/15 border-[#0C67B3]/30" : "bg-sky-50 border-sky-200"
+                                                "p-3.5 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs",
+                                                apt.payment.adminApproval === "pending"
+                                                    ? (isDark ? "bg-amber-500/10 border-amber-500/30" : "bg-amber-50 border-amber-200")
+                                                    : apt.payment.adminApproval === "approved"
+                                                    ? (isDark ? "bg-emerald-500/10 border-emerald-500/30" : "bg-emerald-50 border-emerald-200")
+                                                    : (isDark ? "bg-red-500/10 border-red-500/30" : "bg-red-50 border-red-200")
                                             )}>
                                                 <div className="flex items-center gap-2 flex-wrap">
-                                                    <span className="font-semibold text-emerald-500 flex items-center gap-1">
-                                                        {Icons.check}
-                                                        {language === "ar" ? "تفاصيل الدفع:" : "Payment:"}
+                                                    <span className={cn(
+                                                        "px-2.5 py-1 rounded-md font-bold text-xs flex items-center gap-1",
+                                                        apt.payment.adminApproval === "pending"
+                                                            ? "bg-amber-500/20 text-amber-400 border border-amber-500/40"
+                                                            : apt.payment.adminApproval === "approved"
+                                                            ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/40"
+                                                            : "bg-red-500/20 text-red-400 border border-red-500/40"
+                                                    )}>
+                                                        {apt.payment.adminApproval === "pending" ? (
+                                                            <>
+                                                                <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+                                                                {language === "ar" ? "في انتظار تأكيد الإدارة" : "Pending Approval"}
+                                                            </>
+                                                        ) : apt.payment.adminApproval === "approved" ? (
+                                                            <>
+                                                                <span>✓</span>
+                                                                {language === "ar" ? "تم تأكيد الدفع" : "Payment Approved"}
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <span>✕</span>
+                                                                {language === "ar" ? "تم رفض الدفع" : "Payment Rejected"}
+                                                            </>
+                                                        )}
                                                     </span>
+
                                                     <span className={cn("px-2.5 py-1 rounded-md font-bold text-xs", isDark ? "bg-white/10 text-white" : "bg-white text-slate-900 border border-slate-200")}>
                                                         {apt.payment.methodLabelAr || (apt.payment.paymentMethod === "instapay" ? "إنستا باي (InstaPay)" : apt.payment.paymentMethod === "wepay" ? "وي باي (WE Pay)" : apt.payment.paymentMethod)}
                                                     </span>
+
                                                     {apt.payment.targetPhone && (
                                                         <span className={cn("font-mono font-medium px-2 py-0.5 rounded", isDark ? "bg-black/30 text-gray-300" : "bg-white text-gray-700")}>
-                                                            {language === "ar" ? "الرقم المحوّل إليه:" : "Target:"} {apt.payment.targetPhone}
+                                                            {language === "ar" ? "المحوّل إليه:" : "Target:"} {apt.payment.targetPhone}
                                                         </span>
                                                     )}
                                                     {apt.payment.senderName && (
@@ -492,22 +600,57 @@ export default function AdminAppointmentsPage() {
                                                             ({apt.payment.senderPhone})
                                                         </span>
                                                     )}
+                                                    {apt.payment.rejectionReason && (
+                                                        <span className="text-red-400 font-medium">
+                                                            • {language === "ar" ? `السبب: ${apt.payment.rejectionReason}` : `Reason: ${apt.payment.rejectionReason}`}
+                                                        </span>
+                                                    )}
                                                 </div>
 
-                                                {apt.payment.receiptUrl ? (
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => setSelectedReceiptAppointment(apt)}
-                                                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r from-[#FD614B] to-[#E84D37] hover:brightness-110 text-white font-semibold transition-all shadow-sm"
-                                                    >
-                                                        {Icons.receipt}
-                                                        <span>{language === "ar" ? "عرض إيصال الدفع" : "View Receipt"}</span>
-                                                    </button>
-                                                ) : (
-                                                    <span className={cn("text-[11px] italic", isDark ? "text-gray-500" : "text-gray-400")}>
-                                                        {language === "ar" ? "لا يوجد إيصال مرفق" : "No receipt attached"}
-                                                    </span>
-                                                )}
+                                                <div className="flex items-center gap-2 flex-wrap">
+                                                    {apt.payment.receiptUrl && (
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setSelectedReceiptAppointment(apt)}
+                                                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r from-[#FD614B] to-[#E84D37] hover:brightness-110 text-white font-semibold transition-all shadow-sm"
+                                                        >
+                                                            {Icons.receipt}
+                                                            <span>{language === "ar" ? "معاينة الإيصال" : "View Receipt"}</span>
+                                                        </button>
+                                                    )}
+
+                                                    {apt.payment.transactionId && (
+                                                        <div className="flex items-center gap-1.5">
+                                                            {apt.payment.adminApproval !== "approved" && (
+                                                                <button
+                                                                    type="button"
+                                                                    disabled={actionLoadingId === apt.payment.transactionId}
+                                                                    onClick={() => handleApprove(apt.payment!.transactionId!, apt.id)}
+                                                                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold transition-all shadow-sm disabled:opacity-50"
+                                                                >
+                                                                    {actionLoadingId === apt.payment.transactionId ? (
+                                                                        <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                                                    ) : (
+                                                                        <span>✓</span>
+                                                                    )}
+                                                                    <span>{language === "ar" ? "تأكيد واستلام" : "Approve"}</span>
+                                                                </button>
+                                                            )}
+
+                                                            {apt.payment.adminApproval !== "rejected" && (
+                                                                <button
+                                                                    type="button"
+                                                                    disabled={actionLoadingId === apt.payment.transactionId}
+                                                                    onClick={() => setRejectModalAppointment(apt)}
+                                                                    className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 font-semibold transition-all disabled:opacity-50"
+                                                                >
+                                                                    <span>✕</span>
+                                                                    <span>{language === "ar" ? "رفض الدفع" : "Reject"}</span>
+                                                                </button>
+                                                            )}
+                                                        </div>
+                                                    )}
+                                                </div>
                                             </div>
                                         )}
                                     </div>
@@ -693,7 +836,7 @@ export default function AdminAppointmentsPage() {
                             </div>
 
                             {/* Modal Footer */}
-                            <div className={cn("p-4 border-t flex items-center justify-between gap-3", isDark ? "border-white/10" : "border-slate-200")}>
+                            <div className={cn("p-4 border-t flex flex-wrap items-center justify-between gap-3", isDark ? "border-white/10" : "border-slate-200")}>
                                 {selectedReceiptAppointment.payment.receiptUrl && (
                                     <a
                                         href={selectedReceiptAppointment.payment.receiptUrl}
@@ -708,11 +851,149 @@ export default function AdminAppointmentsPage() {
                                         <span>{language === "ar" ? "فتح الصورة بحجمها الكامل" : "Open Full Image"}</span>
                                     </a>
                                 )}
+
+                                <div className="flex items-center gap-2 ml-auto">
+                                    {selectedReceiptAppointment.payment.transactionId && (
+                                        <>
+                                            {selectedReceiptAppointment.payment.adminApproval !== "approved" ? (
+                                                <button
+                                                    type="button"
+                                                    disabled={actionLoadingId === selectedReceiptAppointment.payment.transactionId}
+                                                    onClick={() => handleApprove(selectedReceiptAppointment.payment!.transactionId!, selectedReceiptAppointment.id)}
+                                                    className="flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition-all disabled:opacity-50 shadow-md"
+                                                >
+                                                    {actionLoadingId === selectedReceiptAppointment.payment.transactionId ? (
+                                                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                                    ) : (
+                                                        <span>✓</span>
+                                                    )}
+                                                    <span>{language === "ar" ? "تأكيد واستلام المبلغ" : "Approve Payment"}</span>
+                                                </button>
+                                            ) : (
+                                                <span className="px-3 py-1.5 rounded-lg bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-xs font-bold flex items-center gap-1">
+                                                    <span>✓</span>
+                                                    <span>{language === "ar" ? "معتمد ومقبول" : "Approved"}</span>
+                                                </span>
+                                            )}
+
+                                            {selectedReceiptAppointment.payment.adminApproval !== "rejected" ? (
+                                                <button
+                                                    type="button"
+                                                    disabled={actionLoadingId === selectedReceiptAppointment.payment.transactionId}
+                                                    onClick={() => setRejectModalAppointment(selectedReceiptAppointment)}
+                                                    className="flex items-center gap-1 px-4 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 rounded-xl text-xs font-bold transition-all disabled:opacity-50"
+                                                >
+                                                    <span>✕</span>
+                                                    <span>{language === "ar" ? "رفض الدفع" : "Reject"}</span>
+                                                </button>
+                                            ) : (
+                                                <span className="px-3 py-1.5 rounded-lg bg-red-500/20 text-red-400 border border-red-500/30 text-xs font-bold flex items-center gap-1">
+                                                    <span>✕</span>
+                                                    <span>{language === "ar" ? "مرفوض" : "Rejected"}</span>
+                                                </span>
+                                            )}
+                                        </>
+                                    )}
+
+                                    <button
+                                        onClick={() => setSelectedReceiptAppointment(null)}
+                                        className="px-5 py-2 bg-gradient-to-r from-[#FD614B] to-[#E84D37] text-white rounded-xl text-xs font-bold hover:brightness-110 transition-all"
+                                    >
+                                        {language === "ar" ? "إغلاق" : "Close"}
+                                    </button>
+                                </div>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+
+                {/* Reject Confirmation Modal */}
+                {rejectModalAppointment && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.95 }}
+                            className={cn(
+                                "w-full max-w-md rounded-2xl border p-6 shadow-2xl space-y-4",
+                                isDark ? "bg-[#031326] border-red-500/30" : "bg-white border-red-200"
+                            )}
+                        >
+                            <div className="flex items-center gap-3 text-red-500">
+                                <div className="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center font-bold text-lg">
+                                    ✕
+                                </div>
+                                <div>
+                                    <h3 className={cn("font-bold text-base", isDark ? "text-white" : "text-slate-900")}>
+                                        {language === "ar" ? "رفض إيصال التحويل" : "Reject Payment Receipt"}
+                                    </h3>
+                                    <p className={cn("text-xs", isDark ? "text-gray-400" : "text-gray-500")}>
+                                        {language === "ar" ? "سيتم إلغاء الموعد وإخطار المريض بسبب الرفض" : "Appointment will be cancelled and patient will be notified"}
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className={cn("text-xs font-semibold block", isDark ? "text-gray-300" : "text-gray-700")}>
+                                    {language === "ar" ? "سبب الرفض (سيظهر للمريض):" : "Rejection Reason (visible to patient):"}
+                                </label>
+                                <textarea
+                                    rows={3}
+                                    value={rejectionReasonInput}
+                                    onChange={(e) => setRejectionReasonInput(e.target.value)}
+                                    placeholder={language === "ar" ? "مثال: لم يتم استلام المبلغ على الحساب أو صورة الإيصال غير واضحة" : "e.g. Amount not received or receipt image is unreadable"}
+                                    className={cn(
+                                        "w-full px-3 py-2 text-xs rounded-xl border focus:outline-hidden focus:ring-2 focus:ring-red-500 resize-none",
+                                        isDark ? "bg-white/5 border-white/10 text-white placeholder-gray-500" : "bg-slate-50 border-slate-200 text-slate-900 placeholder-gray-400"
+                                    )}
+                                />
+                                <div className="flex flex-wrap gap-1.5 pt-1">
+                                    {[
+                                        "لم يصل المبلغ على الحساب",
+                                        "المبلغ المحول غير مطابق",
+                                        "صورة الإيصال غير واضحة",
+                                    ].map((quickReason) => (
+                                        <button
+                                            key={quickReason}
+                                            type="button"
+                                            onClick={() => setRejectionReasonInput(quickReason)}
+                                            className={cn(
+                                                "text-[10px] px-2 py-1 rounded-md border transition-all",
+                                                isDark ? "bg-white/5 border-white/10 text-gray-300 hover:bg-white/10" : "bg-slate-100 border-slate-200 text-slate-700 hover:bg-slate-200"
+                                            )}
+                                        >
+                                            {quickReason}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div className="flex items-center justify-end gap-2 pt-2 border-t border-white/10">
                                 <button
-                                    onClick={() => setSelectedReceiptAppointment(null)}
-                                    className="px-5 py-2 bg-gradient-to-r from-[#FD614B] to-[#E84D37] text-white rounded-xl text-xs font-bold hover:brightness-110 transition-all ml-auto"
+                                    type="button"
+                                    onClick={() => {
+                                        setRejectModalAppointment(null);
+                                        setRejectionReasonInput("");
+                                    }}
+                                    className={cn(
+                                        "px-4 py-2 rounded-xl text-xs font-semibold border transition-all",
+                                        isDark ? "border-white/10 text-gray-300 hover:bg-white/5" : "border-slate-200 text-gray-700 hover:bg-slate-100"
+                                    )}
                                 >
-                                    {language === "ar" ? "إغلاق" : "Close"}
+                                    {language === "ar" ? "إلغاء" : "Cancel"}
+                                </button>
+                                <button
+                                    type="button"
+                                    disabled={Boolean(actionLoadingId)}
+                                    onClick={handleReject}
+                                    className="px-5 py-2 bg-red-600 hover:bg-red-500 text-white rounded-xl text-xs font-bold transition-all disabled:opacity-50 flex items-center gap-1.5 shadow-md"
+                                >
+                                    {actionLoadingId ? (
+                                        <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                    ) : (
+                                        <span>✕</span>
+                                    )}
+                                    <span>{language === "ar" ? "تأكيد الرفض وإلغاء الموعد" : "Confirm Rejection"}</span>
                                 </button>
                             </div>
                         </motion.div>

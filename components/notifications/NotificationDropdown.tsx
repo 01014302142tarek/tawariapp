@@ -9,6 +9,7 @@ import { useI18n } from "@/app/i18n";
 import { useRealtimeNotifications, playNotificationSound } from "@/lib/useRealtimeNotifications";
 import { useToast } from "@/components/ui/toast";
 import { type Notification, type NotificationType } from "@/app/actions/notifications";
+import { getLocalizedNotificationText } from "@/lib/utils/notification-i18n";
 
 // Icons for notification types
 const NotificationIcons: Record<NotificationType, React.ReactNode> = {
@@ -380,7 +381,9 @@ export default function NotificationDropdown({ isDark, dashboardType }: Notifica
                                     </p>
                                 </div>
                             ) : (
-                                notifications.map((notification) => (
+                                notifications.map((notification) => {
+                                    const localized = getLocalizedNotificationText(notification, isRTL);
+                                    return (
                                     <button
                                         key={notification.id}
                                         onClick={() => handleNotificationClick(notification)}
@@ -417,7 +420,7 @@ export default function NotificationDropdown({ isDark, dashboardType }: Notifica
                                                     !notification.is_read && "font-semibold"
                                                 )}
                                             >
-                                                {notification.title}
+                                                {localized.title}
                                             </p>
                                             <p
                                                 className={cn(
@@ -425,7 +428,7 @@ export default function NotificationDropdown({ isDark, dashboardType }: Notifica
                                                     isDark ? "text-gray-400" : "text-gray-600"
                                                 )}
                                             >
-                                                {notification.body}
+                                                {localized.body}
                                             </p>
                                             <p
                                                 className={cn(
@@ -442,7 +445,8 @@ export default function NotificationDropdown({ isDark, dashboardType }: Notifica
                                             <div className="w-2 h-2 rounded-full bg-[#FD614B] flex-shrink-0 mt-2" />
                                         )}
                                     </button>
-                                ))
+                                );
+                                })
                             )}
                         </div>
 

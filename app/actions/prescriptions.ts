@@ -1173,7 +1173,7 @@ export async function getPatientRenewalRequests(): Promise<{
                 frequency
             ),
             doctor_profiles (
-                profiles (
+                profiles!doctor_profiles_profile_id_fkey (
                     full_name
                 )
             )

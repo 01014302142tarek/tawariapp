@@ -2,6 +2,7 @@
 
 import { createClient, createServiceRoleClient } from "@/lib/supabase/server";
 import { notifyPaymentSuccess } from "./notifications";
+import { notifyAdminNewPaymentReceipt } from "@/lib/email/admin-receipt-notifications";
 import { uploadPaymentReceipt } from "@/lib/supabase/storage";
 import { isValidEgyptianPhone, normalizeEgyptianPhone, isValidFullName } from "@/lib/validations/payment";
 import { joinDoctorQueue } from "./queue";
@@ -402,6 +403,7 @@ export async function submitManualTransferPayment(
         sender_phone: normalizedSenderPhone,
         receipt_url: receiptUrl,
         receipt_file_name: input.receiptFileName,
+        admin_approval: "pending",
         submitted_at: new Date().toISOString(),
     };
 
@@ -420,7 +422,7 @@ export async function submitManualTransferPayment(
         await (serviceRole as any)
             .from("transactions")
             .update({
-                status: "completed",
+                status: "pending",
                 payment_method: input.method,
                 payment_details: paymentDetails,
                 amount: appointment.consultation_fee,
@@ -436,7 +438,7 @@ export async function submitManualTransferPayment(
                 amount: appointment.consultation_fee,
                 currency: "EGP",
                 transaction_type: "consultation",
-                status: "completed",
+                status: "pending",
                 payment_method: input.method,
                 payment_details: paymentDetails,
             })
@@ -450,29 +452,35 @@ export async function submitManualTransferPayment(
         transactionId = newTx?.id;
     }
 
-    // 7. Record doctor earnings
-    const { grossAmount, platformFee, netAmount } = calculatePlatformFee(appointment.consultation_fee);
-    await (serviceRole as any)
-        .from("doctor_earnings")
-        .upsert({
-            doctor_profile_id: appointment.doctor_profile_id,
-            appointment_id: appointment.id,
-            transaction_id: transactionId,
-            gross_amount: grossAmount,
-            platform_fee: platformFee,
-            net_amount: netAmount,
-            status: "available",
-        }, { onConflict: "appointment_id" });
-
-    // 8. Notifications
+    // Notify Admin, Doctor, and Patient (In-App + Email to tbakr373@gmail.com)
     try {
-        notifyPaymentSuccess(
-            profile.id,
-            appointment.consultation_fee,
-            transactionId
-        ).catch(() => {});
-    } catch {
-        // non-blocking
+        let doctorName: string | undefined;
+        let doctorUserProfId: string | undefined;
+        if (appointment.doctor_profile_id) {
+            const { data: docData } = await (serviceRole as any)
+                .from("doctor_profiles")
+                .select("profile_id, profiles!doctor_profiles_profile_id_fkey(full_name)")
+                .eq("id", appointment.doctor_profile_id)
+                .single();
+            doctorUserProfId = docData?.profile_id;
+            doctorName = docData?.profiles?.full_name;
+        }
+
+        notifyAdminNewPaymentReceipt({
+            appointmentId: appointment.id,
+            patientProfileId: profile.id,
+            doctorProfileId: doctorUserProfId,
+            patientName: input.senderName,
+            patientPhone: normalizedSenderPhone,
+            doctorName,
+            amount: appointment.consultation_fee,
+            method: input.method,
+            targetPhone: input.targetPhone,
+            receiptUrl,
+            isUrgent: false,
+        }).catch(err => console.warn("Failed sending new receipt admin notification:", err));
+    } catch (e) {
+        console.warn("Could not trigger admin notification:", e);
     }
 
     return {
@@ -576,11 +584,25 @@ export async function submitUrgentCareManualPayment(
     // 4. Fetch doctor
     const { data: doctorData } = await (serviceRole as any)
         .from("doctor_profiles")
-        .select("id, is_online, consultation_fee")
+        .select(`
+            id,
+            profile_id,
+            is_online,
+            consultation_fee,
+            profiles!doctor_profiles_profile_id_fkey (
+                full_name
+            )
+        `)
         .eq("id", input.doctorProfileId)
         .single();
 
-    const doctor = doctorData as { id: string; is_online: boolean; consultation_fee: number } | null;
+    const doctor = doctorData as {
+        id: string;
+        profile_id: string;
+        is_online: boolean;
+        consultation_fee: number;
+        profiles?: { full_name: string } | null;
+    } | null;
     if (!doctor) {
         return { success: false, error: "Doctor profile not found" };
     }
@@ -625,6 +647,7 @@ export async function submitUrgentCareManualPayment(
         receipt_url: receiptUrl,
         receipt_file_name: input.receiptFileName,
         type: "urgent_care",
+        admin_approval: "pending",
         queue_entry_id: queueEntryId,
         submitted_at: new Date().toISOString(),
     };
@@ -654,7 +677,7 @@ export async function submitUrgentCareManualPayment(
                 .from("consultation_queue")
                 .update({ 
                     appointment_id: urgentAppointmentId,
-                    payment_status: "completed"
+                    payment_status: "pending"
                 })
                 .eq("id", queueEntryId);
         }
@@ -662,7 +685,7 @@ export async function submitUrgentCareManualPayment(
         console.warn("Could not create initial urgent appointment record:", e);
     }
 
-    // Insert transaction
+    // Insert transaction with status "pending" (awaits admin approval)
     const { data: newTx, error: txError } = await (serviceRole as any)
         .from("transactions")
         .insert({
@@ -672,7 +695,7 @@ export async function submitUrgentCareManualPayment(
             amount: totalAmount,
             currency: "EGP",
             transaction_type: "consultation",
-            status: "completed",
+            status: "pending",
             payment_method: input.method,
             payment_details: paymentDetails,
         })
@@ -683,24 +706,24 @@ export async function submitUrgentCareManualPayment(
         console.error("Error creating urgent transaction:", txError);
     }
 
-    // Record doctor earnings
-    if (urgentAppointmentId && newTx?.id) {
-        try {
-            const { grossAmount, platformFee, netAmount } = calculatePlatformFee(doctor.consultation_fee);
-            await (serviceRole as any)
-                .from("doctor_earnings")
-                .upsert({
-                    doctor_profile_id: doctor.id,
-                    appointment_id: urgentAppointmentId,
-                    transaction_id: newTx.id,
-                    gross_amount: grossAmount,
-                    platform_fee: platformFee,
-                    net_amount: netAmount,
-                    status: "available",
-                }, { onConflict: "appointment_id" });
-        } catch (err) {
-            console.warn("Error creating urgent doctor earnings:", err);
-        }
+    // Notify Admin, Doctor, and Patient (In-App + Email to tbakr373@gmail.com)
+    try {
+        notifyAdminNewPaymentReceipt({
+            queueEntryId,
+            appointmentId: urgentAppointmentId,
+            patientProfileId: profile.id,
+            doctorProfileId: doctor.profile_id,
+            patientName: input.senderName,
+            patientPhone: normalizedSenderPhone,
+            doctorName: doctor.profiles?.full_name,
+            amount: totalAmount,
+            method: input.method,
+            targetPhone: input.targetPhone,
+            receiptUrl,
+            isUrgent: true,
+        }).catch(err => console.warn("Failed sending urgent admin notification:", err));
+    } catch (e) {
+        console.warn("Could not trigger urgent admin notification:", e);
     }
 
     return {

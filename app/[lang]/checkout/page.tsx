@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { useI18n } from "@/app/i18n";
 import { GlowingCard } from "@/components/ui/glowing-card";
 import { initiateAppointmentPayment, submitManualTransferPayment } from "@/app/actions/payments";
+import { getAppointmentById } from "@/app/actions/appointments";
 import { isValidFullName, isValidEgyptianPhone } from "@/lib/validations/payment";
 import { createClient } from "@/lib/supabase/client";
 import { useTheme } from "../dashboard/patient/context/ThemeContext";
@@ -123,6 +124,35 @@ function CheckoutPageContent() {
     const [receiptFileName, setReceiptFileName] = useState<string>("");
     const [copiedNumber, setCopiedNumber] = useState<string | null>(null);
     const [successBooking, setSuccessBooking] = useState(false);
+    const [paymentApprovalStatus, setPaymentApprovalStatus] = useState<"pending" | "approved" | "rejected">("pending");
+    const [paymentRejectionReason, setPaymentRejectionReason] = useState<string | null>(null);
+
+    // Poll appointment approval status after receipt submission
+    useEffect(() => {
+        if (!successBooking || !appointment?.id) return;
+
+        let isMounted = true;
+        const checkApproval = async () => {
+            try {
+                const res = await getAppointmentById(appointment.id);
+                if (!isMounted || !res.appointment) return;
+                const status = res.appointment.paymentApproval || "approved";
+                setPaymentApprovalStatus(status);
+                if (res.appointment.paymentRejectionReason) {
+                    setPaymentRejectionReason(res.appointment.paymentRejectionReason);
+                }
+            } catch (err) {
+                console.error("Error polling approval:", err);
+            }
+        };
+
+        checkApproval();
+        const interval = setInterval(checkApproval, 2500);
+        return () => {
+            isMounted = false;
+            clearInterval(interval);
+        };
+    }, [successBooking, appointment?.id]);
 
     const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -382,7 +412,7 @@ function CheckoutPageContent() {
         );
     }
 
-    // Success Screen after uploading receipt
+    // Success Screen after uploading receipt - with Live Status & Polling
     if (successBooking) {
         return (
             <div className={cn("min-h-screen flex items-center justify-center p-4", isDark ? "bg-[#031326]" : "bg-[#F4F8FC]")}>
@@ -391,54 +421,189 @@ function CheckoutPageContent() {
                     animate={{ scale: 1, opacity: 1 }}
                     className="max-w-md w-full"
                 >
-                    <GlowingCard glowColor="coral" className="p-8 text-center" isDark={isDark}>
-                        <div className="w-20 h-20 rounded-full bg-emerald-500/20 text-emerald-500 flex items-center justify-center mx-auto mb-5 border-2 border-emerald-500/40">
-                            {Icons.check}
-                        </div>
-                        <h2 className={cn("text-2xl font-bold mb-2", isDark ? "text-white" : "text-slate-900")}>
-                            {isRTL ? "تم تأكيد الحجز بنجاح!" : "Booking Confirmed Successfully!"}
-                        </h2>
-                        <p className={cn("text-sm mb-6 leading-relaxed", isDark ? "text-gray-300" : "text-gray-600")}>
-                            {isRTL
-                                ? "تم استلام إيصال الدفع بنجاح وتسجيل حجزك مع الطبيب. يمكنك الآن متابعة تفاصيل موعدك ودخول غرفة الاستشارة في الوقت المحدد."
-                                : "Your payment receipt has been received and your appointment is confirmed. You can now view your appointment details and join the consultation at the scheduled time."}
-                        </p>
+                    {paymentApprovalStatus === "approved" ? (
+                        <GlowingCard glowColor="teal" className="p-8 text-center" isDark={isDark}>
+                            <motion.div
+                                initial={{ scale: 0 }}
+                                animate={{ scale: 1 }}
+                                transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                                className="w-20 h-20 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto mb-5 border-2 border-emerald-500/50 shadow-lg shadow-emerald-500/30"
+                            >
+                                {Icons.check}
+                            </motion.div>
+                            <h2 className={cn("text-2xl font-bold mb-2", isDark ? "text-white" : "text-slate-900")}>
+                                {isRTL ? "تم اعتماد الدفع وتأكيد الحجز! 🎉" : "Payment Approved & Confirmed! 🎉"}
+                            </h2>
+                            <p className={cn("text-sm mb-6 leading-relaxed", isDark ? "text-gray-300" : "text-gray-600")}>
+                                {isRTL
+                                    ? "تم التحقق من إيصال التحويل واعتماده بنجاح بواسطة الإدارة. موعدك الآن مؤكد وجاهز للدخول."
+                                    : "Your transfer receipt has been verified and approved by administration. Your appointment is confirmed and ready."}
+                            </p>
 
-                        <div className={cn("p-4 rounded-xl mb-6 text-start space-y-2 border", isDark ? "bg-white/5 border-white/10" : "bg-slate-50 border-slate-200")}>
-                            <div className="flex justify-between text-sm">
-                                <span className={isDark ? "text-gray-400" : "text-gray-600"}>{isRTL ? "الطبيب:" : "Doctor:"}</span>
-                                <span className={cn("font-medium", isDark ? "text-white" : "text-slate-900")}>{appointment?.doctorName}</span>
+                            <div className={cn("p-4 rounded-xl mb-6 text-start space-y-2.5 border", isDark ? "bg-white/5 border-white/10" : "bg-slate-50 border-slate-200")}>
+                                <div className="flex justify-between text-sm">
+                                    <span className={isDark ? "text-gray-400" : "text-gray-600"}>{isRTL ? "الطبيب:" : "Doctor:"}</span>
+                                    <span className={cn("font-medium", isDark ? "text-white" : "text-slate-900")}>{appointment?.doctorName}</span>
+                                </div>
+                                <div className="flex justify-between text-sm">
+                                    <span className={isDark ? "text-gray-400" : "text-gray-600"}>{isRTL ? "التخصص:" : "Specialty:"}</span>
+                                    <span className={cn("font-medium", isDark ? "text-white" : "text-slate-900")}>{appointment?.specialty}</span>
+                                </div>
+                                <div className="flex justify-between text-sm">
+                                    <span className={isDark ? "text-gray-400" : "text-gray-600"}>{isRTL ? "طريقة الدفع:" : "Method:"}</span>
+                                    <span className="font-semibold text-emerald-500 flex items-center gap-1">
+                                        <span>✓</span>
+                                        <span>{paymentMethod === "instapay" ? "إنستا باي (InstaPay)" : "محفظة وي باي (WE Pay)"}</span>
+                                    </span>
+                                </div>
                             </div>
-                            <div className="flex justify-between text-sm">
-                                <span className={isDark ? "text-gray-400" : "text-gray-600"}>{isRTL ? "التخصص:" : "Specialty:"}</span>
-                                <span className={cn("font-medium", isDark ? "text-white" : "text-slate-900")}>{appointment?.specialty}</span>
+
+                            <div className="flex flex-col gap-3">
+                                <button
+                                    onClick={() => router.push(`/${language}/dashboard/consultation/${appointment?.id}/waiting-room`)}
+                                    className="w-full py-3.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:brightness-110 text-white rounded-xl shadow-lg shadow-emerald-500/30 transition-all font-bold text-sm"
+                                >
+                                    {isRTL ? "الانضمام إلى غرفة الانتظار / الاستشارة 📹" : "Enter Consultation Waiting Room 📹"}
+                                </button>
+                                <button
+                                    onClick={() => router.push(`/${language}/dashboard/patient/appointments`)}
+                                    className={cn(
+                                        "w-full py-3 rounded-xl border transition-all text-sm font-medium",
+                                        isDark ? "border-white/10 text-gray-300 hover:bg-white/5" : "border-gray-200 text-gray-700 hover:bg-gray-100"
+                                    )}
+                                >
+                                    {isRTL ? "الانتقال إلى قائمة مواعيدي" : "View My Appointments"}
+                                </button>
                             </div>
-                            <div className="flex justify-between text-sm">
-                                <span className={isDark ? "text-gray-400" : "text-gray-600"}>{isRTL ? "طريقة الدفع:" : "Method:"}</span>
-                                <span className="font-semibold text-[#FD614B]">
-                                    {paymentMethod === "instapay" ? "إنستا باي (InstaPay)" : "محفظة وي باي (WE Pay)"}
+                        </GlowingCard>
+                    ) : paymentApprovalStatus === "rejected" ? (
+                        <GlowingCard glowColor="coral" className="p-8 text-center" isDark={isDark}>
+                            <div className="w-20 h-20 rounded-full bg-red-500/20 text-red-400 flex items-center justify-center mx-auto mb-5 border-2 border-red-500/50 shadow-lg shadow-red-500/30">
+                                {Icons.warning}
+                            </div>
+                            <h2 className={cn("text-2xl font-bold mb-2 text-red-500")}>
+                                {isRTL ? "تعذر اعتماد إيصال الدفع ❌" : "Payment Receipt Rejected ❌"}
+                            </h2>
+                            <p className={cn("text-sm mb-4 leading-relaxed", isDark ? "text-gray-300" : "text-gray-600")}>
+                                {isRTL
+                                    ? "عذراً، لم تتمكن الإدارة من مطابقة أو اعتماد إيصال التحويل المرسل."
+                                    : "Sorry, administration could not verify the submitted transfer receipt."}
+                            </p>
+
+                            {paymentRejectionReason && (
+                                <div className="p-3.5 rounded-xl bg-red-500/10 border border-red-500/30 text-xs text-red-400 text-start mb-6">
+                                    <span className="font-bold">{isRTL ? "سبب الرفض: " : "Reason: "}</span>
+                                    {paymentRejectionReason}
+                                </div>
+                            )}
+
+                            <div className="flex flex-col gap-3">
+                                <button
+                                    onClick={() => {
+                                        setSuccessBooking(false);
+                                        setReceiptBase64(null);
+                                        setReceiptFileName("");
+                                        setPaymentApprovalStatus("pending");
+                                    }}
+                                    className="w-full py-3.5 bg-gradient-to-r from-[#FD614B] to-[#E84D37] hover:brightness-110 text-white rounded-xl shadow-lg shadow-[#FD614B]/30 transition-all font-bold text-sm"
+                                >
+                                    {isRTL ? "إعادة رفع الإيصال والمحاولة مرة أخرى" : "Re-upload Receipt & Try Again"}
+                                </button>
+                                <button
+                                    onClick={() => router.push(`/${language}/dashboard/patient`)}
+                                    className={cn(
+                                        "w-full py-3 rounded-xl border transition-all text-sm font-medium",
+                                        isDark ? "border-white/10 text-gray-300 hover:bg-white/5" : "border-gray-200 text-gray-700 hover:bg-gray-100"
+                                    )}
+                                >
+                                    {isRTL ? "العودة للوحة التحكم" : "Back to Dashboard"}
+                                </button>
+                            </div>
+                        </GlowingCard>
+                    ) : (
+                        <GlowingCard glowColor="coral" className="p-8 text-center relative overflow-hidden" isDark={isDark}>
+                            {/* Animated Pulse Radar */}
+                            <div className="relative w-24 h-24 mx-auto mb-6 flex items-center justify-center">
+                                <motion.div
+                                    className="absolute inset-0 rounded-full border-2 border-[#FD614B]/40"
+                                    animate={{ scale: [1, 1.8, 2.2], opacity: [0.6, 0.2, 0] }}
+                                    transition={{ duration: 2.5, repeat: Infinity, ease: "easeOut" }}
+                                />
+                                <motion.div
+                                    className="absolute inset-2 rounded-full border border-[#FD614B]/30"
+                                    animate={{ scale: [1, 1.5, 1.9], opacity: [0.5, 0.15, 0] }}
+                                    transition={{ duration: 2.5, repeat: Infinity, delay: 0.5, ease: "easeOut" }}
+                                />
+                                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#FD614B]/20 to-[#FD614B]/10 border-2 border-[#FD614B] flex items-center justify-center shadow-lg shadow-[#FD614B]/20">
+                                    <motion.div
+                                        animate={{ rotate: 360 }}
+                                        transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
+                                        className="text-[#FD614B]"
+                                    >
+                                        <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M12 6v6l4 2m6-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                    </motion.div>
+                                </div>
+                            </div>
+
+                            {/* Status Pill */}
+                            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#FD614B]/10 border border-[#FD614B]/30 mb-4">
+                                <span className="w-2 h-2 rounded-full bg-[#FD614B] animate-ping" />
+                                <span className="text-xs font-bold text-[#FD614B]">
+                                    {isRTL ? "جاري مراجعة إيصال التحويل..." : "Verifying Payment Receipt..."}
                                 </span>
                             </div>
-                        </div>
 
-                        <div className="flex flex-col gap-3">
-                            <button
-                                onClick={() => router.push(`/${language}/dashboard/patient/appointments`)}
-                                className="w-full py-3.5 bg-gradient-to-r from-[#FD614B] to-[#E84D37] hover:brightness-110 text-white rounded-xl shadow-lg shadow-[#FD614B]/30 transition-all font-semibold"
-                            >
-                                {isRTL ? "الانتقال إلى قائمة مواعيدي" : "View My Appointments"}
-                            </button>
-                            <button
-                                onClick={() => router.push(`/${language}/dashboard/patient`)}
-                                className={cn(
-                                    "w-full py-3 rounded-xl border transition-all text-sm font-medium",
-                                    isDark ? "border-white/10 text-gray-300 hover:bg-white/5" : "border-gray-200 text-gray-700 hover:bg-gray-100"
-                                )}
-                            >
-                                {isRTL ? "العودة للوحة التحكم" : "Back to Dashboard"}
-                            </button>
-                        </div>
-                    </GlowingCard>
+                            <h2 className={cn("text-xl sm:text-2xl font-bold mb-2", isDark ? "text-white" : "text-slate-900")}>
+                                {isRTL ? "يرجى الانتظار، جاري المراجعة" : "Please Wait, Verification in Progress"}
+                            </h2>
+                            <p className={cn("text-xs sm:text-sm mb-6 leading-relaxed", isDark ? "text-gray-300" : "text-gray-600")}>
+                                {isRTL
+                                    ? "تم استلام الإيصال وبيانات التحويل بنجاح، ويقوم فريق الإدارة بمراجعته حالياً. سيتم تحويلك وتأكيد الموعد تلقائياً فور الاعتماد."
+                                    : "Your receipt has been submitted and is currently being reviewed by administration. Your appointment will be confirmed automatically upon approval."}
+                            </p>
+
+                            <div className={cn("p-4 rounded-xl mb-6 text-start space-y-2 border", isDark ? "bg-white/5 border-white/10" : "bg-slate-50 border-slate-200")}>
+                                <div className="flex justify-between text-xs sm:text-sm">
+                                    <span className={isDark ? "text-gray-400" : "text-gray-600"}>{isRTL ? "الطبيب:" : "Doctor:"}</span>
+                                    <span className={cn("font-medium", isDark ? "text-white" : "text-slate-900")}>{appointment?.doctorName}</span>
+                                </div>
+                                <div className="flex justify-between text-xs sm:text-sm">
+                                    <span className={isDark ? "text-gray-400" : "text-gray-600"}>{isRTL ? "التخصص:" : "Specialty:"}</span>
+                                    <span className={cn("font-medium", isDark ? "text-white" : "text-slate-900")}>{appointment?.specialty}</span>
+                                </div>
+                                <div className="flex justify-between text-xs sm:text-sm">
+                                    <span className={isDark ? "text-gray-400" : "text-gray-600"}>{isRTL ? "طريقة التحويل:" : "Method:"}</span>
+                                    <span className="font-semibold text-[#FD614B]">
+                                        {paymentMethod === "instapay" ? "إنستا باي (InstaPay)" : "محفظة وي باي (WE Pay)"}
+                                    </span>
+                                </div>
+                                <div className="flex justify-between text-xs sm:text-sm">
+                                    <span className={isDark ? "text-gray-400" : "text-gray-600"}>{isRTL ? "المبلغ المحوّل:" : "Amount:"}</span>
+                                    <span className="font-bold text-[#FD614B]">{appointment?.consultationFee} ج.م</span>
+                                </div>
+                            </div>
+
+                            <div className="flex flex-col gap-3">
+                                <button
+                                    onClick={() => router.push(`/${language}/dashboard/patient/appointments`)}
+                                    className="w-full py-3 bg-gradient-to-r from-[#FD614B] to-[#E84D37] hover:brightness-110 text-white rounded-xl shadow-lg shadow-[#FD614B]/20 transition-all font-semibold text-xs sm:text-sm"
+                                >
+                                    {isRTL ? "الانتقال إلى قائمة مواعيدي" : "View My Appointments"}
+                                </button>
+                                <button
+                                    onClick={() => router.push(`/${language}/dashboard/patient`)}
+                                    className={cn(
+                                        "w-full py-2.5 rounded-xl border transition-all text-xs sm:text-sm font-medium",
+                                        isDark ? "border-white/10 text-gray-300 hover:bg-white/5" : "border-gray-200 text-gray-700 hover:bg-gray-100"
+                                    )}
+                                >
+                                    {isRTL ? "العودة للوحة التحكم" : "Back to Dashboard"}
+                                </button>
+                            </div>
+                        </GlowingCard>
+                    )}
                 </motion.div>
             </div>
         );
@@ -655,7 +820,7 @@ function CheckoutPageContent() {
                             <p className={isDark ? "text-gray-300" : "text-gray-700"}>
                                 <strong>3. </strong>
                                 {isRTL
-                                    ? "التقط لقطة شاشة (Screenshot) لعملية التحويل الناجحة أو إيصال السداد."
+                                    ? "التقط لقطة شاشة لإشعار تأكيد التحويل الناجح أو إيصال السداد."
                                     : "Take a screenshot of the successful transfer or transaction receipt."}
                             </p>
                             <p className={isDark ? "text-gray-300" : "text-gray-700"}>

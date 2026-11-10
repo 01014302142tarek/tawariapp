@@ -59,11 +59,21 @@ export default function ConsultationPage() {
         async function loadSession() {
             setLoading(true);
             try {
-                // Fetch session and user info in parallel
-                const [sessionResult, userInfoResult] = await Promise.all([
+                // Fetch session, user info, and appointment in parallel
+                const [sessionResult, userInfoResult, aptResult] = await Promise.all([
                     getConsultationSession(appointmentId),
                     getConsultationUserInfo(),
+                    getAppointmentById(appointmentId),
                 ]);
+
+                // Guard: If payment approval is still pending or was rejected, redirect to waiting room
+                if (aptResult.appointment) {
+                    const approval = aptResult.appointment.paymentApproval;
+                    if (approval === "pending" || approval === "rejected") {
+                        router.replace(`/${language}/dashboard/consultation/${appointmentId}/waiting-room`);
+                        return;
+                    }
+                }
 
                 const { session, error: sessionError } = sessionResult;
 
