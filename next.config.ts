@@ -13,17 +13,24 @@ const nextConfig: NextConfig = {
         "192.168.1.6",
         "192.168.1.6:3000",
         "*.run.app",
+        "tabibi-app.vercel.app",
+        "*.vercel.app",
     ],
 
     // Experimental settings including Server Actions allowed origins
     experimental: {
         serverActions: {
+            bodySizeLimit: "15mb",
             allowedOrigins: [
+                "localhost",
                 "localhost:3000",
+                "127.0.0.1",
                 "127.0.0.1:3000",
-                "192.168.1.6:3000",
                 "192.168.1.6",
+                "192.168.1.6:3000",
                 "*.run.app",
+                "tabibi-app.vercel.app",
+                "*.vercel.app",
             ],
         },
     },

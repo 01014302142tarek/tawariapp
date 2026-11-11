@@ -10,6 +10,7 @@ import { GlowingCard } from "@/components/ui/glowing-card";
 import { initiateAppointmentPayment, submitManualTransferPayment } from "@/app/actions/payments";
 import { getAppointmentById } from "@/app/actions/appointments";
 import { isValidFullName, isValidEgyptianPhone } from "@/lib/validations/payment";
+import { compressImageFile } from "@/lib/utils/image-compression";
 import { createClient } from "@/lib/supabase/client";
 import { useTheme } from "../dashboard/patient/context/ThemeContext";
 
@@ -122,6 +123,7 @@ function CheckoutPageContent() {
     const [phoneTouched, setPhoneTouched] = useState(false);
     const [receiptBase64, setReceiptBase64] = useState<string | null>(null);
     const [receiptFileName, setReceiptFileName] = useState<string>("");
+    const [isCompressing, setIsCompressing] = useState(false);
     const [copiedNumber, setCopiedNumber] = useState<string | null>(null);
     const [successBooking, setSuccessBooking] = useState(false);
     const [paymentApprovalStatus, setPaymentApprovalStatus] = useState<"pending" | "approved" | "rejected">("pending");
@@ -250,8 +252,8 @@ function CheckoutPageContent() {
         }, 2500);
     };
 
-    // Handle file selection
-    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Handle file selection with client compression
+    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
 
@@ -262,26 +264,37 @@ function CheckoutPageContent() {
             return;
         }
 
-        // Validate size (max 8MB)
-        if (file.size > 8 * 1024 * 1024) {
-            setError(isRTL ? "حجم الصورة كبير جداً، الحد الأقصى 8 ميجابايت" : "Image size is too large (max 8MB)");
+        // Validate size (max 15MB)
+        if (file.size > 15 * 1024 * 1024) {
+            setError(isRTL ? "حجم الصورة كبير جداً، الحد الأقصى 15 ميجابايت" : "Image size is too large (max 15MB)");
             return;
         }
 
         setError(null);
-        setReceiptFileName(file.name);
+        setIsCompressing(true);
 
-        const reader = new FileReader();
-        reader.onload = () => {
-            setReceiptBase64(reader.result as string);
-        };
-        reader.readAsDataURL(file);
+        try {
+            const compressed = await compressImageFile(file, 1600, 0.82);
+            setReceiptBase64(compressed.base64);
+            setReceiptFileName(compressed.fileName);
+        } catch (compErr) {
+            console.warn("Client compression failed, falling back to FileReader:", compErr);
+            const reader = new FileReader();
+            reader.onload = () => {
+                setReceiptBase64(reader.result as string);
+                setReceiptFileName(file.name);
+            };
+            reader.readAsDataURL(file);
+        } finally {
+            setIsCompressing(false);
+        }
     };
 
     // Handle removing uploaded image
     const handleRemoveImage = () => {
         setReceiptBase64(null);
         setReceiptFileName("");
+        setIsCompressing(false);
         if (fileInputRef.current) {
             fileInputRef.current.value = "";
         }
@@ -290,11 +303,20 @@ function CheckoutPageContent() {
     // Validation state
     const isNameValid = isValidFullName(senderName);
     const isPhoneValid = isValidEgyptianPhone(senderPhone);
-    const canSubmit = Boolean(receiptBase64 && isNameValid && isPhoneValid);
+    const canSubmit = Boolean(receiptBase64 && isNameValid && isPhoneValid && !isCompressing);
 
     // Submit manual transfer payment (InstaPay or WE Pay)
     const handleManualSubmit = async () => {
         if (!appointment) return;
+
+        if (isCompressing) {
+            setError(
+                isRTL
+                    ? "جاري تجهيز وضغط صورة الإيصال، يرجى الانتظار ثانية..."
+                    : "Processing image receipt, please wait a moment..."
+            );
+            return;
+        }
 
         setNameTouched(true);
         setPhoneTouched(true);
@@ -846,7 +868,14 @@ function CheckoutPageContent() {
                             className="hidden"
                         />
 
-                        {receiptBase64 ? (
+                        {isCompressing ? (
+                            <div className={cn("p-4 rounded-xl border flex items-center justify-center gap-2.5", isDark ? "border-amber-500/40 bg-amber-500/10 text-amber-300" : "border-amber-300 bg-amber-50 text-amber-700")}>
+                                <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin flex-shrink-0" />
+                                <span className="text-xs font-semibold">
+                                    {isRTL ? "جاري تحسين وضغط الصورة تمهيداً للإرسال السريع..." : "Optimizing image for fast upload..."}
+                                </span>
+                            </div>
+                        ) : receiptBase64 ? (
                             <div className={cn("relative p-3 rounded-xl border flex items-center gap-3", isDark ? "border-emerald-500/40 bg-emerald-500/10" : "border-emerald-300 bg-emerald-50")}>
                                 <div className="relative w-16 h-16 rounded-lg overflow-hidden border border-emerald-500/30 flex-shrink-0 bg-black/20">
                                     <Image
@@ -859,11 +888,11 @@ function CheckoutPageContent() {
                                 </div>
                                 <div className="flex-1 min-w-0">
                                     <p className={cn("text-sm font-semibold truncate", isDark ? "text-white" : "text-slate-900")}>
-                                        {receiptFileName || "receipt.png"}
+                                        {receiptFileName || "receipt.jpg"}
                                     </p>
                                     <p className="text-xs text-emerald-500 font-medium flex items-center gap-1 mt-0.5">
                                         {Icons.check}
-                                        {isRTL ? "تم إرفاق الصورة بنجاح ومستعدة للإرسال" : "Receipt image ready to submit"}
+                                        {isRTL ? "تم تجهيز وإرفاق الصورة بنجاح" : "Receipt image ready to submit"}
                                     </p>
                                 </div>
                                 <button
@@ -893,7 +922,7 @@ function CheckoutPageContent() {
                                         {isRTL ? "اضغط هنا لرفع صورة إيصال التحويل" : "Click to upload transfer receipt"}
                                     </p>
                                     <p className={cn("text-xs mt-1", isDark ? "text-gray-400" : "text-gray-500")}>
-                                        {isRTL ? "يدعم JPG, PNG, WebP (بحد أقصى 8 ميجابايت)" : "Supports JPG, PNG, WebP (max 8MB)"}
+                                        {isRTL ? "يدعم JPG, PNG, WebP (يتم ضغطها تلقائياً لأقصى سرعة)" : "Supports JPG, PNG, WebP (auto-compressed)"}
                                     </p>
                                 </div>
                             </div>

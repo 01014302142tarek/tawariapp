@@ -309,14 +309,15 @@ export interface SubmitManualPaymentResult {
 export async function submitManualTransferPayment(
     input: SubmitManualPaymentInput
 ): Promise<SubmitManualPaymentResult> {
-    const supabase = await createClient();
-    const serviceRole = await createServiceRoleClient();
+    try {
+        const supabase = await createClient();
+        const serviceRole = await createServiceRoleClient();
 
-    // 1. Authenticate user
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-        return { success: false, error: "Not authenticated" };
-    }
+        // 1. Authenticate user
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+            return { success: false, error: "Not authenticated" };
+        }
 
     // 2. Fetch patient profile
     const { data: profileData } = await supabase
@@ -484,12 +485,20 @@ export async function submitManualTransferPayment(
         console.warn("Could not trigger admin notification:", e);
     }
 
-    return {
-        success: true,
-        transactionId,
-        appointmentId: appointment.id,
-        receiptUrl,
-    };
+        return {
+            success: true,
+            transactionId,
+            appointmentId: appointment.id,
+            receiptUrl,
+        };
+    } catch (err: unknown) {
+        console.error("Unhandled error in submitManualTransferPayment:", err);
+        const message = err instanceof Error ? err.message : String(err);
+        return {
+            success: false,
+            error: message || "حدث خطأ أثناء معالجة الطلب، يرجى المحاولة مرة أخرى",
+        };
+    }
 }
 
 export interface SubmitUrgentCarePaymentInput {
@@ -516,14 +525,15 @@ export interface SubmitUrgentCarePaymentResult {
 export async function submitUrgentCareManualPayment(
     input: SubmitUrgentCarePaymentInput
 ): Promise<SubmitUrgentCarePaymentResult> {
-    const supabase = await createClient();
-    const serviceRole = await createServiceRoleClient();
+    try {
+        const supabase = await createClient();
+        const serviceRole = await createServiceRoleClient();
 
-    // 1. Authenticate user
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-        return { success: false, error: "Not authenticated" };
-    }
+        // 1. Authenticate user
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+            return { success: false, error: "Not authenticated" };
+        }
 
     // 2. Fetch patient profile
     const { data: profileData } = await supabase
@@ -727,11 +737,19 @@ export async function submitUrgentCareManualPayment(
         console.warn("Could not trigger urgent admin notification:", e);
     }
 
-    return {
-        success: true,
-        queueEntryId,
-        receiptUrl,
-    };
+        return {
+            success: true,
+            queueEntryId,
+            receiptUrl,
+        };
+    } catch (err: unknown) {
+        console.error("Unhandled error in submitUrgentCareManualPayment:", err);
+        const message = err instanceof Error ? err.message : String(err);
+        return {
+            success: false,
+            error: message || "حدث خطأ أثناء معالجة الطلب، يرجى المحاولة مرة أخرى",
+        };
+    }
 }
 
 /**
