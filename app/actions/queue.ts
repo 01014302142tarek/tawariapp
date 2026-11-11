@@ -276,189 +276,282 @@ export async function getDoctorQueueStatus(): Promise<{
 }
 
 /**
- * Doctor calls next patient in queue
+ * Doctor calls a specific patient or the next patient in queue.
+ * If targetQueueEntryId is provided, that specific patient is called.
+ * If another patient was previously called and is still pending/unattended,
+ * they are automatically and safely returned to the waiting queue so they are not lost.
  */
-export async function callNextPatient(): Promise<{
+export async function callPatient(targetQueueEntryId?: string): Promise<{
     success: boolean;
-    queueEntry?: QueueEntry;
+    queueEntry?: QueueEntry & { patient_name?: string; patient_avatar?: string };
     roomUrl?: string;
     error?: string;
 }> {
-    const supabase = await createClient();
-    const adminSupabase: any = await createServiceRoleClient();
-
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-        return { success: false, error: "Not authenticated" };
-    }
-
-    // Get doctor profile
-    const { data: profileData } = await adminSupabase
-        .from("profiles")
-        .select("id")
-        .eq("user_id", user.id)
-        .single();
-
-    const profile = profileData as { id: string } | null;
-    if (!profile) {
-        return { success: false, error: "Profile not found" };
-    }
-
-    const { data: doctorData } = await adminSupabase
-        .from("doctor_profiles")
-        .select("id, is_online, current_queue_entry_id")
-        .eq("profile_id", profile.id)
-        .single();
-
-    const doctor = doctorData as any;
-    if (!doctor) {
-        return { success: false, error: "Doctor profile not found" };
-    }
-
-    // Ensure doctor is online
-    if (!doctor.is_online) {
-        await adminSupabase
-            .from("doctor_profiles")
-            .update({ is_online: true, is_available_now: true })
-            .eq("id", doctor.id);
-    }
-
-    // Get next patient in queue
-    const { data: nextPatient } = await adminSupabase
-        .from("consultation_queue")
-        .select("*")
-        .eq("doctor_profile_id", doctor.id)
-        .eq("status", "waiting")
-        .order("position", { ascending: true })
-        .limit(1)
-        .single();
-
-    if (!nextPatient) {
-        return { success: false, error: "No patients in queue" };
-    }
-
-    const queueEntry = nextPatient as QueueEntry;
-
-    // Immediately generate video room so both doctor and patient enter without waiting
-    const dailyApiKey = process.env.DAILY_API_KEY;
-    const dailyDomain = process.env.NEXT_PUBLIC_DAILY_DOMAIN;
-    const jitsiDomain = process.env.NEXT_PUBLIC_JITSI_DOMAIN || "fairmeeting.net";
-    let roomUrl: string;
-    let roomName: string;
-
-    if (!dailyApiKey || !dailyDomain) {
-        roomName = `tabibi-q-${queueEntry.id.replace(/[^a-zA-Z0-9]/g, "").slice(0, 12)}-${Date.now().toString(36)}`;
-        roomUrl = `https://${jitsiDomain}/${roomName}`;
-    } else {
-        try {
-            roomName = `tabibi-q-${queueEntry.id.slice(0, 8)}-${Date.now()}`;
-            const response = await fetch("https://api.daily.co/v1/rooms", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${dailyApiKey}`,
-                },
-                body: JSON.stringify({
-                    name: roomName,
-                    privacy: "private",
-                    properties: {
-                        exp: Math.floor(Date.now() / 1000) + 3600,
-                        enable_screenshare: true,
-                        enable_chat: true,
-                        enable_knocking: false,
-                        start_video_off: false,
-                        start_audio_off: false,
-                        max_participants: 2,
-                        eject_at_room_exp: true,
-                    },
-                }),
-            });
-            if (response.ok) {
-                const room = await response.json();
-                roomUrl = room.url;
-            } else {
-                roomName = `tabibi-q-${queueEntry.id.replace(/[^a-zA-Z0-9]/g, "").slice(0, 12)}-${Date.now().toString(36)}`;
-                roomUrl = `https://${jitsiDomain}/${roomName}`;
-            }
-        } catch {
-            roomName = `tabibi-q-${queueEntry.id.replace(/[^a-zA-Z0-9]/g, "").slice(0, 12)}-${Date.now().toString(36)}`;
-            roomUrl = `https://${jitsiDomain}/${roomName}`;
-        }
-    }
-
-    const nowIso = new Date().toISOString();
-
-    // Update queue entry directly to in_consultation with room URL
-    const { error: updateError } = await adminSupabase
-        .from("consultation_queue")
-        .update({
-            status: "in_consultation",
-            called_at: nowIso,
-            consultation_started_at: nowIso,
-            daily_room_name: roomName,
-            daily_room_url: roomUrl,
-        })
-        .eq("id", queueEntry.id);
-
-    if (updateError) {
-        console.error("Error calling patient:", updateError);
-        return { success: false, error: updateError.message };
-    }
-
-    // Update doctor's current queue entry
-    await adminSupabase
-        .from("doctor_profiles")
-        .update({ current_queue_entry_id: queueEntry.id })
-        .eq("id", doctor.id);
-
-    // Notify patient that doctor is calling them into consultation
     try {
-        const { data: patientProfileData } = await adminSupabase
-            .from("patient_profiles")
-            .select("profile_id")
-            .eq("id", queueEntry.patient_profile_id)
+        const supabase = await createClient();
+        const adminSupabase: any = await createServiceRoleClient();
+
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+            return { success: false, error: "Not authenticated" };
+        }
+
+        // Get doctor profile
+        const { data: profileData } = await adminSupabase
+            .from("profiles")
+            .select("id")
+            .eq("user_id", user.id)
             .single();
 
-        if (patientProfileData?.profile_id) {
-            const { data: doctorUserData } = await adminSupabase
-                .from("profiles")
-                .select("full_name")
-                .eq("id", profile.id)
-                .single();
-            const doctorName = (doctorUserData as { full_name?: string } | null)?.full_name || "الطبيب";
-
-            createNotification({
-                profileId: patientProfileData.profile_id,
-                title: "It's your turn for urgent consultation! 📹",
-                body: `Dr. ${doctorName} is waiting for you now. Click to join the video call.`,
-                notificationType: "system",
-                data: {
-                    title_ar: "حان دورك في الكشف العاجل! 📹",
-                    title_en: "It's your turn for urgent consultation! 📹",
-                    body_ar: `${doctorName} بانتظارك الآن في غرفة الكشف. اضغط للدخول إلى مكالمة الفيديو.`,
-                    body_en: `Dr. ${doctorName} is waiting for you now. Click to join the video call.`,
-                    queueEntryId: queueEntry.id,
-                    roomUrl,
-                    action: "urgent_call",
-                },
-            }).catch(err => console.error("Failed to notify patient of urgent call:", err));
+        const profile = profileData as { id: string } | null;
+        if (!profile) {
+            return { success: false, error: "Profile not found" };
         }
-    } catch (e) {
-        console.error("Error sending urgent call notification:", e);
-    }
 
-    return {
-        success: true,
-        queueEntry: {
-            ...queueEntry,
+        const { data: doctorData } = await adminSupabase
+            .from("doctor_profiles")
+            .select("id, is_online, current_queue_entry_id")
+            .eq("profile_id", profile.id)
+            .single();
+
+        const doctor = doctorData as any;
+        if (!doctor) {
+            return { success: false, error: "Doctor profile not found" };
+        }
+
+        // Ensure doctor is online
+        if (!doctor.is_online) {
+            await adminSupabase
+                .from("doctor_profiles")
+                .update({ is_online: true, is_available_now: true })
+                .eq("id", doctor.id);
+        }
+
+        // If doctor already has another patient in current_queue_entry_id that is active,
+        // and is now calling a different patient, safely return the previous patient back to "waiting"
+        if (doctor.current_queue_entry_id && doctor.current_queue_entry_id !== targetQueueEntryId) {
+            await adminSupabase
+                .from("consultation_queue")
+                .update({
+                    status: "waiting",
+                    daily_room_url: null,
+                    daily_room_name: null,
+                })
+                .eq("id", doctor.current_queue_entry_id)
+                .in("status", ["called", "in_consultation"]);
+        }
+
+        // Select the target patient
+        let query = adminSupabase
+            .from("consultation_queue")
+            .select(`
+                *,
+                patient_profiles!consultation_queue_patient_profile_id_fkey (
+                    id,
+                    profile_id,
+                    profiles!patient_profiles_profile_id_fkey (
+                        id,
+                        full_name,
+                        avatar_url
+                    )
+                )
+            `)
+            .eq("doctor_profile_id", doctor.id);
+
+        if (targetQueueEntryId) {
+            query = query.eq("id", targetQueueEntryId);
+        } else {
+            query = query.eq("status", "waiting").order("position", { ascending: true }).limit(1);
+        }
+
+        const { data: targetPatient, error: fetchErr } = await query.single();
+        if (fetchErr || !targetPatient) {
+            return { success: false, error: "المريض غير متاح في قائمة الانتظار" };
+        }
+
+        const rawPatient = targetPatient as any;
+        const patientName = rawPatient.patient_profiles?.profiles?.full_name || "المريض";
+        const patientAvatar = rawPatient.patient_profiles?.profiles?.avatar_url || null;
+
+        // Generate video room URL
+        const dailyApiKey = process.env.DAILY_API_KEY;
+        const dailyDomain = process.env.NEXT_PUBLIC_DAILY_DOMAIN;
+        const jitsiDomain = process.env.NEXT_PUBLIC_JITSI_DOMAIN || "fairmeeting.net";
+        let roomUrl: string;
+        let roomName: string;
+
+        if (!dailyApiKey || !dailyDomain) {
+            roomName = `tabibi-q-${rawPatient.id.replace(/[^a-zA-Z0-9]/g, "").slice(0, 12)}-${Date.now().toString(36)}`;
+            roomUrl = `https://${jitsiDomain}/${roomName}`;
+        } else {
+            try {
+                roomName = `tabibi-q-${rawPatient.id.slice(0, 8)}-${Date.now()}`;
+                const response = await fetch("https://api.daily.co/v1/rooms", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${dailyApiKey}`,
+                    },
+                    body: JSON.stringify({
+                        name: roomName,
+                        privacy: "private",
+                        properties: {
+                            exp: Math.floor(Date.now() / 1000) + 3600,
+                            enable_screenshare: true,
+                            enable_chat: true,
+                            enable_knocking: false,
+                            start_video_off: false,
+                            start_audio_off: false,
+                            max_participants: 2,
+                            eject_at_room_exp: true,
+                        },
+                    }),
+                });
+                if (response.ok) {
+                    const room = await response.json();
+                    roomUrl = room.url;
+                } else {
+                    roomName = `tabibi-q-${rawPatient.id.replace(/[^a-zA-Z0-9]/g, "").slice(0, 12)}-${Date.now().toString(36)}`;
+                    roomUrl = `https://${jitsiDomain}/${roomName}`;
+                }
+            } catch {
+                roomName = `tabibi-q-${rawPatient.id.replace(/[^a-zA-Z0-9]/g, "").slice(0, 12)}-${Date.now().toString(36)}`;
+                roomUrl = `https://${jitsiDomain}/${roomName}`;
+            }
+        }
+
+        const nowIso = new Date().toISOString();
+
+        // Update queue entry directly to in_consultation with room URL
+        const { error: updateError } = await adminSupabase
+            .from("consultation_queue")
+            .update({
+                status: "in_consultation",
+                called_at: nowIso,
+                consultation_started_at: nowIso,
+                daily_room_name: roomName,
+                daily_room_url: roomUrl,
+            })
+            .eq("id", rawPatient.id);
+
+        if (updateError) {
+            console.error("Error calling patient:", updateError);
+            return { success: false, error: updateError.message };
+        }
+
+        // Update doctor's current queue entry
+        await adminSupabase
+            .from("doctor_profiles")
+            .update({ current_queue_entry_id: rawPatient.id })
+            .eq("id", doctor.id);
+
+        // Notify patient that doctor is calling them into consultation
+        try {
+            const patientUserId = rawPatient.patient_profiles?.profile_id;
+            if (patientUserId) {
+                const { data: doctorUserData } = await adminSupabase
+                    .from("profiles")
+                    .select("full_name")
+                    .eq("id", profile.id)
+                    .single();
+                const doctorName = (doctorUserData as { full_name?: string } | null)?.full_name || "الطبيب";
+
+                createNotification({
+                    profileId: patientUserId,
+                    title: "It's your turn for urgent consultation! 📹",
+                    body: `Dr. ${doctorName} is waiting for you now. Click to join the video call.`,
+                    notificationType: "system",
+                    data: {
+                        title_ar: "حان دورك في الكشف العاجل! 📹",
+                        title_en: "It's your turn for urgent consultation! 📹",
+                        body_ar: `${doctorName} بانتظارك الآن في غرفة الكشف. اضغط للدخول إلى مكالمة الفيديو.`,
+                        body_en: `Dr. ${doctorName} is waiting for you now. Click to join the video call.`,
+                        queueEntryId: rawPatient.id,
+                        roomUrl,
+                        action: "urgent_call",
+                    },
+                }).catch(err => console.error("Failed to notify patient of urgent call:", err));
+            }
+        } catch (e) {
+            console.error("Error sending urgent call notification:", e);
+        }
+
+        const formattedQueueEntry: QueueEntry & { patient_name?: string; patient_avatar?: string } = {
+            ...rawPatient,
+            patient_name: patientName,
+            patient_avatar: patientAvatar,
             status: "in_consultation",
             called_at: nowIso,
             consultation_started_at: nowIso,
             daily_room_name: roomName,
             daily_room_url: roomUrl,
-        },
-        roomUrl,
-    };
+            patient_profiles: undefined,
+        };
+
+        return {
+            success: true,
+            queueEntry: formattedQueueEntry,
+            roomUrl,
+        };
+    } catch (err: unknown) {
+        console.error("Unhandled error in callPatient:", err);
+        const message = err instanceof Error ? err.message : String(err);
+        return { success: false, error: message || "حدث خطأ أثناء استدعاء المريض" };
+    }
+}
+
+/**
+ * Doctor calls next patient in queue (backward compatibility alias)
+ */
+export async function callNextPatient(targetQueueEntryId?: string): Promise<{
+    success: boolean;
+    queueEntry?: QueueEntry & { patient_name?: string; patient_avatar?: string };
+    roomUrl?: string;
+    error?: string;
+}> {
+    return callPatient(targetQueueEntryId);
+}
+
+/**
+ * Returns a called or in-consultation patient back to the waiting queue
+ * so the doctor can attend another patient without losing anyone.
+ */
+export async function returnPatientToQueue(queueEntryId: string): Promise<{ success: boolean; error?: string }> {
+    try {
+        const supabase = await createClient();
+        const adminSupabase: any = await createServiceRoleClient();
+
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return { success: false, error: "Not authenticated" };
+
+        const { data: profile } = await adminSupabase.from("profiles").select("id").eq("user_id", user.id).single();
+        if (!profile) return { success: false, error: "Profile not found" };
+
+        const { data: doctor } = await adminSupabase.from("doctor_profiles").select("id").eq("profile_id", profile.id).single();
+        if (!doctor) return { success: false, error: "Doctor profile not found" };
+
+        await adminSupabase
+            .from("consultation_queue")
+            .update({
+                status: "waiting",
+                daily_room_url: null,
+                daily_room_name: null,
+            })
+            .eq("id", queueEntryId)
+            .eq("doctor_profile_id", doctor.id);
+
+        await adminSupabase
+            .from("doctor_profiles")
+            .update({ current_queue_entry_id: null })
+            .eq("id", doctor.id)
+            .eq("current_queue_entry_id", queueEntryId);
+
+        return { success: true };
+    } catch (err: unknown) {
+        console.error("Unhandled error in returnPatientToQueue:", err);
+        const message = err instanceof Error ? err.message : String(err);
+        return { success: false, error: message || "حدث خطأ في إعادة المريض للانتظار" };
+    }
 }
 
 /**
@@ -510,11 +603,11 @@ export async function startQueueConsultation(
         return { success: false, error: "Queue entry not found" };
     }
 
-    // Require completed/approved payment before starting consultation
-    if (queueEntry.payment_status !== "completed") {
+    // Allow doctor to attend patient - only block if payment was refunded
+    if (queueEntry.payment_status === "refunded") {
         return {
             success: false,
-            error: "في انتظار تأكيد وموافقة الإدارة على إيصال التحويل قبل بدء المكالمة."
+            error: "لا يمكن بدء المكالمة لأن مبلغ الاستشارة تم استرداده."
         };
     }
 

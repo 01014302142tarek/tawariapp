@@ -10,7 +10,10 @@ import { useI18n } from "@/app/i18n";
 import { useAuth } from "@/app/context/AuthContext";
 import {
     getDoctorQueueStatus,
+    callPatient,
     callNextPatient,
+    returnPatientToQueue,
+    endQueueConsultation,
     startQueueConsultation,
     type QueueEntry,
 } from "@/app/actions/queue";
@@ -107,7 +110,7 @@ interface QueuePatientCardProps {
     position: number;
     isDark: boolean;
     isRTL: boolean;
-    isNext: boolean;
+    isCurrent: boolean;
     onCall: () => void;
     calling: boolean;
 }
@@ -117,7 +120,7 @@ const QueuePatientCard: React.FC<QueuePatientCardProps> = ({
     position,
     isDark,
     isRTL,
-    isNext,
+    isCurrent,
     onCall,
     calling,
 }) => {
@@ -129,115 +132,131 @@ const QueuePatientCard: React.FC<QueuePatientCardProps> = ({
             exit={{ opacity: 0, x: -100 }}
             className={cn(
                 "p-4 rounded-xl border transition-all",
-                isNext
+                isCurrent
                     ? "bg-[#FD614B]/10 border-[#FD614B]/40"
                     : isDark
-                        ? "bg-white/[0.02] border-white/5"
-                        : "bg-gray-50 border-gray-200"
+                        ? "bg-white/[0.02] border-white/5 hover:border-white/10"
+                        : "bg-gray-50 border-gray-200 hover:border-gray-300"
             )}
         >
-            <div className="flex items-start gap-4">
-                {/* Position */}
-                <div className={cn(
-                    "w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg",
-                    isNext
-                        ? "bg-[#FD614B] text-white"
-                        : isDark
-                            ? "bg-slate-700 text-slate-300"
-                            : "bg-gray-200 text-gray-600"
-                )}>
-                    {position}
-                </div>
-
-                {/* Patient Info */}
-                <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-3 mb-2">
-                        {entry.patient_avatar ? (
-                            <Image
-                                src={entry.patient_avatar}
-                                alt={entry.patient_name}
-                                width={40}
-                                height={40}
-                                className="w-10 h-10 rounded-full object-cover"
-                            />
-                        ) : (
-                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#044C87] to-[#FD614B] flex items-center justify-center text-white font-medium">
-                                {getInitials(entry.patient_name)}
-                            </div>
-                        )}
-                        <div>
-                            <p className={cn("font-semibold", isDark ? "text-white" : "text-slate-900")}>
-                                {entry.patient_name}
-                            </p>
-                            <div className="flex items-center gap-2 text-sm text-slate-500">
-                                {Icons.clock}
-                                <span>{isRTL ? "في الانتظار منذ" : "Waiting"} {formatWaitTime(entry.joined_at)}</span>
-                            </div>
-                        </div>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="flex items-start gap-3.5 flex-1 min-w-0">
+                    {/* Position */}
+                    <div className={cn(
+                        "w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg flex-shrink-0",
+                        isCurrent
+                            ? "bg-[#FD614B] text-white"
+                            : isDark
+                                ? "bg-slate-700 text-slate-300"
+                                : "bg-gray-200 text-gray-600"
+                    )}>
+                        {position}
                     </div>
 
-                    {/* Chief Complaint */}
-                    {entry.chief_complaint && (
-                        <div className={cn(
-                            "mt-3 p-3 rounded-lg text-sm",
-                            isDark ? "bg-[#0D2C4F]/50" : "bg-white"
-                        )}>
-                            <div className="flex items-start gap-2">
-                                <span className="text-slate-400">{Icons.clipboard}</span>
-                                <div>
-                                    <p className="text-slate-500 text-xs mb-1">
-                                        {isRTL ? "الشكوى الرئيسية" : "Chief Complaint"}
-                                    </p>
-                                    <p className={cn(isDark ? "text-slate-300" : "text-slate-700")}>
-                                        {entry.chief_complaint}
-                                    </p>
+                    {/* Patient Info */}
+                    <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-3 mb-1.5 flex-wrap">
+                            {entry.patient_avatar ? (
+                                <Image
+                                    src={entry.patient_avatar}
+                                    alt={entry.patient_name}
+                                    width={40}
+                                    height={40}
+                                    className="w-10 h-10 rounded-full object-cover flex-shrink-0"
+                                />
+                            ) : (
+                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#044C87] to-[#FD614B] flex items-center justify-center text-white font-medium flex-shrink-0">
+                                    {getInitials(entry.patient_name)}
+                                </div>
+                            )}
+                            <div>
+                                <p className={cn("font-bold text-base", isDark ? "text-white" : "text-slate-900")}>
+                                    {entry.patient_name}
+                                </p>
+                                <div className="flex items-center gap-2 text-xs text-slate-500">
+                                    {Icons.clock}
+                                    <span>{isRTL ? "في الانتظار منذ" : "Waiting"} {formatWaitTime(entry.joined_at)}</span>
                                 </div>
                             </div>
                         </div>
-                    )}
 
-                    {/* Payment Info */}
-                    <div className="flex items-center gap-4 mt-3 text-sm">
-                        <div className="flex items-center gap-1 text-slate-500">
-                            {Icons.money}
-                            <span>{entry.payment_amount} EGP</span>
+                        {/* Chief Complaint */}
+                        {entry.chief_complaint && (
+                            <div className={cn(
+                                "mt-2 p-2.5 rounded-lg text-xs sm:text-sm",
+                                isDark ? "bg-[#0D2C4F]/50" : "bg-white"
+                            )}>
+                                <div className="flex items-start gap-1.5">
+                                    <span className="text-slate-400 mt-0.5">{Icons.clipboard}</span>
+                                    <div>
+                                        <p className="text-slate-500 text-[11px] mb-0.5">
+                                            {isRTL ? "الشكوى الرئيسية:" : "Chief Complaint:"}
+                                        </p>
+                                        <p className={cn("font-medium", isDark ? "text-slate-300" : "text-slate-700")}>
+                                            {entry.chief_complaint}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Payment Info */}
+                        <div className="flex items-center gap-3 mt-2 text-xs">
+                            <div className="flex items-center gap-1 text-slate-500">
+                                {Icons.money}
+                                <span>{entry.payment_amount} EGP</span>
+                            </div>
+                            <span className={cn(
+                                "px-2 py-0.5 rounded-full font-medium",
+                                entry.payment_status === "completed_mock" || entry.payment_status === "completed"
+                                    ? "bg-green-500/10 text-green-400"
+                                    : "bg-amber-500/10 text-amber-400"
+                            )}>
+                                {entry.payment_status === "completed_mock" ? (isRTL ? "مدفوع (تجريبي)" : "Paid (Mock)") :
+                                    entry.payment_status === "completed" ? (isRTL ? "مدفوع" : "Paid") :
+                                        (isRTL ? "معلق" : "Pending")}
+                            </span>
                         </div>
-                        <span className={cn(
-                            "px-2 py-0.5 rounded-full text-xs",
-                            entry.payment_status === "completed_mock" || entry.payment_status === "completed"
-                                ? "bg-green-500/10 text-green-400"
-                                : "bg-[#FD614B]/10 text-[#FD614B]"
-                        )}>
-                            {entry.payment_status === "completed_mock" ? (isRTL ? "مدفوع (تجريبي)" : "Paid (Mock)") :
-                                entry.payment_status === "completed" ? (isRTL ? "مدفوع" : "Paid") :
-                                    (isRTL ? "معلق" : "Pending")}
-                        </span>
                     </div>
                 </div>
 
-                {/* Call Button (only for first in queue) */}
-                {isNext && (
-                    <motion.button
-                        whileHover={{ scale: 1.03, boxShadow: "0 0 15px rgba(253,97,75,0.4)" }}
-                        whileTap={{ scale: 0.95 }}
-                        transition={{ type: "spring", stiffness: 400, damping: 25 }}
-                        onClick={onCall}
-                        disabled={calling}
-                        className="px-4 py-2 bg-[#FD614B] text-white rounded-lg font-medium hover:bg-[#E84D37] transition-all flex items-center gap-2 disabled:opacity-50 cursor-pointer"
-                    >
-                        {calling ? (
-                            <>
-                                {Icons.loading}
-                                <span>{isRTL ? "جاري..." : "Calling..."}</span>
-                            </>
-                        ) : (
-                            <>
-                                {Icons.phone}
-                                <span>{isRTL ? "استدعاء" : "Call"}</span>
-                            </>
-                        )}
-                    </motion.button>
-                )}
+                {/* Call Action Button - Available for EVERY patient in queue */}
+                <div className="flex items-center justify-end flex-shrink-0 self-end sm:self-center">
+                    {isCurrent ? (
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
+                            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                            {isRTL ? "الاستشارة الحالية" : "Current Consultation"}
+                        </span>
+                    ) : (
+                        <motion.button
+                            whileHover={{ scale: 1.04, boxShadow: "0 0 15px rgba(253,97,75,0.4)" }}
+                            whileTap={{ scale: 0.96 }}
+                            transition={{ type: "spring", stiffness: 400, damping: 25 }}
+                            onClick={onCall}
+                            disabled={calling}
+                            title={isRTL ? `بدء المكالمة الآن مع ${entry.patient_name}` : `Call ${entry.patient_name} now`}
+                            className={cn(
+                                "px-4 py-2.5 rounded-xl font-semibold text-xs sm:text-sm transition-all flex items-center gap-2 cursor-pointer shadow-md",
+                                calling ? "opacity-60 cursor-not-allowed" : "",
+                                entry.payment_status === "completed" || entry.payment_status === "completed_mock"
+                                    ? "bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-600/20"
+                                    : "bg-[#FD614B] hover:bg-[#E84D37] text-white shadow-[#FD614B]/20"
+                            )}
+                        >
+                            {calling ? (
+                                <>
+                                    {Icons.loading}
+                                    <span>{isRTL ? "جاري الاتصال..." : "Calling..."}</span>
+                                </>
+                            ) : (
+                                <>
+                                    {Icons.video}
+                                    <span>{isRTL ? "بدء المكالمة الآن" : "Start Call Now"}</span>
+                                </>
+                            )}
+                        </motion.button>
+                    )}
+                </div>
             </div>
         </motion.div>
     );
@@ -247,11 +266,15 @@ const QueuePatientCard: React.FC<QueuePatientCardProps> = ({
 // Current Consultation Card
 // ============================================
 interface CurrentConsultationProps {
-    entry: QueueEntry;
+    entry: QueueEntry & { patient_name?: string; patient_avatar?: string };
     isDark: boolean;
     isRTL: boolean;
     onStartCall: () => void;
+    onPostpone: () => void;
+    onEnd: () => void;
     starting: boolean;
+    postponing: boolean;
+    ending: boolean;
 }
 
 const CurrentConsultationCard: React.FC<CurrentConsultationProps> = ({
@@ -259,84 +282,175 @@ const CurrentConsultationCard: React.FC<CurrentConsultationProps> = ({
     isDark,
     isRTL,
     onStartCall,
+    onPostpone,
+    onEnd,
     starting,
+    postponing,
+    ending,
 }) => {
     return (
         <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             className={cn(
-                "p-6 rounded-2xl border-2 border-[#FD614B]",
-                isDark ? "bg-[#FD614B]/10" : "bg-[#FFF5F3]"
+                "p-5 sm:p-6 rounded-2xl border-2 border-[#FD614B] transition-all shadow-lg",
+                isDark ? "bg-[#FD614B]/10 border-[#FD614B]/50" : "bg-[#FFF5F3] border-[#FD614B]/40"
             )}
         >
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
                 <div className="flex items-center gap-2">
                     <span className="relative flex h-3 w-3">
                         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
                         <span className="relative inline-flex rounded-full h-3 w-3 bg-[#FD614B]" />
                     </span>
-                    <span className="text-[#FD614B] font-semibold">
+                    <span className="text-[#FD614B] font-bold text-sm sm:text-base">
                         {entry.status === "called"
-                            ? (isRTL ? "المريض مستدعى" : "Patient Called")
-                            : (isRTL ? "استشارة جارية" : "Consultation In Progress")}
+                            ? (isRTL ? "المريض قيد الاستدعاء" : "Patient Called")
+                            : (isRTL ? "استشارة جارية حالياً" : "Consultation In Progress")}
                     </span>
                 </div>
                 {entry.called_at && (
-                    <span className="text-slate-500 text-sm">
-                        {isRTL ? "منذ" : "Called"} {formatWaitTime(entry.called_at)}
+                    <span className="text-slate-500 text-xs sm:text-sm flex items-center gap-1">
+                        {Icons.clock}
+                        <span>{isRTL ? "منذ" : "Called"} {formatWaitTime(entry.called_at)}</span>
                     </span>
                 )}
             </div>
 
-            <div className="flex items-center gap-4 mb-6">
-                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#044C87] to-[#FD614B] flex items-center justify-center text-white font-bold text-2xl">
-                    {Icons.user}
+            <div className="flex items-center gap-4 mb-5">
+                <div className="relative w-14 h-14 sm:w-16 sm:h-16 rounded-full overflow-hidden border-2 border-[#FD614B]/50 flex items-center justify-center bg-gradient-to-br from-[#044C87] to-[#FD614B] text-white font-bold text-xl flex-shrink-0 shadow-md">
+                    {entry.patient_avatar ? (
+                        <Image
+                            src={entry.patient_avatar}
+                            alt={entry.patient_name || "Patient"}
+                            fill
+                            className="object-cover"
+                        />
+                    ) : (
+                        <span>{getInitials(entry.patient_name || "مريض")}</span>
+                    )}
                 </div>
-                <div>
-                    <p className={cn("text-xl font-bold", isDark ? "text-white" : "text-slate-900")}>
-                        {isRTL ? "مريض في الانتظار" : "Patient Waiting"}
-                    </p>
-                    <p className="text-slate-500">
-                        {isRTL ? "المريض جاهز للاستشارة" : "Patient is ready for consultation"}
+                <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                        <p className={cn("text-lg sm:text-xl font-bold truncate", isDark ? "text-white" : "text-slate-900")}>
+                            {entry.patient_name || (isRTL ? "مريض في الانتظار" : "Patient Waiting")}
+                        </p>
+                        <span className={cn(
+                            "px-2.5 py-0.5 rounded-full text-xs font-semibold",
+                            entry.payment_status === "completed" || entry.payment_status === "completed_mock"
+                                ? "bg-green-500/15 text-green-400 border border-green-500/30"
+                                : "bg-amber-500/15 text-amber-400 border border-amber-500/30"
+                        )}>
+                            {entry.payment_status === "completed" || entry.payment_status === "completed_mock"
+                                ? (isRTL ? "مدفوع" : "Paid")
+                                : (isRTL ? "إيصال معلق" : "Pending Receipt")}
+                        </span>
+                    </div>
+                    <p className={cn("text-xs sm:text-sm mt-0.5", isDark ? "text-slate-400" : "text-slate-600")}>
+                        {isRTL ? "المريض جاهز للاستشارة الفورية عبر الفيديو" : "Patient ready for immediate video consultation"}
                     </p>
                 </div>
             </div>
 
             {entry.chief_complaint && (
                 <div className={cn(
-                    "p-4 rounded-xl mb-6",
-                    isDark ? "bg-[#0D2C4F]/50" : "bg-white"
+                    "p-3.5 rounded-xl mb-5 text-sm",
+                    isDark ? "bg-[#0D2C4F]/60 border border-white/5" : "bg-white border border-gray-200"
                 )}>
-                    <p className="text-slate-500 text-sm mb-1">
-                        {isRTL ? "الشكوى الرئيسية" : "Chief Complaint"}
-                    </p>
-                    <p className={cn("font-medium", isDark ? "text-white" : "text-slate-900")}>
-                        {entry.chief_complaint}
-                    </p>
+                    <div className="flex items-start gap-2">
+                        <span className="text-[#FD614B] mt-0.5 flex-shrink-0">{Icons.clipboard}</span>
+                        <div>
+                            <p className="text-slate-400 text-xs mb-0.5 font-medium">
+                                {isRTL ? "الشكوى الرئيسية للمريض:" : "Chief Complaint:"}
+                            </p>
+                            <p className={cn("font-medium", isDark ? "text-white" : "text-slate-800")}>
+                                {entry.chief_complaint}
+                            </p>
+                        </div>
+                    </div>
                 </div>
             )}
 
-            <motion.button
-                whileHover={{ scale: 1.02, boxShadow: "0 0 25px rgba(253,97,75,0.45)" }}
-                whileTap={{ scale: 0.97 }}
-                transition={{ type: "spring", stiffness: 400, damping: 25 }}
-                onClick={onStartCall}
-                disabled={starting}
-                className="w-full py-4 bg-[#FD614B] text-white rounded-xl font-semibold text-lg hover:bg-[#E84D37] transition-all flex items-center justify-center gap-3 disabled:opacity-50 cursor-pointer shadow-lg shadow-[#FD614B]/20"
-            >
-                {starting ? (
-                    <>
-                        {Icons.loading}
-                        <span>{isRTL ? "جاري إنشاء الغرفة..." : "Creating Room..."}</span>
-                    </>
-                ) : (
-                    <>
-                        {Icons.video}
-                        <span>{isRTL ? "بدء مكالمة الفيديو" : "Start Video Call"}</span>
-                    </>
-                )}
-            </motion.button>
+            {/* Action Buttons */}
+            <div className="space-y-2.5">
+                {/* Main Video Call Button */}
+                <motion.button
+                    whileHover={{ scale: 1.02, boxShadow: "0 0 25px rgba(253,97,75,0.45)" }}
+                    whileTap={{ scale: 0.97 }}
+                    transition={{ type: "spring", stiffness: 400, damping: 25 }}
+                    onClick={onStartCall}
+                    disabled={starting || postponing || ending}
+                    className="w-full py-3.5 sm:py-4 bg-[#FD614B] text-white rounded-xl font-bold text-base sm:text-lg hover:bg-[#E84D37] transition-all flex items-center justify-center gap-2.5 disabled:opacity-50 cursor-pointer shadow-lg shadow-[#FD614B]/20"
+                >
+                    {starting ? (
+                        <>
+                            {Icons.loading}
+                            <span>{isRTL ? "جاري الدخول لغرفة المكالمة..." : "Entering Call Room..."}</span>
+                        </>
+                    ) : (
+                        <>
+                            {Icons.video}
+                            <span>{isRTL ? "بدء مكالمة الفيديو الآن" : "Start Video Call Now"}</span>
+                        </>
+                    )}
+                </motion.button>
+
+                {/* Secondary Controls: Postpone / End */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+                    <motion.button
+                        whileHover={{ scale: 1.01 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={onPostpone}
+                        disabled={starting || postponing || ending}
+                        className={cn(
+                            "py-2.5 px-3 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center justify-center gap-2 border cursor-pointer",
+                            isDark
+                                ? "bg-amber-500/10 text-amber-300 border-amber-500/30 hover:bg-amber-500/20"
+                                : "bg-amber-50 text-amber-800 border-amber-300 hover:bg-amber-100",
+                            (starting || postponing || ending) && "opacity-50 cursor-not-allowed"
+                        )}
+                        title={isRTL ? "إذا كان المريض غير متاح حالياً، أعده لقائمة الانتظار واختر مريضاً آخر" : "Return to queue if patient is unavailable"}
+                    >
+                        {postponing ? (
+                            <>
+                                {Icons.loading}
+                                <span>{isRTL ? "جاري التأجيل..." : "Postponing..."}</span>
+                            </>
+                        ) : (
+                            <>
+                                {Icons.clock}
+                                <span>{isRTL ? "المريض غير متاح (تأجيل للانتظار)" : "Unavailable (Return to Queue)"}</span>
+                            </>
+                        )}
+                    </motion.button>
+
+                    <motion.button
+                        whileHover={{ scale: 1.01 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={onEnd}
+                        disabled={starting || postponing || ending}
+                        className={cn(
+                            "py-2.5 px-3 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center justify-center gap-2 border cursor-pointer",
+                            isDark
+                                ? "bg-white/5 text-slate-300 border-white/10 hover:bg-white/10"
+                                : "bg-gray-100 text-slate-700 border-gray-300 hover:bg-gray-200",
+                            (starting || postponing || ending) && "opacity-50 cursor-not-allowed"
+                        )}
+                    >
+                        {ending ? (
+                            <>
+                                {Icons.loading}
+                                <span>{isRTL ? "جاري الإنهاء..." : "Ending..."}</span>
+                            </>
+                        ) : (
+                            <>
+                                {Icons.check}
+                                <span>{isRTL ? "إنهاء الاستشارة" : "End Consultation"}</span>
+                            </>
+                        )}
+                    </motion.button>
+                </div>
+            </div>
         </motion.div>
     );
 };
@@ -362,7 +476,10 @@ export default function DoctorUrgentCarePage() {
     const [doctorMessagingProfileId, setDoctorMessagingProfileId] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
     const [calling, setCalling] = useState(false);
+    const [callingPatientId, setCallingPatientId] = useState<string | null>(null);
     const [startingCall, setStartingCall] = useState(false);
+    const [postponing, setPostponing] = useState(false);
+    const [ending, setEnding] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [isOnline, setIsOnline] = useState(false);
 
@@ -490,31 +607,85 @@ export default function DoctorUrgentCarePage() {
         };
     }, [loadQueueStatus]);
 
-    // Handle call next patient
-    const handleCallNext = async () => {
-        if (waitingPatients.length === 0) return;
-
-        // Prevent double-clicks using ref for immediate blocking
+    // Handle calling any specific patient or next in queue
+    const handleCallPatient = async (targetPatientId?: string, directJoin = true) => {
         if (isCallingNextRef.current) return;
         isCallingNextRef.current = true;
 
+        const effectiveId = targetPatientId || (waitingPatients[0]?.id);
+        if (!effectiveId) {
+            isCallingNextRef.current = false;
+            return;
+        }
+
         setCalling(true);
+        setCallingPatientId(effectiveId);
         setError(null);
 
         try {
-            const result = await callNextPatient();
+            const result = await callPatient(effectiveId);
             if (result.success && result.queueEntry) {
-                setCurrentPatient(result.queueEntry);
-                setWaitingPatients(prev => prev.filter(p => p.id !== result.queueEntry!.id));
+                const calledEntry = result.queueEntry;
+                setCurrentPatient(calledEntry);
+                await loadQueueStatus(false);
+
+                if (directJoin) {
+                    router.push(`/${language}/dashboard/doctor/urgent-care/call/${calledEntry.id}`);
+                }
             } else {
-                setError(result.error || (isRTL ? "حدث خطأ" : "An error occurred"));
+                setError(result.error || (isRTL ? "حدث خطأ أثناء استدعاء المريض" : "An error occurred"));
+                isCallingNextRef.current = false;
             }
         } catch (err) {
             console.error("Error calling patient:", err);
-            setError(isRTL ? "حدث خطأ" : "An error occurred");
+            setError(isRTL ? "حدث خطأ أثناء استدعاء المريض" : "An error occurred");
+            isCallingNextRef.current = false;
         } finally {
             setCalling(false);
-            isCallingNextRef.current = false;
+            setCallingPatientId(null);
+            if (!directJoin) {
+                isCallingNextRef.current = false;
+            }
+        }
+    };
+
+    // Return current patient to queue if unavailable right now
+    const handlePostpone = async (patientId: string) => {
+        setPostponing(true);
+        setError(null);
+        try {
+            const result = await returnPatientToQueue(patientId);
+            if (result.success) {
+                setCurrentPatient(null);
+                await loadQueueStatus(false);
+            } else {
+                setError(result.error || (isRTL ? "فشل تأجيل المريض" : "Failed to return patient to queue"));
+            }
+        } catch (err) {
+            console.error("Error postponing patient:", err);
+            setError(isRTL ? "حدث خطأ أثناء تأجيل المريض" : "An error occurred");
+        } finally {
+            setPostponing(false);
+        }
+    };
+
+    // Complete / end consultation
+    const handleEndConsultation = async (patientId: string) => {
+        setEnding(true);
+        setError(null);
+        try {
+            const result = await endQueueConsultation(patientId);
+            if (result.success) {
+                setCurrentPatient(null);
+                await loadQueueStatus(false);
+            } else {
+                setError(result.error || (isRTL ? "فشل إنهاء الاستشارة" : "Failed to end consultation"));
+            }
+        } catch (err) {
+            console.error("Error ending consultation:", err);
+            setError(isRTL ? "حدث خطأ أثناء إنهاء الاستشارة" : "An error occurred");
+        } finally {
+            setEnding(false);
         }
     };
 
@@ -715,7 +886,11 @@ export default function DoctorUrgentCarePage() {
                         isDark={isDark}
                         isRTL={isRTL}
                         onStartCall={handleStartCall}
+                        onPostpone={() => handlePostpone(currentPatient.id)}
+                        onEnd={() => handleEndConsultation(currentPatient.id)}
                         starting={startingCall}
+                        postponing={postponing}
+                        ending={ending}
                     />
                 </div>
             )}
@@ -723,20 +898,27 @@ export default function DoctorUrgentCarePage() {
             {/* Queue List */}
             {isOnline && (
                 <div>
-                    <div className="flex items-center justify-between mb-4">
-                        <h2 className={cn("text-lg font-semibold", isDark ? "text-white" : "text-slate-900")}>
-                            {isRTL ? "قائمة الانتظار" : "Waiting Queue"}
-                        </h2>
+                    <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
+                        <div>
+                            <h2 className={cn("text-lg font-semibold", isDark ? "text-white" : "text-slate-900")}>
+                                {isRTL ? "قائمة الانتظار" : "Waiting Queue"}
+                            </h2>
+                            <p className={cn("text-xs mt-0.5", isDark ? "text-slate-400" : "text-slate-600")}>
+                                {isRTL
+                                    ? "يمكنك اختيار وبدء المكالمة مع أي مريض في القائمة مباشرة"
+                                    : "You can select and start a call with any patient in the queue directly"}
+                            </p>
+                        </div>
                         {waitingPatients.length > 0 && !currentPatient && (
                             <motion.button
                                 whileHover={{ scale: 1.03, boxShadow: "0 0 15px rgba(253,97,75,0.4)" }}
                                 whileTap={{ scale: 0.95 }}
                                 transition={{ type: "spring", stiffness: 400, damping: 25 }}
-                                onClick={handleCallNext}
+                                onClick={() => handleCallPatient()}
                                 disabled={calling}
                                 className="px-4 py-2 bg-[#FD614B] text-white rounded-lg font-medium hover:bg-[#E84D37] transition-all flex items-center gap-2 disabled:opacity-50 cursor-pointer shadow-md shadow-[#FD614B]/20"
                             >
-                                {calling ? Icons.loading : Icons.phone}
+                                {calling && !callingPatientId ? Icons.loading : Icons.phone}
                                 <span>{isRTL ? "استدعاء التالي" : "Call Next"}</span>
                             </motion.button>
                         )}
@@ -772,9 +954,9 @@ export default function DoctorUrgentCarePage() {
                                         position={index + 1}
                                         isDark={isDark}
                                         isRTL={isRTL}
-                                        isNext={index === 0 && !currentPatient}
-                                        onCall={handleCallNext}
-                                        calling={calling}
+                                        isCurrent={patient.id === currentPatient?.id}
+                                        onCall={() => handleCallPatient(patient.id)}
+                                        calling={calling && callingPatientId === patient.id}
                                     />
                                 ))}
                             </AnimatePresence>
