@@ -411,11 +411,11 @@ export async function callPatient(targetQueueEntryId?: string): Promise<{
                     const room = await response.json();
                     roomUrl = room.url;
                 } else {
-                    roomName = `tabibi-q-${rawPatient.id.replace(/[^a-zA-Z0-9]/g, "").slice(0, 12)}-${Date.now().toString(36)}`;
+                    roomName = `tabibi-q-${rawPatient.id.replace(/[^a-zA-Z0-9]/g, "").slice(0, 16)}`;
                     roomUrl = `https://${jitsiDomain}/${roomName}`;
                 }
             } catch {
-                roomName = `tabibi-q-${rawPatient.id.replace(/[^a-zA-Z0-9]/g, "").slice(0, 12)}-${Date.now().toString(36)}`;
+                roomName = `tabibi-q-${rawPatient.id.replace(/[^a-zA-Z0-9]/g, "").slice(0, 16)}`;
                 roomUrl = `https://${jitsiDomain}/${roomName}`;
             }
         }
@@ -662,8 +662,8 @@ export async function startQueueConsultation(
     let roomName: string;
 
     if (!dailyApiKey || !dailyDomain) {
-        // Fallback to WebRTC room (meet.jit.si) when Daily.co keys are not set
-        roomName = `tabibi-q-${queueEntryId.replace(/[^a-zA-Z0-9]/g, "").slice(0, 12)}-${Date.now().toString(36)}`;
+        // Fallback to high-reliability WebRTC room when Daily.co keys are not set
+        roomName = `tabibi-q-${queueEntryId.replace(/[^a-zA-Z0-9]/g, "").slice(0, 16)}`;
         roomUrl = `https://${jitsiDomain}/${roomName}`;
         console.log("[startQueueConsultation] Using WebRTC fallback room:", roomUrl);
     } else {

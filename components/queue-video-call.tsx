@@ -9,6 +9,7 @@ import { endQueueConsultation, getQueueEntryForCall, leaveQueue } from "@/app/ac
 import { PrescriptionPromptModal, QuickPrescriptionForm, ReviewPromptModal } from "@/components/post-consultation";
 import { createClient as createBrowserSupabaseClient } from "@/lib/supabase/client";
 import { NativeWebRTCCall } from "@/components/native-webrtc-call";
+import { QueueChat } from "@/components/queue-chat";
 
 // ============================================
 // Types
@@ -87,8 +88,51 @@ export function QueueVideoCall({
         doctorName?: string;
         patientName?: string;
     }>({});
+    const [messagingInfo, setMessagingInfo] = useState<{
+        currentProfileId?: string;
+        recipientProfileId?: string;
+        recipientName?: string;
+        recipientAvatar?: string;
+    }>({});
+    const [callDurationSeconds, setCallDurationSeconds] = useState(0);
     const [consultationEnded, setConsultationEnded] = useState(false);
     const statusPollRef = useRef<NodeJS.Timeout | null>(null);
+
+    // Call duration timer
+    useEffect(() => {
+        if (callState !== "joined") return;
+        const interval = setInterval(() => {
+            setCallDurationSeconds((prev) => prev + 1);
+        }, 1000);
+        return () => clearInterval(interval);
+    }, [callState]);
+
+    const formatCallDuration = (totalSec: number) => {
+        const mins = Math.floor(totalSec / 60);
+        const secs = totalSec % 60;
+        return `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
+    };
+
+    // Listen for hangup events from the embedded video conference iframe
+    useEffect(() => {
+        const handleIframeMessage = (event: MessageEvent) => {
+            try {
+                const data = typeof event.data === "string" ? JSON.parse(event.data) : event.data;
+                if (
+                    data?.type === "video-conference-left" ||
+                    data?.event === "video-conference-left" ||
+                    data?.action === "hangup"
+                ) {
+                    setShowEndConfirm(true);
+                }
+            } catch {
+                // Ignore non-JSON messages
+            }
+        };
+
+        window.addEventListener("message", handleIframeMessage);
+        return () => window.removeEventListener("message", handleIframeMessage);
+    }, []);
 
     // Post-consultation flow state
     const [postCallPhase, setPostCallPhase] = useState<"none" | "prescription_prompt" | "prescription_form" | "review_prompt">("none");
@@ -183,9 +227,26 @@ export function QueueVideoCall({
             if (!isMountedRef.current) return;
 
             if (entryResult.success) {
+                const isDoctor = userRole === "doctor";
+                const recipientProfileId = isDoctor
+                    ? entryResult.patient?.messaging_profile_id
+                    : entryResult.doctor?.messaging_profile_id;
+                const recipientName = isDoctor
+                    ? (entryResult.patient?.full_name || (isRTL ? "المريض" : "Patient"))
+                    : (entryResult.doctor?.full_name || (isRTL ? "الطبيب" : "Doctor"));
+                const recipientAvatar = isDoctor
+                    ? entryResult.patient?.avatar_url
+                    : entryResult.doctor?.avatar_url;
+
                 setParticipantInfo({
                     doctorName: entryResult.doctor?.full_name,
                     patientName: entryResult.patient?.full_name,
+                });
+                setMessagingInfo({
+                    currentProfileId: entryResult.userMessagingProfileId,
+                    recipientProfileId,
+                    recipientName,
+                    recipientAvatar,
                 });
             } else {
                 console.error("[VideoCall] getQueueEntryForCall failed after retry:", entryResult.error);
@@ -235,12 +296,37 @@ export function QueueVideoCall({
 
             if (!isMountedRef.current) return;
 
-            // Handle high-availability WebRTC fallback room
+            // Handle high-availability WebRTC room (relayed through SFU videobridge)
             if (tokenData.roomUrl && !tokenData.roomUrl.includes("daily.co")) {
-                const effectiveUrl = tokenData.roomUrl.replace("meet.jit.si", process.env.NEXT_PUBLIC_JITSI_DOMAIN || "fairmeeting.net");
-                console.log("[VideoCall] Using WebRTC room:", effectiveUrl);
-                setWebrtcUrl(effectiveUrl);
-                setWebrtcUserName(tokenData.userName || (userRole === "doctor" ? "Doctor" : "Patient"));
+                const jitsiDomain = process.env.NEXT_PUBLIC_JITSI_DOMAIN || "fairmeeting.net";
+                let effectiveUrl = tokenData.roomUrl.replace("meet.jit.si", jitsiDomain);
+                const [cleanBase] = effectiveUrl.split("#");
+                const participantDisplayName = tokenData.userName || (userRole === "doctor" ? (isRTL ? "طبيب معتمد" : "Doctor") : (isRTL ? "المريض" : "Patient"));
+                const configParams = [
+                    `userInfo.displayName="${encodeURIComponent(participantDisplayName)}"`,
+                    `config.prejoinPageEnabled=false`,
+                    `config.prejoinConfig.enabled=false`,
+                    `config.requireDisplayName=false`,
+                    `config.enableLobby=false`,
+                    `config.startWithAudioMuted=false`,
+                    `config.startWithVideoMuted=false`,
+                    `config.disableDeepLinking=true`,
+                    `config.enableClosePage=false`,
+                    `config.defaultLanguage="ar"`,
+                    `interfaceConfig.TOOLBAR_BUTTONS=['microphone','camera','chat','desktop','tileview','hangup','select-background']`,
+                    `interfaceConfig.SHOW_JITSI_WATERMARK=false`,
+                    `interfaceConfig.SHOW_WATERMARK_FOR_GUESTS=false`,
+                    `interfaceConfig.SHOW_BRAND_WATERMARK=false`,
+                    `interfaceConfig.SHOW_POWERED_BY=false`,
+                    `interfaceConfig.MOBILE_APP_PROMO=false`,
+                    `interfaceConfig.HIDE_DEEP_LINKING_LOGO=true`,
+                    `interfaceConfig.SHOW_CHROME_EXTENSION_BANNER=false`,
+                ].join("&");
+
+                const finalWebRtcUrl = `${cleanBase}#${configParams}`;
+                console.log("[VideoCall] Using WebRTC room:", finalWebRtcUrl);
+                setWebrtcUrl(finalWebRtcUrl);
+                setWebrtcUserName(participantDisplayName);
                 hasJoinedRef.current = true;
                 setCallState("joined");
                 setLoading(false);
@@ -742,12 +828,11 @@ export function QueueVideoCall({
             </AnimatePresence>
 
             {/* Header */}
-            {!webrtcUrl && (
             <div className={cn(
-                "p-4 border-b flex items-center justify-between",
+                "p-3 sm:p-4 border-b flex items-center justify-between z-20",
                 isDark ? "bg-[#08213D] border-white/10" : "bg-white border-gray-200"
             )}>
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-3">
                     <button
                         onClick={handleBack}
                         className={cn(
@@ -760,14 +845,24 @@ export function QueueVideoCall({
                         <span className={cn(isRTL && "rotate-180 block")}>{Icons.back}</span>
                     </button>
                     <div>
-                        <h1 className={cn("font-semibold", isDark ? "text-white" : "text-slate-900")}>
-                            {isRTL ? "استشارة فيديو" : "Video Consultation"}
+                        <h1 className={cn("font-semibold text-sm sm:text-base", isDark ? "text-white" : "text-slate-900")}>
+                            {isRTL ? "استشارة فيديو عاجلة" : "Urgent Video Consultation"}
                         </h1>
-                        <p className={cn("text-sm", isDark ? "text-slate-400" : "text-slate-600")}>
-                            {userRole === "doctor"
-                                ? (participantInfo.patientName || (isRTL ? "مريض" : "Patient"))
-                                : (participantInfo.doctorName || (isRTL ? "طبيب" : "Doctor"))}
-                        </p>
+                        <div className="flex items-center gap-2">
+                            <span className={cn("text-xs", isDark ? "text-slate-400" : "text-slate-600")}>
+                                {userRole === "doctor"
+                                    ? (participantInfo.patientName || (isRTL ? "المريض" : "Patient"))
+                                    : (participantInfo.doctorName || (isRTL ? "الطبيب" : "Doctor"))}
+                            </span>
+                            {callState === "joined" && (
+                                <div className="flex items-center gap-1.5">
+                                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                                    <span className="text-[11px] text-slate-300 font-mono">
+                                        {formatCallDuration(callDurationSeconds)}
+                                    </span>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
 
@@ -775,7 +870,7 @@ export function QueueVideoCall({
                 <div className="flex items-center gap-2">
                     {webrtcUrl && (
                         <a
-                            href={`${webrtcUrl}#userInfo.displayName="${encodeURIComponent(webrtcUserName || (userRole === "doctor" ? "Doctor" : "Patient"))}"&config.disableDeepLinking=true&config.prejoinPageEnabled=false&config.prejoinConfig.enabled=false&config.requireDisplayName=false&config.enableLobby=false&config.startWithAudioMuted=false&config.startWithVideoMuted=false&interfaceConfig.SHOW_JITSI_WATERMARK=false&interfaceConfig.SHOW_WATERMARK_FOR_GUESTS=false&interfaceConfig.MOBILE_APP_PROMO=false&interfaceConfig.HIDE_DEEP_LINKING_LOGO=true&interfaceConfig.SHOW_CHROME_EXTENSION_BANNER=false`}
+                            href={webrtcUrl}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="px-2.5 py-1.5 sm:px-3 sm:py-2 bg-[#0D2C4F] hover:bg-slate-700 text-slate-200 rounded-lg text-xs sm:text-sm font-medium transition-colors flex items-center gap-1.5 border border-white/10"
@@ -790,19 +885,18 @@ export function QueueVideoCall({
                     {callState === "joined" && (
                         <button
                             onClick={() => setShowEndConfirm(true)}
-                            className="px-3 py-1.5 sm:px-4 sm:py-2 bg-red-500 text-white rounded-lg text-xs sm:text-sm font-medium hover:bg-red-600 transition-colors flex items-center gap-1.5"
+                            className="px-3 py-1.5 sm:px-4 sm:py-2 bg-red-600 text-white rounded-lg text-xs sm:text-sm font-semibold hover:bg-red-700 transition-colors flex items-center gap-1.5 shadow-md shadow-red-600/30"
                         >
                             {Icons.endCall}
                             <span>
                                 {userRole === "doctor"
-                                    ? (isRTL ? "إنهاء" : "End Call")
+                                    ? (isRTL ? "إنهاء المكالمة" : "End Call")
                                     : (isRTL ? "مغادرة" : "Leave")}
                             </span>
                         </button>
                     )}
                 </div>
             </div>
-            )}
 
             {/* Video Container */}
             <div className="flex-1 relative min-h-0 overflow-hidden">
@@ -879,19 +973,16 @@ export function QueueVideoCall({
                 {/* Video Container - hide when showing post-call modals */}
                 {webrtcUrl ? (
                     <div
-                        className="w-full h-full absolute inset-0"
+                        className="w-full h-full absolute inset-0 bg-slate-950"
                         style={{
                             display: postCallPhase !== "none" ? "none" : "block"
                         }}
                     >
-                        <NativeWebRTCCall
-                            roomId={queueEntryId}
-                            userRole={userRole}
-                            userName={webrtcUserName}
-                            remoteUserName={userRole === "doctor" ? participantInfo.patientName : participantInfo.doctorName}
-                            onEndCall={() => setShowEndConfirm(true)}
-                            isRTL={isRTL}
-                            language={language}
+                        <iframe
+                            src={webrtcUrl}
+                            allow="camera *; microphone *; display-capture *; autoplay *; clipboard-write *; screen-wake-lock *;"
+                            className="w-full h-full border-0 absolute inset-0"
+                            allowFullScreen
                         />
                     </div>
                 ) : (
@@ -905,6 +996,19 @@ export function QueueVideoCall({
                     />
                 )}
             </div>
+
+            {/* In-Call Realtime Chat between Doctor & Patient */}
+            {messagingInfo.currentProfileId && messagingInfo.recipientProfileId && (
+                <QueueChat
+                    currentProfileId={messagingInfo.currentProfileId}
+                    recipientProfileId={messagingInfo.recipientProfileId}
+                    recipientName={messagingInfo.recipientName || (isRTL ? "الطرف الآخر" : "Participant")}
+                    recipientAvatar={messagingInfo.recipientAvatar}
+                    isDark={isDark}
+                    isRTL={isRTL}
+                    className="bottom-6"
+                />
+            )}
 
             {/* Post-Consultation Modals */}
 
