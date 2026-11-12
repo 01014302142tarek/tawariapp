@@ -58,10 +58,13 @@ type ConversationContext = Pick<DashboardUserContext, "profileId">;
 // ============================================
 
 async function getUserIdByProfileId(
-    supabase: SupabaseClient<Database>,
-    profileId: string
+    profileIdOrClient: any,
+    maybeProfileId?: string
 ): Promise<string | null> {
-    const { data } = await supabase
+    const profileId = typeof profileIdOrClient === "string" ? profileIdOrClient : maybeProfileId;
+    if (!profileId) return null;
+    const adminSupabase = await createAdminClient();
+    const { data } = await (adminSupabase as any)
         .from("profiles")
         .select("user_id")
         .eq("id", profileId)
@@ -101,8 +104,8 @@ export async function getConversations(
             return { conversations: [], error: "Not authenticated" };
         }
 
-        // Get current user's profile
-        const { data: profileData } = await supabase
+        const adminSupabase = await createAdminClient();
+        const { data: profileData } = await (adminSupabase as any)
             .from("profiles")
             .select("id")
             .eq("user_id", user.id)
@@ -117,9 +120,10 @@ export async function getConversations(
     }
 
     const resolvedProfileId = profileId as string;
+    const adminSupabase = await createAdminClient();
 
     // Get all messages where user is sender or recipient, grouped by conversation
-    const { data: messages, error } = await supabase
+    const { data: messages, error } = await (adminSupabase as any)
         .from("messages")
         .select(`
             id,
@@ -197,7 +201,8 @@ export async function getOrCreateConversation(
         return { conversationId: null, error: "Not authenticated" };
     }
 
-    const { data: profileData } = await supabase
+    const adminSupabase = await createAdminClient();
+    const { data: profileData } = await (adminSupabase as any)
         .from("profiles")
         .select("id")
         .eq("user_id", user.id)
@@ -209,7 +214,7 @@ export async function getOrCreateConversation(
     }
 
     // Check if conversation already exists
-    const { data: existingMessages } = await supabase
+    const { data: existingMessages } = await (adminSupabase as any)
         .from("messages")
         .select("conversation_id")
         .or(`and(sender_profile_id.eq.${profile.id},recipient_profile_id.eq.${otherProfileId}),and(sender_profile_id.eq.${otherProfileId},recipient_profile_id.eq.${profile.id})`)
@@ -244,7 +249,8 @@ export async function getMessages(
         return { messages: [], error: "Not authenticated" };
     }
 
-    const { data: profileData } = await supabase
+    const adminSupabase = await createAdminClient();
+    const { data: profileData } = await (adminSupabase as any)
         .from("profiles")
         .select("id")
         .eq("user_id", user.id)
@@ -255,7 +261,7 @@ export async function getMessages(
         return { messages: [], error: "Profile not found" };
     }
 
-    const { data, error } = await supabase
+    const { data, error } = await (adminSupabase as any)
         .from("messages")
         .select(`
             *,
@@ -310,7 +316,8 @@ export async function sendMessage(data: {
         return { message: null, error: "Not authenticated" };
     }
 
-    const { data: profileData } = await supabase
+    const adminSupabase = await createAdminClient();
+    const { data: profileData } = await (adminSupabase as any)
         .from("profiles")
         .select("id")
         .eq("user_id", user.id)
@@ -343,7 +350,7 @@ export async function sendMessage(data: {
     }
 
     // Get sender name for notification
-    const { data: senderData } = await supabase
+    const { data: senderData } = await (adminSupabase as any)
         .from("profiles")
         .select("full_name")
         .eq("id", profile.id)
@@ -352,7 +359,7 @@ export async function sendMessage(data: {
     const senderName = (senderData as { full_name: string } | null)?.full_name || "Someone";
 
     // Security check: Verify that if conversation already exists, caller and recipient are participants
-    const { data: existingConv } = await supabase
+    const { data: existingConv } = await (adminSupabase as any)
         .from("messages")
         .select("sender_profile_id, recipient_profile_id")
         .eq("conversation_id", data.conversationId)
@@ -369,8 +376,6 @@ export async function sendMessage(data: {
     }
 
     // Insert message
-    const adminSupabase = await createAdminClient();
-
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: insertedData, error } = await (adminSupabase as any)
         .from("messages")
@@ -400,7 +405,7 @@ export async function sendMessage(data: {
         data.conversationId
     ).catch(err => console.error("Failed to send message notification:", err));
 
-    const recipientUserId = await getUserIdByProfileId(supabase, data.recipientProfileId);
+    const recipientUserId = await getUserIdByProfileId(data.recipientProfileId);
     revalidateConversationCaches([user.id, recipientUserId || undefined]);
 
     return { message: insertedData as Message };
@@ -419,7 +424,8 @@ export async function markMessagesAsRead(
         return { success: false, error: "Not authenticated" };
     }
 
-    const { data: profileData } = await supabase
+    const adminSupabase = await createAdminClient();
+    const { data: profileData } = await (adminSupabase as any)
         .from("profiles")
         .select("id")
         .eq("user_id", user.id)
@@ -431,7 +437,7 @@ export async function markMessagesAsRead(
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { error } = await (supabase as any)
+    const { error } = await (adminSupabase as any)
         .from("messages")
         .update({
             is_read: true,
@@ -462,7 +468,8 @@ export async function getUnreadCount(): Promise<{ count: number; error?: string 
         return { count: 0, error: "Not authenticated" };
     }
 
-    const { data: profileData } = await supabase
+    const adminSupabase = await createAdminClient();
+    const { data: profileData } = await (adminSupabase as any)
         .from("profiles")
         .select("id")
         .eq("user_id", user.id)
@@ -473,7 +480,7 @@ export async function getUnreadCount(): Promise<{ count: number; error?: string 
         return { count: 0, error: "Profile not found" };
     }
 
-    const { count, error } = await supabase
+    const { count, error } = await (adminSupabase as any)
         .from("messages")
         .select("*", { count: "exact", head: true })
         .eq("recipient_profile_id", profile.id)
@@ -501,7 +508,8 @@ export async function deleteMessage(
         return { success: false, error: "Not authenticated" };
     }
 
-    const { data: profileData } = await supabase
+    const adminSupabase = await createAdminClient();
+    const { data: profileData } = await (adminSupabase as any)
         .from("profiles")
         .select("id")
         .eq("user_id", user.id)
@@ -514,7 +522,7 @@ export async function deleteMessage(
 
     // Only allow deleting own messages
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: updatedMessage, error } = await (supabase as any)
+    const { data: updatedMessage, error } = await (adminSupabase as any)
         .from("messages")
         .update({ is_deleted: true })
         .eq("id", messageId)
@@ -528,7 +536,7 @@ export async function deleteMessage(
     }
 
     const recipientUserId = (updatedMessage as { recipient_profile_id?: string } | null)?.recipient_profile_id
-        ? await getUserIdByProfileId(supabase, updatedMessage.recipient_profile_id)
+        ? await getUserIdByProfileId(updatedMessage.recipient_profile_id)
         : null;
     revalidateConversationCaches([user.id, recipientUserId || undefined]);
 
@@ -561,7 +569,8 @@ export async function getPatientContacts(): Promise<{
         return { contacts: [], error: "Not authenticated" };
     }
 
-    const { data: profileData } = await supabase
+    const adminSupabase = await createAdminClient();
+    const { data: profileData } = await (adminSupabase as any)
         .from("profiles")
         .select("id")
         .eq("user_id", user.id)
@@ -572,7 +581,7 @@ export async function getPatientContacts(): Promise<{
         return { contacts: [], error: "Profile not found" };
     }
 
-    const { data: patientProfileData } = await supabase
+    const { data: patientProfileData } = await (adminSupabase as any)
         .from("patient_profiles")
         .select("id")
         .eq("profile_id", profile.id)
@@ -584,7 +593,7 @@ export async function getPatientContacts(): Promise<{
     }
 
     // Get doctors from appointments (scheduled, in_progress, or completed)
-    const { data, error } = await supabase
+    const { data, error } = await (adminSupabase as any)
         .from("appointments")
         .select(`
             doctor_profiles!inner (
@@ -611,6 +620,7 @@ export async function getPatientContacts(): Promise<{
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (data || []).forEach((apt: any) => {
         const dp = apt.doctor_profiles;
+        if (!dp || !dp.profiles) return;
         const profileId = dp.profiles.id;
         if (!contactMap.has(profileId)) {
             contactMap.set(profileId, {
@@ -639,7 +649,8 @@ export async function getDoctorContacts(): Promise<{
         return { contacts: [], error: "Not authenticated" };
     }
 
-    const { data: profileData } = await supabase
+    const adminSupabase = await createAdminClient();
+    const { data: profileData } = await (adminSupabase as any)
         .from("profiles")
         .select("id")
         .eq("user_id", user.id)
@@ -647,10 +658,10 @@ export async function getDoctorContacts(): Promise<{
 
     const profile = profileData as { id: string } | null;
     if (!profile) {
-        return { contacts: [], error: "Profile not found" };
+        return { contacts: [], error: "Doctor profile not found" };
     }
 
-    const { data: doctorProfileData } = await supabase
+    const { data: doctorProfileData } = await (adminSupabase as any)
         .from("doctor_profiles")
         .select("id")
         .eq("profile_id", profile.id)
@@ -662,7 +673,7 @@ export async function getDoctorContacts(): Promise<{
     }
 
     // Get patients from appointments (scheduled, in_progress, or completed)
-    const { data, error } = await supabase
+    const { data, error } = await (adminSupabase as any)
         .from("appointments")
         .select(`
             patient_profiles!inner (
@@ -689,6 +700,7 @@ export async function getDoctorContacts(): Promise<{
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (data || []).forEach((apt: any) => {
         const pp = apt.patient_profiles;
+        if (!pp || !pp.profiles) return;
         const profileId = pp.profiles.id;
         if (!contactMap.has(profileId)) {
             contactMap.set(profileId, {
@@ -728,7 +740,8 @@ export async function uploadMessageAttachment(data: {
         return { attachmentUrl: null, attachmentType: null, error: "Not authenticated" };
     }
 
-    const { data: profileData } = await supabase
+    const adminSupabase = await createAdminClient();
+    const { data: profileData } = await (adminSupabase as any)
         .from("profiles")
         .select("id")
         .eq("user_id", user.id)
