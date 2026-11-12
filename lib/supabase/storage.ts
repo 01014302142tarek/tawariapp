@@ -495,7 +495,8 @@ export async function getMedicalDocumentSignedUrl(
     }
 
     // Generate signed URL
-    const { data, error } = await supabase.storage
+    const adminSupabase = await createServiceRoleClient();
+    const { data, error } = await adminSupabase.storage
         .from("medical_documents")
         .createSignedUrl(path, expiresIn);
 
@@ -650,21 +651,37 @@ export async function uploadChatAttachment(
     }
 
     // Upload to medical_documents bucket (private, with RLS)
-    const { error: uploadError } = await supabase.storage
+    let uploadError = null;
+    const { error: initialUploadError } = await supabase.storage
         .from("medical_documents")
         .upload(filePath, buffer, {
             contentType,
             upsert: false,
         });
 
+    if (initialUploadError) {
+        console.warn("[uploadChatAttachment] Standard upload failed, retrying with service role:", initialUploadError.message);
+        const adminSupabase = await createServiceRoleClient();
+        const { error: adminError } = await adminSupabase.storage
+            .from("medical_documents")
+            .upload(filePath, buffer, {
+                contentType,
+                upsert: false,
+            });
+        if (adminError) {
+            uploadError = adminError;
+        }
+    }
+
     if (uploadError) {
         return { path: null, url: null, attachmentType: null, error: uploadError.message };
     }
 
-    // Generate signed URL for immediate access (1 hour expiry)
-    const { data: signedUrlData } = await supabase.storage
+    // Generate signed URL for immediate access (24 hour expiry)
+    const adminSupabase = await createServiceRoleClient();
+    const { data: signedUrlData } = await adminSupabase.storage
         .from("medical_documents")
-        .createSignedUrl(filePath, 3600);
+        .createSignedUrl(filePath, 86400);
 
     return {
         path: filePath,
@@ -718,7 +735,8 @@ export async function getChatAttachmentSignedUrl(
     }
 
     // Generate signed URL
-    const { data, error } = await supabase.storage
+    const adminSupabase = await createServiceRoleClient();
+    const { data, error } = await adminSupabase.storage
         .from("medical_documents")
         .createSignedUrl(path, expiresIn);
 

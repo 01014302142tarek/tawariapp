@@ -76,7 +76,7 @@ export function NativeWebRTCCall({
             `config.disableDeepLinking=true`,
             `config.enableClosePage=false`,
             `config.defaultLanguage="ar"`,
-            `interfaceConfig.TOOLBAR_BUTTONS=['microphone','camera','chat','desktop','tileview','hangup','select-background']`,
+            `interfaceConfig.TOOLBAR_BUTTONS=['microphone','camera','desktop','tileview','hangup','select-background']`,
             `interfaceConfig.SHOW_JITSI_WATERMARK=false`,
             `interfaceConfig.SHOW_WATERMARK_FOR_GUESTS=false`,
             `interfaceConfig.SHOW_BRAND_WATERMARK=false`,

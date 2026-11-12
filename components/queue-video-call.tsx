@@ -94,6 +94,7 @@ export function QueueVideoCall({
         recipientName?: string;
         recipientAvatar?: string;
     }>({});
+    const [isChatOpen, setIsChatOpen] = useState(false);
     const [callDurationSeconds, setCallDurationSeconds] = useState(0);
     const [consultationEnded, setConsultationEnded] = useState(false);
     const statusPollRef = useRef<NodeJS.Timeout | null>(null);
@@ -313,7 +314,7 @@ export function QueueVideoCall({
                     `config.disableDeepLinking=true`,
                     `config.enableClosePage=false`,
                     `config.defaultLanguage="ar"`,
-                    `interfaceConfig.TOOLBAR_BUTTONS=['microphone','camera','chat','desktop','tileview','hangup','select-background']`,
+                    `interfaceConfig.TOOLBAR_BUTTONS=['microphone','camera','desktop','tileview','hangup','select-background']`,
                     `interfaceConfig.SHOW_JITSI_WATERMARK=false`,
                     `interfaceConfig.SHOW_WATERMARK_FOR_GUESTS=false`,
                     `interfaceConfig.SHOW_BRAND_WATERMARK=false`,
@@ -868,6 +869,19 @@ export function QueueVideoCall({
 
                 {/* Top Bar Actions */}
                 <div className="flex items-center gap-2">
+                    {/* Send Photo / Open Medical Chat Button */}
+                    <button
+                        onClick={() => setIsChatOpen((prev) => !prev)}
+                        className="px-2.5 py-1.5 sm:px-3 sm:py-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white rounded-lg text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5 shadow-md shadow-orange-500/25 active:scale-95"
+                        title={isRTL ? "إرسال صورة أو تقرير طبي أو محادثة" : "Send photo, medical report or chat"}
+                    >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                        <span>{isRTL ? "إرسال صورة / شات 📷" : "Photo / Chat 📷"}</span>
+                    </button>
+
                     {webrtcUrl && (
                         <a
                             href={webrtcUrl}
@@ -1006,6 +1020,8 @@ export function QueueVideoCall({
                     recipientAvatar={messagingInfo.recipientAvatar}
                     isDark={isDark}
                     isRTL={isRTL}
+                    isOpen={isChatOpen}
+                    onOpenChange={setIsChatOpen}
                     className="bottom-6"
                 />
             )}

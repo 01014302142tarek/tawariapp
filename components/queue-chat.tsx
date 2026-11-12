@@ -24,6 +24,8 @@ interface QueueChatProps {
     isRTL?: boolean;
     currentProfileId: string;
     className?: string;
+    isOpen?: boolean;
+    onOpenChange?: (open: boolean) => void;
 }
 
 // ============================================
@@ -83,8 +85,16 @@ export function QueueChat({
     isRTL = false,
     currentProfileId,
     className,
+    isOpen: propIsOpen,
+    onOpenChange,
 }: QueueChatProps) {
-    const [isOpen, setIsOpen] = useState(false);
+    const [internalIsOpen, setInternalIsOpen] = useState(false);
+    const isOpen = propIsOpen !== undefined ? propIsOpen : internalIsOpen;
+    const setIsOpen = (val: boolean) => {
+        setInternalIsOpen(val);
+        onOpenChange?.(val);
+    };
+
     const [isExpanded, setIsExpanded] = useState(true);
     const [messages, setMessages] = useState<MessageWithSender[]>([]);
     const [newMessage, setNewMessage] = useState("");
@@ -104,6 +114,8 @@ export function QueueChat({
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const imageInputRef = useRef<HTMLInputElement>(null);
+    const docInputRef = useRef<HTMLInputElement>(null);
     const pollingRef = useRef<NodeJS.Timeout | null>(null);
 
     // Initialize conversation
@@ -234,9 +246,9 @@ export function QueueChat({
     const clearSelectedFile = () => {
         setSelectedFile(null);
         setFilePreview(null);
-        if (fileInputRef.current) {
-            fileInputRef.current.value = "";
-        }
+        if (fileInputRef.current) fileInputRef.current.value = "";
+        if (imageInputRef.current) imageInputRef.current.value = "";
+        if (docInputRef.current) docInputRef.current.value = "";
     };
 
     // Send message with optional attachment
@@ -362,7 +374,7 @@ export function QueueChat({
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.9, y: 20 }}
                         className={cn(
-                            "w-[calc(100vw-2rem)] sm:w-80 max-w-80 rounded-2xl border shadow-2xl overflow-hidden",
+                            "w-[calc(100vw-2rem)] sm:w-96 max-w-96 rounded-2xl border shadow-2xl overflow-hidden",
                             isDark
                                 ? "bg-[#08213D] border-white/10"
                                 : "bg-white border-gray-200"
@@ -391,8 +403,8 @@ export function QueueChat({
                                     <p className={cn("text-sm font-medium", isDark ? "text-white" : "text-slate-900")}>
                                         {recipientName}
                                     </p>
-                                    <p className={cn("text-xs", isDark ? "text-slate-400" : "text-slate-500")}>
-                                        {isRTL ? "في قائمة الانتظار" : "In Queue"}
+                                    <p className={cn("text-xs", isDark ? "text-amber-400" : "text-amber-600")}>
+                                        {isRTL ? "محادثة ومشاركة الصور والتقارير 📷" : "Chat & Photo Sharing 📷"}
                                     </p>
                                 </div>
                             </div>
@@ -631,14 +643,43 @@ export function QueueChat({
                                             )}
                                         </AnimatePresence>
 
+                                        {/* Quick Action Photo & File Upload */}
+                                        <div className={cn(
+                                            "px-3 py-2 border-b flex items-center gap-2 text-xs",
+                                            isDark ? "bg-[#0D2C4F]/60 border-white/5" : "bg-gray-50 border-gray-200"
+                                        )}>
+                                            <button
+                                                type="button"
+                                                onClick={() => imageInputRef.current?.click()}
+                                                disabled={sending || uploading}
+                                                className="flex-1 py-1.5 px-2.5 bg-gradient-to-r from-amber-500/20 to-orange-500/20 hover:from-amber-500/30 hover:to-orange-500/30 text-amber-300 rounded-lg flex items-center justify-center gap-1.5 font-medium transition-all border border-amber-500/30 active:scale-95 disabled:opacity-50"
+                                            >
+                                                <svg className="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                </svg>
+                                                <span>{isRTL ? "📷 التقاط أو رفع صورة" : "📷 Upload Photo"}</span>
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => docInputRef.current?.click()}
+                                                disabled={sending || uploading}
+                                                className="py-1.5 px-2.5 bg-slate-700/60 hover:bg-slate-700 text-slate-300 rounded-lg flex items-center justify-center gap-1 font-medium transition-all border border-white/10 active:scale-95 disabled:opacity-50"
+                                                title={isRTL ? "إرفاق تحليل أو تقرير PDF" : "Attach PDF"}
+                                            >
+                                                {Icons.attachment}
+                                                <span className="hidden sm:inline">{isRTL ? "تقرير PDF" : "PDF"}</span>
+                                            </button>
+                                        </div>
+
                                         <form
                                             onSubmit={(e) => {
                                                 e.preventDefault();
                                                 handleSendWithAttachment();
                                             }}
-                                            className="flex gap-2 items-end"
+                                            className="flex gap-2 items-end pt-2"
                                         >
-                                            {/* Hidden file input */}
+                                            {/* Hidden file inputs */}
                                             <input
                                                 ref={fileInputRef}
                                                 type="file"
@@ -646,11 +687,43 @@ export function QueueChat({
                                                 onChange={handleFileSelect}
                                                 className="hidden"
                                             />
+                                            <input
+                                                ref={imageInputRef}
+                                                type="file"
+                                                accept="image/*"
+                                                onChange={handleFileSelect}
+                                                className="hidden"
+                                            />
+                                            <input
+                                                ref={docInputRef}
+                                                type="file"
+                                                accept="application/pdf,image/*"
+                                                onChange={handleFileSelect}
+                                                className="hidden"
+                                            />
+
+                                            {/* Camera button */}
+                                            <button
+                                                type="button"
+                                                onClick={() => imageInputRef.current?.click()}
+                                                disabled={sending || uploading}
+                                                className={cn(
+                                                    "p-2 rounded-lg transition-colors flex-shrink-0 text-amber-400 hover:text-amber-300",
+                                                    isDark ? "hover:bg-slate-700" : "hover:bg-gray-200",
+                                                    "disabled:opacity-50 disabled:cursor-not-allowed"
+                                                )}
+                                                title={isRTL ? "التقاط أو إرفاق صورة" : "Attach photo"}
+                                            >
+                                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                </svg>
+                                            </button>
 
                                             {/* Attachment button */}
                                             <button
                                                 type="button"
-                                                onClick={() => fileInputRef.current?.click()}
+                                                onClick={() => docInputRef.current?.click()}
                                                 disabled={sending || uploading}
                                                 className={cn(
                                                     "p-2 rounded-lg transition-colors flex-shrink-0",
@@ -705,8 +778,8 @@ export function QueueChat({
                     <motion.button
                         initial={{ scale: 0 }}
                         animate={{
-                            scale: hasNewMessage ? [1, 1.2, 1] : 1,
-                            rotate: hasNewMessage ? [0, -10, 10, -10, 0] : 0,
+                            scale: hasNewMessage ? [1, 1.15, 1] : 1,
+                            rotate: hasNewMessage ? [0, -8, 8, -8, 0] : 0,
                         }}
                         transition={{
                             duration: hasNewMessage ? 0.5 : 0.2,
@@ -718,25 +791,27 @@ export function QueueChat({
                             setHasNewMessage(false);
                         }}
                         className={cn(
-                            "relative w-14 h-14 rounded-full text-white shadow-lg flex items-center justify-center transition-all",
+                            "relative px-4 py-2.5 rounded-full text-white shadow-2xl flex items-center gap-2.5 transition-all cursor-pointer border border-white/20 select-none",
                             unreadCount > 0
-                                ? "bg-gradient-to-br from-red-500 to-orange-500 shadow-red-500/40 hover:shadow-xl hover:shadow-red-500/50"
-                                : "bg-gradient-to-br from-amber-500 to-amber-600 shadow-amber-500/30 hover:shadow-xl hover:shadow-amber-500/40"
+                                ? "bg-gradient-to-r from-red-500 via-orange-500 to-amber-500 shadow-red-500/40 hover:scale-105"
+                                : "bg-gradient-to-r from-amber-500 via-orange-500 to-[#FD614B] shadow-amber-500/30 hover:scale-105"
                         )}
+                        title={isRTL ? "إرسال صورة أو تقرير طبي أو محادثة" : "Send photo, medical report or chat"}
                     >
-                        {/* Pulse ring when there are unread messages */}
                         {unreadCount > 0 && (
                             <span className="absolute inset-0 rounded-full animate-ping bg-red-500 opacity-30" />
                         )}
-                        {Icons.chat}
+                        <svg className="w-5 h-5 text-white flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                        <span className="font-bold text-xs sm:text-sm whitespace-nowrap">
+                            {isRTL ? "إرسال صورة / محادثة 📷" : "Photo / Chat 📷"}
+                        </span>
                         {unreadCount > 0 && (
-                            <motion.span
-                                initial={{ scale: 0 }}
-                                animate={{ scale: 1 }}
-                                className="absolute -top-1 -right-1 w-6 h-6 bg-red-600 text-white text-xs font-bold rounded-full flex items-center justify-center border-2 border-white shadow-md"
-                            >
+                            <span className="px-1.5 py-0.5 bg-red-600 text-white text-[10px] font-bold rounded-full border border-white">
                                 {unreadCount > 9 ? "9+" : unreadCount}
-                            </motion.span>
+                            </span>
                         )}
                     </motion.button>
                 )}
