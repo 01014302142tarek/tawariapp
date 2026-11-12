@@ -828,54 +828,104 @@ export function QueueVideoCall({
                 )}
             </AnimatePresence>
 
-            {/* Header (shown during connecting / error states) */}
+            {/* Native Full-Screen Calling Screen (Shown while connecting / waiting / error) */}
             {callState !== "joined" && (
-                <div className={cn(
-                    "p-3 sm:p-4 border-b flex items-center justify-between z-20",
-                    isDark ? "bg-[#08213D] border-white/10" : "bg-white border-gray-200"
-                )}>
-                    <div className="flex items-center gap-3">
+                <div className="fixed inset-0 w-full h-[100dvh] bg-gradient-to-b from-slate-950 via-[#031527] to-slate-950 text-white flex flex-col justify-between p-4 sm:p-6 z-30 select-none overflow-hidden">
+                    {/* Top Bar */}
+                    <div className="flex items-center justify-between w-full pt-[max(env(safe-area-inset-top),8px)]">
                         <button
                             onClick={handleBack}
-                            className={cn(
-                                "p-2 rounded-lg transition-colors",
-                                isDark
-                                    ? "hover:bg-[#0D2C4F] text-slate-400"
-                                    : "hover:bg-gray-100 text-gray-600"
-                            )}
+                            className="p-2.5 rounded-full bg-white/10 hover:bg-white/20 active:scale-95 text-white backdrop-blur-md transition-all flex items-center justify-center border border-white/10 shadow-lg"
+                            title={isRTL ? "رجوع" : "Back"}
                         >
                             <span className={cn(isRTL && "rotate-180 block")}>{Icons.back}</span>
                         </button>
-                        <div>
-                            <h1 className={cn("font-semibold text-sm sm:text-base", isDark ? "text-white" : "text-slate-900")}>
-                                {isRTL ? "استشارة فيديو عاجلة" : "Urgent Video Consultation"}
-                            </h1>
-                            <div className="flex items-center gap-2">
-                                <span className={cn("text-xs", isDark ? "text-slate-400" : "text-slate-600")}>
-                                    {userRole === "doctor"
-                                        ? (participantInfo.patientName || (isRTL ? "المريض" : "Patient"))
-                                        : (participantInfo.doctorName || (isRTL ? "الطبيب" : "Doctor"))}
-                                </span>
+
+                        <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs font-medium shadow-sm">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                            <span>{isRTL ? "اتصال طبي مشفر" : "Encrypted Medical Call"}</span>
+                        </div>
+                    </div>
+
+                    {/* Center: Calling card */}
+                    <div className="flex flex-col items-center text-center my-auto px-4 max-w-sm mx-auto">
+                        {/* Ripple Avatar */}
+                        <div className="relative mb-6 flex items-center justify-center">
+                            <div className="w-36 h-36 rounded-full bg-cyan-500/10 animate-ping absolute" />
+                            <div className="w-28 h-28 rounded-full bg-blue-500/20 animate-pulse absolute" />
+                            <div className="relative w-24 h-24 rounded-full bg-gradient-to-tr from-cyan-600 via-blue-600 to-indigo-600 border-2 border-white/30 shadow-2xl flex items-center justify-center text-3xl font-bold text-white overflow-hidden">
+                                {messagingInfo.recipientAvatar ? (
+                                    // eslint-disable-next-line @next/next/no-img-element
+                                    <img src={messagingInfo.recipientAvatar} alt="" className="w-full h-full object-cover" />
+                                ) : (
+                                    (userRole === "doctor" ? participantInfo.patientName : participantInfo.doctorName)?.charAt(0) || "🩺"
+                                )}
                             </div>
                         </div>
+
+                        {/* Name & Role */}
+                        <h2 className="text-xl sm:text-2xl font-bold text-white mb-1.5 drop-shadow">
+                            {userRole === "doctor"
+                                ? (participantInfo.patientName || (isRTL ? "المريض" : "Patient"))
+                                : (participantInfo.doctorName || (isRTL ? "الطبيب" : "Doctor"))}
+                        </h2>
+
+                        <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-blue-500/20 text-blue-200 border border-blue-500/30 text-xs font-medium mb-6">
+                            <span>{userRole === "doctor" ? (isRTL ? "مريض عيادة الطوارئ" : "Emergency Patient") : (isRTL ? "طبيب معتمد 🩺" : "Verified Doctor 🩺")}</span>
+                        </div>
+
+                        {/* Status Message */}
+                        {loading && (
+                            <div className="flex flex-col items-center gap-3">
+                                <div className="w-6 h-6 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin" />
+                                <p className="text-sm text-cyan-200/90 font-medium animate-pulse">
+                                    {isRTL ? "جاري الاتصال وتجهيز الكاميرا والصوت..." : "Connecting & preparing video..."}
+                                </p>
+                            </div>
+                        )}
+
+                        {error && callState === "error" && !consultationEnded && (
+                            <div className="p-4 rounded-2xl bg-red-500/20 border border-red-500/30 text-red-200 text-xs sm:text-sm mt-2">
+                                <p className="font-semibold mb-1">{isRTL ? "تعذر التوصيل" : "Connection failed"}</p>
+                                <p className="mb-3">{error}</p>
+                                <div className="flex gap-2 justify-center">
+                                    <button
+                                        onClick={handleCallEnded}
+                                        className="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-white rounded-lg text-xs font-medium transition-all"
+                                    >
+                                        {isRTL ? "العودة" : "Go Back"}
+                                    </button>
+                                    <button
+                                        onClick={initializeCall}
+                                        className="px-3 py-1.5 bg-[#FD614B] hover:bg-[#E84D37] text-white rounded-lg text-xs font-bold transition-all shadow-md"
+                                    >
+                                        {isRTL ? "إعادة المحاولة" : "Retry"}
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Bottom Action: Red Cancel / Hang up button */}
+                    <div className="flex flex-col items-center justify-center pb-[max(env(safe-area-inset-bottom),16px)]">
+                        <button
+                            onClick={handleBack}
+                            className="w-14 h-14 rounded-full bg-red-600 hover:bg-red-700 active:scale-90 text-white flex items-center justify-center shadow-xl shadow-red-600/40 border border-red-500/40 transition-all"
+                            title={isRTL ? "إلغاء ومغادرة" : "Cancel & Leave"}
+                        >
+                            <svg className="w-6 h-6 rotate-[135deg]" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z" />
+                            </svg>
+                        </button>
+                        <span className="text-xs text-slate-400 mt-2 font-medium">
+                            {isRTL ? "إلغاء ومغادرة" : "Cancel"}
+                        </span>
                     </div>
                 </div>
             )}
 
             {/* Video Container */}
             <div className="flex-1 relative min-h-0 overflow-hidden">
-                {/* Loading State */}
-                {loading && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-[#08213D] z-10">
-                        <div className="text-center">
-                            {Icons.loading}
-                            <p className="text-white mt-4">
-                                {isRTL ? "جاري الاتصال..." : "Connecting..."}
-                            </p>
-                        </div>
-                    </div>
-                )}
-
                 {/* Consultation Ended State (for patients) - Show review modal if appointment ID available */}
                 {consultationEnded && userRole === "patient" && postCallPhase !== "review_prompt" && !createdAppointmentId && (
                     <div className="absolute inset-0 flex items-center justify-center bg-[#08213D] z-10 overflow-auto">
@@ -899,37 +949,6 @@ export function QueueVideoCall({
                             >
                                 {isRTL ? "العودة للأطباء المتاحين" : "Back to Available Doctors"}
                             </button>
-                        </div>
-                    </div>
-                )}
-
-                {/* Error State */}
-                {error && callState === "error" && !consultationEnded && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-[#08213D] z-10 overflow-auto">
-                        <div className="text-center max-w-md mx-auto p-6 my-auto">
-                            <div className="w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center mx-auto mb-4">
-                                <svg className="w-8 h-8 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                                </svg>
-                            </div>
-                            <h3 className="text-xl font-semibold text-white mb-2">
-                                {isRTL ? "فشل الاتصال" : "Connection Failed"}
-                            </h3>
-                            <p className="text-slate-400 mb-6">{error}</p>
-                            <div className="flex gap-3 justify-center">
-                                <button
-                                    onClick={handleCallEnded}
-                                    className="px-4 py-2 bg-slate-700 text-white rounded-lg font-medium hover:bg-slate-600 transition-colors"
-                                >
-                                    {isRTL ? "العودة" : "Go Back"}
-                                </button>
-                                <button
-                                    onClick={initializeCall}
-                                    className="px-4 py-2 bg-[#FD614B] text-white rounded-lg font-medium hover:bg-[#E84D37] transition-colors"
-                                >
-                                    {isRTL ? "إعادة المحاولة" : "Retry"}
-                                </button>
-                            </div>
                         </div>
                     </div>
                 )}

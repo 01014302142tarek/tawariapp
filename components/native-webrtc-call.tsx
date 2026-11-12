@@ -92,6 +92,7 @@ export function NativeWebRTCCall({
     const [isRemoteVideoOff, setIsRemoteVideoOff] = useState(false);
     const [facingMode, setFacingMode] = useState<"user" | "environment">("user");
     const [hasMultipleCameras, setHasMultipleCameras] = useState(false);
+    const [isMobileDevice, setIsMobileDevice] = useState(false);
     const [mediaError, setMediaError] = useState<string | null>(null);
 
     // UI states
@@ -138,8 +139,13 @@ export function NativeWebRTCCall({
         return `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
     };
 
-    // Check for camera count (Front / Back switch on mobile)
+    // Check for camera count & mobile devices (Front / Back switch on mobile)
     useEffect(() => {
+        setIsMobileDevice(
+            typeof window !== "undefined" &&
+            ("ontouchstart" in window || navigator.maxTouchPoints > 0 || window.innerWidth < 768)
+        );
+
         async function detectCameras() {
             try {
                 if (navigator.mediaDevices?.enumerateDevices) {
@@ -763,8 +769,8 @@ export function NativeWebRTCCall({
             )}
             style={{ direction: isRTL ? "rtl" : "ltr" }}
         >
-            {/* Top Bar Header (Glassmorphic) */}
-            <header className="absolute top-0 inset-x-0 h-14 sm:h-16 px-3 sm:px-6 flex items-center justify-between z-30 bg-gradient-to-b from-slate-950/80 via-slate-950/40 to-transparent backdrop-blur-sm pointer-events-auto">
+            {/* Top Bar Header (Glassmorphic & Safe-Area Aware) */}
+            <header className="absolute top-0 inset-x-0 pt-[max(env(safe-area-inset-top),10px)] pb-3 px-3 sm:px-6 flex items-center justify-between z-30 bg-gradient-to-b from-slate-950/90 via-slate-950/50 to-transparent backdrop-blur-sm pointer-events-auto">
                 <div className="flex items-center gap-2.5 sm:gap-3">
                     <div className="relative">
                         <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-gradient-to-tr from-cyan-600 via-blue-600 to-indigo-600 border border-white/20 flex items-center justify-center font-bold text-white text-xs sm:text-sm shadow-lg overflow-hidden">
@@ -861,9 +867,9 @@ export function NativeWebRTCCall({
                         !isSwapped
                             ? "absolute inset-0 w-full h-full z-0 flex items-center justify-center bg-black"
                             : cn(
-                                  "absolute z-20 cursor-pointer rounded-2xl border-2 border-white/20 shadow-2xl bg-slate-900/90 backdrop-blur-md",
+                                  "absolute z-20 cursor-pointer rounded-2xl border-2 border-white/25 shadow-2xl bg-slate-900/90 backdrop-blur-md active:scale-95",
                                   isRTL ? "left-3 sm:left-6" : "right-3 sm:right-6",
-                                  "bottom-20 sm:bottom-24 w-28 h-36 sm:w-40 sm:h-52"
+                                  "bottom-24 sm:bottom-28 w-28 h-40 sm:w-36 sm:h-48"
                               )
                     )}
                 >
@@ -943,9 +949,9 @@ export function NativeWebRTCCall({
                         isSwapped
                             ? "absolute inset-0 w-full h-full z-0 flex items-center justify-center bg-black"
                             : cn(
-                                  "absolute z-20 cursor-pointer rounded-2xl border-2 border-white/20 shadow-2xl bg-slate-900/90 backdrop-blur-md",
+                                  "absolute z-20 cursor-pointer rounded-2xl border-2 border-white/25 shadow-2xl bg-slate-900/90 backdrop-blur-md active:scale-95",
                                   isRTL ? "left-3 sm:left-6" : "right-3 sm:right-6",
-                                  "bottom-20 sm:bottom-24 w-28 h-36 sm:w-40 sm:h-52"
+                                  "bottom-24 sm:bottom-28 w-28 h-40 sm:w-36 sm:h-48"
                               )
                     )}
                     title={isRTL ? "اضغط للتبديل مع الشاشة الرئيسية" : "Tap to swap views"}
@@ -996,12 +1002,12 @@ export function NativeWebRTCCall({
                     </div>
                 )}
 
-                {/* Floating Bottom Control Dock */}
-                <div className="absolute bottom-4 sm:bottom-6 inset-x-0 flex items-center justify-center pointer-events-none z-30 px-3">
+                {/* Floating Bottom Control Dock (Safe-Area Aware) */}
+                <div className="absolute bottom-4 sm:bottom-6 inset-x-0 flex items-center justify-center pointer-events-none z-30 px-3 pb-[max(env(safe-area-inset-bottom),10px)]">
                     <motion.div
                         initial={{ y: 20, opacity: 0 }}
                         animate={{ y: 0, opacity: 1 }}
-                        className="pointer-events-auto flex items-center gap-2 sm:gap-3 px-3 py-2 sm:px-5 sm:py-3 rounded-full bg-slate-950/80 backdrop-blur-2xl border border-white/15 shadow-2xl"
+                        className="pointer-events-auto flex items-center gap-2 sm:gap-3 px-3 py-2 sm:px-5 sm:py-3 rounded-full bg-slate-950/85 backdrop-blur-2xl border border-white/20 shadow-2xl"
                     >
                         {/* 1. Mic Button */}
                         <button
@@ -1049,7 +1055,7 @@ export function NativeWebRTCCall({
                         </button>
 
                         {/* 3. Flip Camera (Front / Back on Mobile & Tablets) */}
-                        {hasMultipleCameras && (
+                        {(hasMultipleCameras || isMobileDevice) && (
                             <button
                                 onClick={flipCamera}
                                 className="w-11 h-11 sm:w-13 sm:h-13 rounded-full bg-slate-800/80 hover:bg-slate-700 text-white border border-white/10 flex items-center justify-center transition-all shadow-md active:scale-90"

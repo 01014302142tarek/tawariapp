@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { usePathname } from "next/navigation";
 import Sidebar from "./components/Sidebar";
 import Header from "./components/Header";
 import { useGlobalTheme } from "@/app/context/GlobalThemeContext";
@@ -13,6 +14,24 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
     const { isDark } = useGlobalTheme();
     const { isRTL } = useI18n();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const pathname = usePathname();
+
+    // In-call video routes must be 100% immersive fullscreen with no headers or sidebars
+    const isCallPage = pathname?.includes("/urgent-care/call/") || pathname?.includes("/call/");
+
+    if (isCallPage) {
+        return (
+            <div
+                className={cn(
+                    "fixed inset-0 w-full h-[100dvh] bg-slate-950 overflow-hidden z-50",
+                    isRTL ? "font-cairo" : ""
+                )}
+                dir={isRTL ? "rtl" : "ltr"}
+            >
+                {children}
+            </div>
+        );
+    }
 
     return (
         <div

@@ -397,9 +397,14 @@ export function QueueChat({
                                 : "bg-white border-gray-200"
                         )}
                     >
+                        {/* Mobile Drag Handle */}
+                        {embedded && (
+                            <div className="w-12 h-1 bg-white/25 rounded-full mx-auto my-2 md:hidden flex-shrink-0" />
+                        )}
+
                         {/* Header */}
                         <div className={cn(
-                            "p-3 border-b flex items-center justify-between",
+                            "p-3 border-b flex items-center justify-between flex-shrink-0",
                             isDark ? "border-white/10 bg-[#0D2C4F]/50" : "border-gray-200 bg-gray-50"
                         )}>
                             <div className="flex items-center gap-2">
@@ -454,10 +459,10 @@ export function QueueChat({
                                     initial={{ height: 0 }}
                                     animate={{ height: "auto" }}
                                     exit={{ height: 0 }}
-                                    className="overflow-hidden"
+                                    className={cn("overflow-hidden", embedded && "flex-1 min-h-0 flex flex-col")}
                                 >
                                     <div className={cn(
-                                        "h-64 overflow-y-auto p-3 space-y-2",
+                                        embedded ? "flex-1 min-h-0 overflow-y-auto p-3 space-y-2" : "h-64 overflow-y-auto p-3 space-y-2",
                                         isDark ? "bg-[#031326]" : "bg-white"
                                     )}>
                                         {loading ? (
