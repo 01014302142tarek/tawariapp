@@ -29,15 +29,19 @@ const RTC_CONFIG: RTCConfiguration = {
         // High-availability Google Public STUN
         { urls: ["stun:stun.l.google.com:19302", "stun:stun1.l.google.com:19302"] },
         { urls: ["stun:stun2.l.google.com:19302", "stun:stun3.l.google.com:19302"] },
+        { urls: ["stun:stun4.l.google.com:19302"] },
         // Cloudflare Public STUN
         { urls: ["stun:stun.cloudflare.com:3478"] },
-        // OpenRelay Public TURN (Essential for mobile carrier 4G/5G NAT traversal)
-        { urls: ["stun:openrelay.metered.ca:80"] },
+        // Metered Public STUN
+        { urls: ["stun:stun.metered.ca:80"] },
+        // Metered OpenRelay Public TURN (Active endpoints with valid DNS & relay support for 4G/5G mobile networks)
         {
             urls: [
-                "turn:openrelay.metered.ca:80",
-                "turn:openrelay.metered.ca:443",
-                "turn:openrelay.metered.ca:443?transport=tcp",
+                "turn:staticauth.openrelay.metered.ca:80",
+                "turn:staticauth.openrelay.metered.ca:443",
+                "turn:staticauth.openrelay.metered.ca:443?transport=tcp",
+                "turns:staticauth.openrelay.metered.ca:443",
+                "turns:staticauth.openrelay.metered.ca:443?transport=tcp",
             ],
             username: "openrelayproject",
             credential: "openrelayproject",
@@ -67,6 +71,8 @@ export function NativeWebRTCCall({
     const pcRef = useRef<RTCPeerConnection | null>(null);
     const channelRef = useRef<RealtimeChannel | null>(null);
     const pendingCandidatesRef = useRef<RTCIceCandidateInit[]>([]);
+    const localIceBufferRef = useRef<RTCIceCandidateInit[]>([]);
+    const heartbeatRef = useRef<NodeJS.Timeout | null>(null);
     const audioContextRef = useRef<AudioContext | null>(null);
     const animFrameRef = useRef<number | null>(null);
     const isMountedRef = useRef(true);
@@ -300,50 +306,97 @@ export function NativeWebRTCCall({
                 }
             });
 
-            // Handle incoming remote stream tracks
+            // Handle incoming remote stream tracks (Unified Plan compatible)
             peerConnection.ontrack = (event) => {
-                console.log("[NativeWebRTC] Received remote track:", event.track.kind);
-                if (event.streams && event.streams[0]) {
-                    const stream = event.streams[0];
+                console.log("[NativeWebRTC] Received remote track:", event.track.kind, "id:", event.track.id);
+                let stream = remoteStreamRef.current;
+                if (!stream) {
+                    stream = new MediaStream();
                     remoteStreamRef.current = stream;
-                    if (remoteVideoRef.current) {
+                }
+
+                // Modern WebRTC: extract tracks from event.streams if available, or event.track directly
+                const incomingTracks = (event.streams && event.streams[0])
+                    ? event.streams[0].getTracks()
+                    : [event.track];
+
+                incomingTracks.forEach((track) => {
+                    if (!stream!.getTracks().some((t) => t.id === track.id)) {
+                        stream!.addTrack(track);
+                    }
+                });
+
+                if (remoteVideoRef.current) {
+                    if (remoteVideoRef.current.srcObject !== stream) {
                         remoteVideoRef.current.srcObject = stream;
                     }
-                    setHasRemoteVideo(stream.getVideoTracks().length > 0);
-                    setConnectionStatus("connected");
-                    setupAudioVisualizer(stream, false);
-                }
-            };
-
-            // Handle local ICE candidates and broadcast
-            peerConnection.onicecandidate = (event) => {
-                if (event.candidate && channelRef.current) {
-                    channelRef.current.send({
-                        type: "broadcast",
-                        event: "ice-candidate",
-                        payload: {
-                            candidate: event.candidate.toJSON(),
-                            senderRole: userRole,
-                        },
+                    // Attempt playback immediately to satisfy browser autoplay
+                    remoteVideoRef.current.play().catch((playErr) => {
+                        console.warn("[NativeWebRTC] Remote video autoplay error (will retry on tap):", playErr);
                     });
                 }
+
+                const hasVideo = stream.getVideoTracks().length > 0;
+                setHasRemoteVideo(hasVideo);
+                setPeerJoined(true);
+                setConnectionStatus("connected");
+                setupAudioVisualizer(stream, false);
+
+                // Listen for track unmute
+                event.track.onunmute = () => {
+                    console.log("[NativeWebRTC] Remote track unmuted:", event.track.kind);
+                    if (remoteVideoRef.current) {
+                        remoteVideoRef.current.play().catch(() => {});
+                    }
+                    if (event.track.kind === "video") {
+                        setHasRemoteVideo(true);
+                        setIsRemoteVideoOff(false);
+                    }
+                };
             };
 
-            // Monitor ICE Connection State
+            // Handle local ICE candidates and buffer/send
+            peerConnection.onicecandidate = (event) => {
+                if (event.candidate) {
+                    const candidateJson = event.candidate.toJSON();
+                    if (channelRef.current) {
+                        channelRef.current.send({
+                            type: "broadcast",
+                            event: "ice-candidate",
+                            payload: {
+                                candidate: candidateJson,
+                                senderRole: userRole,
+                            },
+                        }).catch(() => {});
+                    } else {
+                        localIceBufferRef.current.push(candidateJson);
+                    }
+                }
+            };
+
+            // Monitor ICE Connection State with auto-reconnection & restart
             peerConnection.oniceconnectionstatechange = () => {
                 if (!peerConnection) return;
                 const state = peerConnection.iceConnectionState;
                 console.log("[NativeWebRTC] ICE Connection State:", state);
                 if (state === "connected" || state === "completed") {
                     setConnectionStatus("connected");
+                    setPeerJoined(true);
+                    if (remoteVideoRef.current && remoteVideoRef.current.paused) {
+                        remoteVideoRef.current.play().catch(() => {});
+                    }
                 } else if (state === "disconnected") {
                     setConnectionStatus("reconnecting");
                 } else if (state === "failed") {
-                    setConnectionStatus("failed");
+                    console.warn("[NativeWebRTC] ICE Connection failed! Triggering ICE restart...");
+                    setConnectionStatus("reconnecting");
                     try {
                         peerConnection.restartIce();
-                    } catch {
-                        // Ignore restart fail
+                        if (userRole === "doctor") {
+                            sendOffer();
+                        }
+                    } catch (err) {
+                        console.warn("[NativeWebRTC] ICE restart failed:", err);
                     }
                 }
             };
@@ -355,7 +408,22 @@ export function NativeWebRTCCall({
             });
             channelRef.current = channel;
 
-            // Handle Peer Ready Event
+            // Helper to broadcast readiness/presence
+            const broadcastPresence = () => {
+                if (!channelRef.current || !isMountedRef.current) return;
+                channelRef.current.send({
+                    type: "broadcast",
+                    event: "peer-ready",
+                    payload: {
+                        role: userRole,
+                        name: myDisplayName,
+                        isAudioMuted,
+                        isVideoOff,
+                    },
+                }).catch(() => {});
+            };
+
+            // Handle Peer Ready Event (With auto offer initiation / re-transmission)
             channel.on("broadcast", { event: "peer-ready" }, async (message) => {
                 const payload = message.payload as { role: string; name?: string; isAudioMuted?: boolean; isVideoOff?: boolean };
                 if (payload.role === userRole) return; // Prevent self-echo
@@ -364,47 +432,67 @@ export function NativeWebRTCCall({
                 if (payload.isAudioMuted !== undefined) setIsRemoteAudioMuted(payload.isAudioMuted);
                 if (payload.isVideoOff !== undefined) setIsRemoteVideoOff(payload.isVideoOff);
 
-                // If I am the doctor, initiate the WebRTC Offer
+                const pc = pcRef.current;
+                if (!pc) return;
+
+                // If I am the doctor, initiate or re-transmit the WebRTC Offer
                 if (userRole === "doctor") {
-                    await sendOffer();
+                    const ice = pc.iceConnectionState;
+                    if (ice !== "connected" && ice !== "completed") {
+                        if (pc.signalingState === "stable") {
+                            console.log("[NativeWebRTC] Doctor initiating WebRTC Offer");
+                            await sendOffer();
+                        } else if (pc.signalingState === "have-local-offer" && pc.localDescription) {
+                            console.log("[NativeWebRTC] Doctor re-transmitting existing WebRTC Offer");
+                            await channelRef.current?.send({
+                                type: "broadcast",
+                                event: "offer",
+                                payload: {
+                                    sdp: pc.localDescription,
+                                    senderRole: userRole,
+                                },
+                            });
+                        }
+                    }
                 } else {
-                    // Patient replies with peer-ready to trigger doctor offer if doctor was already in room
-                    channel?.send({
-                        type: "broadcast",
-                        event: "peer-ready",
-                        payload: {
-                            role: userRole,
-                            name: myDisplayName,
-                            isAudioMuted,
-                            isVideoOff,
-                        },
-                    });
+                    // Patient replies with peer-ready so Doctor receives presence
+                    broadcastPresence();
                 }
             });
 
-            // Handle WebRTC Offer (Received by Callee / Patient)
+            // Handle WebRTC Offer (Received by Callee / Patient with Glare Protection)
             channel.on("broadcast", { event: "offer" }, async (message) => {
                 const payload = message.payload as { sdp: RTCSessionDescriptionInit; senderRole: string };
                 if (payload.senderRole === userRole) return; // Ignore own messages
                 console.log("[NativeWebRTC] Received WebRTC Offer from:", payload.senderRole);
 
-                if (!pcRef.current) return;
-                try {
-                    await pcRef.current.setRemoteDescription(new RTCSessionDescription(payload.sdp));
+                const pc = pcRef.current;
+                if (!pc) return;
 
-                    // Flush any queued ICE candidates
+                try {
+                    // Glare protection: if signaling is not stable, rollback to stable description
+                    if (pc.signalingState !== "stable") {
+                        await pc.setLocalDescription({ type: "rollback" } as unknown as RTCSessionDescriptionInit);
+                    }
+                    await pc.setRemoteDescription(new RTCSessionDescription(payload.sdp));
+
+                    // Flush any queued remote ICE candidates
                     while (pendingCandidatesRef.current.length > 0) {
                         const candidate = pendingCandidatesRef.current.shift();
                         if (candidate) {
-                            await pcRef.current.addIceCandidate(new RTCIceCandidate(candidate));
+                            try {
+                                await pc.addIceCandidate(new RTCIceCandidate(candidate));
+                            } catch (candErr) {
+                                console.warn("[NativeWebRTC] Pending candidate error:", candErr);
+                            }
                         }
                     }
 
                     // Create and send Answer
-                    const answer = await pcRef.current.createAnswer();
-                    await pcRef.current.setLocalDescription(answer);
+                    const answer = await pc.createAnswer();
+                    await pc.setLocalDescription(answer);
 
-                    await channel?.send({
+                    await channelRef.current?.send({
                         type: "broadcast",
                         event: "answer",
                         payload: {
@@ -412,6 +500,7 @@ export function NativeWebRTCCall({
                             senderRole: userRole,
                         },
                     });
+                    console.log("[NativeWebRTC] Created and sent WebRTC Answer to doctor");
                 } catch (err) {
                     console.error("[NativeWebRTC] Error handling offer:", err);
                 }
@@ -423,19 +512,28 @@ export function NativeWebRTCCall({
                 if (payload.senderRole === userRole) return;
                 console.log("[NativeWebRTC] Received WebRTC Answer from:", payload.senderRole);
 
-                if (!pcRef.current) return;
-                try {
-                    await pcRef.current.setRemoteDescription(new RTCSessionDescription(payload.sdp));
+                const pc = pcRef.current;
+                if (!pc) return;
 
-                    // Flush any queued ICE candidates
-                    while (pendingCandidatesRef.current.length > 0) {
-                        const candidate = pendingCandidatesRef.current.shift();
-                        if (candidate) {
-                            await pcRef.current.addIceCandidate(new RTCIceCandidate(candidate));
+                if (pc.signalingState === "have-local-offer") {
+                    try {
+                        await pc.setRemoteDescription(new RTCSessionDescription(payload.sdp));
+                        console.log("[NativeWebRTC] Doctor set remote description successfully");
+
+                        // Flush any queued remote ICE candidates
+                        while (pendingCandidatesRef.current.length > 0) {
+                            const candidate = pendingCandidatesRef.current.shift();
+                            if (candidate) {
+                                try {
+                                    await pc.addIceCandidate(new RTCIceCandidate(candidate));
+                                } catch (candErr) {
+                                    console.warn("[NativeWebRTC] Pending candidate error:", candErr);
+                                }
+                            }
                         }
+                    } catch (err) {
+                        console.error("[NativeWebRTC] Error handling answer:", err);
                     }
-                } catch (err) {
-                    console.error("[NativeWebRTC] Error handling answer:", err);
                 }
             });
 
@@ -443,10 +541,12 @@ export function NativeWebRTCCall({
             channel.on("broadcast", { event: "ice-candidate" }, async (message) => {
                 const payload = message.payload as { candidate: RTCIceCandidateInit; senderRole: string };
                 if (payload.senderRole === userRole) return;
+                if (!payload.candidate) return;
 
-                if (pcRef.current?.remoteDescription && pcRef.current.remoteDescription.type) {
+                const pc = pcRef.current;
+                if (pc?.remoteDescription && pc.remoteDescription.type) {
                     try {
-                        await pcRef.current.addIceCandidate(new RTCIceCandidate(payload.candidate));
+                        await pc.addIceCandidate(new RTCIceCandidate(payload.candidate));
                     } catch (err) {
                         console.warn("[NativeWebRTC] Error adding ICE candidate:", err);
                     }
@@ -471,22 +571,36 @@ export function NativeWebRTCCall({
                 onEndCall(durationSeconds);
             });
 
-            // Subscribe to channel and broadcast initial presence
+            // Subscribe to channel, flush buffered local ICE candidates, and broadcast initial presence
             channel.subscribe((status) => {
                 console.log("[NativeWebRTC] Channel subscription status:", status);
                 if (status === "SUBSCRIBED") {
-                    channel?.send({
-                        type: "broadcast",
-                        event: "peer-ready",
-                        payload: {
-                            role: userRole,
-                            name: myDisplayName,
-                            isAudioMuted,
-                            isVideoOff,
-                        },
-                    });
+                    while (localIceBufferRef.current.length > 0) {
+                        const cand = localIceBufferRef.current.shift();
+                        if (cand && channelRef.current) {
+                            channelRef.current.send({
+                                type: "broadcast",
+                                event: "ice-candidate",
+                                payload: { candidate: cand, senderRole: userRole },
+                            }).catch(() => {});
+                        }
+                    }
+                    broadcastPresence();
                 }
             });
+
+            // Heartbeat: Ping every 2.5 seconds until ICE connection is confirmed
+            heartbeatRef.current = setInterval(() => {
+                if (!isMountedRef.current) return;
+                const ice = pcRef.current?.iceConnectionState;
+                if (ice !== "connected" && ice !== "completed") {
+                    broadcastPresence();
+                    // If Doctor is still stable and not connected, re-attempt offer
+                    if (userRole === "doctor" && pcRef.current?.signalingState === "stable") {
+                        sendOffer();
+                    }
+                }
+            }, 2500);
         }
 
         startCall();
@@ -494,6 +608,10 @@ export function NativeWebRTCCall({
         // Cleanup on unmount
         return () => {
             isMountedRef.current = false;
+            if (heartbeatRef.current) {
+                clearInterval(heartbeatRef.current);
+                heartbeatRef.current = null;
+            }
             if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
             if (audioContextRef.current && audioContextRef.current.state !== "closed") {
                 audioContextRef.current.close().catch(() => {});
@@ -700,23 +818,6 @@ export function NativeWebRTCCall({
                         </svg>
                     </button>
 
-                    {/* Toggle In-Call Chat Button */}
-                    <button
-                        onClick={() => setIsChatOpen((prev) => !prev)}
-                        className={cn(
-                            "px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5 shadow-lg border backdrop-blur-md",
-                            isChatOpen
-                                ? "bg-amber-500 text-slate-950 border-amber-400 shadow-amber-500/20"
-                                : "bg-slate-900/70 hover:bg-slate-800 text-white border-white/15"
-                        )}
-                        title={isRTL ? "فتح المحادثة والصور" : "Toggle Chat & Photos"}
-                    >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                        </svg>
-                        <span>{isRTL ? "الصور والشات 📷" : "Chat & Photos 📷"}</span>
-                    </button>
-
                     {/* End Call Button */}
                     <button
                         onClick={() => setShowEndModal(true)}
@@ -733,11 +834,22 @@ export function NativeWebRTCCall({
             </header>
 
             {/* Video Stage Container */}
-            <div className="relative flex-1 w-full h-full flex items-center justify-center bg-black overflow-hidden">
+            <div
+                className="relative flex-1 w-full h-full flex items-center justify-center bg-black overflow-hidden"
+                onClick={() => {
+                    if (remoteVideoRef.current && remoteVideoRef.current.paused) {
+                        remoteVideoRef.current.play().catch(() => {});
+                    }
+                }}
+            >
                 {/* 1. Remote Video Container (Fullscreen when !isSwapped, PiP when isSwapped) */}
                 <div
-                    onClick={() => {
+                    onClick={(e) => {
+                        e.stopPropagation();
                         if (isSwapped) setIsSwapped(false);
+                        if (remoteVideoRef.current && remoteVideoRef.current.paused) {
+                            remoteVideoRef.current.play().catch(() => {});
+                        }
                     }}
                     className={cn(
                         "transition-all duration-300 overflow-hidden",
@@ -817,7 +929,8 @@ export function NativeWebRTCCall({
 
                 {/* 2. Local Video Container (PiP when !isSwapped, Fullscreen when isSwapped) */}
                 <div
-                    onClick={() => {
+                    onClick={(e) => {
+                        e.stopPropagation();
                         if (!isSwapped) setIsSwapped(true);
                     }}
                     className={cn(
