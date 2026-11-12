@@ -26,6 +26,7 @@ interface QueueChatProps {
     className?: string;
     isOpen?: boolean;
     onOpenChange?: (open: boolean) => void;
+    embedded?: boolean;
 }
 
 // ============================================
@@ -87,6 +88,7 @@ export function QueueChat({
     className,
     isOpen: propIsOpen,
     onOpenChange,
+    embedded = false,
 }: QueueChatProps) {
     const [internalIsOpen, setInternalIsOpen] = useState(false);
     const isOpen = propIsOpen !== undefined ? propIsOpen : internalIsOpen;
@@ -379,15 +381,17 @@ export function QueueChat({
     };
 
     return (
-        <div className={cn("fixed bottom-20 sm:bottom-4 z-50", isRTL ? "left-4" : "right-4", className)}>
+        <div className={cn(embedded ? "w-full h-full flex flex-col" : "fixed bottom-20 sm:bottom-4 z-50", !embedded && (isRTL ? "left-4" : "right-4"), className)}>
             <AnimatePresence>
                 {isOpen ? (
                     <motion.div
-                        initial={{ opacity: 0, scale: 0.9, y: 20 }}
-                        animate={{ opacity: 1, scale: 1, y: 0 }}
-                        exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                        initial={embedded ? { opacity: 0 } : { opacity: 0, scale: 0.9, y: 20 }}
+                        animate={embedded ? { opacity: 1 } : { opacity: 1, scale: 1, y: 0 }}
+                        exit={embedded ? { opacity: 0 } : { opacity: 0, scale: 0.9, y: 20 }}
                         className={cn(
-                            "w-[calc(100vw-2rem)] sm:w-96 max-w-96 rounded-2xl border shadow-2xl overflow-hidden",
+                            embedded
+                                ? "w-full h-full flex flex-col overflow-hidden"
+                                : "w-[calc(100vw-2rem)] sm:w-96 max-w-96 rounded-2xl border shadow-2xl overflow-hidden",
                             isDark
                                 ? "bg-[#08213D] border-white/10"
                                 : "bg-white border-gray-200"
@@ -785,7 +789,7 @@ export function QueueChat({
                             )}
                         </AnimatePresence>
                     </motion.div>
-                ) : (
+                ) : !embedded ? (
                     <motion.button
                         initial={{ scale: 0 }}
                         animate={{
@@ -825,7 +829,7 @@ export function QueueChat({
                             </span>
                         )}
                     </motion.button>
-                )}
+                ) : null}
             </AnimatePresence>
         </div>
     );

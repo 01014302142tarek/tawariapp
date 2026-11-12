@@ -828,89 +828,39 @@ export function QueueVideoCall({
                 )}
             </AnimatePresence>
 
-            {/* Header */}
-            <div className={cn(
-                "p-3 sm:p-4 border-b flex items-center justify-between z-20",
-                isDark ? "bg-[#08213D] border-white/10" : "bg-white border-gray-200"
-            )}>
-                <div className="flex items-center gap-3">
-                    <button
-                        onClick={handleBack}
-                        className={cn(
-                            "p-2 rounded-lg transition-colors",
-                            isDark
-                                ? "hover:bg-[#0D2C4F] text-slate-400"
-                                : "hover:bg-gray-100 text-gray-600"
-                        )}
-                    >
-                        <span className={cn(isRTL && "rotate-180 block")}>{Icons.back}</span>
-                    </button>
-                    <div>
-                        <h1 className={cn("font-semibold text-sm sm:text-base", isDark ? "text-white" : "text-slate-900")}>
-                            {isRTL ? "استشارة فيديو عاجلة" : "Urgent Video Consultation"}
-                        </h1>
-                        <div className="flex items-center gap-2">
-                            <span className={cn("text-xs", isDark ? "text-slate-400" : "text-slate-600")}>
-                                {userRole === "doctor"
-                                    ? (participantInfo.patientName || (isRTL ? "المريض" : "Patient"))
-                                    : (participantInfo.doctorName || (isRTL ? "الطبيب" : "Doctor"))}
-                            </span>
-                            {callState === "joined" && (
-                                <div className="flex items-center gap-1.5">
-                                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                                    <span className="text-[11px] text-slate-300 font-mono">
-                                        {formatCallDuration(callDurationSeconds)}
-                                    </span>
-                                </div>
+            {/* Header (shown during connecting / error states) */}
+            {callState !== "joined" && (
+                <div className={cn(
+                    "p-3 sm:p-4 border-b flex items-center justify-between z-20",
+                    isDark ? "bg-[#08213D] border-white/10" : "bg-white border-gray-200"
+                )}>
+                    <div className="flex items-center gap-3">
+                        <button
+                            onClick={handleBack}
+                            className={cn(
+                                "p-2 rounded-lg transition-colors",
+                                isDark
+                                    ? "hover:bg-[#0D2C4F] text-slate-400"
+                                    : "hover:bg-gray-100 text-gray-600"
                             )}
+                        >
+                            <span className={cn(isRTL && "rotate-180 block")}>{Icons.back}</span>
+                        </button>
+                        <div>
+                            <h1 className={cn("font-semibold text-sm sm:text-base", isDark ? "text-white" : "text-slate-900")}>
+                                {isRTL ? "استشارة فيديو عاجلة" : "Urgent Video Consultation"}
+                            </h1>
+                            <div className="flex items-center gap-2">
+                                <span className={cn("text-xs", isDark ? "text-slate-400" : "text-slate-600")}>
+                                    {userRole === "doctor"
+                                        ? (participantInfo.patientName || (isRTL ? "المريض" : "Patient"))
+                                        : (participantInfo.doctorName || (isRTL ? "الطبيب" : "Doctor"))}
+                                </span>
+                            </div>
                         </div>
                     </div>
                 </div>
-
-                {/* Top Bar Actions */}
-                <div className="flex items-center gap-2">
-                    {/* Send Photo / Open Medical Chat Button */}
-                    <button
-                        onClick={() => setIsChatOpen((prev) => !prev)}
-                        className="px-2.5 py-1.5 sm:px-3 sm:py-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white rounded-lg text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5 shadow-md shadow-orange-500/25 active:scale-95"
-                        title={isRTL ? "إرسال صورة أو تقرير طبي أو محادثة" : "Send photo, medical report or chat"}
-                    >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-                        </svg>
-                        <span>{isRTL ? "إرسال صورة / شات 📷" : "Photo / Chat 📷"}</span>
-                    </button>
-
-                    {webrtcUrl && (
-                        <a
-                            href={webrtcUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="px-2.5 py-1.5 sm:px-3 sm:py-2 bg-[#0D2C4F] hover:bg-slate-700 text-slate-200 rounded-lg text-xs sm:text-sm font-medium transition-colors flex items-center gap-1.5 border border-white/10"
-                            title={isRTL ? "فتح في نافذة كاملة بدون تطبيقات" : "Open in Full Window"}
-                        >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                            </svg>
-                            <span className="hidden sm:inline">{isRTL ? "نافذة خارجية" : "Full Window"}</span>
-                        </a>
-                    )}
-                    {callState === "joined" && (
-                        <button
-                            onClick={() => setShowEndConfirm(true)}
-                            className="px-3 py-1.5 sm:px-4 sm:py-2 bg-red-600 text-white rounded-lg text-xs sm:text-sm font-semibold hover:bg-red-700 transition-colors flex items-center gap-1.5 shadow-md shadow-red-600/30"
-                        >
-                            {Icons.endCall}
-                            <span>
-                                {userRole === "doctor"
-                                    ? (isRTL ? "إنهاء المكالمة" : "End Call")
-                                    : (isRTL ? "مغادرة" : "Leave")}
-                            </span>
-                        </button>
-                    )}
-                </div>
-            </div>
+            )}
 
             {/* Video Container */}
             <div className="flex-1 relative min-h-0 overflow-hidden">
@@ -984,47 +934,36 @@ export function QueueVideoCall({
                     </div>
                 )}
 
-                {/* Video Container - hide when showing post-call modals */}
-                {webrtcUrl ? (
+                {/* Native In-House WebRTC Call Room (100% In-App, Zero External Dependencies) */}
+                {callState === "joined" && (
                     <div
                         className="w-full h-full absolute inset-0 bg-slate-950"
                         style={{
-                            display: postCallPhase !== "none" ? "none" : "block"
+                            display: postCallPhase !== "none" ? "none" : "block",
                         }}
                     >
-                        <iframe
-                            src={webrtcUrl}
-                            allow="camera *; microphone *; display-capture *; autoplay *; clipboard-write *; screen-wake-lock *;"
-                            className="w-full h-full border-0 absolute inset-0"
-                            allowFullScreen
+                        <NativeWebRTCCall
+                            roomId={queueEntryId}
+                            userRole={userRole}
+                            userName={userRole === "doctor" ? participantInfo.doctorName : participantInfo.patientName}
+                            remoteUserName={userRole === "doctor" ? participantInfo.patientName : participantInfo.doctorName}
+                            remoteUserAvatar={messagingInfo.recipientAvatar}
+                            currentProfileId={messagingInfo.currentProfileId}
+                            recipientProfileId={messagingInfo.recipientProfileId}
+                            onEndCall={() => {
+                                if (userRole === "doctor") {
+                                    handleEndCall();
+                                } else {
+                                    handleLeaveCall();
+                                }
+                            }}
+                            isRTL={isRTL}
+                            language={language}
+                            isDark={isDark}
                         />
                     </div>
-                ) : (
-                    <div
-                        ref={containerRef}
-                        className="absolute inset-0 bg-[#08213D]"
-                        style={{
-                            minHeight: "400px",
-                            display: postCallPhase !== "none" ? "none" : "block"
-                        }}
-                    />
                 )}
             </div>
-
-            {/* In-Call Realtime Chat between Doctor & Patient */}
-            {messagingInfo.currentProfileId && messagingInfo.recipientProfileId && (
-                <QueueChat
-                    currentProfileId={messagingInfo.currentProfileId}
-                    recipientProfileId={messagingInfo.recipientProfileId}
-                    recipientName={messagingInfo.recipientName || (isRTL ? "الطرف الآخر" : "Participant")}
-                    recipientAvatar={messagingInfo.recipientAvatar}
-                    isDark={isDark}
-                    isRTL={isRTL}
-                    isOpen={isChatOpen}
-                    onOpenChange={setIsChatOpen}
-                    className="bottom-6"
-                />
-            )}
 
             {/* Post-Consultation Modals */}
 

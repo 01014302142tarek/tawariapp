@@ -1075,6 +1075,7 @@ export function createMockSupabaseClient(options?: {
                 on: () => ch,
                 subscribe: () => ch,
                 unsubscribe: () => Promise.resolve("ok"),
+                send: () => Promise.resolve("ok"),
             };
             return ch;
         },
