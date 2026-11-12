@@ -15,3 +15,4 @@ describe("Audio Ringtone & Web Push Notifications Invariants", () => {
         assert.equal(permission, "unsupported");
     });
 });
+

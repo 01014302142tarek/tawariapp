@@ -86,3 +86,4 @@ export function sendBrowserNotification(
         return null;
     }
 }
+

@@ -170,13 +170,22 @@ export async function createPrescription(data: {
         return { success: false, error: "Doctor not verified" };
     }
 
-    // Check if doctor has clinic info filled - required for prescription PDF generation
-    if (!doctorProfile.clinic_name || !doctorProfile.clinic_address) {
-        return {
-            success: false,
-            error: "Please complete your clinic information in settings before creating prescriptions",
-            requiresClinicInfo: true
-        };
+    // Ensure doctor has clinic info (auto-provide telemedicine defaults if not filled, so doctors are never blocked from issuing prescriptions)
+    let clinicName = doctorProfile.clinic_name;
+    let clinicAddress = doctorProfile.clinic_address;
+
+    if (!clinicName || !clinicAddress) {
+        clinicName = clinicName || "عيادة الاستشارات الطبية - طوارئ";
+        clinicAddress = clinicAddress || "استشارة طبية عن بُعد (Telemedicine)";
+
+        // Save defaults to doctor profile in the background
+        await (supabase as any)
+            .from("doctor_profiles")
+            .update({
+                clinic_name: clinicName,
+                clinic_address: clinicAddress,
+            })
+            .eq("id", doctorProfile.id);
     }
 
     // Get patient's base profile_id for notification
@@ -1485,8 +1494,8 @@ export async function getPrescriptionForPdf(
             full_name: rx.doctor_profiles?.profiles?.full_name || "Doctor",
             specialty: specialtyString || undefined,
             license_number: rx.doctor_profiles?.license_number,
-            clinic_name: rx.doctor_profiles?.clinic_name,
-            clinic_address: rx.doctor_profiles?.clinic_address,
+            clinic_name: rx.doctor_profiles?.clinic_name || "عيادة الاستشارات الطبية - طوارئ",
+            clinic_address: rx.doctor_profiles?.clinic_address || "استشارة طبية عن بُعد (Telemedicine)",
             clinic_phone: rx.doctor_profiles?.clinic_phone,
             phone_number: rx.doctor_profiles?.phone_number,
         },
