@@ -13,6 +13,12 @@ import { toggleDoctorOnline } from "@/app/actions/queue";
 import { useRouter } from "next/navigation";
 import { MovingBorder } from "@/components/ui/moving-border";
 import { NotificationDropdown } from "@/components/notifications";
+import {
+    playIncomingCallRingtone,
+    stopIncomingCallRingtone,
+    isRingtonePlaying,
+    unlockAudio,
+} from "@/lib/audio/ringtone";
 
 // Icons
 const Icons = {
@@ -569,6 +575,26 @@ export default function Header({ onMenuClick }: { onMenuClick?: () => void }) {
                             {isOnline ? (isRTL ? "متصل الآن" : "Online") : (isRTL ? "غير متصل" : "Offline")}
                         </span>
                     </motion.button>
+
+                    {/* Ringtone Test Button */}
+                    <button
+                        onClick={() => {
+                            if (isRingtonePlaying()) {
+                                stopIncomingCallRingtone();
+                            } else {
+                                unlockAudio();
+                                playIncomingCallRingtone();
+                                setTimeout(() => stopIncomingCallRingtone(), 3500);
+                            }
+                        }}
+                        className={cn(
+                            "p-2 rounded-xl transition-all hidden sm:flex items-center justify-center text-xs font-semibold cursor-pointer active:scale-95",
+                            isDark ? "hover:bg-white/10 text-slate-400 hover:text-amber-400" : "hover:bg-gray-100 text-gray-600 hover:text-amber-600"
+                        )}
+                        title={isRTL ? "تجربة رنة المكالمات الواردة 🔔" : "Test incoming call ringtone"}
+                    >
+                        <span className="text-base">🔔</span>
+                    </button>
 
                     {/* Notifications - visible on all screens */}
                     <NotificationDropdown isDark={isDark} dashboardType="doctor" />

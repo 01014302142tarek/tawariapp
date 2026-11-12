@@ -10,6 +10,8 @@ import { useGlobalTheme } from "@/app/context/GlobalThemeContext";
 import { leaveQueue, getQueueEntryForCall } from "@/app/actions/queue";
 import { useMyQueuePosition } from "@/lib/hooks/useQueueRealtime";
 import { QueueChat } from "@/components/queue-chat";
+import { sendBrowserNotification } from "@/lib/notifications/web-push";
+import { playNotificationChime } from "@/lib/audio/ringtone";
 
 // ============================================
 // Icons
@@ -183,12 +185,21 @@ export default function WaitingRoomPage() {
         if (entry) {
             console.log("[Waiting Room] Entry status:", entry.status, "Room URL:", entry.daily_room_url);
             if ((entry.status === "in_consultation" || entry.status === "called") && entry.daily_room_url) {
-                // Room is ready - redirect to video call
-                console.log("[Waiting Room] Redirecting to call page...");
-                hasRedirectedRef.current = true; // Mark as redirected to prevent loops
-                // Use replace instead of push to prevent back-navigation issues
+                // Room is ready - notify patient & redirect to video call
+                console.log("[Waiting Room] Doctor is ready - triggering alert & redirecting...");
+                playNotificationChime();
                 const callUrl = `/${language}/dashboard/patient/urgent-care/call/${queueEntryId}`;
-                console.log("[Waiting Room] Navigation URL:", callUrl);
+                sendBrowserNotification(
+                    isRTL ? "🩺 حان دورك الآن مع الدكتور!" : "🩺 Doctor is Ready for You!",
+                    {
+                        body: isRTL
+                            ? `د. ${doctorInfo?.full_name || "طبيب معتمد"} بانتظارك الآن في غرفة الكشف.`
+                            : `Dr. ${doctorInfo?.full_name || "Your Doctor"} is ready in the consultation room.`,
+                        url: callUrl,
+                        requireInteraction: true,
+                    }
+                );
+                hasRedirectedRef.current = true; // Mark as redirected to prevent loops
                 // Use window.location.replace for hard navigation without history entry
                 window.location.replace(callUrl);
             } else if (entry.status === "completed") {

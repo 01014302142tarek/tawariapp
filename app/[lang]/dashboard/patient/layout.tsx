@@ -8,6 +8,7 @@ import { useGlobalTheme } from "@/app/context/GlobalThemeContext";
 import { useI18n } from "@/app/i18n";
 import { cn } from "@/lib/utils";
 import { SidebarProvider } from "./context/SidebarContext";
+import { PatientCallNotifier } from "@/components/patient-call-notifier";
 
 function LayoutContent({ children }: { children: React.ReactNode }) {
     const { isDark } = useGlobalTheme();
@@ -66,6 +67,7 @@ export default function PatientDashboardLayout({
 }) {
     return (
         <SidebarProvider>
+            <PatientCallNotifier />
             <LayoutContent>{children}</LayoutContent>
         </SidebarProvider>
     );

@@ -9,6 +9,7 @@ import { useI18n } from "@/app/i18n";
 import { cn } from "@/lib/utils";
 import { DoctorSidebarProvider } from "./context/SidebarContext";
 import DoctorOfflineTracker from "./components/DoctorOfflineTracker";
+import { DoctorCallNotifier } from "@/components/doctor-call-notifier";
 
 function LayoutContent({ children }: { children: React.ReactNode }) {
     const { isDark } = useGlobalTheme();
@@ -68,6 +69,7 @@ export default function Doctor2DashboardLayout({
     return (
         <DoctorSidebarProvider>
             <DoctorOfflineTracker />
+            <DoctorCallNotifier />
             <LayoutContent>{children}</LayoutContent>
         </DoctorSidebarProvider>
     );
