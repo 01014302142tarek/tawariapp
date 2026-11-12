@@ -358,6 +358,7 @@ export function NativeWebRTCCall({
             // Handle Peer Ready Event
             channel.on("broadcast", { event: "peer-ready" }, async (message) => {
                 const payload = message.payload as { role: string; name?: string; isAudioMuted?: boolean; isVideoOff?: boolean };
+                if (payload.role === userRole) return; // Prevent self-echo
                 console.log("[NativeWebRTC] Remote peer is ready:", payload);
                 setPeerJoined(true);
                 if (payload.isAudioMuted !== undefined) setIsRemoteAudioMuted(payload.isAudioMuted);
@@ -456,7 +457,9 @@ export function NativeWebRTCCall({
 
             // Handle Media State Updates (Mute / Camera toggle from remote side)
             channel.on("broadcast", { event: "media-state" }, (message) => {
-                const payload = message.payload as { isAudioMuted?: boolean; isVideoOff?: boolean };
+                const payload = message.payload as { senderRole?: string; isAudioMuted?: boolean; isVideoOff?: boolean };
+                if (payload.senderRole === userRole) return; // Prevent self-echo!
+                console.log("[NativeWebRTC] Received media-state from remote peer:", payload);
                 if (payload.isAudioMuted !== undefined) setIsRemoteAudioMuted(payload.isAudioMuted);
                 if (payload.isVideoOff !== undefined) setIsRemoteVideoOff(payload.isVideoOff);
             });
@@ -529,10 +532,10 @@ export function NativeWebRTCCall({
             channelRef.current?.send({
                 type: "broadcast",
                 event: "media-state",
-                payload: { isAudioMuted: newMuted, isVideoOff },
+                payload: { senderRole: userRole, isAudioMuted: newMuted, isVideoOff },
             });
         }
-    }, [isVideoOff]);
+    }, [isVideoOff, userRole]);
 
     // Toggle Camera On / Off
     const toggleVideo = useCallback(() => {
@@ -546,10 +549,10 @@ export function NativeWebRTCCall({
             channelRef.current?.send({
                 type: "broadcast",
                 event: "media-state",
-                payload: { isAudioMuted, isVideoOff: newVideoOff },
+                payload: { senderRole: userRole, isAudioMuted, isVideoOff: newVideoOff },
             });
         }
-    }, [isAudioMuted]);
+    }, [isAudioMuted, userRole]);
 
     // Flip Camera (Front / Back switch for mobile phones & tablets)
     const flipCamera = useCallback(async () => {
@@ -731,56 +734,138 @@ export function NativeWebRTCCall({
 
             {/* Video Stage Container */}
             <div className="relative flex-1 w-full h-full flex items-center justify-center bg-black overflow-hidden">
-                {/* Remote Main Video (or Local if swapped) */}
-                <video
-                    ref={isSwapped ? localVideoRef : remoteVideoRef}
-                    autoPlay
-                    playsInline
-                    muted={isSwapped} // Muted if local video is in main frame
+                {/* 1. Remote Video Container (Fullscreen when !isSwapped, PiP when isSwapped) */}
+                <div
+                    onClick={() => {
+                        if (isSwapped) setIsSwapped(false);
+                    }}
                     className={cn(
-                        "w-full h-full transition-all duration-300",
-                        videoFit === "cover" ? "object-cover" : "object-contain",
-                        (!isSwapped && isRemoteVideoOff) || (isSwapped && isVideoOff) ? "hidden" : "block"
+                        "transition-all duration-300 overflow-hidden",
+                        !isSwapped
+                            ? "absolute inset-0 w-full h-full z-0 flex items-center justify-center bg-black"
+                            : cn(
+                                  "absolute z-20 cursor-pointer rounded-2xl border-2 border-white/20 shadow-2xl bg-slate-900/90 backdrop-blur-md",
+                                  isRTL ? "left-3 sm:left-6" : "right-3 sm:right-6",
+                                  "bottom-20 sm:bottom-24 w-28 h-36 sm:w-40 sm:h-52"
+                              )
                     )}
-                />
+                >
+                    <video
+                        ref={remoteVideoRef}
+                        autoPlay
+                        playsInline
+                        className={cn(
+                            "w-full h-full transition-opacity duration-300",
+                            !isSwapped ? (videoFit === "cover" ? "object-cover" : "object-contain") : "object-cover",
+                            isRemoteVideoOff ? "opacity-0" : "opacity-100"
+                        )}
+                    />
 
-                {/* Remote Video Off / Waiting Card Placeholder */}
-                {((!isSwapped && isRemoteVideoOff) || (!isSwapped && !peerJoined)) && (
-                    <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center bg-gradient-to-b from-slate-900 to-[#031326] z-10">
-                        <div className="relative mb-4">
-                            <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-gradient-to-tr from-cyan-600 via-blue-600 to-indigo-600 border-2 border-white/20 flex items-center justify-center text-3xl sm:text-4xl font-bold text-white shadow-2xl overflow-hidden">
-                                {remoteUserAvatar ? (
-                                    // eslint-disable-next-line @next/next/no-img-element
-                                    <img src={remoteUserAvatar} alt={targetDisplayName} className="w-full h-full object-cover" />
-                                ) : (
-                                    targetDisplayName.charAt(0)
+                    {/* Remote Video Off / Waiting Placeholder */}
+                    {(isRemoteVideoOff || !peerJoined) && (
+                        <div className="absolute inset-0 flex flex-col items-center justify-center p-4 text-center bg-gradient-to-b from-slate-900 to-[#031326] z-10">
+                            <div className="relative mb-3">
+                                <div className={cn(
+                                    "rounded-full bg-gradient-to-tr from-cyan-600 via-blue-600 to-indigo-600 border-2 border-white/20 flex items-center justify-center font-bold text-white shadow-2xl overflow-hidden",
+                                    !isSwapped ? "w-20 h-20 sm:w-28 sm:h-28 text-2xl sm:text-4xl" : "w-10 h-10 sm:w-12 sm:h-12 text-sm sm:text-base"
+                                )}>
+                                    {remoteUserAvatar ? (
+                                        // eslint-disable-next-line @next/next/no-img-element
+                                        <img src={remoteUserAvatar} alt={targetDisplayName} className="w-full h-full object-cover" />
+                                    ) : (
+                                        targetDisplayName.charAt(0)
+                                    )}
+                                </div>
+                                {isSpeakingRemote && (
+                                    <span className="absolute -inset-1.5 rounded-full border-4 border-emerald-400 animate-ping opacity-60" />
                                 )}
                             </div>
-                            {isSpeakingRemote && (
-                                <span className="absolute -inset-2 rounded-full border-4 border-emerald-400 animate-ping opacity-60" />
+                            <h3 className={cn("font-bold text-white mb-1", !isSwapped ? "text-lg sm:text-2xl" : "text-xs truncate max-w-[90px]")}>
+                                {targetDisplayName}
+                            </h3>
+                            {!isSwapped && (
+                                <p className="text-xs sm:text-sm text-slate-300 max-w-sm">
+                                    {!peerJoined
+                                        ? isRTL
+                                            ? "في انتظار انضمام الطرف الآخر للمكالمة، يتم التوصيل التلقائي فور دخوله..."
+                                            : "Waiting for the participant to join the room..."
+                                        : isRemoteVideoOff
+                                        ? isRTL
+                                            ? (userRole === "doctor" ? "المريض أوقف تشغيل الكاميرا مؤقتاً، الصوت يعمل بشكل طبيعي." : "الطبيب أوقف تشغيل الكاميرا مؤقتاً، الصوت يعمل بشكل طبيعي.")
+                                            : "Camera turned off by participant, audio is active."
+                                        : isRTL
+                                        ? "المكالمة متصلة"
+                                        : "Call connected"}
+                                </p>
+                            )}
+                            {isRemoteAudioMuted && (
+                                <div className="mt-2 inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-red-500/20 text-red-300 border border-red-500/30 text-[10px] sm:text-xs">
+                                    <span>🎙️ {isRTL ? "المايك مكتوم" : "Muted"}</span>
+                                </div>
                             )}
                         </div>
-                        <h3 className="text-xl sm:text-2xl font-bold text-white mb-2">{targetDisplayName}</h3>
-                        <p className="text-sm text-slate-300 max-w-sm">
-                            {!peerJoined
-                                ? isRTL
-                                    ? "في انتظار انضمام الطرف الآخر للمكالمة، يتم التوصيل التلقائي فور دخوله..."
-                                    : "Waiting for the participant to join the room..."
-                                : isRemoteVideoOff
-                                ? isRTL
-                                    ? "الكاميرا متوقفة مؤقتاً من طرف المتحدث، الصوت يعمل بشكل طبيعي."
-                                    : "Camera turned off by participant, audio is active."
-                                : isRTL
-                                ? "المكالمة متصلة"
-                                : "Call connected"}
-                        </p>
-                        {isRemoteAudioMuted && (
-                            <div className="mt-3 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-500/20 text-red-300 border border-red-500/30 text-xs">
-                                <span>🎙️ {isRTL ? "المايكروفون مكتوم" : "Muted"}</span>
-                            </div>
+                    )}
+
+                    {/* PiP Badge if Remote is in PiP */}
+                    {isSwapped && (
+                        <div className="absolute bottom-1.5 inset-x-1.5 flex items-center justify-between px-1.5 py-0.5 rounded-md bg-black/60 backdrop-blur-sm text-[10px] text-white z-20">
+                            <span className="truncate">{targetDisplayName}</span>
+                            {isRemoteAudioMuted && <span className="text-red-400">🎙️✕</span>}
+                        </div>
+                    )}
+                </div>
+
+                {/* 2. Local Video Container (PiP when !isSwapped, Fullscreen when isSwapped) */}
+                <div
+                    onClick={() => {
+                        if (!isSwapped) setIsSwapped(true);
+                    }}
+                    className={cn(
+                        "transition-all duration-300 overflow-hidden",
+                        isSwapped
+                            ? "absolute inset-0 w-full h-full z-0 flex items-center justify-center bg-black"
+                            : cn(
+                                  "absolute z-20 cursor-pointer rounded-2xl border-2 border-white/20 shadow-2xl bg-slate-900/90 backdrop-blur-md",
+                                  isRTL ? "left-3 sm:left-6" : "right-3 sm:right-6",
+                                  "bottom-20 sm:bottom-24 w-28 h-36 sm:w-40 sm:h-52"
+                              )
+                    )}
+                    title={isRTL ? "اضغط للتبديل مع الشاشة الرئيسية" : "Tap to swap views"}
+                >
+                    <video
+                        ref={localVideoRef}
+                        autoPlay
+                        playsInline
+                        muted
+                        className={cn(
+                            "w-full h-full object-cover transition-opacity duration-300",
+                            isVideoOff ? "opacity-0" : "opacity-100"
                         )}
-                    </div>
-                )}
+                    />
+
+                    {/* Local Video Off Placeholder */}
+                    {isVideoOff && (
+                        <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-900/95 p-2 text-center text-white z-10">
+                            <div className={cn(
+                                "rounded-full bg-slate-800 flex items-center justify-center font-bold mb-1 border border-white/10",
+                                isSwapped ? "w-20 h-20 text-2xl" : "w-10 h-10 text-sm"
+                            )}>
+                                {myDisplayName.charAt(0)}
+                            </div>
+                            <span className={cn("text-slate-400", isSwapped ? "text-sm" : "text-[10px]")}>
+                                {isRTL ? "الكاميرا متوقفة" : "Camera Off"}
+                            </span>
+                        </div>
+                    )}
+
+                    {/* Badge if Local is in PiP */}
+                    {!isSwapped && (
+                        <div className="absolute bottom-1.5 inset-x-1.5 flex items-center justify-between px-1.5 py-0.5 rounded-md bg-black/60 backdrop-blur-sm text-[10px] text-white z-20">
+                            <span className="truncate">{isRTL ? "أنت" : "You"}</span>
+                            {isAudioMuted && <span className="text-red-400">🎙️✕</span>}
+                        </div>
+                    )}
+                </div>
 
                 {/* Permission Error Banner */}
                 {mediaError && (
@@ -792,46 +877,6 @@ export function NativeWebRTCCall({
                         </div>
                     </div>
                 )}
-
-                {/* Picture-in-Picture (PiP) Local Video (Tap to Swap) */}
-                <motion.div
-                    drag
-                    dragConstraints={containerRef}
-                    dragMomentum={false}
-                    onClick={() => setIsSwapped((s) => !s)}
-                    className={cn(
-                        "absolute z-20 cursor-pointer overflow-hidden rounded-2xl border-2 border-white/20 shadow-2xl bg-slate-900/90 backdrop-blur-md group transition-all",
-                        isRTL ? "left-3 sm:left-6" : "right-3 sm:right-6",
-                        "bottom-20 sm:bottom-24 w-28 h-36 sm:w-40 sm:h-52"
-                    )}
-                    title={isRTL ? "اضغط للتبديل مع الشاشة الرئيسية" : "Tap to swap views"}
-                >
-                    <video
-                        ref={isSwapped ? remoteVideoRef : localVideoRef}
-                        autoPlay
-                        playsInline
-                        muted={!isSwapped} // Local is muted
-                        className={cn(
-                            "w-full h-full object-cover transition-opacity",
-                            (isSwapped && isRemoteVideoOff) || (!isSwapped && isVideoOff) ? "hidden" : "block"
-                        )}
-                    />
-                    {((isSwapped && isRemoteVideoOff) || (!isSwapped && isVideoOff)) && (
-                        <div className="w-full h-full flex flex-col items-center justify-center bg-slate-900 p-2 text-center text-white">
-                            <div className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center font-bold text-sm mb-1">
-                                {isSwapped ? targetDisplayName.charAt(0) : myDisplayName.charAt(0)}
-                            </div>
-                            <span className="text-[10px] text-slate-400">
-                                {isRTL ? "الكاميرا متوقفة" : "Camera Off"}
-                            </span>
-                        </div>
-                    )}
-                    {/* Badge on PiP */}
-                    <div className="absolute bottom-1.5 inset-x-1.5 flex items-center justify-between px-1.5 py-0.5 rounded-md bg-black/60 backdrop-blur-sm text-[10px] text-white">
-                        <span className="truncate">{isSwapped ? targetDisplayName : (isRTL ? "أنت" : "You")}</span>
-                        {(!isSwapped && isAudioMuted) && <span className="text-red-400">🎙️✕</span>}
-                    </div>
-                </motion.div>
 
                 {/* Floating Bottom Control Dock */}
                 <div className="absolute bottom-4 sm:bottom-6 inset-x-0 flex items-center justify-center pointer-events-none z-30 px-3">

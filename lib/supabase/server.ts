@@ -81,51 +81,30 @@ export async function createClient() {
 
 // Admin client with service role for server-side operations that bypass RLS
 export async function createAdminClient() {
-    const cookieStore = await cookies();
-    const isHttps = await isHttpsRequest();
     const supabaseUrl =
         process.env.NEXT_PUBLIC_SUPABASE_URL ??
         process.env.NEXT_PUBLIC_TawariAppSUPABASE_URL;
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
     if (!isSupabaseConfigured(supabaseUrl, serviceRoleKey)) {
+        const cookieStore = await cookies();
         return createMockSupabaseClient({
             getSessionEmail: () => cookieStore.get(MOCK_SESSION_COOKIE)?.value ?? null,
-            setSessionEmail: (email) => {
-                try {
-                    if (email) {
-                        cookieStore.set(MOCK_SESSION_COOKIE, email, {
-                            path: "/",
-                            maxAge: 60 * 60 * 24 * 7,
-                            sameSite: isHttps ? "none" : "lax",
-                            secure: isHttps,
-                        });
-                    } else {
-                        cookieStore.delete(MOCK_SESSION_COOKIE);
-                    }
-                } catch {
-                    // Ignore when called from a Server Component
-                }
-            },
         });
     }
 
+    // Do NOT pass cookies here: passing user session cookies causes @supabase/ssr
+    // to attach the user's JWT, which evaluates user RLS instead of the service role!
     return createServerClient<Database>(
         supabaseUrl!,
         serviceRoleKey!,
         {
             cookies: {
                 getAll() {
-                    return cookieStore.getAll();
+                    return [];
                 },
-                setAll(cookiesToSet) {
-                    try {
-                        cookiesToSet.forEach(({ name, value, options }) =>
-                            cookieStore.set(name, value, options)
-                        );
-                    } catch {
-                        // Ignore - called from Server Component
-                    }
+                setAll() {
+                    // No-op for admin client
                 },
             },
         }

@@ -222,3 +222,25 @@ CREATE POLICY "Assistants can read patient profiles during consultations"
         get_current_user_role() IN ('doctor_assistant', 'admin_assistant')
         AND assistant_has_patient_appointment(id, get_current_profile_id())
     );
+
+-- ============================================================================
+-- 4. Guard Messages INSERT Policy for Assistants
+-- ============================================================================
+
+DROP POLICY IF EXISTS "Assistants can send messages for doctor" ON messages;
+CREATE POLICY "Assistants can send messages for doctor"
+    ON messages FOR INSERT
+    WITH CHECK (
+        get_current_user_role() IN ('doctor_assistant', 'admin_assistant')
+        AND EXISTS (
+            SELECT 1 FROM doctor_assistant_assignments daa
+            JOIN assistant_profiles ap ON ap.id = daa.assistant_profile_id
+            JOIN doctor_profiles dp ON dp.id = daa.doctor_profile_id
+            WHERE ap.profile_id = get_current_profile_id()
+            AND dp.profile_id = sent_on_behalf_of
+            AND daa.status = 'active'
+            AND daa.can_send_messages = true
+        )
+    );
+
+
