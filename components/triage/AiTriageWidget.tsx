@@ -128,14 +128,18 @@ export function AiTriageWidget() {
             "Severe joint and knee pain",
         ];
 
-    // Hide widget on doctor and admin dashboards, active calls, and for doctor/admin accounts
-    const isDoctorOrAdminRoute = pathname?.includes("/dashboard/doctor") ||
-                                 pathname?.includes("/dashboard/admin") ||
-                                 pathname?.includes("/consultation/") ||
-                                 pathname?.includes("/doctor-onboarding");
+    // Hide chatbot completely on call screens, waiting rooms, urgent care flows, consultations, and for doctors/admins
+    const isCallOrConsultationRoute =
+        pathname?.includes("/call") ||
+        pathname?.includes("/waiting") ||
+        pathname?.includes("/urgent-care") ||
+        pathname?.includes("/consultation") ||
+        pathname?.includes("/dashboard/doctor") ||
+        pathname?.includes("/dashboard/admin") ||
+        pathname?.includes("/doctor-onboarding");
     const isDoctorOrAdminUser = profile?.profile?.role === "doctor" || profile?.profile?.role === "admin";
 
-    if (isDoctorOrAdminRoute || isDoctorOrAdminUser) {
+    if (isCallOrConsultationRoute || isDoctorOrAdminUser) {
         return null;
     }
 

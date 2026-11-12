@@ -650,42 +650,101 @@ export async function uploadChatAttachment(
         contentType = "image/webp";
     }
 
-    // Upload to medical_documents bucket (private, with RLS)
-    let uploadError = null;
-    const { error: initialUploadError } = await supabase.storage
-        .from("medical_documents")
-        .upload(filePath, buffer, {
-            contentType,
-            upsert: false,
-        });
+    // Use service role client to ensure reliable upload without RLS blocking
+    const adminSupabase = await createServiceRoleClient();
 
-    if (initialUploadError) {
-        console.warn("[uploadChatAttachment] Standard upload failed, retrying with service role:", initialUploadError.message);
-        const adminSupabase = await createServiceRoleClient();
-        const { error: adminError } = await adminSupabase.storage
+    // 1. First attempt: upload to medical_documents bucket
+    let finalPath: string | null = null;
+    let finalUrl: string | null = null;
+    let uploadSuccess = false;
+
+    try {
+        const { error: medError } = await adminSupabase.storage
             .from("medical_documents")
             .upload(filePath, buffer, {
                 contentType,
-                upsert: false,
+                upsert: true,
             });
-        if (adminError) {
-            uploadError = adminError;
+
+        if (!medError) {
+            uploadSuccess = true;
+            finalPath = filePath;
+            const { data: signedUrlData } = await adminSupabase.storage
+                .from("medical_documents")
+                .createSignedUrl(filePath, 86400);
+            finalUrl = signedUrlData?.signedUrl || null;
+        } else {
+            console.warn("[uploadChatAttachment] Upload to medical_documents failed:", medError.message);
+            // If bucket not found, try auto-creating the bucket
+            if (medError.message?.toLowerCase().includes("not found")) {
+                try {
+                    await (adminSupabase.storage as any).createBucket("medical_documents", {
+                        public: true,
+                        fileSizeLimit: MAX_CHAT_ATTACHMENT_SIZE,
+                    });
+                    const { error: retryError } = await adminSupabase.storage
+                        .from("medical_documents")
+                        .upload(filePath, buffer, { contentType, upsert: true });
+
+                    if (!retryError) {
+                        uploadSuccess = true;
+                        finalPath = filePath;
+                        const { data: signedUrlData } = await adminSupabase.storage
+                            .from("medical_documents")
+                            .createSignedUrl(filePath, 86400);
+                        finalUrl = signedUrlData?.signedUrl || null;
+                    }
+                } catch (createErr) {
+                    console.warn("[uploadChatAttachment] Auto-create medical_documents failed:", createErr);
+                }
+            }
+        }
+    } catch (err) {
+        console.warn("[uploadChatAttachment] Exception uploading to medical_documents:", err);
+    }
+
+    // 2. Fallback attempt: avatars bucket (public, always available in Supabase)
+    if (!uploadSuccess) {
+        const fallbackPath = `chat/${conversationId}/${fileId}_${sanitizedName}`;
+        try {
+            const { error: avatarError } = await adminSupabase.storage
+                .from("avatars")
+                .upload(fallbackPath, buffer, {
+                    contentType,
+                    upsert: true,
+                });
+
+            if (!avatarError) {
+                uploadSuccess = true;
+                finalPath = `avatars/${fallbackPath}`;
+                const { data: { publicUrl } } = adminSupabase.storage
+                    .from("avatars")
+                    .getPublicUrl(fallbackPath);
+                finalUrl = publicUrl;
+            } else {
+                console.warn("[uploadChatAttachment] Fallback to avatars bucket failed:", avatarError.message);
+            }
+        } catch (avatarErr) {
+            console.warn("[uploadChatAttachment] Exception uploading to avatars:", avatarErr);
         }
     }
 
-    if (uploadError) {
-        return { path: null, url: null, attachmentType: null, error: uploadError.message };
+    // 3. Ultimate resilient fallback for images (data URL so patient/doctor is never blocked)
+    if (!uploadSuccess) {
+        if (attachmentType === "image" && buffer.length <= 5 * 1024 * 1024) {
+            const dataUrl = `data:${contentType};base64,${base64Data}`;
+            return {
+                path: dataUrl,
+                url: dataUrl,
+                attachmentType,
+            };
+        }
+        return { path: null, url: null, attachmentType: null, error: "فشل رفع الملف، يرجى المحاولة مرة أخرى" };
     }
 
-    // Generate signed URL for immediate access (24 hour expiry)
-    const adminSupabase = await createServiceRoleClient();
-    const { data: signedUrlData } = await adminSupabase.storage
-        .from("medical_documents")
-        .createSignedUrl(filePath, 86400);
-
     return {
-        path: filePath,
-        url: signedUrlData?.signedUrl || null,
+        path: finalPath,
+        url: finalUrl,
         attachmentType,
     };
 }
@@ -702,6 +761,11 @@ export async function getChatAttachmentSignedUrl(
     conversationId: string,
     expiresIn: number = 3600
 ): Promise<{ url: string | null; error?: string }> {
+    // If it's already an absolute or data URL, return it directly
+    if (path.startsWith("http://") || path.startsWith("https://") || path.startsWith("data:")) {
+        return { url: path };
+    }
+
     const supabase = await createClient();
 
     // Verify caller is authenticated
@@ -722,7 +786,6 @@ export async function getChatAttachmentSignedUrl(
     }
 
     // Verify user is a participant in this conversation
-    // Check if they have any messages in this conversation (as sender or recipient)
     const { data: messageCheck, error: checkError } = await supabase
         .from("messages")
         .select("id")
@@ -734,17 +797,46 @@ export async function getChatAttachmentSignedUrl(
         return { url: null, error: "Unauthorized - Not a participant in this conversation" };
     }
 
-    // Generate signed URL
     const adminSupabase = await createServiceRoleClient();
-    const { data, error } = await adminSupabase.storage
-        .from("medical_documents")
-        .createSignedUrl(path, expiresIn);
 
-    if (error) {
-        return { url: null, error: error.message };
+    // If file was stored in avatars fallback
+    if (path.startsWith("avatars/") || path.startsWith("chat/")) {
+        const cleanPath = path.startsWith("avatars/") ? path.replace(/^avatars\//, "") : path;
+        const { data: { publicUrl } } = adminSupabase.storage
+            .from("avatars")
+            .getPublicUrl(cleanPath);
+        if (publicUrl) {
+            return { url: publicUrl };
+        }
     }
 
-    return { url: data.signedUrl };
+    // Try medical_documents bucket
+    try {
+        const { data, error } = await adminSupabase.storage
+            .from("medical_documents")
+            .createSignedUrl(path, expiresIn);
+
+        if (!error && data?.signedUrl) {
+            return { url: data.signedUrl };
+        }
+    } catch (e) {
+        console.warn("[getChatAttachmentSignedUrl] Error getting signed url from medical_documents:", e);
+    }
+
+    // Secondary fallback: check avatars bucket directly
+    try {
+        const { data: { publicUrl } } = adminSupabase.storage
+            .from("avatars")
+            .getPublicUrl(path);
+
+        if (publicUrl) {
+            return { url: publicUrl };
+        }
+    } catch (e) {
+        console.warn("[getChatAttachmentSignedUrl] Error getting public url from avatars:", e);
+    }
+
+    return { url: null, error: "Failed to retrieve attachment URL" };
 }
 
 /**

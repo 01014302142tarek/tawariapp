@@ -747,7 +747,7 @@ export async function uploadMessageAttachment(data: {
         data.fileName
     );
 
-    if (uploadResult.error || !uploadResult.url) {
+    if (uploadResult.error || (!uploadResult.path && !uploadResult.url)) {
         return {
             attachmentUrl: null,
             attachmentType: null,
@@ -756,7 +756,7 @@ export async function uploadMessageAttachment(data: {
     }
 
     return {
-        attachmentUrl: uploadResult.path, // Store path, not signed URL (URLs expire)
+        attachmentUrl: uploadResult.path || uploadResult.url,
         attachmentType: uploadResult.attachmentType,
     };
 }

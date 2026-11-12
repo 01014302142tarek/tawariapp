@@ -311,6 +311,13 @@ export function QueueChat({
             }
 
             if (result.message) {
+                // If message has an attachment, immediately show preview/url for instant display without flicker
+                if (attachmentUrl && result.message.id) {
+                    const immediateUrl = filePreview || (attachmentUrl.startsWith("http") || attachmentUrl.startsWith("data:") ? attachmentUrl : null);
+                    if (immediateUrl) {
+                        setAttachmentUrls(prev => ({ ...prev, [result.message!.id]: immediateUrl }));
+                    }
+                }
                 setMessages(prev => [...prev, { ...result.message!, sender: undefined }]);
                 setNewMessage("");
                 clearSelectedFile();
@@ -335,6 +342,12 @@ export function QueueChat({
     // Load attachment URL for display
     const loadAttachmentUrl = useCallback(async (attachmentPath: string, messageId: string) => {
         if (!conversationId || attachmentUrls[messageId]) return;
+
+        // If path is already a direct data URL or http(s) URL, use it immediately
+        if (attachmentPath.startsWith("data:") || attachmentPath.startsWith("http://") || attachmentPath.startsWith("https://")) {
+            setAttachmentUrls(prev => ({ ...prev, [messageId]: attachmentPath }));
+            return;
+        }
 
         try {
             const result = await getAttachmentUrl(attachmentPath, conversationId);
@@ -495,13 +508,11 @@ export function QueueChat({
                                                                                 rel="noopener noreferrer"
                                                                                 className="block"
                                                                             >
-                                                                                <Image
+                                                                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                                                                <img
                                                                                     src={attachmentUrls[msg.id]}
                                                                                     alt={isRTL ? "مرفق" : "Attachment"}
-                                                                                    width={480}
-                                                                                    height={320}
-                                                                                    sizes="(max-width: 768px) 80vw, 480px"
-                                                                                    className="max-w-full rounded-lg max-h-40 object-cover cursor-pointer hover:opacity-90 transition-opacity"
+                                                                                    className="max-w-full rounded-lg max-h-48 object-cover cursor-pointer hover:opacity-90 transition-opacity"
                                                                                 />
                                                                             </a>
                                                                         ) : (
