@@ -469,6 +469,11 @@ export function NativeWebRTCCall({
                 const pc = pcRef.current;
                 if (!pc) return;
 
+                // Ignore duplicate offers if already established or currently answering
+                if (pc.signalingState === "have-remote-offer" || (pc.iceConnectionState === "connected" && pc.signalingState === "stable")) {
+                    return;
+                }
+
                 try {
                     // Glare protection: if signaling is not stable, rollback to stable description
                     if (pc.signalingState !== "stable") {
