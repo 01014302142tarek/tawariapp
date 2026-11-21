@@ -49,4 +49,4 @@ npm run test:ci   # CI test suite
 
 ## Team
 
-Built by a small team. See the commit history and the contributors page for each member's work.
+A team project. Documented contributions by [Tarek Bakr](https://github.com/01014302142tarek) on this account cover the real-time consultation system: the WebRTC calling layer, the call UI (desktop + mobile), the incoming-call ringtone and notification engine, and prescription workflow fixes (see the commit history). He also contributed additional parts of the project through North Shore Digital's company GitHub account while working with them.
